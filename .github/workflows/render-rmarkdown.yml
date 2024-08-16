@@ -1,0 +1,40 @@
+name: Render RMarkdown and Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Set a branch to deploy
+
+jobs:
+  render-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v1
+
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v1
+
+      - name: Install dependencies
+        run: |
+          install.packages(c('rmarkdown', 'knitr'))
+
+      - name: Render site
+        run: |
+          rmarkdown::render_site(encoding = 'UTF-8')
+
+      - name: Setup pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "_site/"
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

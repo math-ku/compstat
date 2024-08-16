@@ -1,0 +1,252 @@
+---
+title: "Computational Statistics <br> Functions"
+author: "Niels Richard Hansen"
+date: "September 1, 2020"
+output:
+  xaringan::moon_reader:
+    css: ["default", "science.css"]
+    nature:
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: '16:10'
+      navigation:
+        scroll: false
+---
+
+## Counting number of zeros in data
+
+Count data (values in $\mathbb{N}_0$) are often modelled using a Poisson 
+distribution. R can simulate count data using the function `rpois`.
+
+```{r, echo=2}
+set.seed(1234)
+rpois(10, 2)     #n = 10 variables from a Pois(2) distribution
+```
+
+--
+
+In the above sequence, two of the values are zero. 
+
+--
+
+Zero-inflation is often encountered in practice, which means that the number
+of zeros exceeds what is expected from Poisson variables. 
+
+--
+
+We need to count how many zeros there are in a data set. 
+
+---
+## Writing an R function
+
+A function that counts the number of zeros in a vector.
+
+```{r}
+count_zeros <- function(x) {
+  nr <- 0
+  for(i in seq_along(x))    # 1:length(x) wrong if length(x) is 0
+    nr <- nr + (x[i] == 0)  # logical coerced to numeric
+  nr
+}
+```
+
+--
+The implementation works in most programming languages:
+--
+
+* Initialize a counter to be 0.
+* Loop through the elements of the vector.
+* Increment the counter whenever an element equals zero.
+* Return the value of the counter.
+
+---
+## Testing an R function
+
+```{r}
+tests <- list(
+  c(0, 0, 0, 0, 25),
+  c(0, 1, 10, 0, 5, -4, 2.5),
+  c(2, 1, 10),
+  c()                        # Extreme cases should be tested!
+)                      
+sapply(tests, count_zeros)
+```
+
+--
+We can manually inspect that the results are correct, or we can do it programmatically.
+
+```{r}
+all(sapply(tests, count_zeros) == c(4, 2, 0, 0))
+```
+
+---
+## Writing an R function, version 2
+
+```{r}
+count_zeros_vec <- function(x)
+  sum(x == 0)
+```
+
+--
+Testing:
+
+```{r}
+all(sapply(tests, count_zeros) == sapply(tests, count_zeros_vec))
+```
+
+---
+## Vectorized R code
+
+```{r}
+count_zeros_vec
+```
+
+
+--
+* The expression `x == 0` tests each entry of the vector `x` for being equal to 0 and returns a vector of logicals.
+--
+
+* The `sum` function computes and returns the sum of all elements in a vector. Logicals are coerced to integers. 
+--
+
+* The vectorized implementation is short but expressive and easy to understand.
+--
+
+* The vectorized computations are performed by compiled code. They are faster to evaluate than R code.  
+--
+
+* Writing vectorized code requires a larger knowledge of R functions.
+
+
+---
+## However, all is not good
+
+
+```{r}
+identical(
+  sapply(tests, count_zeros),
+  sapply(tests, count_zeros_vec)
+)
+```
+
+---
+## Why are results equal but not identical!?
+
+--
+```{r}
+typeof(sapply(tests, count_zeros))
+```
+
+
+--
+```{r}
+count_zeros <- function(x) {
+# counter now of type integer! 
+  nr <- 0L #<<
+  for(i in seq_along(x))  
+    nr <- nr + (x[i] == 0)
+  nr
+}
+```
+
+--
+```{r}
+typeof(sapply(tests, count_zeros))
+```
+
+---
+## Results are now identical
+
+```{r}
+identical(
+  sapply(tests, count_zeros),
+  sapply(tests, count_zeros_vec)
+)
+```
+
+
+---
+## Functions as arguments
+
+We have already used `sapply` above with a function as its second argument.
+--
+
+
+It is a feature of R as a functional programming language that it can operate with
+functions as with any other data structure. Functions can be arguments and return values.
+--
+
+
+Let's write our own apply-function.
+
+```{r own-apply}
+our_apply <- function(x, fun) {
+  val <- numeric(length(x))   # initialize vector of return values
+  for(i in seq_along(x))
+    val[i] <- fun(x[[i]])
+  val
+}
+```
+
+---
+## Testing our apply-function
+
+```{r}
+sapply(tests, count_zeros_vec)
+our_apply(tests, count_zeros_vec)
+```
+
+--
+
+Our implementation assumes that `x` is a list, that `fun` takes a single 
+argument and that `fun` returns a numeric. 
+
+---
+## What if `fun` needs additional arguments?
+
+```{r, error=TRUE}
+our_apply(1:10, rpois)
+```
+
+--
+Generating Poisson distributed values requires two arguments, and the
+code above resulted in an error. 
+--
+
+
+It is possible to "solve" this by an *anonymous function* 
+
+```{r}
+our_apply(1:10, function(lambda) rpois(1, lambda))
+```
+
+---
+## The `...` argument
+
+It is possible to use a general construct via the `...` argument to pass any 
+arguments on to the function.
+
+```{r own-apply-2}
+our_apply <- function(x, fun, ...) {
+  val <- numeric(length(x))     
+  for(i in seq_along(x))
+    val[i] <- fun(x[[i]], ...)
+  val
+}
+```
+
+--
+
+```{r}
+our_apply(1:10, rpois, n = 1)
+```
+
+
+---
+# Exercises
+
+```{r, echo = FALSE, out.height=NULL, out.width=400, fig.align='center'}
+knitr::include_graphics("PracIcon.png")
+```
+
+You should now do [Exercises A.1—A.6](https://cswr.nrhstat.org/a-5-app-ex).
