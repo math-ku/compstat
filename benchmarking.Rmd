@@ -1,0 +1,267 @@
+---
+title: "Benchmarking"
+subtitle: Computational Statistics
+author: "Johan Larsson, Niels Richard Hansen"
+date: "September 3, 2020"
+---
+
+```{r, echo = FALSE, warning = FALSE}
+library(ggplot2)
+knitr::opts_chunk$set(
+  fig.width = 4.8,
+  fig.height = 4.2,
+  cache = TRUE,
+  fig.retina = 3,
+  fig.align = "center",
+  dev.args = list(bg = "transparent"),
+  fig.align = "center"
+)
+theme_replace(plot.background = element_rect(fill = NA, color = NA))
+theme_set(theme_grey(base_size = 18))
+```
+
+
+## R Is Slow ... 
+
+... when used like a low-level language. 
+
+--
+
+- The language and its implementation have limitations in terms of speed and 
+memory usage. It was designed to specify statistical models and carry out 
+data analysis and not for high-performance computing.  
+--
+
+- It is a language suitable for high-level programming where most low-level computations 
+are actually implemented in a compiled language and accessed via function calls. 
+--
+
+
+### Example: Numerical Linear Algebra
+
+All basic operations with vectors and matrices from 
+scalar multiplication (`10 * x`) over matrix products (`%*%` or `crossprod()`) to matrix decompositions (`eigen()` or `qr()`) are implemented in C or Fortran. 
+
+---
+
+## R Is Fast ...
+
+... when most computations are carried out by calls to compiled code. 
+
+```{r}
+library(microbenchmark)
+
+x <- rnorm(1e4)
+loop_bench <- microbenchmark(
+  for (i in seq_along(x)) 10 * x[i],
+  10 * x
+)
+loop_bench <- summary(loop_bench)
+```
+--
+
+```{r}
+loop_bench[, c(1, 4, 5)]
+```
+
+```{r, echo = FALSE}
+cat("units: ", attr(loop_bench, "unit"))
+```
+
+---
+## "Vectorized" Computations May Not Be Fast
+
+```{r}
+apply_bench <- microbenchmark(
+  sapply(x, function(z) 10 * z),
+  10 * x
+)
+apply_bench <- summary(apply_bench)
+```
+--
+
+
+```{r}
+apply_bench[, c(1, 4, 5)]
+```
+
+```{r, echo = FALSE}
+cat("units: ", attr(apply_bench, "unit"))
+```
+
+---
+## Suggested (Real World) Development Cycle
+
+* Can I find an existing implementation that solves my problem? Does it
+solve my problem sufficiently well (fast enough, general enough)? If yes, I'm done.
+--
+
+
+* Implement a solution and test it. Does it
+solve my problem sufficiently well? If yes, I'm done.
+--
+
+
+* Rewrite, improve and test the code. Use e.g. profiling tools to identify 
+the computationally demanding parts of the code. 
+--
+
+
+* Use benchmaking tools to compare different implementations and to investigate 
+how the computational demands scale. 
+
+--
+
+* If one implementation solves my problem sufficiently well, I'm done. Otherwise
+reiterate the two previous points. 
+
+--
+
+---
+
+## Density Implementation
+
+```{r kernDens}
+kern_dens <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- numeric(m)
+
+  for (i in seq_along(xx)) {
+    for (j in seq_along(x)) { #<<
+      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2)) #<<
+    } #<<
+  }
+
+  y <- y / (sqrt(2 * pi) * h * length(x))
+
+  list(x = xx, y = y)
+}
+```
+
+
+---
+
+## Density Implementation (Vectorized)
+
+```{r kernDens-vec}
+kern_dens_vec <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- numeric(m)
+  const <- (sqrt(2 * pi) * h * length(x))
+
+  for (i in seq_along(xx)) {
+    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) / const #<<
+  }
+
+  list(x = xx, y = y)
+}
+```
+
+```{r, echo=FALSE}
+kern_dens_apply <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  const <- sqrt(2 * pi) * h * length(x)
+  y <- sapply(xx, function(z) sum(exp(-(z - x)^2 / (2 * h^2))) / const)
+  list(x = xx, y = y)
+}
+
+kern_dens_outer <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- outer(xx, x, function(zz, z) exp(-(zz - z)^2 / (2 * h^2)))
+  y <- rowMeans(y) / (sqrt(2 * pi) * h)
+  list(x = xx, y = y)
+}
+```
+
+
+---
+
+## Density Benchmarking
+
+```{r, echo=FALSE}
+phipsi <- read.table("phipsi.tsv", header = TRUE)
+phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
+psi <- phipsi$psi
+```
+
+
+```{r kern-bench, dependson=c("phipsiLoad", "kernDens", "kernDens-vec", "kernDens-apply", "kernDens-outer")}
+kern_bench <- microbenchmark(
+  kern_dens(psi, 0.2),
+  kern_dens_vec(psi, 0.2),
+  kern_dens_apply(psi, 0.2),
+  kern_dens_outer(psi, 0.2)
+)
+```
+
+```{r kern-bench-hidden, echo=FALSE, dependson="kern-bench"}
+old_options <- options(digits = 3)
+kern_bench
+options(digits = old_options$digits)
+```
+
+---
+## Plot
+
+```{r kern-bench-autoplot, dependson="kern-bench-hidden", message=FALSE, fig.height=4.5, fig.width = 9}
+autoplot(kern_bench) +
+  geom_jitter(aes(color = expr), height = 0.2, width = 0, alpha = 0.4) +
+  aes(fill = I("gray")) +
+  theme(legend.position = "none")
+```
+
+
+---
+## Systematic Benchmarking
+
+A designed experiment
+
+```{r kern-bench-grid, dependson=c("kernDens", "kernDens-vec", "kernDens-apply", "kernDens-outer")}
+conf <- expand.grid(
+  fun = c("kern_dens", "kern_dens_vec", "kern_dens_apply", "kern_dens_outer"),
+  n = 2^(5:11),
+  m = 2^c(5, 7, 9, 11)
+)
+
+set.seed(1234)
+x <- rnorm(2^11)
+calls <- paste0(conf[, 1], "(x[1:", conf[, 2], "], h = 0.2, m = ", conf[, 3], ")")
+expr_list <- lapply(calls, function(x) parse(text = x)[[1]])
+
+kern_benchmarks <- microbenchmark(list = expr_list, times = 40L)
+```
+
+---
+## Results
+
+```{r kern-bench-fig, echo=FALSE, message=FALSE, warning=FALSE, dependson="kern-bench-grid", fig.width=11, fig.height=7}
+library(tidyverse)
+class(kern_benchmarks) <- "data.frame"
+kern_benchmarks <- bind_cols(conf, expr = calls) %>%
+  left_join(kern_benchmarks, .)
+
+kern_benchmarks$m <- factor(
+  kern_benchmarks$m,
+  levels = c(32, 128, 512, 2048),
+  labels = c("m = 32", "m = 128", "m = 512", "m = 2048")
+)
+
+ggplot(kern_benchmarks, aes(x = n, y = time, color = fun)) +
+  geom_abline(intercept = 15, slope = 1, color = "gray", linetype = 2) +
+  stat_summary(fun.y = "median", geom = "line") +
+  stat_summary(fun.y = "median", geom = "point") +
+  facet_wrap(~m) +
+  scale_x_continuous(trans = "log2") +
+  scale_y_continuous("Time (ms)",
+    trans = "log2",
+    breaks = c(1e5, 1e6, 1e7, 1e8),
+    labels = c("0.1", "1", "10", "100")
+  ) +
+  scale_color_discrete("Function:") +
+  theme(legend.position = "top")
+```
+
