@@ -50,3 +50,7 @@ rsconnect/
 
 # Generated site
 _site/ 
+
+*.html
+*_cache
+*_files
