@@ -5,15 +5,13 @@ author: "Johan Larsson, Niels Richard Hansen"
 date: "Sep 2, 2024"
 output:
   xaringan::moon_reader:
-    css: ["default", "../assets/styles.css"]
+    css: ["default", "assets/styles.css"]
     nature:
       highlightStyle: github
       highlightLines: true
       titleSlideClass: [middle, center]
       ratio: "16:10"
       countIncrementalSlides: false
-editor_options: 
-  chunk_output_type: console
 ---
 
 ## Computational Statistics
@@ -32,7 +30,7 @@ knitr::opts_chunk$set(
   fig.align = "center",
   cache = TRUE,
   autodep = TRUE,
-  dev.args = list(bg = "transparent", pointsize = 14),
+  dev.args = list(bg = "transparent", pointsize = 16),
   crop = TRUE
 )
 
@@ -41,7 +39,7 @@ phipsi2 <- na.omit(dataset)
 phipsi <- read.table("phipsi.tsv", header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 
-theme_set(theme_grey(base_size = 16))
+theme_set(theme_grey(base_size = 18))
 
 options(width = 80)
 ```
@@ -460,7 +458,8 @@ class(factor_vector)
 
 --
 
-* Might look like a character vector but based on an integer vector.
+Might look like a character vector but is actually based on an integer vector.
+
 --
 
 ```{r}
@@ -595,7 +594,7 @@ my_data_frame
 
 
 ---
-## Subsetting data frames
+## Subsetting Data Frames
 
 Extracting one column from a data frame by name.
 ```{r my_data_frame_integers, dependson = "my_data_frame"}
@@ -639,20 +638,37 @@ We introduced missing values in our data frame above. Suppose we want to
 impute a value whenever it's missing.
 --
 
+.pull-left[
 ```{r}
-within(my_data_frame, my_integers <- ifelse(is.na(my_integers), 0, my_integers))
-```
+res <- within(
+  my_data_frame,
+  my_integers <- ifelse(
+    is.na(my_integers),
+    0,
+    my_integers
+  )
+)
 
-However, this is a bit cumbersume to copy-paste around, and it's 
-not totally clear what this code does. Lets write a function with a good 
-name.
+head(res, 4)
+```
+]
+
 --
+
+.pull-right[
+
+However, this is a bit cumbersome to copy-paste around, and it's 
+not completely clear what this code does. 
+
+Let's write a function with a good name.
 
 ```{r}
 impute_missing <- function(x) {
   ifelse(is.na(x), 0, x)
 }
 ```
+]
+
 
 ---
 ## Functions
@@ -665,10 +681,6 @@ within(my_data_frame, my_integers <- impute_missing(my_integers))
 
 ## Exercise
 
-```{r, echo = FALSE, out.height=NULL, out.width=200, fig.align='center'}
-knitr::include_graphics("PracIcon.png")
-```
-
 Write a function, `is_pos`, which takes a vector `x` as argument and returns a
 vector of logicals whose i-th entry is `TRUE` whenever `x[i] > 0`. E.g. 
 
@@ -676,7 +688,6 @@ vector of logicals whose i-th entry is `TRUE` whenever `x[i] > 0`. E.g.
 is_pos <- function(x) x > 0
 is_pos(c(-1, 0, 1, 2))
 ```
-
 
 
 ---
@@ -696,7 +707,7 @@ within(my_data_frame, my_logicals <- impute_missing(my_logicals))
 
 ---
 
-## Better impute function
+## Better Impute Function
 
 ```{r}
 impute_missing <- function(x, value = 0) {
@@ -714,28 +725,28 @@ within(my_data_frame, {
 ```
 
 ---
-## R programming 
+## R Programming 
 
-R functions are fundamental. They don't do anything before they are called and the call is evaluated. 
---
-
-
-An R function takes a number of *arguments*, and when a function call is evaluated it computes a *return value*.
+- R functions are fundamental. They don't do anything before they are called and the call is evaluated. 
 
 --
 
-An R program consists of a hierarchy of function calls. When the program is executed, function calls are evaluated and 
+- An R function takes a number of *arguments*, and when a function call is evaluated it computes a *return value*.
+
+--
+
+- An R program consists of a hierarchy of function calls. When the program is executed, function calls are evaluated and 
 replaced by their return values. 
 
 --
 
-Implementations of R functions are collected into source files, which can be organized into R packages.
+- Implementations of R functions are collected into source files, which can be organized into R packages.
 
 --
 
-An R script (or R Markdown document) is a collection of R function calls, which, when evaluated, 
+- An R script (or R Markdown document) is a collection of R function calls, which, when evaluated, 
 compute a desired result. 
 
 --
 
-R programming includes activities at many different levels of sophistication and abstraction.
+- R programming includes activities at many different levels of sophistication and abstraction.
