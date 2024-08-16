@@ -17,12 +17,14 @@ jobs:
       - name: Setup R
         uses: r-lib/actions/setup-r@v1
 
+      - uses: r-lib/actions/setup-r-dependencies@v1
+        with:
+          extra-packages: |
+            rmarkdown
+            knitr
+
       - name: Setup Pandoc
         uses: r-lib/actions/setup-pandoc@v1
-
-      - name: Install dependencies
-        run: |
-          install.packages(c('rmarkdown', 'knitr'))
 
       - name: Render site
         run: |
