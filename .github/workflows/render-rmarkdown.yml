@@ -28,7 +28,7 @@ jobs:
 
       - name: Render site
         run: |
-          rmarkdown::render_site()
+          Rscript -e "rmarkdown::render_site()"
 
       - name: Setup pages
         uses: actions/configure-pages@v5
