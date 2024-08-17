@@ -2,16 +2,7 @@
 title: "Introduction"
 subtitle: Computational Statistics
 author: "Johan Larsson, Niels Richard Hansen"
-date: "Sep 2, 2024"
-output:
-  xaringan::moon_reader:
-    css: ["default", "assets/styles.css"]
-    nature:
-      highlightStyle: github
-      highlightLines: true
-      titleSlideClass: [middle, center]
-      ratio: "16:10"
-      countIncrementalSlides: false
+date: "September 3, 2024"
 ---
 
 ## Computational Statistics
