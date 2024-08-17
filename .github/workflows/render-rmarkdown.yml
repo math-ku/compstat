@@ -27,8 +27,8 @@ jobs:
       - uses: r-lib/actions/setup-renv@v2
 
       - name: Render site
-        run: |
-          Rscript -e "rmarkdown::render_site()"
+        run: rmarkdown::render_site()
+        shell: Rscript {0}
 
       - name: Setup pages
         uses: actions/configure-pages@v5
