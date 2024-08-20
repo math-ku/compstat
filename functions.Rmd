@@ -73,7 +73,7 @@ all(sapply(tests, count_zeros) == c(4, 2, 0, 0))
 ```
 
 ---
-## Writing an R function, version 2
+## Writing an R function, Version 2
 
 ```{r}
 count_zeros_vec <- function(x) {
@@ -89,7 +89,7 @@ all(sapply(tests, count_zeros) == sapply(tests, count_zeros_vec))
 ```
 
 ---
-## Vectorized R code
+## Vectorized R Code
 
 ```{r}
 count_zeros_vec
@@ -112,7 +112,7 @@ count_zeros_vec
 
 
 ---
-## However, all is not good
+## However, All Is Not Well
 
 
 ```{r}
@@ -123,7 +123,7 @@ identical(
 ```
 
 ---
-## Why are results equal but not identical!?
+## Why Are Results Equal But Not Identical!?
 
 --
 ```{r}
@@ -149,7 +149,7 @@ typeof(sapply(tests, count_zeros))
 ```
 
 ---
-## Results are now identical
+## Results Are Now Identical
 
 ```{r}
 identical(
@@ -159,7 +159,7 @@ identical(
 ```
 
 ---
-## Functions as arguments
+## Functions as Arguments
 
 We have already used `sapply` above with a function as its second argument.
 --
@@ -196,7 +196,7 @@ Our implementation assumes that `x` is a list, that `fun` takes a single
 argument and that `fun` returns a numeric. 
 
 ---
-## What if `fun` needs additional arguments?
+## What if `fun` Needs Additional Arguments?
 
 ```{r, error=TRUE}
 our_apply(1:10, rpois)
@@ -237,6 +237,6 @@ our_apply(1:10, rpois, n = 1)
 ```
 
 ---
-# Exercises
+## Exercises
 
 You should now do [Exercises A.1—A.6](https://cswr.nrhstat.org/a-5-app-ex).
