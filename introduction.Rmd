@@ -3,6 +3,7 @@ title: "Introduction"
 subtitle: Computational Statistics
 author: "Johan Larsson, Niels Richard Hansen"
 date: "September 3, 2024"
+output: xaringan::moon_reader
 ---
 
 ## Computational Statistics
@@ -14,14 +15,12 @@ library(gridExtra)
 knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
 
 knitr::opts_chunk$set(
-  dev = "png",
   fig.width = 4.8,
   fig.height = 4.2,
   fig.retina = 3,
   fig.align = "center",
   cache = TRUE,
   autodep = TRUE,
-  dev.args = list(bg = "transparent", pointsize = 16),
   crop = TRUE
 )
 
