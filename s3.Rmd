@@ -9,12 +9,18 @@ date: "September 3, 2024"
 library(ggplot2)
 library(gridExtra)
 library(microbenchmark)
+
+knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
+
 knitr::opts_chunk$set(
   fig.width = 4.8,
   fig.height = 4.2,
   fig.retina = 3,
   fig.align = "center",
-  dev.args = list(pointsize = 16)
+  cache = TRUE,
+  autodep = TRUE,
+  dev.args = list(pointsize = 16),
+  crop = TRUE
 )
 
 theme_set(theme_grey(base_size = 18))
@@ -41,7 +47,7 @@ integral
 
 The numerical value of the integral 
 $$\int_0^1 \sin(x) \mathrm{d}x$$ 
-is nicely printed above---including an indication of the numerical error. 
+is printed nicely above—including an indication of the numerical error. 
 
 ---
 ## Return Values
