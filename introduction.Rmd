@@ -300,7 +300,6 @@ my_vector[1]
 my_vector[c(1, 4)]
 my_vector[-2] # Negative indices drop corresponding components
 ```
-```
 
 ---
 ## Vectors of Class `integer`
