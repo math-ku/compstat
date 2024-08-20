@@ -2,7 +2,7 @@
 title: "Benchmarking"
 subtitle: Computational Statistics
 author: "Johan Larsson, Niels Richard Hansen"
-date: "September 3, 2020"
+date: "September 3, 2024"
 ---
 
 ```{r, echo = FALSE, warning = FALSE}
