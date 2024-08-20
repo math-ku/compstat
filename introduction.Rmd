@@ -24,9 +24,9 @@ knitr::opts_chunk$set(
   crop = TRUE
 )
 
-load("top100dih.RData")
+load(file.path("data", "top100dih.RData"))
 phipsi2 <- na.omit(dataset)
-phipsi <- read.table("phipsi.tsv", header = TRUE)
+phipsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 
 theme_set(theme_grey(base_size = 18))
@@ -56,7 +56,7 @@ options(width = 80)
 ## Example: Amino Acid Angles
 
 ```{r PhiPsi, echo = FALSE, out.height=400, out.width=400, fig.align='center'}
-knitr::include_graphics("PhiPsi_creative.jpg")
+knitr::include_graphics("images/PhiPsi_creative.jpg")
 ```
 
 ---
@@ -245,7 +245,7 @@ Good working knowledge of:
 ## Exercise
 
 ```{r, echo = FALSE, out.height=NULL, out.width=200, fig.align='center'}
-knitr::include_graphics("PracIcon.png")
+knitr::include_graphics("images/PracIcon.png")
 ```
 
 With `x` a vector of numbers, write code in R to compute a vector 
@@ -557,7 +557,7 @@ identical(date_vector, dates_from_list)
 ## Exercise
 
 ```{r, echo = FALSE, out.height=NULL, out.width=200, fig.align='center'}
-knitr::include_graphics("PracIcon.png")
+knitr::include_graphics("images/PracIcon.png")
 ```
 
 Run the following code and explain the differences/similarities

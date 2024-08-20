@@ -175,7 +175,7 @@ kern_dens_outer <- function(x, h, m = 512) {
 ## Density Benchmarking
 
 ```{r, echo=FALSE}
-phipsi <- read.table("phipsi.tsv", header = TRUE)
+phipsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 psi <- phipsi$psi
 ```

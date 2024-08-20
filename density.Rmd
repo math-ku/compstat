@@ -24,10 +24,10 @@ knitr::opts_chunk$set(
 
 theme_set(theme_grey(base_size = 16))
 
-load("top100dih.RData")
+load(file.path("data", "top100dih.RData"))
 
 phipsi2 <- na.omit(dataset)
-phipsi <- read.table("phipsi.tsv", header = TRUE)
+phipsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 ```
 

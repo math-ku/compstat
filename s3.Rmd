@@ -25,7 +25,7 @@ knitr::opts_chunk$set(
 
 theme_set(theme_grey(base_size = 18))
 
-phipsi <- read.table("phipsi.tsv", header = TRUE)
+phipsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 ```
 
