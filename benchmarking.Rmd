@@ -13,11 +13,9 @@ knitr::opts_chunk$set(
   cache = TRUE,
   fig.retina = 3,
   fig.align = "center",
-  dev.args = list(bg = "transparent"),
   fig.align = "center"
 )
-theme_replace(plot.background = element_rect(fill = NA, color = NA))
-theme_set(theme_grey(base_size = 18))
+theme_set(theme_grey(base_size = 16))
 ```
 
 
@@ -96,26 +94,20 @@ cat("units: ", attr(apply_bench, "unit"))
 solve my problem sufficiently well (fast enough, general enough)? If yes, I'm done.
 --
 
-
 * Implement a solution and test it. Does it
 solve my problem sufficiently well? If yes, I'm done.
 --
-
 
 * Rewrite, improve and test the code. Use e.g. profiling tools to identify 
 the computationally demanding parts of the code. 
 --
 
-
 * Use benchmaking tools to compare different implementations and to investigate 
 how the computational demands scale. 
-
 --
 
 * If one implementation solves my problem sufficiently well, I'm done. Otherwise
 reiterate the two previous points. 
-
---
 
 ---
 
