@@ -243,10 +243,6 @@ count_data ## Print data
 count_zeros(count_data)
 ```
 
----
-## Exercises
-
-You should now do [Exercises A.7-A.10 in CSwR](https://cswr.nrhstat.org/app-r#app-ex).
 
 
 

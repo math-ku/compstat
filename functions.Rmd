@@ -237,8 +237,3 @@ our_apply <- function(x, fun, ...) {
 ```{r}
 our_apply(1:10, rpois, n = 1)
 ```
-
----
-## Exercises
-
-You should now do [Exercises A.1—A.6](https://cswr.nrhstat.org/a-5-app-ex).
