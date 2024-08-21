@@ -6,8 +6,6 @@ date: "September 3, 2024"
 output: xaringan::moon_reader
 ---
 
-## Computational Statistics
-
 ```{r init, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(gridExtra)
@@ -34,7 +32,45 @@ theme_set(theme_grey(base_size = 18))
 options(width = 80)
 ```
 
---
+## Computational Statistics
+
+TBW
+
+---
+
+## Teaching Staff
+
+.pull-left[
+### Instructor
+
+Johan Larsson, postdoctoral researcher
+
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics(file.path("images/johan.jpg"))
+```
+]
+
+.pull-right[
+### Teaching Assistant
+
+Jinyang Liu, PhD student
+
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics(file.path("images/jinyang.jpg"))
+```
+]
+
+*See Absalon for contact information.*
+
+---
+
+## Absalon
+
+
+
+---
+
+## Topics
 
 ### Problems
 
@@ -430,11 +466,12 @@ length(character_vector)
 
 --
 
-* Observe that the number was coerced to a string.
+Observe that the number was coerced to a string.
 
 ---
 ## Factor (Categorical) Vectors
 
+.pull-left[
 Example of a factor.
 ```{r factor_vector}
 factor_vector <- factor(c(
@@ -442,20 +479,27 @@ factor_vector <- factor(c(
   "m", "f", "f", "f", "m"
 ))
 factor_vector
+```
+]
+
+--
+
+.pull-right[
+```{r factor_vector_class}
 class(factor_vector)
 ```
 
---
-
 Might look like a character vector but is actually based on an integer vector.
-
---
 
 ```{r}
 typeof(factor_vector)
 ```
+]
 
 --
+
+### Notes
+
 * Can only take a fixed set of values (default: values present in data).
 --
 
@@ -474,7 +518,7 @@ class(date_vector)
 
 --
 
-* Date vectors might also look like character vectors, but they are based on numeric vectors.
+Date vectors might also look like character vectors, but they are based on numeric vectors.
 
 
 ---
@@ -559,13 +603,15 @@ identical(date_vector, dates_from_list)
 knitr::include_graphics("images/PracIcon.png")
 ```
 
-Run the following code and explain the differences/similarities
+Run the following code and explain the differences/similarities.
 
 ```{r, eval=FALSE}
-xl <- list(x = c(-1, 0, 1, 2))
-xl[1]
-xl[[1]]
-xl$x
+a_list <- list(foo = c(-1, 0, 1, 2))
+
+a_list[1]
+a_list[[1]]
+a_list$foo
+a_list[["foo"]]
 ```
 
 ---
@@ -603,7 +649,7 @@ my_data_frame[, 1]
 ```
 
 ---
-## Subsetting data frames
+## Subsetting Data Frames
 
 You can subset data frames using brackets
 
