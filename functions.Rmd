@@ -94,8 +94,8 @@ all(sapply(tests, count_zeros) == sapply(tests, count_zeros_vec))
 ```{r}
 count_zeros_vec
 ```
-
 --
+
 * The expression `x == 0` tests each entry of the vector `x` for being equal to 0 and returns a vector of logicals.
 --
 
@@ -130,8 +130,8 @@ identical(
 typeof(sapply(tests, count_zeros))
 ```
 
-
 --
+
 ```{r}
 count_zeros <- function(x) {
   # counter now of type integer!
@@ -144,6 +144,7 @@ count_zeros <- function(x) {
 ```
 
 --
+
 ```{r}
 typeof(sapply(tests, count_zeros))
 ```
@@ -161,16 +162,16 @@ identical(
 ---
 ## Functions as Arguments
 
-We have already used `sapply` above with a function as its second argument.
---
+We have already used `sapply()` above with a function as its second argument.
 
+--
 
 It is a feature of R as a functional programming language that it can operate with
 functions as with any other data structure. Functions can be arguments and return values.
+
 --
 
-
-Let's write our own apply-function.
+Let's write our own apply function.
 
 ```{r own-apply}
 our_apply <- function(x, fun) {
@@ -183,7 +184,7 @@ our_apply <- function(x, fun) {
 ```
 
 ---
-## Testing our apply-function
+## Testing Our Apply-Function
 
 ```{r}
 sapply(tests, count_zeros_vec)
@@ -192,23 +193,24 @@ our_apply(tests, count_zeros_vec)
 
 --
 
-Our implementation assumes that `x` is a list, that `fun` takes a single 
-argument and that `fun` returns a numeric. 
+Our implementation assumes that `x` is a list, that `fun()` takes a single 
+argument and that `fun()` returns a numeric. 
 
 ---
-## What if `fun` Needs Additional Arguments?
+## What if `fun()` Needs Additional Arguments?
 
 ```{r, error=TRUE}
 our_apply(1:10, rpois)
 ```
 
 --
+
 Generating Poisson distributed values requires two arguments, and the
 code above resulted in an error. 
+
 --
 
-
-It is possible to "solve" this by an *anonymous function* 
+It is possible to "solve" this by an **anonymous** function.
 
 ```{r}
 our_apply(1:10, function(lambda) rpois(1, lambda))
