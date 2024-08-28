@@ -17,8 +17,8 @@ knitr::opts_chunk$set(
   fig.height = 4.2,
   fig.retina = 3,
   fig.align = "center",
-  cache = TRUE,
   autodep = TRUE,
+  cache = FALSE,
   crop = TRUE
 )
 
@@ -334,7 +334,7 @@ my_vector
 --
 
 You can extract components with `[]`.
-```{r my_vector_subsetting, dependson = "my_vector"}
+```{r my_vector_subsetting}
 my_vector[1]
 my_vector[c(1, 4)]
 my_vector[-2] # Negative indices drop corresponding components
@@ -352,7 +352,7 @@ class(integer_vector)
 --
 
 This is a vector of length 10, i.e. it has 10 elements.
-```{r length, dependson = "integer_vector"}
+```{r length}
 length(integer_vector)
 ```
 
@@ -400,7 +400,7 @@ class(x)
 ## Comparison of Numerical Values
 
 Values in a vector of class numeric are approximate.
-```{r numeric_vector_comparison, dependson = "numeric_vector"}
+```{r numeric_vector_comparison}
 numeric_vector[2:3]
 numeric_vector[2:3] == c(0.2, 0.3)
 ```
@@ -408,7 +408,7 @@ numeric_vector[2:3] == c(0.2, 0.3)
 --
 
 Function `all.equal` has a tolerance.
-```{r numeric_vector_near, dependson = "numeric_vector", message = FALSE}
+```{r numeric_vector_near}
 all.equal(numeric_vector[2:3], c(0.2, 0.3))
 ```
 
@@ -437,7 +437,7 @@ precision in the binary numeral system.
 ## Logical (Boolean) Vectors
 
 Example of a logical vector.
-```{r logical_vector, dependson = "integer_vector"}
+```{r logical_vector}
 logical_vector <- integer_vector > 4
 logical_vector
 class(logical_vector)
@@ -447,7 +447,7 @@ class(logical_vector)
 How many percent (%) of the components of `integer_vector` are (strictly) larger than 4?
 --
 
-```{r logcial_vector_mean, results = "hold", dependson = "integer_vector"}
+```{r logcial_vector_mean, results = "hold"}
 mean(integer_vector > 4) * 100
 ```
 
@@ -530,7 +530,7 @@ Date vectors might also look like character vectors, but they are based on numer
 A list with named elements.
 
 .pull-left[
-```{r my_list, dependson = "integer_vector, factor_vector, logical_vector, date_vector", results="hide"}
+```{r my_list, results="hide"}
 my_list <- list(
   my_integers = integer_vector,
   my_factor = factor_vector,
@@ -546,7 +546,7 @@ my_list
 ```{r my_list_output, echo=FALSE}
 options(width = 35)
 my_list
-options(width = 100)
+options(width = 80)
 ```
 ]
 
@@ -554,27 +554,27 @@ options(width = 100)
 ## Subsetting Lists
 
 Example of a sublist.
-```{r my_first_sublist, dependson = "my_list"}
+```{r my_first_sublist}
 my_first_sublist <- my_list[1:3]
 my_first_sublist
 ```
 --
 
-```{r my_first_sublist_class, dependson = "my_first_sublist"}
+```{r my_first_sublist_class}
 class(my_first_sublist)
 ```
 
 ---
-## Subsetting lists
+## Subsetting Lists
 
 Example of another sublist.
-```{r my_second_sublist, dependson = "my_list"}
+```{r my_second_sublist}
 my_second_sublist <- my_list[4]
 my_second_sublist
 ```
 --
 
-```{r my_second_sublist_class, dependson = "my_second_sublist"}
+```{r my_second_sublist_class}
 class(my_second_sublist)
 ```
 
@@ -583,7 +583,7 @@ class(my_second_sublist)
 
 Extracting components from a list.
 
-```{r my_list_dates, dependson = "my_list"}
+```{r my_list_dates}
 dates_from_list <- my_list$my_dates
 dates_from_list
 ```
@@ -595,7 +595,7 @@ class(dates_from_list)
 --
 
 The original date vector and the one extracted from the list are identical:
-```{r identical_dates, dependson = "date_vector, my_list_dates"}
+```{r identical_dates}
 identical(date_vector, dates_from_list)
 ```
 
@@ -622,7 +622,7 @@ a_list[["foo"]]
 
 Example of a data frame.
 
-```{r my_data frame, dependson = "my_first_sublist"}
+```{r my_data frame}
 my_data_frame <- as.data.frame(my_first_sublist)
 my_data_frame
 ```
@@ -635,19 +635,19 @@ my_data_frame
 ## Subsetting Data Frames
 
 Extracting one column from a data frame by name.
-```{r my_data_frame_integers, dependson = "my_data_frame"}
+```{r my_data_frame_integers}
 my_data_frame$my_integers
 ```
 --
 
 Extracting one column from a data frame using that it is a list.
-```{r my_data_frame_integers2, dependson = "my_data_frame"}
+```{r my_data_frame_integers2}
 my_data_frame[[1]]
 ```
 --
 
 Extracting one column from a data frame using data frame subsetting.
-```{r my_data_frame_integers3, dependson = "my_data_frame"}
+```{r my_data_frame_integers3}
 my_data_frame[, 1]
 ```
 
@@ -1288,44 +1288,26 @@ scalar multiplication (`10 * x`) over matrix products (`%*%` or `crossprod()`) t
 ... when most computations are carried out by calls to compiled code. 
 
 ```{r}
-library(microbenchmark)
-
 x <- rnorm(1e4)
-loop_bench <- microbenchmark(
-  for (i in seq_along(x)) 10 * x[i],
-  10 * x
+
+bench::mark(
+  {
+    y <- numeric(length(x))
+    for (i in seq_along(x)) y[i] <- 10 * x[i]
+    y
+  },
+  y <- 10 * x
 )
-loop_bench <- summary(loop_bench)
-```
---
-
-```{r}
-loop_bench[, c(1, 4, 5)]
-```
-
-```{r, echo = FALSE}
-cat("units: ", attr(loop_bench, "unit"))
 ```
 
 ---
 ## "Vectorized" Computations May Not Be Fast
 
 ```{r}
-apply_bench <- microbenchmark(
-  sapply(x, function(z) 10 * z),
+bench::mark(
+  sapply(x, function(x_i) 10 * x_i),
   10 * x
 )
-apply_bench <- summary(apply_bench)
-```
---
-
-
-```{r}
-apply_bench[, c(1, 4, 5)]
-```
-
-```{r, echo = FALSE}
-cat("units: ", attr(apply_bench, "unit"))
 ```
 
 ---
@@ -1392,110 +1374,54 @@ kern_dens_vec <- function(x, h, m = 512) {
 }
 ```
 
-```{r, echo=FALSE}
-kern_dens_apply <- function(x, h, m = 512) {
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  const <- sqrt(2 * pi) * h * length(x)
-  y <- sapply(xx, function(z) sum(exp(-(z - x)^2 / (2 * h^2))) / const)
-  list(x = xx, y = y)
-}
-
-kern_dens_outer <- function(x, h, m = 512) {
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- outer(xx, x, function(zz, z) exp(-(zz - z)^2 / (2 * h^2)))
-  y <- rowMeans(y) / (sqrt(2 * pi) * h)
-  list(x = xx, y = y)
-}
-```
-
-
 ---
 
 ## Density Benchmarking
 
-```{r, echo=FALSE}
-phipsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
-phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
-psi <- phipsi$psi
-```
-
-
-```{r kern-bench, dependson=c("phipsiLoad", "kernDens", "kernDens-vec", "kernDens-apply", "kernDens-outer")}
-kern_bench <- microbenchmark(
-  kern_dens(psi, 0.2),
-  kern_dens_vec(psi, 0.2),
-  kern_dens_apply(psi, 0.2),
-  kern_dens_outer(psi, 0.2)
-)
-```
-
-```{r kern-bench-hidden, echo=FALSE, dependson="kern-bench"}
-old_options <- options(digits = 3)
-kern_bench
-options(digits = old_options$digits)
-```
-
----
-## Plot
-
-```{r kern-bench-autoplot, dependson="kern-bench-hidden", message=FALSE, fig.height=4.5, fig.width = 9}
-autoplot(kern_bench) +
-  geom_jitter(aes(color = expr), height = 0.2, width = 0, alpha = 0.4) +
-  aes(fill = I("gray")) +
-  theme(legend.position = "none")
-```
-
-
----
-## Systematic Benchmarking
-
-A designed experiment
-
-```{r kern-bench-grid, dependson=c("kernDens", "kernDens-vec", "kernDens-apply", "kernDens-outer")}
-conf <- expand.grid(
-  fun = c("kern_dens", "kern_dens_vec", "kern_dens_apply", "kern_dens_outer"),
-  n = 2^(5:11),
-  m = 2^c(5, 7, 9, 11)
+```{r kern-bench, cache = TRUE}
+kern_bench <- bench::mark(
+  kern_dens(phipsi$psi, 0.2),
+  kern_dens_vec(phipsi$psi, 0.2)
 )
 
-set.seed(1234)
-x <- rnorm(2^11)
-calls <- paste0(conf[, 1], "(x[1:", conf[, 2], "], h = 0.2, m = ", conf[, 3], ")")
-expr_list <- lapply(calls, function(x) parse(text = x)[[1]])
-
-kern_benchmarks <- microbenchmark(list = expr_list, times = 40L)
+summary(kern_bench)
 ```
 
 ---
-## Results
+## Plot Benchmark Results
 
-```{r kern-bench-fig, echo=FALSE, message=FALSE, warning=FALSE, dependson="kern-bench-grid", fig.width=11, fig.height=7}
+```{r kern-bench-autoplot, message=FALSE, fig.height=4.5, fig.width = 9}
+plot(kern_bench, type = "violin")
+```
+
+---
+## Parameterized Benchmarking
+
+```{r kern-bench-grid, cache = TRUE, message = FALSE}
+kern_benchmarks <- bench::press(
+  n = 2^(6:9),
+  m = 2^(5:11),
+  {
+    bench::mark(
+      loop = kern_dens(x[1:n], h = 0.2, m = m),
+      vec = kern_dens_vec(x[1:n], h = 0.2, m = m)
+    )
+  }
+)
+
+head(kern_benchmarks, 3)
+```
+
+---
+## Plotting Results
+
+```{r kern-bench-fig, message=FALSE, warning=FALSE, fig.width=11, fig.height=4.5}
 library(tidyverse)
-class(kern_benchmarks) <- "data.frame"
-kern_benchmarks <- bind_cols(conf, expr = calls) %>%
-  left_join(kern_benchmarks, .)
-
-kern_benchmarks$m <- factor(
-  kern_benchmarks$m,
-  levels = c(32, 128, 512, 2048),
-  labels = c("m = 32", "m = 128", "m = 512", "m = 2048")
-)
-
-ggplot(kern_benchmarks, aes(x = n, y = time, color = fun)) +
-  geom_abline(intercept = 15, slope = 1, color = "gray", linetype = 2) +
-  stat_summary(fun.y = "median", geom = "line") +
-  stat_summary(fun.y = "median", geom = "point") +
-  facet_wrap(~m) +
-  scale_x_continuous(trans = "log2") +
-  scale_y_continuous("Time (ms)",
-    trans = "log2",
-    breaks = c(1e5, 1e6, 1e7, 1e8),
-    labels = c("0.1", "1", "10", "100")
-  ) +
-  scale_color_discrete("Function:") +
-  theme(legend.position = "top")
+mutate(kern_benchmarks, fun = as.character(expression)) |>
+  ggplot(aes(m, median, color = fun)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(cols = vars(n))
 ```
 
 
