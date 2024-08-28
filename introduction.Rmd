@@ -64,12 +64,6 @@ knitr::include_graphics(file.path("images/jinyang.jpg"))
 
 ---
 
-## Absalon
-
-
-
----
-
 ## Topics
 
 ### Problems
@@ -257,6 +251,15 @@ entire content of the course*.
 - Get started immediately and work continuously on the assignments as the
 course progresses. 
 ]
+
+---
+
+## Learning Platform: Absalon
+
+- **Course Material**: Slides, videos,, data, groups, and assignments.
+- [absalon.ku.dk](https://absalon.ku.dk/)
+- Actually based on Canvas (but rebranded for UCPH).
+- Download Canvas Student app for your phone.
 
 ---
 ## Prerequisites in R 
@@ -785,3 +788,715 @@ compute a desired result.
 --
 
 - R programming includes activities at many different levels of sophistication and abstraction.
+
+---
+
+class: center, middle
+
+# Functions
+
+---
+
+## Counting Number of Zeros in Data
+
+Count data (values in $\mathbb{N}_0$) are often modeled using a Poisson 
+distribution. R can simulate count data using the function `rpois()`.
+
+```{r, echo=2}
+set.seed(1234)
+rpois(10, 2) # n = 10 variables from a Pois(2) distribution
+```
+
+--
+
+In the above sequence, two of the values are zero. 
+
+--
+
+Zero-inflation is often encountered in practice, which means that the number
+of zeros exceeds what is expected from Poisson variables. 
+
+--
+
+We need to count how many zeros there are in a data set. 
+
+---
+## Writing an R function
+
+A function that counts the number of zeros in a vector.
+
+```{r}
+count_zeros <- function(x) {
+  nr <- 0
+  for (i in seq_along(x)) { # 1:length(x) wrong if length(x) is 0
+    nr <- nr + (x[i] == 0)
+  } # logical coerced to numeric
+  nr
+}
+```
+
+--
+The implementation works in most programming languages:
+--
+
+* Initialize a counter to be 0.
+* Loop through the elements of the vector.
+* Increment the counter whenever an element equals zero.
+* Return the value of the counter.
+
+---
+## Testing an R function
+
+```{r}
+tests <- list(
+  c(0, 0, 0, 0, 25),
+  c(0, 1, 10, 0, 5, -4, 2.5),
+  c(2, 1, 10),
+  c() # Extreme cases should be tested!
+)
+sapply(tests, count_zeros)
+```
+
+--
+We can manually inspect that the results are correct, or we can do it programmatically.
+
+```{r}
+all(sapply(tests, count_zeros) == c(4, 2, 0, 0))
+```
+
+---
+## Writing an R function, Version 2
+
+```{r}
+count_zeros_vec <- function(x) {
+  sum(x == 0)
+}
+```
+
+--
+Testing:
+
+```{r}
+all(sapply(tests, count_zeros) == sapply(tests, count_zeros_vec))
+```
+
+---
+## Vectorized R Code
+
+```{r}
+count_zeros_vec
+```
+--
+
+* The expression `x == 0` tests each entry of the vector `x` for being equal to 0 and returns a vector of logicals.
+--
+
+* The `sum` function computes and returns the sum of all elements in a vector. Logicals are coerced to integers. 
+--
+
+* The vectorized implementation is short but expressive and easy to understand.
+--
+
+* The vectorized computations are performed by compiled code. They are faster to evaluate than R code.  
+--
+
+* Writing vectorized code requires a larger knowledge of R functions.
+
+
+---
+## However, All Is Not Well
+
+
+```{r}
+identical(
+  sapply(tests, count_zeros),
+  sapply(tests, count_zeros_vec)
+)
+```
+
+---
+## Why Are Results Equal But Not Identical!?
+
+--
+```{r}
+typeof(sapply(tests, count_zeros))
+```
+
+--
+
+```{r}
+count_zeros <- function(x) {
+  # counter now of type integer!
+  nr <- 0L #<<
+  for (i in seq_along(x)) {
+    nr <- nr + (x[i] == 0)
+  }
+  nr
+}
+```
+
+--
+
+```{r}
+typeof(sapply(tests, count_zeros))
+```
+
+---
+## Results Are Now Identical
+
+```{r}
+identical(
+  sapply(tests, count_zeros),
+  sapply(tests, count_zeros_vec)
+)
+```
+
+---
+## Functions as Arguments
+
+We have already used `sapply()` above with a function as its second argument.
+
+--
+
+It is a feature of R as a functional programming language that it can operate with
+functions as with any other data structure. Functions can be arguments and return values.
+
+--
+
+Let's write our own apply function.
+
+```{r own-apply}
+our_apply <- function(x, fun) {
+  val <- numeric(length(x)) # initialize vector of return values
+  for (i in seq_along(x)) {
+    val[i] <- fun(x[[i]])
+  }
+  val
+}
+```
+
+---
+## Testing Our Apply-Function
+
+```{r}
+sapply(tests, count_zeros_vec)
+our_apply(tests, count_zeros_vec)
+```
+
+--
+
+Our implementation assumes that `x` is a list, that `fun()` takes a single 
+argument and that `fun()` returns a numeric. 
+
+---
+## What if `fun()` Needs Additional Arguments?
+
+```{r, error=TRUE}
+our_apply(1:10, rpois)
+```
+
+--
+
+Generating Poisson distributed values requires two arguments, and the
+code above resulted in an error. 
+
+--
+
+It is possible to "solve" this by an **anonymous** function.
+
+```{r}
+our_apply(1:10, function(lambda) rpois(1, lambda))
+```
+
+---
+## The `...` Argument
+
+It is possible to use a general construct via the `...` argument to pass any 
+arguments on to the function.
+
+```{r own-apply-2}
+our_apply <- function(x, fun, ...) {
+  val <- numeric(length(x))
+  for (i in seq_along(x)) {
+    val[i] <- fun(x[[i]], ...)
+  }
+  val
+}
+```
+
+--
+
+```{r}
+our_apply(1:10, rpois, n = 1)
+```
+
+---
+
+class: middle, center
+
+# S3 Objects
+
+---
+
+## Functionals
+
+The function `integrate()` takes a function as argument and returns the 
+value of numerically integrating the function.
+--
+
+
+It is an example of a *functional*. 
+--
+
+
+```{r}
+integral <- integrate(sin, 0, 1)
+integral
+```
+
+The numerical value of the integral 
+$$\int_0^1 \sin(x) \mathrm{d}x$$ 
+is printed nicely above—including an indication of the numerical error. 
+
+---
+## Return Values
+
+In fact, `integrate()` returns a list with a *class label*.
+
+```{r}
+str(integral)
+```
+--
+
+Return values that don't fit into one of the basic data structures 
+can be returned as a list as above.
+
+---
+## The Return Value of `integrate()`
+
+The class label can be extracted directly.
+
+```{r}
+class(integral)
+```
+--
+
+
+When you ask R to print this object it doesn't just print out all the values in the list. 
+It gives a suitably formatted result as implemented 
+in the print method for objects of class integrate. 
+
+---
+## Printing Objects of Class Integrate 
+
+```{r}
+stats:::print.integrate
+```
+
+(The `print.integrate()` function is not exported from the stats package. It is in the 
+namespace of the stats package, and to access it directly we use `stats:::`.)
+
+---
+## Histogram Objects
+
+```{r temp-hist, fig.width = 9, fig.height = 6}
+phi_hist <- hist(phipsi$phi, main = NULL)
+```
+
+---
+## Histogram Objects
+
+```{r}
+class(phi_hist)
+```
+
+--
+
+```{r}
+str(phi_hist)
+```
+
+---
+## Histogram Objects
+
+```{r}
+phi_hist[1:4]
+```
+
+
+---
+## Getting Help 
+
+You can find documentation for `plot()` using e.g. 
+
+```{r help-plot, eval = FALSE}
+?plot
+```
+
+--
+However, this will be uninformative on how an object of class histogram is plotted. 
+Try instead 
+
+```{r help-plot-histogram, eval = FALSE}
+?plot.histogram
+```
+
+This will give the documentation for the plot method for objects of class histogram. 
+
+
+---
+## S3 Overview
+
+* S3 classes are standard data structures (typically lists) with *class labels*.
+--
+
+* It is an informal system. No checks of object content.
+--
+
+* One implements a *generic* function via `UseMethod()`. E.g.
+```{r, eval=FALSE}
+plot
+```
+
+```{r, echo=FALSE}
+cat(deparse(plot))
+```
+
+--
+
+* **Methods** for specific classes are implemented as standard R functions 
+with the naming convention `f.classname()` for a method for class `classname` of the function `f()`. 
+--
+
+* The system is widely used to write methods for the generic functions `print()`, 
+`plot()` and `summary()`. 
+
+
+---
+## Constructing a New Class
+
+```{r, echo=FALSE}
+count_zeros_vec <- function(x) {
+  sum(x == 0)
+}
+```
+
+Recall the function `count_zeros_vec()` that counts the number of zeros in a vector.
+--
+
+
+If we need this number many times it is beneficial to compute it once and then 
+extract it whenever needed. 
+
+--
+
+We first write a *constructor function* that returns a list with a class
+label.
+
+```{r}
+count_object <- function(x) {
+  structure(
+    list(
+      x = x,
+      n = count_zeros_vec(x)
+    ),
+    class = "count_object"
+  )
+}
+```
+
+---
+## A Data Example
+
+```{r, echo=-1}
+set.seed(1234)
+count_data <- count_object(rpois(10, 2))
+count_data
+```
+
+---
+## The Generic Function and a Method
+
+To activate looking up a method for a specific class, one needs to tell R 
+that the function `count_zeros()` is a *generic function*. 
+
+```{r}
+count_zeros <- function(x) {
+  UseMethod("count_zeros")
+}
+```
+
+--
+Then we can implement a class specific version of `count_zeros()`.
+
+```{r}
+count_zeros.count_object <- function(x) {
+  x$n
+}
+```
+
+--
+And we can also implement a print method
+
+```{r}
+print.count_object <- function(x) {
+  cat(x$x, "\n")
+}
+```
+
+---
+## Trying It Out
+
+```{r}
+count_data ## Print data
+count_zeros(count_data)
+```
+
+---
+
+class: center, middle
+
+# Benchmarking
+
+---
+
+## R Is Slow ... 
+
+... when used like a low-level language. 
+
+--
+
+- The language and its implementation have limitations in terms of speed and 
+memory usage. It was designed to specify statistical models and carry out 
+data analysis and not for high-performance computing.  
+--
+
+- It is a language suitable for high-level programming where most low-level computations 
+are actually implemented in a compiled language and accessed via function calls. 
+--
+
+
+### Example: Numerical Linear Algebra
+
+All basic operations with vectors and matrices from 
+scalar multiplication (`10 * x`) over matrix products (`%*%` or `crossprod()`) to matrix decompositions (`eigen()` or `qr()`) are implemented in C or Fortran. 
+
+---
+
+## R Is Fast ...
+
+... when most computations are carried out by calls to compiled code. 
+
+```{r}
+library(microbenchmark)
+
+x <- rnorm(1e4)
+loop_bench <- microbenchmark(
+  for (i in seq_along(x)) 10 * x[i],
+  10 * x
+)
+loop_bench <- summary(loop_bench)
+```
+--
+
+```{r}
+loop_bench[, c(1, 4, 5)]
+```
+
+```{r, echo = FALSE}
+cat("units: ", attr(loop_bench, "unit"))
+```
+
+---
+## "Vectorized" Computations May Not Be Fast
+
+```{r}
+apply_bench <- microbenchmark(
+  sapply(x, function(z) 10 * z),
+  10 * x
+)
+apply_bench <- summary(apply_bench)
+```
+--
+
+
+```{r}
+apply_bench[, c(1, 4, 5)]
+```
+
+```{r, echo = FALSE}
+cat("units: ", attr(apply_bench, "unit"))
+```
+
+---
+## Suggested (Real World) Development Cycle
+
+* Can I find an existing implementation that solves my problem? Does it
+solve my problem sufficiently well (fast enough, general enough)? If yes, I'm done.
+--
+
+* Implement a solution and test it. Does it
+solve my problem sufficiently well? If yes, I'm done.
+--
+
+* Rewrite, improve and test the code. Use e.g. profiling tools to identify 
+the computationally demanding parts of the code. 
+--
+
+* Use benchmaking tools to compare different implementations and to investigate 
+how the computational demands scale. 
+--
+
+* If one implementation solves my problem sufficiently well, I'm done. Otherwise
+reiterate the two previous points. 
+
+---
+
+## Density Implementation
+
+```{r kernDens}
+kern_dens <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- numeric(m)
+
+  for (i in seq_along(xx)) {
+    for (j in seq_along(x)) { #<<
+      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2)) #<<
+    } #<<
+  }
+
+  y <- y / (sqrt(2 * pi) * h * length(x))
+
+  list(x = xx, y = y)
+}
+```
+
+
+---
+
+## Density Implementation (Vectorized)
+
+```{r kernDens-vec}
+kern_dens_vec <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- numeric(m)
+  const <- (sqrt(2 * pi) * h * length(x))
+
+  for (i in seq_along(xx)) {
+    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) / const #<<
+  }
+
+  list(x = xx, y = y)
+}
+```
+
+```{r, echo=FALSE}
+kern_dens_apply <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  const <- sqrt(2 * pi) * h * length(x)
+  y <- sapply(xx, function(z) sum(exp(-(z - x)^2 / (2 * h^2))) / const)
+  list(x = xx, y = y)
+}
+
+kern_dens_outer <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- outer(xx, x, function(zz, z) exp(-(zz - z)^2 / (2 * h^2)))
+  y <- rowMeans(y) / (sqrt(2 * pi) * h)
+  list(x = xx, y = y)
+}
+```
+
+
+---
+
+## Density Benchmarking
+
+```{r, echo=FALSE}
+phipsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
+phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
+psi <- phipsi$psi
+```
+
+
+```{r kern-bench, dependson=c("phipsiLoad", "kernDens", "kernDens-vec", "kernDens-apply", "kernDens-outer")}
+kern_bench <- microbenchmark(
+  kern_dens(psi, 0.2),
+  kern_dens_vec(psi, 0.2),
+  kern_dens_apply(psi, 0.2),
+  kern_dens_outer(psi, 0.2)
+)
+```
+
+```{r kern-bench-hidden, echo=FALSE, dependson="kern-bench"}
+old_options <- options(digits = 3)
+kern_bench
+options(digits = old_options$digits)
+```
+
+---
+## Plot
+
+```{r kern-bench-autoplot, dependson="kern-bench-hidden", message=FALSE, fig.height=4.5, fig.width = 9}
+autoplot(kern_bench) +
+  geom_jitter(aes(color = expr), height = 0.2, width = 0, alpha = 0.4) +
+  aes(fill = I("gray")) +
+  theme(legend.position = "none")
+```
+
+
+---
+## Systematic Benchmarking
+
+A designed experiment
+
+```{r kern-bench-grid, dependson=c("kernDens", "kernDens-vec", "kernDens-apply", "kernDens-outer")}
+conf <- expand.grid(
+  fun = c("kern_dens", "kern_dens_vec", "kern_dens_apply", "kern_dens_outer"),
+  n = 2^(5:11),
+  m = 2^c(5, 7, 9, 11)
+)
+
+set.seed(1234)
+x <- rnorm(2^11)
+calls <- paste0(conf[, 1], "(x[1:", conf[, 2], "], h = 0.2, m = ", conf[, 3], ")")
+expr_list <- lapply(calls, function(x) parse(text = x)[[1]])
+
+kern_benchmarks <- microbenchmark(list = expr_list, times = 40L)
+```
+
+---
+## Results
+
+```{r kern-bench-fig, echo=FALSE, message=FALSE, warning=FALSE, dependson="kern-bench-grid", fig.width=11, fig.height=7}
+library(tidyverse)
+class(kern_benchmarks) <- "data.frame"
+kern_benchmarks <- bind_cols(conf, expr = calls) %>%
+  left_join(kern_benchmarks, .)
+
+kern_benchmarks$m <- factor(
+  kern_benchmarks$m,
+  levels = c(32, 128, 512, 2048),
+  labels = c("m = 32", "m = 128", "m = 512", "m = 2048")
+)
+
+ggplot(kern_benchmarks, aes(x = n, y = time, color = fun)) +
+  geom_abline(intercept = 15, slope = 1, color = "gray", linetype = 2) +
+  stat_summary(fun.y = "median", geom = "line") +
+  stat_summary(fun.y = "median", geom = "point") +
+  facet_wrap(~m) +
+  scale_x_continuous(trans = "log2") +
+  scale_y_continuous("Time (ms)",
+    trans = "log2",
+    breaks = c(1e5, 1e6, 1e7, 1e8),
+    labels = c("0.1", "1", "10", "100")
+  ) +
+  scale_color_discrete("Function:") +
+  theme(legend.position = "top")
+```
+
+
+
