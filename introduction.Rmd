@@ -34,10 +34,15 @@ options(width = 80)
 
 ## Computational Statistics
 
-TBW
+- Broad field and can mean many things.
+--
+
+- This courses: focus on practical aspects of statistical computing.
+--
+
+- How do you turn a statistical method into a working computer program (in R)?
 
 ---
-
 ## Teaching Staff
 
 .pull-left[
@@ -48,6 +53,10 @@ Johan Larsson, postdoctoral researcher
 ```{r, echo=FALSE, out.width = "50%"}
 knitr::include_graphics(file.path("images/johan.jpg"))
 ```
+
+#### Contact
+
+Use Absalon for course-related questions and email (<jola@math.ku.dk>) for personal matters.
 ]
 
 .pull-right[
@@ -60,26 +69,6 @@ knitr::include_graphics(file.path("images/jinyang.jpg"))
 ```
 ]
 
-*See Absalon for contact information.*
-
----
-
-## Topics
-
-### Problems
-
-* Computing nonparametric estimates
-* Computing integrals (and probabilities)
-  $E f(X) = \int f(X) dP \left(P(X \in A) = \int_{(X \in A)} \ dP\right)$.
-* Optimizing the likelihood
-
---
-
-### Methods
-
-* Numerical linear algebra
-* Monte Carlo integration
-* The EM-algorithm, stochastic gradient descent
 
 ---
 
@@ -89,25 +78,9 @@ knitr::include_graphics(file.path("images/jinyang.jpg"))
 knitr::include_graphics("images/PhiPsi_creative.jpg")
 ```
 
----
-## Ramachandran Plot
-
-.two-column-left[
-```{r phipsi-plot1}
-ggplot(phipsi, aes(phi, psi)) + 
-  geom_point(alpha = 0.2)
-```
-]
---
-
-.two-column-right[
-```{r phipsi-plot2}
-ggplot(phipsi2, aes(phi, psi)) +
-  geom_point(alpha = 0.2)
-```
-]
 
 ---
+
 ## Histograms
 
 
@@ -136,6 +109,7 @@ hist(
 rug(phipsi$psi)
 ```
 ]
+
 ---
 ## Density Estimation
 
@@ -148,12 +122,10 @@ lines(
 )
 ```
 
-
-```{r, echo = FALSE}
-<<hist1>>
-<<dens1>>
+```{r, echo = FALSE, ref.label=c('hist1','dens1')}
 ```
 ]
+
 --
 
 .two-column-right[
@@ -165,13 +137,12 @@ lines(
 )
 ```
 
-```{r, echo = FALSE}
-<<hist2>>
-<<dens2>>
+```{r, echo = FALSE, ref.label=c('hist2','dens2')}
 ```
 ]
 
 ---
+
 ## Statistical Topics of the Course
 
 * **Smoothing:** what does `density()` do?
@@ -203,591 +174,146 @@ lines(
 * **Implementation**: writing statistical software.
 --
 
-    + R data structures and functions
-    + S3 object oriented programming
+    + Data structures and functions
+    + Object-oriented programming
 --
 
 
 * **Correctness**: does the implementation do the right thing?
 --
 
-    + testing
-    + debugging
-    + accuracy of numerical computations
+    + Testing
+    + Debugging
+    + Accuracy of numerical computations
 --
 
 
 * **Efficiency**: minimize memory and time usage.
 --
 
-    + benchmark code for comparison
-    + profile code for identifying bottlenecks
-    + optimize code (Rcpp)
+    + Benchmarking code for comparisons
+    + Profiling code to identify bottlenecks
+    + Optimizing code
 
 ---
-## Course Work
+## Assignments
 
-.pull-left[
-### Assignments
-
-- Eight assignments covering four topics
-- Register in Absalon for the presentation of 
-  one assignment solution. 
-- Presentations are done in groups of two-three students. 
-- On four Thursdays there will be presentations with discussion and feedback.
-- For the exam you need to prepare four *individual* presentations, one for each topic assignment.
-]
+- Four topics
+  * Smoothing
+  * Univariate simulation
+  * The EM algorithm
+  * Stochastic optimization
+- Each topic has two assignments; you pick one.
 
 --
 
-.pull-right[
-### Examination
+### Presentations
 
-- Oral exam
-- For each of the four topics you choose one out of two assignments to 
-prepare for the exam.
-- Assessment is based on your presentation *on the basis of the 
-entire content of the course*.
-- Get started immediately and work continuously on the assignments as the
-course progresses. 
+- On weeks 3, 4, 5, and 6 (Thursday afternoon sessions).
+- Groups of 2-3 students
+- Presentation, discussion, and feedback
+- Register in Absalon for the presentation of 
+  one assignment solution.
+- Compulsory but not graded
+- Solutions do not need to be perfect
 ]
 
 ---
 
-## Learning Platform: Absalon
+## Examination
 
-- **Course Material**: Slides, videos,, data, groups, and assignments.
-- [absalon.ku.dk](https://absalon.ku.dk/)
+- Oral exam, presented indivudally.
+- Prepare four presentations, one for each topic (same as last slide).
+- Get started immediately and work continuously on the assignments as the
+  course progresses.
+]
+
+---
+
+## Absalon
+
+Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
+
+- **Course Material**: Slides, videos, data, groups, and assignments.
 - Actually based on Canvas (but rebranded for UCPH).
 - Download Canvas Student app for your phone.
+- Updated as we go along.
 
 ---
-## Prerequisites in R 
 
-Good working knowledge of:
+## Generative AI is Allowed
 
-* Data structures (vectors, lists, data frames).
+- You can use generative AI to help you with your assignments.
 --
 
-* Control structures (loops, if-then-else).
+- But you must understand the results.
 --
 
-* Function calling.
+- Your learning will suffer if you rely too heavily on generative AI.
 --
 
-* Interactive and script usages (`source`) of R.
---
-
-* You don't need to be an experienced programmer.
+- Beware of hallucinations!
 
 ---
-## Exercise
 
-```{r, echo = FALSE, out.height=NULL, out.width=200, fig.align='center'}
-knitr::include_graphics("images/PracIcon.png")
-```
+class: middle, center
 
-With `x` a vector of numbers, write code in R to compute a vector 
-`y` of logicals such that `y[i]` is `TRUE` whenever `x[i] > 0`. E.g. 
+# Programming in R
 
-```{r, echo=3:4}
-x <- c(-1, 0, 1, 2)
-y <- c(FALSE, FALSE, TRUE, TRUE)
-x
-y
-```
+---
+
+## Prerequisite R  Knowledge
+
+We expect knowledge of
+
+* data structures (vectors, lists, data frames),
+--
+
+* control structures (loops, if-then-else),
+--
+
+* function calling,
+--
+
+* interactive and script usage (`source`) of R.
+--
+
+
+All of this is covered in chapters 1–5 of [Advanced R](https://adv-r.hadley.nz/).
+
+But you **do not** need to be an experienced programmer.
 
 
 ---
-## Vectors in R
+## Warm-Up Quiz
 
-Think of a vector as a column with a number of entries.
+### Exercise 1
 
-### Atomic Vectors
-
-All components are of the same type, e.g.
-
-  + integers
-  + numbers
-  + logical values
-  + character strings
-
---
-
-### Lists
-
-May contain components of different types, including components which themselves are lists. 
-
---
-
-Atomic vectors and lists are important building blocks of data structures in R.
-
----
-## Atomic Vectors and Subsetting
-
-Example of a vector
-```{r my_vector}
-my_vector <- c(1.1, 3.2, 90, 67.7, 10)
-my_vector
-```
-
---
-
-You can extract components with `[]`.
-```{r my_vector_subsetting}
-my_vector[1]
-my_vector[c(1, 4)]
-my_vector[-2] # Negative indices drop corresponding components
-```
-
----
-## Vectors of Class `integer`
-
-```{r integer_vector}
-integer_vector <- 1:10 #<<
-integer_vector
-
-class(integer_vector)
-```
---
-
-This is a vector of length 10, i.e. it has 10 elements.
-```{r length}
-length(integer_vector)
-```
-
----
-## Numerical Vectors
-
-Example of a vector with non-integer values.
-```{r numeric_vector}
-numeric_vector <- seq(0.1, 1, by = 0.1)
-numeric_vector
-
-class(numeric_vector)
-```
-
---
+Can you list three ways to access element `a` in this list?
 
 ```{r}
-typeof(numeric_vector) # Internal storage mode
+l <- list(a = 1, b = 2)
 ```
-
----
-## A Tricky (Non-)Integer Vector
-
-Example of a vector with only seemingly integer values (and how to fix it).
-
-```{r num_int_example}
-x <- c(1, 4, 7, 9)
-class(x)
+```{r, include=FALSE}
+l[[1]]
+l$a
+l[["a"]]
 ```
 
 --
 
-```{r}
-typeof(x)
-```
+### Exercise 2
+
+For a numerical vector `x` , write code to compute a vector
+`y` of logicals such that `y[i]` is `TRUE` whenever `x[i] > 0`.
 
 --
 
-```{r}
-x <- c(1L, 4L, 7L, 9L)
-class(x)
-```
-
----
-## Comparison of Numerical Values
-
-Values in a vector of class numeric are approximate.
-```{r numeric_vector_comparison}
-numeric_vector[2:3]
-numeric_vector[2:3] == c(0.2, 0.3)
-```
-
---
-
-Function `all.equal` has a tolerance.
-```{r numeric_vector_near}
-all.equal(numeric_vector[2:3], c(0.2, 0.3))
-```
-
----
-## Precision
-
-```{r}
-options(digits = 20) ## Precision of printed numbers increased
-c(0.2, 0.3)
-numeric_vector[2:3]
-options(digits = 7) ## Default precision of printed numbers restored
-```
-
---
-
-Note that the internal storage precision is **not** changed by setting the `digits` 
-option. It only affects the precision of printed numbers.
-
---
-
-The differences arise because not all decimals are represented to arbitrary 
-precision in the binary numeral system.
-
-
----
-## Logical (Boolean) Vectors
-
-Example of a logical vector.
-```{r logical_vector}
-logical_vector <- integer_vector > 4
-logical_vector
-class(logical_vector)
-```
---
-
-How many percent (%) of the components of `integer_vector` are (strictly) larger than 4?
---
-
-```{r logcial_vector_mean, results = "hold"}
-mean(integer_vector > 4) * 100
-```
-
----
-## Character Vectors
-
-Example of a character vector.
-```{r character_vector}
-character_vector <- c("A", "vector", "of", "length", 6, ".")
-character_vector
-```
-
---
-
-```{r}
-class(character_vector)
-length(character_vector)
-```
-
---
-
-Observe that the number was coerced to a string.
-
----
-## Factor (Categorical) Vectors
-
-.pull-left[
-Example of a factor.
-```{r factor_vector}
-factor_vector <- factor(c(
-  "m", "m", "f", "m", "f",
-  "m", "f", "f", "f", "m"
-))
-factor_vector
-```
-]
-
---
-
-.pull-right[
-```{r factor_vector_class}
-class(factor_vector)
-```
-
-Might look like a character vector but is actually based on an integer vector.
-
-```{r}
-typeof(factor_vector)
-```
-]
-
---
-
-### Notes
-
-* Can only take a fixed set of values (default: values present in data).
---
-
-* Possibility of reordering levels convenient e.g. for plots.
-
----
-## Date Vectors
-
-Example of a date vector.
-
-```{r date_vector}
-date_vector <- seq(Sys.Date(), length.out = 4, by = "quarter")
-date_vector
-class(date_vector)
-```
-
---
-
-Date vectors might also look like character vectors, but they are based on numeric vectors.
-
-
----
-## Lists
-
-A list with named elements.
-
-.pull-left[
-```{r my_list, results="hide"}
-my_list <- list(
-  my_integers = integer_vector,
-  my_factor = factor_vector,
-  my_logicals = logical_vector,
-  my_dates = date_vector
-)
-
-my_list
-```
-]
-
-.pull-right[
-```{r my_list_output, echo=FALSE}
-options(width = 35)
-my_list
-options(width = 80)
-```
-]
-
----
-## Subsetting Lists
-
-Example of a sublist.
-```{r my_first_sublist}
-my_first_sublist <- my_list[1:3]
-my_first_sublist
-```
---
-
-```{r my_first_sublist_class}
-class(my_first_sublist)
-```
-
----
-## Subsetting Lists
-
-Example of another sublist.
-```{r my_second_sublist}
-my_second_sublist <- my_list[4]
-my_second_sublist
-```
---
-
-```{r my_second_sublist_class}
-class(my_second_sublist)
-```
-
----
-## Subsetting Lists
-
-Extracting components from a list.
-
-```{r my_list_dates}
-dates_from_list <- my_list$my_dates
-dates_from_list
-```
---
-
-```{r}
-class(dates_from_list)
-```
---
-
-The original date vector and the one extracted from the list are identical:
-```{r identical_dates}
-identical(date_vector, dates_from_list)
-```
-
----
-## Exercise
-
-```{r, echo = FALSE, out.height=NULL, out.width=200, fig.align='center'}
-knitr::include_graphics("images/PracIcon.png")
-```
-
-Run the following code and explain the differences/similarities.
-
-```{r, eval=FALSE}
-a_list <- list(foo = c(-1, 0, 1, 2))
-
-a_list[1]
-a_list[[1]]
-a_list$foo
-a_list[["foo"]]
-```
-
----
-## Data Frames
-
-Example of a data frame.
-
-```{r my_data frame}
-my_data_frame <- as.data.frame(my_first_sublist)
-my_data_frame
-```
---
-
-**Question:** Why does `as.data.frame(my_list)` produce an error? 
-
-
----
-## Subsetting Data Frames
-
-Extracting one column from a data frame by name.
-```{r my_data_frame_integers}
-my_data_frame$my_integers
-```
---
-
-Extracting one column from a data frame using that it is a list.
-```{r my_data_frame_integers2}
-my_data_frame[[1]]
-```
---
-
-Extracting one column from a data frame using data frame subsetting.
-```{r my_data_frame_integers3}
-my_data_frame[, 1]
-```
-
----
-## Subsetting Data Frames
-
-You can subset data frames using brackets
-
-```{r}
-my_data_frame[5, 1]
-```
-
---
-
-... and you can assign values to entries using brackets such as 
-
-```{r}
-my_data_frame[5, 1] <- NA
-my_data_frame[1, 3] <- NA
-```
-
----
-## Functions
-
-We introduced missing values in our data frame above. Suppose we want to 
-impute a value whenever it's missing.
---
-
-.pull-left[
-```{r}
-res <- within(
-  my_data_frame,
-  my_integers <- ifelse(
-    is.na(my_integers),
-    0,
-    my_integers
-  )
-)
-
-head(res, 4)
-```
-]
-
---
-
-.pull-right[
-
-However, this is a bit cumbersome to copy-paste around, and it's 
-not completely clear what this code does. 
-
-Let's write a function with a good name.
-
-```{r}
-impute_missing <- function(x) {
-  ifelse(is.na(x), 0, x)
-}
-```
-]
-
-
----
-## Functions
-
-```{r}
-within(my_data_frame, my_integers <- impute_missing(my_integers))
-```
-
----
-
-## Exercise
-
-Write a function, `is_pos`, which takes a vector `x` as argument and returns a
-vector of logicals whose i-th entry is `TRUE` whenever `x[i] > 0`. E.g. 
-
-```{r, echo=2}
-is_pos <- function(x) x > 0
-is_pos(c(-1, 0, 1, 2))
-```
-
-
----
-## Functions
-
-What happens if we apply the `impute_missing` to other columns?
-
-```{r}
-impute_missing
-```
-
---
-
-```{r}
-within(my_data_frame, my_logicals <- impute_missing(my_logicals))
-```
-
----
-
-## Better Impute Function
-
-```{r}
-impute_missing <- function(x, value = 0) {
-  ifelse(is.na(x), value, x)
-}
-```
---
-
-
-```{r}
-within(my_data_frame, {
-  my_integers <- impute_missing(my_integers)
-  my_logicals <- impute_missing(my_logicals, value = FALSE)
-})
-```
-
----
-## R Programming 
-
-- R functions are fundamental. They don't do anything before they are called and the call is evaluated. 
-
---
-
-- An R function takes a number of *arguments*, and when a function call is evaluated it computes a *return value*.
-
---
-
-- An R program consists of a hierarchy of function calls. When the program is executed, function calls are evaluated and 
-replaced by their return values. 
-
---
-
-- Implementations of R functions are collected into source files, which can be organized into R packages.
-
---
-
-- An R script (or R Markdown document) is a collection of R function calls, which, when evaluated, 
-compute a desired result. 
-
---
-
-- R programming includes activities at many different levels of sophistication and abstraction.
+### Exercise 3
+
+Write a for loop that prints "even" if the loop variable is even,
+"odd" if the loop variable is odd, and exits if is
+larger than 10.
 
 ---
 
@@ -796,170 +322,208 @@ class: center, middle
 # Functions
 
 ---
+## Functions in R
 
-## Counting Number of Zeros in Data
+- Everything that happens in R is the result of a function call. Even `+`, `[` and `<-` are functions.
+--
 
-Count data (values in $\mathbb{N}_0$) are often modeled using a Poisson 
+- An R function takes a number of *arguments*, and when a function call is evaluated it computes a *return value*.
+--
+
+- Functions can return any R object, including functions!
+--
+
+- Implementations of R functions are collected into source files, which can be organized into packages.
+--
+
+- The order of your functions in the script does not matter.
+--
+
+---
+
+## Components of a Function
+
+```{r}
+f <- function(x, y) {
+  x + y
+}
+```
+
+--
+
+.pull-left[
+
+### Arguments
+
+```{r}
+formals(f)
+```
+]
+
+--
+
+.pull-right[
+### Body
+
+```{r}
+body(f)
+```
+
+### Environment
+
+```{r}
+environment(f)
+```
+]
+
+--- 
+
+## Naming Functions
+
+### Use descriptive names
+
+- Verbs are great.
+- Better long and descriptive than short and cryptic.
+
+--
+
+### Naming Convetions
+
+- Avoid `.` in names; it is used for **methods** (upcoming).
+- Use consistent style: 
+  * `lowercase`
+  * `snake_case` (tidyverse)
+  * `camelCase`
+  * `UpperCamelCase`
+
+--
+
+### Namespace Clashes
+
+- Avoid names of existing functions.
+
+---
+
+## Example: Counting Zeros
+
+Count data is often modeled using a Poisson 
 distribution. R can simulate count data using the function `rpois()`.
 
 ```{r, echo=2}
 set.seed(1234)
-rpois(10, 2) # n = 10 variables from a Pois(2) distribution
+rpois(10, 2) # n = 10 variables from a Poisson(2) distribution
 ```
 
 --
 
-In the above sequence, two of the values are zero. 
+There are two zeros in this sequence.
 
 --
 
-Zero-inflation is often encountered in practice, which means that the number
-of zeros exceeds what is expected from Poisson variables. 
-
---
-
-We need to count how many zeros there are in a data set. 
+Let's write a function that counts the number of zeros: checks
+for zero inflation.
 
 ---
-## Writing an R function
-
-A function that counts the number of zeros in a vector.
+## A First Attempt
 
 ```{r}
 count_zeros <- function(x) {
-  nr <- 0
-  for (i in seq_along(x)) { # 1:length(x) wrong if length(x) is 0
-    nr <- nr + (x[i] == 0)
-  } # logical coerced to numeric
-  nr
-}
-```
-
---
-The implementation works in most programming languages:
---
-
-* Initialize a counter to be 0.
-* Loop through the elements of the vector.
-* Increment the counter whenever an element equals zero.
-* Return the value of the counter.
-
----
-## Testing an R function
-
-```{r}
-tests <- list(
-  c(0, 0, 0, 0, 25),
-  c(0, 1, 10, 0, 5, -4, 2.5),
-  c(2, 1, 10),
-  c() # Extreme cases should be tested!
-)
-sapply(tests, count_zeros)
-```
-
---
-We can manually inspect that the results are correct, or we can do it programmatically.
-
-```{r}
-all(sapply(tests, count_zeros) == c(4, 2, 0, 0))
-```
-
----
-## Writing an R function, Version 2
-
-```{r}
-count_zeros_vec <- function(x) {
-  sum(x == 0)
-}
-```
-
---
-Testing:
-
-```{r}
-all(sapply(tests, count_zeros) == sapply(tests, count_zeros_vec))
-```
-
----
-## Vectorized R Code
-
-```{r}
-count_zeros_vec
-```
---
-
-* The expression `x == 0` tests each entry of the vector `x` for being equal to 0 and returns a vector of logicals.
---
-
-* The `sum` function computes and returns the sum of all elements in a vector. Logicals are coerced to integers. 
---
-
-* The vectorized implementation is short but expressive and easy to understand.
---
-
-* The vectorized computations are performed by compiled code. They are faster to evaluate than R code.  
---
-
-* Writing vectorized code requires a larger knowledge of R functions.
-
-
----
-## However, All Is Not Well
-
-
-```{r}
-identical(
-  sapply(tests, count_zeros),
-  sapply(tests, count_zeros_vec)
-)
-```
-
----
-## Why Are Results Equal But Not Identical!?
-
---
-```{r}
-typeof(sapply(tests, count_zeros))
-```
-
---
-
-```{r}
-count_zeros <- function(x) {
-  # counter now of type integer!
-  nr <- 0L #<<
-  for (i in seq_along(x)) {
-    nr <- nr + (x[i] == 0)
+  n_zeros <- 0
+  for (i in 1:length(x)) {
+    if (x[i] == 0) {
+      n_zeros <- n_zeros + 1
+    }
   }
-  nr
+  n_zeros
 }
+
+count_zeros(c(3, 2, 0))
 ```
 
 --
 
 ```{r}
-typeof(sapply(tests, count_zeros))
+count_zeros(c(0, 0, 0))
 ```
 
 ---
-## Results Are Now Identical
+## Testing
+
+- Tests that a given input to a function returns
+  what you expect.
+--
+
+- Thumb of rule: when you find a bug in your function, write a test
+  that fails on it; *then* fix the function.
+--
+
+- As you refactor your code (or dependent code changes), your
+  tests will catch these **regressions** for you.
+--
+
+- Some people even say that writing tests is the first thing you
+  should do.
+--
+
+- In R, most common solution is to use the **testthat** package.
+--
+
+- Works best in packages, but is fine for projects too.
+
+
+---
+
+## Testing with **testthat**
+
+```{r unit-testing, eval = FALSE, error = TRUE}
+# In file tests/test_count_zeros.R
+test_that("count_zeros work on various input", {
+  expect_equal(count_zeros(c(0, 0, 1e-9, 25)), 2)
+  expect_equal(count_zeros(c(-0, 1.1, -2)), 1)
+  expect_equal(count_zeros(c()), 0)
+})
+```
+
+---
+
+```{r testthat, error = TRUE}
+testthat::test_dir("tests")
+```
+
+---
+
+## Debugging
+
+There are good tools for debugging in R, especially in R Studio.
+
+---
+## A Second Attempt
 
 ```{r}
-identical(
-  sapply(tests, count_zeros),
-  sapply(tests, count_zeros_vec)
-)
+count_zeros <- function(x) {
+  n_zeros <- 0
+  for (i in seq_along(x)) { #<<
+    if (x[i] == 0) {
+      n_zeros <- n_zeros + 1
+    }
+  }
+  n_zeros
+}
+```
+```{r}
+testthat::test_dir("tests")
 ```
 
----
-## Functions as Arguments
 
-We have already used `sapply()` above with a function as its second argument.
+---
+## Functional Programming
+
+We have already used `sapply()` with a function as its second argument.
 
 --
 
 It is a feature of R as a functional programming language that it can operate with
-functions as with any other data structure. Functions can be arguments and return values.
+functions as with any other data structure.
 
 --
 
@@ -976,43 +540,43 @@ our_apply <- function(x, fun) {
 ```
 
 ---
-## Testing Our Apply-Function
+## Testing Our Apply Function
 
 ```{r}
-sapply(tests, count_zeros_vec)
-our_apply(tests, count_zeros_vec)
+sapply(1:10, exp)
+our_apply(1:10, exp)
 ```
 
 --
 
-Our implementation assumes that `x` is a list, that `fun()` takes a single 
-argument and that `fun()` returns a numeric. 
+### Assumptions
+
+`x` is a list, `fun()` takes a single
+argument, and `fun()` returns a numeric.
 
 ---
 ## What if `fun()` Needs Additional Arguments?
 
-```{r, error=TRUE}
+```{r, error=TRUE, echo=-1}
+set.seed(1)
 our_apply(1:10, rpois)
 ```
 
 --
 
-Generating Poisson distributed values requires two arguments, and the
-code above resulted in an error. 
-
---
-
-It is possible to "solve" this by an **anonymous** function.
+### Anonymous Functions
 
 ```{r}
-our_apply(1:10, function(lambda) rpois(1, lambda))
+our_apply(
+  1:10,
+  function(lambda) rpois(1, lambda = 0.9) #<<
+)
 ```
 
 ---
-## The `...` Argument
+## `...`
 
-It is possible to use a general construct via the `...` argument to pass any 
-arguments on to the function.
+The `...` (ellipsis) argument passes arguments forward.
 
 ```{r own-apply-2}
 our_apply <- function(x, fun, ...) {
@@ -1032,228 +596,6 @@ our_apply(1:10, rpois, n = 1)
 
 ---
 
-class: middle, center
-
-# S3 Objects
-
----
-
-## Functionals
-
-The function `integrate()` takes a function as argument and returns the 
-value of numerically integrating the function.
---
-
-
-It is an example of a *functional*. 
---
-
-
-```{r}
-integral <- integrate(sin, 0, 1)
-integral
-```
-
-The numerical value of the integral 
-$$\int_0^1 \sin(x) \mathrm{d}x$$ 
-is printed nicely above—including an indication of the numerical error. 
-
----
-## Return Values
-
-In fact, `integrate()` returns a list with a *class label*.
-
-```{r}
-str(integral)
-```
---
-
-Return values that don't fit into one of the basic data structures 
-can be returned as a list as above.
-
----
-## The Return Value of `integrate()`
-
-The class label can be extracted directly.
-
-```{r}
-class(integral)
-```
---
-
-
-When you ask R to print this object it doesn't just print out all the values in the list. 
-It gives a suitably formatted result as implemented 
-in the print method for objects of class integrate. 
-
----
-## Printing Objects of Class Integrate 
-
-```{r}
-stats:::print.integrate
-```
-
-(The `print.integrate()` function is not exported from the stats package. It is in the 
-namespace of the stats package, and to access it directly we use `stats:::`.)
-
----
-## Histogram Objects
-
-```{r temp-hist, fig.width = 9, fig.height = 6}
-phi_hist <- hist(phipsi$phi, main = NULL)
-```
-
----
-## Histogram Objects
-
-```{r}
-class(phi_hist)
-```
-
---
-
-```{r}
-str(phi_hist)
-```
-
----
-## Histogram Objects
-
-```{r}
-phi_hist[1:4]
-```
-
-
----
-## Getting Help 
-
-You can find documentation for `plot()` using e.g. 
-
-```{r help-plot, eval = FALSE}
-?plot
-```
-
---
-However, this will be uninformative on how an object of class histogram is plotted. 
-Try instead 
-
-```{r help-plot-histogram, eval = FALSE}
-?plot.histogram
-```
-
-This will give the documentation for the plot method for objects of class histogram. 
-
-
----
-## S3 Overview
-
-* S3 classes are standard data structures (typically lists) with *class labels*.
---
-
-* It is an informal system. No checks of object content.
---
-
-* One implements a *generic* function via `UseMethod()`. E.g.
-```{r, eval=FALSE}
-plot
-```
-
-```{r, echo=FALSE}
-cat(deparse(plot))
-```
-
---
-
-* **Methods** for specific classes are implemented as standard R functions 
-with the naming convention `f.classname()` for a method for class `classname` of the function `f()`. 
---
-
-* The system is widely used to write methods for the generic functions `print()`, 
-`plot()` and `summary()`. 
-
-
----
-## Constructing a New Class
-
-```{r, echo=FALSE}
-count_zeros_vec <- function(x) {
-  sum(x == 0)
-}
-```
-
-Recall the function `count_zeros_vec()` that counts the number of zeros in a vector.
---
-
-
-If we need this number many times it is beneficial to compute it once and then 
-extract it whenever needed. 
-
---
-
-We first write a *constructor function* that returns a list with a class
-label.
-
-```{r}
-count_object <- function(x) {
-  structure(
-    list(
-      x = x,
-      n = count_zeros_vec(x)
-    ),
-    class = "count_object"
-  )
-}
-```
-
----
-## A Data Example
-
-```{r, echo=-1}
-set.seed(1234)
-count_data <- count_object(rpois(10, 2))
-count_data
-```
-
----
-## The Generic Function and a Method
-
-To activate looking up a method for a specific class, one needs to tell R 
-that the function `count_zeros()` is a *generic function*. 
-
-```{r}
-count_zeros <- function(x) {
-  UseMethod("count_zeros")
-}
-```
-
---
-Then we can implement a class specific version of `count_zeros()`.
-
-```{r}
-count_zeros.count_object <- function(x) {
-  x$n
-}
-```
-
---
-And we can also implement a print method
-
-```{r}
-print.count_object <- function(x) {
-  cat(x$x, "\n")
-}
-```
-
----
-## Trying It Out
-
-```{r}
-count_data ## Print data
-count_zeros(count_data)
-```
-
----
-
 class: center, middle
 
 # Benchmarking
@@ -1262,24 +604,21 @@ class: center, middle
 
 ## R Is Slow ... 
 
-... when used like a low-level language. 
+... when used like a low-level language.
 
 --
+- R is an **interpreted** (as opposed to *compiled*) language.
 
-- The language and its implementation have limitations in terms of speed and 
-memory usage. It was designed to specify statistical models and carry out 
-data analysis and not for high-performance computing.  
 --
+- It was written mainly for specifying statistical models (not for
+  developing new numerical methods).
 
-- It is a language suitable for high-level programming where most low-level computations 
-are actually implemented in a compiled language and accessed via function calls. 
 --
+- It is suitable for high-level programming where most low-level computations
+  are implemented in a compiled language (e.g. `lm()` and `qr()`.)
 
-
-### Example: Numerical Linear Algebra
-
-All basic operations with vectors and matrices from 
-scalar multiplication (`10 * x`) over matrix products (`%*%` or `crossprod()`) to matrix decompositions (`eigen()` or `qr()`) are implemented in C or Fortran. 
+--
+- It is also quite old.
 
 ---
 
@@ -1293,15 +632,17 @@ x <- rnorm(1e4)
 bench::mark(
   {
     y <- numeric(length(x))
-    for (i in seq_along(x)) y[i] <- 10 * x[i]
+    for (i in seq_along(x)) {
+      y[i] <- 10 * x[i]
+    }
     y
   },
-  y <- 10 * x
+  10 * x
 )
 ```
 
 ---
-## "Vectorized" Computations May Not Be Fast
+## Loops in Disguise
 
 ```{r}
 bench::mark(
@@ -1310,27 +651,68 @@ bench::mark(
 )
 ```
 
+--
+
+`apply()` and co. are basically just loops in disguise.
+
 ---
-## Suggested (Real World) Development Cycle
 
-* Can I find an existing implementation that solves my problem? Does it
-solve my problem sufficiently well (fast enough, general enough)? If yes, I'm done.
+## Optimization
+
+Our `count_zeros()` function is correct but not very efficient.
+
+```{r}
+system.time(count_zeros(rpois(1e7, 2)))
+```
+
+---
+
+## Vectorization
+
+```{r}
+count_zeros_vec <- function(x) {
+  sum(x == 0)
+}
+```
+
 --
 
-* Implement a solution and test it. Does it
-solve my problem sufficiently well? If yes, I'm done.
+* `x == 0` checks if each entry of `x` is 0 and returns a vector of logicals.
 --
 
-* Rewrite, improve and test the code. Use e.g. profiling tools to identify 
-the computationally demanding parts of the code. 
+* `sum()` computes and returns the sum of all elements in a vector. Logicals are coerced to integers. 
 --
 
-* Use benchmaking tools to compare different implementations and to investigate 
-how the computational demands scale. 
+* In this case the vectorized implementation is cohesive and clear.
 --
 
-* If one implementation solves my problem sufficiently well, I'm done. Otherwise
-reiterate the two previous points. 
+* The vectorized computations are performed by compiled code (C/C++/Fortran), which run faster than pure R code.
+--
+
+* Writing vectorized code requires a larger knowledge of R functions.
+
+
+
+---
+## Development Cycle Sketch
+
+* Is there a good-enough existing implemention for your problem? If yes, then you are done.
+--
+
+* If not, implement a solution and test it. Does it
+solve your problem sufficiently well? If yes, then you're done.
+--
+
+* If not, then profile, benchmark, and debug. Then refactor and optimize.
+--
+
+
+### The Root of All Evil
+
+> We *should* forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil.
+> Yet we should not pass up our opportunities in that critical 3%.
+> 
+> *—Donald Knuth*
 
 ---
 
@@ -1417,12 +799,317 @@ head(kern_benchmarks, 3)
 
 ```{r kern-bench-fig, message=FALSE, warning=FALSE, fig.width=11, fig.height=4.5}
 library(tidyverse)
-mutate(kern_benchmarks, fun = as.character(expression)) |>
-  ggplot(aes(m, median, color = fun)) +
+mutate(kern_benchmarks, expression = as.character(expression)) |>
+  ggplot(aes(m, median, color = expression)) +
   geom_point() +
   geom_line() +
   facet_grid(cols = vars(n))
 ```
 
+---
+
+class: middle, center
+
+# Object-Oriented Programming in R
+
+---
+
+## Many Systems
+
+### In Base R
+
+- S3
+- S4
+- Reference Classes
+
+--
+
+### Through Packages
+
+- [R6](https://cran.r-project.org/package=R6)
+- [S7](https://cran.r-project.org/package=S7)
+
+### This Course
+
+We will focus **entirely** on S3.
+
+---
+
+## Example: Integration
+
+The function `integrate()` takes a function as argument and returns the 
+value of numerically integrating the function.
+--
+
+
+It is an example of a *functional*. 
+--
+
+
+```{r}
+integral <- integrate(sin, 0, 1)
+integral
+```
+
+The numerical value of the integral 
+$$\int_0^1 \sin(x) \mathrm{d}x$$ 
+is printed nicely above—including an indication of the numerical error. 
+
+---
+## Return Values
+
+In fact, `integrate()` returns a list with a *class label*.
+
+```{r}
+str(integral)
+```
+--
+
+Return values that don't fit into one of the basic data structures 
+can be returned as a list as above.
+
+---
+## The Return Value of `integrate()`
+
+The class label can be extracted directly.
+
+```{r}
+class(integral)
+```
+--
+
+- The printed result of `integrate()` is not the same as the object itself. 
+- What you see is the result of the **method** `print.integrate()`.
+
+---
+## Printing Objects of Class Integrate 
+
+```{r}
+stats:::print.integrate
+```
+
+(The `print.integrate()` function is not exported from the stats package. It is in the 
+namespace of the stats package, and to access it directly we use `stats:::`.)
+
+---
+## Histogram Objects
+
+```{r temp-hist, fig.width = 9, fig.height = 6}
+phi_hist <- hist(phipsi$phi, main = NULL)
+```
+
+---
+## Histogram Objects
+
+```{r}
+class(phi_hist)
+```
+
+--
+
+```{r}
+str(phi_hist)
+```
+
+---
+## Histogram Objects
+
+```{r}
+phi_hist[1:4]
+```
+
+
+---
+## Getting Help for Objects
+
+You can find documentation for `plot()` using e.g. 
+
+```{r help-plot, eval = FALSE}
+?plot
+```
+
+--
+However, this will be uninformative on how an object of class histogram is plotted. 
+Try instead 
+
+```{r help-plot-histogram, eval = FALSE}
+?plot.histogram
+```
+
+This will give the documentation for the plot method for objects of class histogram. 
+
+
+---
+## S3 Overview
+
+* S3 classes are standard data structures (typically lists) with *class labels*.
+--
+
+* It is an informal system. No checks of object content.
+--
+
+* One implements a *generic* function via `UseMethod()`. E.g.
+```{r, eval=FALSE}
+plot
+```
+
+```{r, echo=FALSE}
+cat(deparse(plot))
+```
+
+--
+
+* **Methods** for specific classes are implemented as standard R functions 
+with the naming convention `f.classname()` for a method for class `classname` of the function `f()`. 
+--
+
+* The system is widely used to write methods for the generic functions `print()`, 
+`plot()` and `summary()`. 
+
+
+---
+## Constructing a New Class
+
+```{r, echo=FALSE}
+count_zeros_vec <- function(x) {
+  sum(x == 0)
+}
+```
+
+Recall the function `count_zeros_vec()` that counts the number of zeros in a vector.
+--
+
+
+If we need this number many times it is beneficial to compute it once and then 
+extract it whenever needed. 
+
+--
+
+We first write a *constructor function* that returns a list with a class
+label.
+
+```{r}
+count_object <- function(x) {
+  structure(
+    list(
+      x = x,
+      n = count_zeros_vec(x)
+    ),
+    class = "count_object"
+  )
+}
+```
+
+---
+## A Data Example
+
+```{r}
+set.seed(1234)
+
+count_data <- count_object(rpois(10, 2))
+count_data
+```
+
+---
+## The Generic Function
+
+To activate looking up a method for a specific class, one needs to tell R 
+that the function `count_zeros()` is a *generic function*. 
+
+```{r}
+count_zeros <- function(x) {
+  UseMethod("count_zeros")
+}
+```
+--
+
+We can let the default method be the vectorized version.
+```{r}
+count_zeros.default <- function(x) {
+  count_zeros_vec(x)
+}
+```
+
+--
+
+Then we can implement a class-specific version for the class `count_object`.
+
+```{r}
+count_zeros.count_object <- function(x) {
+  x[["n"]]
+}
+```
+
+---
+
+## A Print Method
+
+And we can also implement a print method.
+
+```{r}
+print.count_object <- function(x) {
+  cat("Values:", x$x, "\nNumber of zeros:", x$n, "\n")
+}
+```
+
+
+```{r}
+count_data # Invokes print.count_object()
+```
+
+```{r}
+count_zeros(count_data) # Invokes count_zeros.count_object()
+```
+
+---
+
+## Exercise
+
+### Step 1
+
+Create a constructor function called `summarize_vector()` that 
+that takes a numeric vector as input and returns an object of class `vector_summary` containing
+the mean, median, and standard deviation of the input vector.
+
+```{r include = FALSE}
+summarize_vector <- function(x) {
+  structure(
+    list(
+      mean = mean(x),
+      median = median(x),
+      sd = sd(x)
+    ),
+    class = "vector_summary"
+  )
+}
+```
+
+### Step 2
+
+Write a `print()` method for the class `vector_summary` that prints the mean, median, and standard deviation in a neatly formatted way.
+
+---
+
+## Getting Help with R
+
+### Google It
+
+Especially good for error messages.
+
+--
+
+### Generative AI
+
+Also great for error messages and debugging
+
+**Caution**: You need to understand the results, 
+especially when you ask it to create something for you.
+
+--
+
+### Absalon Discussion Forum
+
+Use the fact that there are twenty other people in the course
+with exactly the same problem.
 
 
