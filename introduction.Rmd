@@ -145,27 +145,28 @@ lines(
 
 ## Statistical Topics of the Course
 
-* **Smoothing:** what does `density()` do?
---
+### Smoothing
 
-    + How do we compute nonparametric estimators?
-    + How do we choose tuning parameters?
---
+- What does `density()` do?
+- Nonparametric estimators
+- Choosing tuning parameters
 
-
-* **Simulation:** how do we efficiently simulate from a target distribution?
---
-
-    + How do we assess results from Monte Carlo methods?
-    + What if we cannot compute the density?
 --
 
 
-* **Optimization:** how do we compute the MLE?
+### Simulation
+
+- How do we efficiently simulate from a target distribution?
+- Assessing results from Monte Carlo methods
+- What if we cannot compute the density?
+
 --
 
-    + What if we cannot compute the likelihood?
-    + How to deal with very large data sets?
+### Optimization
+
+- How do we compute the MLE?
+- What if we cannot evaluate the likelihood?
+- How to we deal with large data sets?
 
 
 ---
@@ -173,16 +174,12 @@ lines(
 
 ### Implementation
 
-Writing statistical software
-
-- Data structures and functions
+- Writing functions
 - Object-oriented programming
 
 --
 
 ### Correctness
-
-Checking that the program works as intended
 
 - Testing
 - Debugging
@@ -191,11 +188,9 @@ Checking that the program works as intended
 
 ### Efficiency
 
-Minimizing memory and processor usage
-
-- Benchmarking code for comparisons
-- Profiling code to identify bottlenecks
-- Optimizing code
+- Profiling
+- Optimzing
+- Benchmarking
 
 ---
 ## Assignments
@@ -228,7 +223,6 @@ Minimizing memory and processor usage
 - Prepare four presentations, one for each topic (same as last slide).
 - Get started immediately and work continuously on the assignments as the
   course progresses.
-]
 
 ---
 
