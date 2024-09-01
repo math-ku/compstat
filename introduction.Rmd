@@ -233,7 +233,8 @@ lines(
 Main textbook for the course, written by Niels Richard Hansen.
 
 - Available online at <https://cswr.nrhstat.org/>
-- Not yet complete, but we only use parts that are.
+- Not yet complete, but we only use parts that are. 
+- [Companion package](https://github.com/nielsrhansen/CSwR/tree/master/CSwR_package): install with `pak::pak("github::nielsrhansen/CSwR/CSwR_package")`.
 
 --
 
