@@ -2,7 +2,12 @@
 title: 'Assignments: Smoothing'
 author: "Johan Larsson, Niels Richard Hansen"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: pygments
+    global_numbering: true
 ---
 
 The first assignment topic is smoothing. If you draw the topic "smoothing" at the 
