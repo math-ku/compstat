@@ -171,29 +171,31 @@ lines(
 ---
 ## Computational Topics of the Course
 
-* **Implementation**: writing statistical software.
+### Implementation
+
+Writing statistical software
+
+- Data structures and functions
+- Object-oriented programming
+
 --
 
-    + Data structures and functions
-    + Object-oriented programming
+### Correctness
+
+Checking that the program works as intended
+
+- Testing
+- Debugging
+
 --
 
+### Efficiency
 
-* **Correctness**: does the implementation do the right thing?
---
+Minimizing memory and processor usage
 
-    + Testing
-    + Debugging
-    + Accuracy of numerical computations
---
-
-
-* **Efficiency**: minimize memory and time usage.
---
-
-    + Benchmarking code for comparisons
-    + Profiling code to identify bottlenecks
-    + Optimizing code
+- Benchmarking code for comparisons
+- Profiling code to identify bottlenecks
+- Optimizing code
 
 ---
 ## Assignments
@@ -230,6 +232,27 @@ lines(
 
 ---
 
+## Course Literature
+
+### Computational Statistics with R
+
+Main textbook for the course, written by Niels Richard Hansen.
+
+- Available online at <https://cswr.nrhstat.org/>
+- Not yet complete, but we only use parts that are.
+
+--
+
+### Advanced R
+
+Auxiliary textbook, written by Hadley Wickham.
+
+- Available online at <https://adv-r.hadley.nz/>
+- Covers more advanced R programming topics.
+- We will use selected chapters.
+
+---
+
 ## Absalon
 
 Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
@@ -262,7 +285,7 @@ class: middle, center
 
 ---
 
-## Prerequisite R  Knowledge
+## Prerequisite R Knowledge
 
 We expect knowledge of
 
@@ -491,12 +514,6 @@ testthat::test_dir("tests")
 ```
 
 ---
-
-## Debugging
-
-There are good tools for debugging in R, especially in R Studio.
-
----
 ## A Second Attempt
 
 ```{r}
@@ -513,7 +530,17 @@ count_zeros <- function(x) {
 ```{r}
 testthat::test_dir("tests")
 ```
+---
 
+## Debugging
+
+- Sometimes hard to identify the offending piece of code.
+--
+
+- Helpful to use a debugging tool. R studio comes with a helpful interface for this.
+--
+
+- We will talk more about debugging in week 5.
 
 ---
 ## Functional Programming
@@ -655,15 +682,6 @@ bench::mark(
 
 `apply()` and co. are basically just loops in disguise.
 
----
-
-## Optimization
-
-Our `count_zeros()` function is correct but not very efficient.
-
-```{r}
-system.time(count_zeros(rpois(1e7, 2)))
-```
 
 ---
 
@@ -703,7 +721,7 @@ count_zeros_vec <- function(x) {
 solve your problem sufficiently well? If yes, then you're done.
 --
 
-* If not, then profile, benchmark, and debug. Then refactor and optimize.
+* If not, then profile (next week!), benchmark, and debug (week 5). Then refactor and optimize.
 --
 
 
@@ -716,7 +734,7 @@ solve your problem sufficiently well? If yes, then you're done.
 
 ---
 
-## Density Implementation
+## Example: Density Estimation
 
 ```{r kernDens}
 kern_dens <- function(x, h, m = 512) {
@@ -739,7 +757,7 @@ kern_dens <- function(x, h, m = 512) {
 
 ---
 
-## Density Implementation (Vectorized)
+## Vectorizing Our Density Estimator
 
 ```{r kernDens-vec}
 kern_dens_vec <- function(x, h, m = 512) {
@@ -758,7 +776,7 @@ kern_dens_vec <- function(x, h, m = 512) {
 
 ---
 
-## Density Benchmarking
+## Benchmarking
 
 ```{r kern-bench, cache = TRUE}
 kern_bench <- bench::mark(
