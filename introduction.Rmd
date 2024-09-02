@@ -303,7 +303,7 @@ But you **do not** need to be an experienced programmer.
 
 
 ---
-## Warm-Up Quiz
+## Warm-Up Exercises
 
 ### Exercise 1
 
@@ -321,13 +321,6 @@ l[["a"]]
 --
 
 ### Exercise 2
-
-For a numerical vector `x` , write code to compute a vector
-`y` of logicals such that `y[i]` is `TRUE` whenever `x[i] > 0`.
-
---
-
-### Exercise 3
 
 Write a for loop that prints "even" if the loop variable is even,
 "odd" if the loop variable is odd, and exits if is
@@ -398,7 +391,7 @@ environment(f)
 
 ## Naming Functions
 
-### Use descriptive names
+### Use Descriptive Names
 
 - Verbs are great.
 - Better long and descriptive than short and cryptic.
