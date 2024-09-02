@@ -34,47 +34,20 @@ options(width = 80)
 
 ## Computational Statistics
 
-- Broad field and can mean many things.
+- Broad field; can mean many things!
 --
 
-- This courses: focus on practical aspects of statistical computing.
+- This course: focus on the whole pipeline.
 --
 
-- How do you turn a statistical method into a working computer program (in R)?
-
----
-## Teaching Staff
-
-.pull-left[
-### Instructor
-
-Johan Larsson, postdoctoral researcher
-
-```{r, echo=FALSE, out.width = "50%"}
-knitr::include_graphics(file.path("images/johan.jpg"))
-```
-
-#### Contact
-
-Use Absalon for course-related questions and email (<jola@math.ku.dk>) for personal matters.
-]
-
-.pull-right[
-### Teaching Assistant
-
-Jinyang Liu, PhD student
-
-```{r, echo=FALSE, out.width = "50%"}
-knitr::include_graphics(file.path("images/jinyang.jpg"))
-```
-]
+- How to turn a statistical method into a working computer program (in R)?
 
 
 ---
 
 ## Example: Amino Acid Angles
 
-```{r PhiPsi, echo = FALSE, out.height=400, out.width=400, fig.align='center'}
+```{r PhiPsi, echo = FALSE, out.height=450, fig.align='center'}
 knitr::include_graphics("images/PhiPsi_creative.jpg")
 ```
 
@@ -165,7 +138,6 @@ lines(
 ### Optimization
 
 - How do we compute the MLE?
-- What if we cannot evaluate the likelihood?
 - How to we deal with large data sets?
 
 
@@ -202,7 +174,33 @@ lines(
   * Stochastic optimization
 - Each topic has two assignments; you pick one.
 
---
+---
+## Teaching Staff
+
+.pull-left[
+### Instructor
+
+Johan Larsson, postdoctoral researcher
+
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics(file.path("images/johan.jpg"))
+```
+
+#### Contact
+
+Use Absalon for course-related questions and email (see Absalon) for personal matters.
+]
+
+.pull-right[
+### Teaching Assistant
+
+Jinyang Liu, PhD student
+
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics(file.path("images/jinyang.jpg"))
+```
+]
+
 
 ### Presentations
 
@@ -259,7 +257,7 @@ Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
 
 ---
 
-## Generative AI is Allowed
+## Generative AI
 
 - You can use generative AI to help you with your assignments.
 --
@@ -267,7 +265,10 @@ Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
 - But you must understand the results.
 --
 
-- Your learning will suffer if you rely too heavily on generative AI.
+- Can help your learning if used correctly.
+--
+
+- But also hamper your learning if used inappropriately (too much)
 --
 
 - Beware of hallucinations!
