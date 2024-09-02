@@ -44,6 +44,34 @@ options(width = 80)
 
 
 ---
+## Teaching Staff
+
+.pull-left[
+### Instructor
+
+Johan Larsson, postdoctoral researcher
+
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics(file.path("images/johan.jpg"))
+```
+
+#### Contact
+
+Use Absalon for course-related questions and email (see Absalon) for personal matters.
+]
+
+.pull-right[
+### Teaching Assistant
+
+Jinyang Liu, PhD student
+
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics(file.path("images/jinyang.jpg"))
+```
+]
+
+
+---
 
 ## Example: Amino Acid Angles
 
@@ -174,33 +202,8 @@ lines(
   * Stochastic optimization
 - Each topic has two assignments; you pick one.
 
+
 ---
-## Teaching Staff
-
-.pull-left[
-### Instructor
-
-Johan Larsson, postdoctoral researcher
-
-```{r, echo=FALSE, out.width = "50%"}
-knitr::include_graphics(file.path("images/johan.jpg"))
-```
-
-#### Contact
-
-Use Absalon for course-related questions and email (see Absalon) for personal matters.
-]
-
-.pull-right[
-### Teaching Assistant
-
-Jinyang Liu, PhD student
-
-```{r, echo=FALSE, out.width = "50%"}
-knitr::include_graphics(file.path("images/jinyang.jpg"))
-```
-]
-
 
 ### Presentations
 
