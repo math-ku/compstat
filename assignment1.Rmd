@@ -31,7 +31,7 @@ Implement a kernel density estimator using the Epanechnikov kernel,
 $$K(x) = \frac{3}{4}(1 - x^2) 1_{[-1, 1]}(x),$$
 and implement one or more bandwidth selection algorithms using either AMISE 
 plug-in methods or cross-validation methods. Test 
-the implementation and compare the results with the results of using `density` in R. 
+the implementation and compare the results with the results of using `density()` in R. 
 
 It may be a good idea to use real data to investigate how the bandwidth selection
 works, but for benchmarking and profiling it is best to use simulated data. 
@@ -41,13 +41,16 @@ Think about how to make your implementation as general and generic as possible.
 
 Implement a smoothing spline smoother using LOOCV for selecting the tuning 
 parameter $\lambda$. Test the implementation and compare the results with the 
-results of using the R function `smooth.spline`.  
+results of using the R function `smooth.spline()`.  
 
 A natural implementation relies on B-spline basis functions and their derivatives. 
-These can be computed using the `splineDesign` function from the R package `splines` 
-and numerical integration. Riemann-sum approximations can be used, but using Simpson's 
+These can be computed using the `splineDesign()` function from the base 
+R package **splines**^[You don't need to download this. It should already
+be included in your installation of R.] and numerical integration. 
+Riemann-sum approximations can be used, but using Simpson's 
 rule with breakpoints in the knots, the numerical integral becomes exact. 
-Alternatively, the function `bsplinepen` from the fda package can be used. 
+Alternatively, the function `bsplinepen()` from the
+[fda](https://CRAN.R-project.org/package=fda) package can be used. 
 
 In addition to testing your implementation on real data it is a good idea to 
 consider simulated data as well. In particular for benchmarking and profiling.
