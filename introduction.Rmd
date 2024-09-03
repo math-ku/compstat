@@ -578,7 +578,7 @@ testthat::test_dir("tests")
 ---
 ## Functional Programming
 
-We have already used `sapply()` with a function as its second argument.
+`sapply()` is what's typically called a *map*, with a function as its second argument.
 
 --
 
