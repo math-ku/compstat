@@ -43,33 +43,6 @@ options(width = 80)
 - How to turn a statistical method into a working computer program (in R)?
 
 
----
-## Teaching Staff
-
-.pull-left[
-### Instructor
-
-Johan Larsson, postdoctoral researcher
-
-```{r, echo=FALSE, out.width = "50%"}
-knitr::include_graphics(file.path("images/johan.jpg"))
-```
-
-#### Contact
-
-Use Absalon for course-related questions and email (see Absalon) for personal matters.
-]
-
-.pull-right[
-### Teaching Assistant
-
-Jinyang Liu, PhD student
-
-```{r, echo=FALSE, out.width = "50%"}
-knitr::include_graphics(file.path("images/jinyang.jpg"))
-```
-]
-
 
 ---
 
@@ -193,37 +166,97 @@ lines(
 - Benchmarking
 
 ---
+
+## Teaching Staff
+
+.pull-left[
+### Instructor
+
+Johan Larsson, postdoctoral researcher
+
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics(file.path("images/johan.jpg"))
+```
+
+#### Contact
+
+Use Absalon for course-related questions and email (see Absalon) for personal matters.
+]
+
+.pull-right[
+### Teaching Assistant
+
+Jinyang Liu, PhD student
+
+```{r, echo=FALSE, out.width = "50%"}
+knitr::include_graphics(file.path("images/jinyang.jpg"))
+```
+]
+
+---
+
 ## Assignments
 
+- Main course work of the course
+- Eight assignments, two for each topic
 - Four topics
   * Smoothing
   * Univariate simulation
   * The EM algorithm
   * Stochastic optimization
-- Each topic has two assignments; you pick one.
-
-
----
-
-### Presentations
-
-- On weeks 3, 4, 5, and 6 (Thursday afternoon sessions).
-- Groups of 2-3 students
-- Presentation, discussion, and feedback
-- Register in Absalon for the presentation of 
-  one assignment solution.
-- Compulsory but not graded
-- Solutions do not need to be perfect
-]
+- Pick one assignment per topic.
 
 ---
 
 ## Examination
 
+### Presentations
+
+- Present solution to one of the assignments.
+- On weeks 3, 4, 5, and 6 (Thursday afternoon sessions).
+- Groups of 2-3 students
+- Presentation, discussion, and feedback
+- [Register in Absalon](https://absalon.ku.dk/courses/76985/groups#tab-25490) (limited slots assignment)
+- Compulsory but not graded
+- Work-in-progress solutions are fine
+]
+
+--
+
+### Oral Examination
+
 - Oral exam, presented indivudally.
-- Prepare four presentations, one for each topic (same as last slide).
-- Get started immediately and work continuously on the assignments as the
-  course progresses.
+- Prepare four presentations, one for each assignment you picked.
+
+---
+
+## Schedule
+
+.pull-left[
+### Lectures
+
+- Tuesdays and Thursdays, 10:15–12:00 (Johan)
+
+### Exercise Sessions
+
+- Thursdays, 08:15–10:00 (Jinyang)
+
+### Presentations
+
+- Thursdays, 13:15–15:00 (Johan)
+- Only weeks 3, 4, 5, and 6
+]
+
+--
+
+.pull-right[
+
+### Examination
+
+- November 6 and 7 (8.15-17.30, tentative)
+- Room to be announced
+]
+
 
 ---
 
@@ -253,10 +286,19 @@ Auxiliary textbook, written by Hadley Wickham.
 
 Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
 
+.pull-left[
+
 - **Course Material**: Slides, videos, data, groups, and assignments.
 - Actually based on Canvas (but rebranded for UCPH).
 - Download Canvas Student app for your phone.
 - Updated as we go along.
+  ]
+
+.pull-right[
+```{r, echo=FALSE, out.width = 200}
+knitr::include_graphics("images/absalon.jpg")
+```
+]
 
 ---
 
