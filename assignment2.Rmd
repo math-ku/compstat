@@ -1,5 +1,5 @@
 ---
-title: 'Assignment 2: Univariate Simulation'
+title: 'Assignment Topic 2: Univariate Simulation'
 author: "Johan Larsson, Niels Richard Hansen"
 date: "`r format(Sys.time(), '%-d %B, %Y')`"
 output:

@@ -1,5 +1,5 @@
 ---
-title: 'Assignment 4: Stochastic Optimization' 
+title: 'Assignment Topic 4: Stochastic Optimization' 
 author: "Johan LarssonNiels Richard Hansen"
 date: "`r format(Sys.time(), '%-d %B, %Y')`"
 output:

@@ -1,5 +1,5 @@
 ---
-title: 'Assignment 3: The EM Algorithm'
+title: 'Assignment Topic 3: The EM Algorithm'
 author: "Johan Larsson, Niels Richard Hansen"
 date: "`r format(Sys.time(), '%-d %B, %Y')`"
 output:
@@ -29,7 +29,7 @@ Test of convergence and experiments with convergence criteria are important
 to investigate. Robustness towards the initial choice of parameters is important, 
 and testing of the implementation on several (simulated) data sets is a good idea. 
 
-# Assignment 1: The EM-algorithm for the $t$-distribution
+# A: The EM-algorithm for the $t$-Distribution
 
 Let $Y = (X, W) \in \mathbb{R} \times (0, \infty)$ have joint density
 $$f(x, w) = \frac{1}{ \sqrt{ \pi \nu \sigma^2} 2^{(\nu + 1) /2} \Gamma(\nu/2)} w^{\frac{\nu - 1}{2}} e^{- \frac{w}{2}\left(1 + \frac{(x - \mu)^2}{\nu \sigma^2}\right)}.$$
@@ -51,7 +51,7 @@ $W = w$ from a $\mathcal{N}(\mu, \nu \sigma^2 / w)$-distribution. For the E-step
 observe that the density of $W \mid X = x$ is $\propto f(x, w)$ with $x$ fixed
 and recognize this as a $\Gamma$-distribution.*
 
-# Assignment 2: Mixtures of $t$-distributions
+# B: Mixtures of $t$-Distributions
 
 The $t$-distribution with location parameter $\mu \in \mathbb{R}$, scale parameter 
 $\sigma > 0$ and shape parameter $\nu > 0$ has density
