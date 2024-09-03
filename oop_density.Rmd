@@ -1,5 +1,5 @@
 ---
-title: "Density Estimation"
+title: "Object-Oriented Programming and Density Estimation"
 subtitle: Computational Statistics
 author: "Johan Larsson, Niels Richard Hansen"
 date: "September 5, 2024"
@@ -31,6 +31,285 @@ phipsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 ```
 
+class: middle, center
+
+# Object-Oriented Programming in R
+
+---
+
+## Many Systems
+
+### In Base R
+
+- S3
+- S4
+- Reference Classes
+
+--
+
+### Through Packages
+
+- [R6](https://cran.r-project.org/package=R6)
+- [S7](https://cran.r-project.org/package=S7)
+
+### This Course
+
+We will focus **entirely** on S3.
+
+---
+
+## Example: Integration
+
+The function `integrate()` takes a function as argument and returns the 
+value of numerically integrating the function.
+--
+
+
+It is an example of a *functional*. 
+--
+
+
+```{r}
+integral <- integrate(sin, 0, 1)
+integral
+```
+
+The numerical value of the integral 
+$$\int_0^1 \sin(x) \mathrm{d}x$$ 
+is printed nicely above—including an indication of the numerical error. 
+
+---
+## Return Values
+
+In fact, `integrate()` returns a list with a *class label*.
+
+```{r}
+str(integral)
+```
+--
+
+Return values that don't fit into one of the basic data structures 
+can be returned as a list as above.
+
+---
+## The Return Value of `integrate()`
+
+The class label can be extracted directly.
+
+```{r}
+class(integral)
+```
+--
+
+- The printed result of `integrate()` is not the same as the object itself. 
+- What you see is the result of the **method** `print.integrate()`.
+
+---
+## Printing Objects of Class Integrate 
+
+```{r}
+stats:::print.integrate
+```
+
+(The `print.integrate()` function is not exported from the stats package. It is in the 
+namespace of the stats package, and to access it directly we use `stats:::`.)
+
+---
+## Histogram Objects
+
+```{r temp-hist, fig.width = 9, fig.height = 6}
+phi_hist <- hist(phipsi$phi, main = NULL)
+```
+
+---
+## Histogram Objects
+
+```{r}
+class(phi_hist)
+```
+
+--
+
+```{r}
+str(phi_hist)
+```
+
+---
+## Histogram Objects
+
+```{r}
+phi_hist[1:4]
+```
+
+
+---
+## Getting Help for Objects
+
+You can find documentation for `plot()` using e.g. 
+
+```{r help-plot, eval = FALSE}
+?plot
+```
+
+--
+However, this will be uninformative on how an object of class histogram is plotted. 
+Try instead 
+
+```{r help-plot-histogram, eval = FALSE}
+?plot.histogram
+```
+
+This will give the documentation for the plot method for objects of class histogram. 
+
+
+---
+## S3 Overview
+
+* S3 classes are standard data structures (typically lists) with *class labels*.
+--
+
+* It is an informal system. No checks of object content.
+--
+
+* One implements a *generic* function via `UseMethod()`. E.g.
+```{r, eval=FALSE}
+plot
+```
+
+```{r, echo=FALSE}
+cat(deparse(plot))
+```
+
+--
+
+* **Methods** for specific classes are implemented as standard R functions 
+with the naming convention `f.classname()` for a method for class `classname` of the function `f()`. 
+--
+
+* The system is widely used to write methods for the generic functions `print()`, 
+`plot()` and `summary()`. 
+
+
+---
+## Constructing a New Class
+
+```{r, echo=FALSE}
+count_zeros_vec <- function(x) {
+  sum(x == 0)
+}
+```
+
+Recall the function `count_zeros_vec()` that counts the number of zeros in a vector.
+--
+
+
+If we need this number many times it is beneficial to compute it once and then 
+extract it whenever needed. 
+
+--
+
+We first write a *constructor function* that returns a list with a class
+label.
+
+```{r}
+count_object <- function(x) {
+  structure(
+    list(
+      x = x,
+      n = count_zeros_vec(x)
+    ),
+    class = "count_object"
+  )
+}
+```
+
+---
+## A Data Example
+
+```{r}
+set.seed(1234)
+
+count_data <- count_object(rpois(10, 2))
+count_data
+```
+
+---
+## The Generic Function
+
+To activate looking up a method for a specific class, one needs to tell R 
+that the function `count_zeros()` is a *generic function*. 
+
+```{r}
+count_zeros <- function(x) {
+  UseMethod("count_zeros")
+}
+```
+--
+
+We can let the default method be the vectorized version.
+```{r}
+count_zeros.default <- function(x) {
+  count_zeros_vec(x)
+}
+```
+
+--
+
+Then we can implement a class-specific version for the class `count_object`.
+
+```{r}
+count_zeros.count_object <- function(x) {
+  x[["n"]]
+}
+```
+
+---
+
+## A Print Method
+
+And we can also implement a print method.
+
+```{r}
+print.count_object <- function(x) {
+  cat("Values:", x$x, "\nNumber of zeros:", x$n, "\n")
+}
+```
+
+
+```{r}
+count_data # Invokes print.count_object()
+```
+
+```{r}
+count_zeros(count_data) # Invokes count_zeros.count_object()
+```
+
+---
+
+## Exercise
+
+### Step 1
+
+Create a constructor function called `summarize_vector()` that 
+that takes a numeric vector as input and returns an object of class `vector_summary` containing
+the mean, median, and standard deviation of the input vector.
+
+```{r include = FALSE}
+summarize_vector <- function(x) {
+  structure(
+    list(
+      mean = mean(x),
+      median = median(x),
+      sd = sd(x)
+    ),
+    class = "vector_summary"
+  )
+}
+```
+
+### Step 2
+
+Write a `print()` method for the class `vector_summary` that prints the mean, median, and standard deviation in a neatly formatted way.
 
 ## Angle Data
 
@@ -38,6 +317,12 @@ phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 hist(phipsi$psi, prob = TRUE, xlab = expression(psi), main = NULL)
 rug(phipsi$psi)
 ```
+
+---
+
+class: middle, center
+
+# Density Estimation
 
 ---
 
@@ -88,9 +373,12 @@ $$K(x) = \frac{1}{2} 1_{(-1,1)}(x).$$
 The *Gaussian kernel* is 
 $$K(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}.$$
 
----
+???
 
-## Show And Tell
+Two types of possible density estimators
+  - Pointwise 
+  - Everything at one 
+
 
 ---
 
@@ -266,21 +554,22 @@ $$f_h \cdot m \overset{\mathrm{wk}}{\longrightarrow}
 for $h \to 0$ (weak convergence). 
 --
 
-
 The *empirical measure* $\varepsilon_n$ can sensibly be regarded as 
 the nonparametric MLE of the distribution. 
 
-
 ---
+
 ## ISE, MISE, and MSE
 
-Quality of $\hat{f}_h$ can be quantified by the *integrated squared error*
+Quality of $\hat{f}_h$ can be quantified by the *integrated squared error*,
 $$\mathrm{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ dx = ||\hat{f}_h - f_0||_2^2.$$ 
+
 --
 
 Quality of the estimation procedure can be quantified by the mean ISE,
 $$\mathrm{MISE}(h) = E(\mathrm{ISE}(\hat{f}_h)),$$
 where the expectation integral is over the data.
+
 --
 
 $$\mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \ dx$$ 
@@ -291,11 +580,8 @@ where $\mathrm{MSE}_h(x) = \mathrm{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(
 ## AMISE
 
 If $K$ is a square integrable probability density with mean 0,
-
 $$\mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((nh)^{-1} + h^4)$$
-
-where the *asymptotic mean integrated squared error* is 
-
+where the *asymptotic mean integrated squared error* is
 $$\mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}$$
 with $\sigma_K^2 = \int t^2 K(t) \ dt.$
 
