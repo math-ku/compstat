@@ -292,9 +292,13 @@ print.count_object <- function(x) {
 }
 ```
 
+--
+
 ```{r}
 count_data # Invokes print.count_object()
 ```
+
+--
 
 ```{r}
 count_zeros(count_data) # Invokes count_zeros.count_object()
@@ -302,7 +306,7 @@ count_zeros(count_data) # Invokes count_zeros.count_object()
 
 ---
 
-## Exercise1
+## Exercise 1
 
 ### Exercise 1
 
@@ -328,6 +332,12 @@ summarize_vector <- function(x) {
 ### Exercise 2
 
 Write a `print()` method for the class `vector_summary` that prints the mean, median, and standard deviation in a neatly formatted way.
+
+```{r, include = FALSE}
+print.vector_summary <- function(x) {
+  cat("Mean:", x$mean, "\nMedian:", x$median, "\nStandard deviation:", x$sd, "\n")
+}
+```
 
 ---
 
@@ -444,7 +454,7 @@ p1 <- ggplot() +
   labs(x = "x", y = "Density")
 
 p2 <- p1 +
-  geom_rug(aes(x), data = tibble(x = x), cex = 1, col = "navy")
+  geom_rug(aes(x), data = tibble(x = x), linewidth = 1, col = "navy")
 
 p3 <- p2 +
   geom_line(aes(a, d, group = x), col = "dark orange", data = res)
@@ -467,10 +477,10 @@ p2
 
 ---
 
-### An Illustration
+### An Illustration: Gaussian Kernel
 
 .pull-left[
-We add a Gaussian density kernel for each point.
+We add a Gaussian density kernel with bandwidth 1 for each point.
 ]
 
 
@@ -482,7 +492,7 @@ p3
 
 ---
 
-### An Illustration
+### An Illustration: Gaussian Kernel
 
 .pull-left[
 Finally, we average the kernels.
@@ -690,18 +700,18 @@ with densities.
 ## ISE, MISE, and MSE
 
 Quality of $\hat{f}_h$ can be quantified by the *integrated squared error*,
-$$\mathrm{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ dx = ||\hat{f}_h - f_0||_2^2.$$ 
+$$\operatorname{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ dx = ||\hat{f}_h - f_0||_2^2.$$ 
 
 --
 
 Quality of the estimation procedure can be quantified by the mean ISE,
-$$\mathrm{MISE}(h) = E(\mathrm{ISE}(\hat{f}_h)),$$
+$$\operatorname{MISE}(h) = \operatorname{E}(\mathrm{ISE}(\hat{f}_h)),$$
 where the expectation integral is over the data.
 
 --
 
-$$\mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \ dx$$ 
-where $\mathrm{MSE}_h(x) = \mathrm{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
+$$\operatorname{MISE}(h) = \int \operatorname{MSE}_h(x) \ dx$$ 
+where $\operatorname{MSE}_h(x) = \operatorname{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
 --
 
@@ -711,7 +721,7 @@ Let's derive the case of the uniform kernel!
 ---
 ## AMISE
 
-If $K$ is a square integrable probability density with mean 0,
+If $K$ is a square-integrable probability density with mean 0,
 $$\mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((nh)^{-1} + h^4)$$
 where the *asymptotic mean integrated squared error* is
 $$\mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}$$
@@ -811,7 +821,7 @@ lines(density(phipsi$psi, bw = "SJ"), col = "red", lwd = 2)
 
 ## Exercise
 
-Take the `kern_dens()` function we started out with and implement Silverman's rule of thumb for choosing the bandwidth. Test against the default behavior of `density()` to check that your implementation is working.
+Take the `kern_dens()` function we started out with and implement Silverman's rule of thumb for choosing the bandwidth. Test against the default behavior of `density()`.
 
 ```{r}
 kern_dens_silverman <- function(x, h = NULL, m = 512) {
@@ -861,6 +871,8 @@ kern_dens_silverman <- function(x, h = NULL, m = 512) {
 plot(density(x))
 lines(kern_dens_silverman(x))
 ```
+
+---
 
 ## Exercise
 
