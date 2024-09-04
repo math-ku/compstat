@@ -31,6 +31,20 @@ phipsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 ```
 
+## Today's Agenda
+
+### Object-Oriented Programming in R
+
+How to create and work with S3 classes
+
+--
+
+### Kernel Density Estimation
+
+How to create non-parametric density estimates using density kernel estimation
+
+---
+
 class: middle, center
 
 # Object-Oriented Programming in R
@@ -81,15 +95,18 @@ is printed nicely above—including an indication of the numerical error.
 ---
 ## Return Values
 
-In fact, `integrate()` returns a list with a *class label*.
+In fact, `integrate()` returns a class object: a list with a *class label*.
 
 ```{r}
 str(integral)
 ```
---
 
-Return values that don't fit into one of the basic data structures 
-can be returned as a list as above.
+### What is the Point of This Class Label?
+
+It allows us to write functions that work differently depending on 
+the class of the argument.
+
+If `x` is an object of class `numeric`, then do A. If `x` is an object of class `integrate`, then do B.
 
 ---
 ## The Return Value of `integrate()`
@@ -105,14 +122,14 @@ class(integral)
 - What you see is the result of the **method** `print.integrate()`.
 
 ---
-## Printing Objects of Class Integrate 
+## Printing Objects of Class Integrate
 
 ```{r}
 stats:::print.integrate
 ```
 
-(The `print.integrate()` function is not exported from the stats package. It is in the 
-namespace of the stats package, and to access it directly we use `stats:::`.)
+(The `print.integrate()` function is not exported from the stats package. It is in the
+namespace of the **stats** package, and to access it directly we use `stats:::`.)
 
 ---
 ## Histogram Objects
@@ -275,7 +292,6 @@ print.count_object <- function(x) {
 }
 ```
 
-
 ```{r}
 count_data # Invokes print.count_object()
 ```
@@ -286,9 +302,9 @@ count_zeros(count_data) # Invokes count_zeros.count_object()
 
 ---
 
-## Exercise
+## Exercise1
 
-### Step 1
+### Exercise 1
 
 Create a constructor function called `summarize_vector()` that 
 that takes a numeric vector as input and returns an object of class `vector_summary` containing
@@ -307,16 +323,11 @@ summarize_vector <- function(x) {
 }
 ```
 
-### Step 2
+--
+
+### Exercise 2
 
 Write a `print()` method for the class `vector_summary` that prints the mean, median, and standard deviation in a neatly formatted way.
-
-## Angle Data
-
-```{r, fig.asp = 0.8}
-hist(phipsi$psi, prob = TRUE, xlab = expression(psi), main = NULL)
-rug(phipsi$psi)
-```
 
 ---
 
@@ -367,9 +378,13 @@ We will consider *kernel estimators*
 $$\hat{f}_h(x) = \frac{1}{hn} \sum_{i=1}^n K\left(\frac{x - x_i}{h}\right).$$
 
 --
-The *uniform* or *rectangular kernel* is 
-$$K(x) = \frac{1}{2} 1_{(-1,1)}(x).$$
+
+The *uniform* or *rectangular kernel* is
+$$K(x) = \frac{1}{2} 1_{(-1,1)}(x),$$
+which leads to the expression on the last slide.
+
 --
+
 The *Gaussian kernel* is 
 $$K(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}.$$
 
@@ -382,7 +397,7 @@ Two types of possible density estimators
 
 ---
 
-## Implementation with Gaussian Kernel
+## Implementation with the Gaussian Kernel
 
 ```{r kern-dens-impl}
 kern_dens <- function(x, h, m = 512) {
@@ -403,7 +418,93 @@ kern_dens <- function(x, h, m = 512) {
 ```
 
 ---
-## Test
+
+### An Illustration
+
+```{r, echo = FALSE}
+library(tidyverse)
+x <- c(-1, 3, 5, 6, 9)
+n <- length(x)
+
+l <- lapply(x, function(xi) {
+  a <- seq(-4, 4, length.out = 100)
+  d <- dnorm(a) / n
+  data.frame(
+    x = xi,
+    a = a + xi,
+    d = d
+  )
+})
+
+res <- do.call(rbind, l)
+
+p1 <- ggplot() +
+  xlim(c(-5, 15)) +
+  ylim(c(0, 0.15)) +
+  labs(x = "x", y = "Density")
+
+p2 <- p1 +
+  geom_rug(aes(x), data = tibble(x = x), cex = 1, col = "navy")
+
+p3 <- p2 +
+  geom_line(aes(a, d, group = x), col = "dark orange", data = res)
+
+p4 <- p3 +
+  geom_density(aes(x), bw = 1, data = tibble(x = x))
+```
+
+.pull-left[
+Let's say we have a data set
+$$\boldsymbol{x} = (-1, 3, 5, 6, 9).$$
+
+]
+
+.pull-right[
+```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
+p2
+```
+]
+
+---
+
+### An Illustration
+
+.pull-left[
+We add a Gaussian density kernel for each point.
+]
+
+
+.pull-right[
+```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
+p3
+```
+]
+
+---
+
+### An Illustration
+
+.pull-left[
+Finally, we average the kernels.
+]
+
+.pull-right[
+```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
+p4
+```
+]
+
+---
+
+## Angle Data
+
+```{r, fig.asp = 0.8}
+hist(phipsi$psi, prob = TRUE, xlab = expression(psi), main = NULL)
+rug(phipsi$psi)
+```
+
+---
+## A First Test
 
 ```{r}
 f_hat <- kern_dens(phipsi$psi, 0.2)
@@ -434,7 +535,7 @@ lines(
 ]
 
 ---
-## Test
+## A First Test
 
 ```{r, fig.width = 7, fig.asp = 0.7}
 plot(
@@ -448,6 +549,44 @@ plot(
 ```
 
 ---
+
+## Testing with **testthat**
+
+
+```{r, fig.width = 7, fig.asp = 0.7, error = TRUE}
+library(testthat)
+
+test_that("Our density implementation corresponds to density()", {
+  expect_equal(kern_dens(phipsi$psi, 0.2)$y, density(phipsi$psi, 0.2)$y)
+})
+```
+
+---
+
+## Tolerance
+
+It is often necessary to allow for small differences in floating point numbers.
+
+```{r, fig.width = 7, fig.asp = 0.7}
+library(testthat)
+test_that("Our density implementation corresponds to density()", {
+  expect_equal(
+    kern_dens(phipsi$psi, 0.2)$y,
+    density(phipsi$psi, 0.2)$y,
+    tolerance = 1e-3 #<<
+  )
+})
+```
+
+--
+
+### Setting Tolerance Level
+
+- You need to decide on the tolerance level on a case-by-case basis.
+--
+
+- Uses `all.equal()` internally (but depends on testthat edition!). Usually tests 
+  **relative** difference (but not always!)
 
 ---
 ## Density Estimation
@@ -464,7 +603,7 @@ $$f(x) = f_h(x) = \frac{1}{nh \sqrt{2 \pi}} \sum_{j=1}^n e^{- \frac{(x - x_j)^2}
 
 ---
 
-## Density Estimation
+## Bandwidth
 
 ```{r, fig.align='center'}
 f_h <- function(x, h) mean(dnorm(x, phipsi$psi, h))
@@ -475,7 +614,7 @@ curve(f_h(x, 1), add = TRUE, col = "red")
 ```
 
 ---
-## Density Estimation, $h = 1$
+## $h = 1$
 
 ```{r, echo = FALSE}
 hist(phipsi$psi, prob = TRUE)
@@ -484,7 +623,7 @@ curve(f_h(x, 1), add = TRUE, col = "red")
 ```
 
 ---
-## Density Estimation, $h = 0.25$
+## $h = 0.25$
 
 ```{r, echo = FALSE}
 hist(phipsi$psi, prob = TRUE)
@@ -493,7 +632,7 @@ curve(f_h(x, 0.25), add = TRUE, col = "red", n = 1001)
 ```
 
 ---
-## Density Estimation, $h = 0.01$
+## $h = 0.01$
 
 ```{r, echo = FALSE}
 hist(phipsi$psi, prob = TRUE)
@@ -502,7 +641,7 @@ curve(f_h(x, 0.1), add = TRUE, col = "red", n = 1001)
 ```
 
 ---
-## Density Estimation, $h = 0.025$
+## $h = 0.025$
 
 ```{r, echo = FALSE}
 hist(phipsi$psi, prob = TRUE)
@@ -511,7 +650,7 @@ curve(f_h(x, 0.025), add = TRUE, col = "red", n = 10001)
 ```
 
 ---
-## Density Estimation, $h = 0.01$
+## $h = 0.01$
 
 ```{r, echo = FALSE}
 hist(phipsi$psi, prob = TRUE)
@@ -520,7 +659,7 @@ curve(f_h(x, 0.01), add = TRUE, col = "red", n = 10001)
 ```
 
 ---
-## Density Estimation, $h \to 0$
+## $h \to 0$
 
 ```{r, echo = FALSE}
 hist(phipsi$psi, prob = TRUE)
@@ -545,17 +684,6 @@ for $h \to 0$.
 Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is no MLE in the set of distributions
 with densities.
 
----
-## Log-Likelihood
-
-It actually holds that 
-$$f_h \cdot m \overset{\mathrm{wk}}{\longrightarrow} 
-\varepsilon_n = \frac{1}{n} \sum_{j=1}^n \delta_{x_j}$$
-for $h \to 0$ (weak convergence). 
---
-
-The *empirical measure* $\varepsilon_n$ can sensibly be regarded as 
-the nonparametric MLE of the distribution. 
 
 ---
 
@@ -575,6 +703,10 @@ where the expectation integral is over the data.
 $$\mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \ dx$$ 
 where $\mathrm{MSE}_h(x) = \mathrm{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
+--
+
+Let's derive the case of the uniform kernel!
+
 
 ---
 ## AMISE
@@ -585,46 +717,16 @@ where the *asymptotic mean integrated squared error* is
 $$\mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}$$
 with $\sigma_K^2 = \int t^2 K(t) \ dt.$
 
----
-## Asymptotically Optimal Bandwidth
-
-Optimizing $\mathrm{AMISE}(h)$ over $h$ gives the asymptotically optimal 
-bandwidth 
-$$h_n = \left( \frac{\|K\|_2^2}{ \|f_0''\|^2_2  \sigma_K^4} \right)^{1/5} n^{-1/5}.$$
---
-
-and the asymptotically optimal error 
-$$\mathrm{AMISE}(h_n) = C n^{-4/5}.$$
-
 --
 
 Using various plug-in estimates of $\|f_0''\|_2^2$, AMISE can be used to 
 estimate the *asymptotically optimal bandwidth* in a mean integrated squared
-error sense. 
-
----
-## Asymptotically optimal bandwidth
-
-If we pretend $f_0$ is the density for $\mathcal{N}(0, \sigma^2)$, the optimal
-bandwidth becomes 
-$$h_n = \left( \frac{8 \sqrt{\pi} \|K\|_2^2}{3 \sigma_K^4} \right)^{1/5} \sigma n^{-1/5}.$$
-
---
-
-With the Gaussian kernel, $\|K\|_2^2 = 1/(2\sqrt{\pi})$ and $\sigma_K^4 = 1$, and 
-the optimal bandwidth can be estimated as 
-
-$$\hat{h}_n = \left(\frac{4}{3}\right)^{1/5} \tilde{\sigma} n^{-1/5}$$
-
-with a (robust) estimate $\tilde{\sigma}$ of $\sigma.$  
-
---
-
-*Silverman's rule of thumb* uses the bandwidth
-$$\hat{h}_n = 0.9 \tilde{\sigma} n^{-1/5}.$$
+error sense.
 
 ---
 ## Amino Acid Angles (Silverman, the default)
+
+$$h = 0.9 \min \left(\hat{\sigma},\frac{\text{IQR}}{1.34}\right) n^{-1/5}$$
 
 .two-column-left[
 ```{r dens3, eval = FALSE}
@@ -705,4 +807,62 @@ lines(density(phipsi$psi, bw = "SJ"), col = "red", lwd = 2)
 ```
 ]
 
+---
 
+## Exercise
+
+Take the `kern_dens()` function we started out with and implement Silverman's rule of thumb for choosing the bandwidth. Test against the default behavior of `density()` to check that your implementation is working.
+
+```{r}
+kern_dens_silverman <- function(x, h = NULL, m = 512) {
+  # If h is NULL, compute h using Silverman's rule #<<
+
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- numeric(m)
+
+  for (i in seq_along(xx)) {
+    for (j in seq_along(x)) {
+      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
+    }
+  }
+
+  y <- y / (sqrt(2 * pi) * h * length(x))
+
+  list(x = xx, y = y)
+}
+```
+
+```{r, include = FALSE}
+kern_dens_silverman <- function(x, h = NULL, m = 512) {
+  if (is.null(h)) {
+    sigma_hat <- sd(x)
+    n <- length(x)
+    qs <- quantile(x, probs = c(0.25, 0.75))
+    iqr <- qs[2] - qs[1]
+    h <- 0.9 * min(sigma_hat, iqr / 1.34) * n^(-1 / 5)
+  }
+
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- numeric(m)
+
+  for (i in seq_along(xx)) {
+    for (j in seq_along(x)) {
+      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
+    }
+  }
+
+  y <- y / (sqrt(2 * pi) * h * length(x))
+
+  list(x = xx, y = y)
+}
+
+plot(density(x))
+lines(kern_dens_silverman(x))
+```
+
+## Exercise
+
+Return an S3 object from your density function and write a 
+plot method for it.
