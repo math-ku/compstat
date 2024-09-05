@@ -819,7 +819,7 @@ lines(density(phipsi$psi, bw = "SJ"), col = "red", lwd = 2)
 
 ---
 
-## Exercise
+## Exercises
 
 Take the `kern_dens()` function we started out with and implement Silverman's rule of thumb for choosing the bandwidth. Test against the default behavior of `density()`.
 
@@ -874,7 +874,26 @@ lines(kern_dens_silverman(x))
 
 ---
 
-## Exercise
+
+## Exercises
+
+### Multiple Kernels
+
+Let the user choose between the Gaussian and the uniform kernel. 
+
+--
+
+### Object
 
 Return an S3 object from your density function and write a 
-plot method for it.
+plot method for it, using either ggplot2 or base graphics.
+
+--
+
+### Generic
+
+Write a new generic called `my_density()` and
+provide different methods depending on whether you provide a vector or a matrix,
+storing density estimates for each column if it is a matrix.
+
+Modify the `plot()` method to handle the new object.
