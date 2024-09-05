@@ -41,7 +41,7 @@ How to create and work with S3 classes
 
 ### Kernel Density Estimation
 
-How to create non-parametric density estimates using density kernel estimation
+How to create non-parametric density estimates using kernel density estimation
 
 ---
 
