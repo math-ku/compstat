@@ -68,7 +68,7 @@ class: middle, center
 
 ### This Course
 
-We will focus **entirely** on S3.
+We will focus **entirely** on S3: a *very* informal OOP system.
 
 ---
 
@@ -613,7 +613,7 @@ $$f(x) = f_h(x) = \frac{1}{nh \sqrt{2 \pi}} \sum_{j=1}^n e^{- \frac{(x - x_j)^2}
 
 ---
 
-## Bandwidth
+## Bandwidth Selection
 
 ```{r, fig.align='center'}
 f_h <- function(x, h) mean(dnorm(x, phipsi$psi, h))
@@ -691,7 +691,7 @@ n \log(nh\sqrt{2 \pi}) \\
 for $h \to 0$. 
 --
 
-Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is no MLE in the set of distributions
+Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is **no MLE** in the set of distributions
 with densities.
 
 
