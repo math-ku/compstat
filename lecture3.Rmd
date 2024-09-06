@@ -1,13 +1,11 @@
 ---
-title: "Benchmarking, Profiling, and Environments"
+title: "Benchmarking and Profiling"
 subtitle: Computational Statistics
 author: "Johan Larsson, Niels Richard Hansen"
 date: "September 10, 2024"
 ---
 
-## Benchmarking Density estimation
-
-```{r, echo=FALSE}
+```{r setup, echo=FALSE}
 source(file.path("R", "kernel.R"))
 
 knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
@@ -28,87 +26,161 @@ library(ggplot2)
 theme_set(theme_grey(base_size = 16))
 ```
 
-```{r kern-dens-vec, echo=FALSE}
-kern_dens_vec <- function(x, h, m = 512) {
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- numeric(m)
-  # The inner loop from 'kern_dens' has been vectorized, and only the
-  # outer loop over the grid points remains.
-  const <- (sqrt(2 * pi) * h * length(x))
-  for (i in seq_along(xx)) {
-    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) / const
-  }
-  list(x = xx, y = y)
+## Today
+
+
+### Measuring Performance
+
+#### Profiling
+
+Identifying bottlenecks in code
+
+#### Benchmarking
+
+Comparing performance of different implementations
+
+--
+
+### Improving Performance
+
+Writing efficient code
+
+
+---
+## Profiling
+
+A profiler quantifies how much time each part of a function takes up.
+
+--
+
+R uses a *sampling profiler* which at regular time intervals records which 
+function is currently executing.
+
+--
+
+The R package [profvis](https://CRAN.R-project.org/package=profvis) provides useful visualization tools of the data generated 
+by the profiler. Can also be called activated through the RStudio IDE.
+
+```{r load_profvis}
+library(profvis)
+```
+
+--
+
+### Remember!
+
+> We *should* forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil.
+> Yet we should not pass up our opportunities in that critical 3%.
+> 
+> *—Donald Knuth*
+
+---
+
+## Example
+
+We profile the following reimplementation of `gauss()`.
+
+```{r gauss_step, eval=FALSE, out.width = 600}
+gauss_step <- function(x, h = 1) {
+  exponent <- x^2 / (2 * h^2)
+  numerator <- exp(-exponent)
+  denominator <- h * sqrt(2 * pi)
+  numerator / denominator
 }
 ```
 
-```{r, echo = FALSE}
-library("microbenchmark")
+---
+## Example
+
+```{r source_profvis, cache = TRUE, eval = FALSE}
+source("R/Lecture.R", keep.source = TRUE)
+x <- rnorm(1e7)
+profvis(gauss_step(x))
 ```
 
-```{r, echo=FALSE}
-x <- rnorm(2^13)
-tmp <- microbenchmark(
-  density(x[1:32], 0.2),
-  density(x[1:64], 0.2),
-  density(x[1:128], 0.2),
-  density(x[1:264], 0.2),
-  density(x[1:512], 0.2),
-  density(x[1:1024], 0.2),
-  density(x[1:2048], 0.2),
-  density(x[1:4096], 0.2),
-  density(x, 0.2)
-)
-n <- 2^(5:13)
-resDens <- cbind(n, aggregate(time ~ expr, tmp, median))
+---
 
-tmp <- microbenchmark(
-  kern_dens(x[1:32], 0.2),
-  kern_dens(x[1:64], 0.2),
-  kern_dens(x[1:128], 0.2),
-  kern_dens(x[1:264], 0.2),
-  kern_dens(x[1:512], 0.2),
-  kern_dens(x[1:1024], 0.2),
-  kern_dens(x[1:2048], 0.2)
-)
-n <- 2^(5:11)
-resKern <- cbind(n, aggregate(time ~ expr, tmp, median))
+## Exercise
 
-tmp <- microbenchmark(
-  kern_dens_vec(x[1:32], 0.2),
-  kern_dens_vec(x[1:64], 0.2),
-  kern_dens_vec(x[1:128], 0.2),
-  kern_dens_vec(x[1:264], 0.2),
-  kern_dens_vec(x[1:512], 0.2),
-  kern_dens_vec(x[1:1024], 0.2),
-  kern_dens_vec(x[1:2048], 0.2)
-)
-n <- 2^(5:11)
-resKern2 <- cbind(n, aggregate(time ~ expr, tmp, median))
+Consider the implementation of `kern_dens()`.
+
+```{r kern_dens_impl}
+kern_dens <- function(x, h, m = 512) {
+  grid_points <- seq(min(x) - 3 * h, max(x) + 3 * h, length.out = m)
+  y <- numeric(m)
+  for (i in seq_along(grid_points)) {
+    for (j in seq_along(x)) {
+      y[i] <- y[i] + exp(-(grid_points[i] - x[j])^2 / (2 * h^2))
+    }
+  }
+  y <- y / (sqrt(2 * pi) * h * length(x))
+  list(x = grid_points, y = y)
+}
 ```
 
-```{r, echo=FALSE, warning=FALSE}
-p <- ggplot(data = resKern, aes(n, time / 1e6, color = "kern")) +
-  geom_point(size = 4) +
-  scale_x_continuous(trans = "log2") +
-  scale_y_continuous(
-    trans = "log10",
-    limits = c(0.05, 110),
-    breaks = c(0.1, 1, 10, 100)
-  ) +
-  geom_point(data = resDens, size = 4, aes(color = "dens")) +
-  geom_point(data = resKern2, size = 4, aes(color = "kern2")) +
-  scale_color_manual("R function",
-    labels = c("density", "kern_dens", "kern_dens_vec", "kern_dens_bin"),
-    breaks = c("dens", "kern", "kern2", "kern3"),
-    values = c("black", "red", "blue", "purple")
-  ) +
-  ylab("time (ms)")
-p
+Use line profiling on this function to investigate where most
+time is spent. 
+
+
+---
+## Line Profiling
+
+The `profvis` package can summarize profiling information 
+by line in the source code. The following code will open a 
+profiling display when evaluated in RStudio. 
+
+```{r profile_kern_dens, eval=FALSE}
+library("profvis")
+profvis(kern_dens(x, 0.2))
 ```
 
-[Source for R code](R/kernel.R)
+The [result](kern_dens_prof.html) is an interactive HTML page, which can be saved and viewed in a browser.
+
+---
+## Line Profiling
+
+The one-liner in the loop did too many things. The `kern_dens_detail()` spells out
+the steps in this condensed expression.
+
+```{r kern_dens_detail, echo=FALSE}
+kern_dens_detail
+```
+
+---
+## Line Profiling
+
+```{r profile_kern_dens_detail, eval=FALSE}
+profvis(kern_dens_detail(x, 0.2))
+```
+
+The [result](kern_dens_detail_prof.html) of profiling the code for this function call 
+is more informative.
+
+--
+
+You should compare the profiling result above with the 
+[result from the initial `kern_dens`](kern_dens_prof.html) implementation. 
+
+
+---
+
+## Binning
+
+The line profiler revealed that most time is spent on the 
+kernel evaluation. 
+
+--
+
+A trick to reduce the $nm$ kernel evaluations to a smaller number is
+**binning**.
+
+--
+
+
+(On the slides and in my implementations, $m$ denotes the number of grid points 
+for the evaluation of the estimate and $n$ the length of the data vector.)
+
+If $n < m$, then binning may not be beneficial.
 
 ---
 
@@ -119,11 +191,14 @@ used by one or more implementations of a computation.
 
 --
 
-The term *microbenchmarking* is used when very small pieces of code are benchmarked.
+### Microbenchmarking
 
---
+Benchmarking small pieces of code.
 
-We use the R package [bench](https://cran.r-project.org/web/package=bench) for benchmarking.
+### The bench Package
+
+We will use the R package [bench](https://cran.r-project.org/web/package=bench) for benchmarking.
+
 ```{r}
 library(bench)
 ```
@@ -163,382 +238,41 @@ bench::mark(
 ```
 
 ---
-## Profiling
 
-A profiler quantifies how much time each part of a function takes up.
+## Benchmarking Density Estimation
 
---
-
-R uses a *sampling profiler* which at regular time intervals records which 
-function is currently executing.
-
---
-
-The R package [profvis](https://CRAN.R-project.org/package=profvis) provides useful visualization tools of the data generated 
-by the profiler. 
-
-```{r}
-library(profvis)
-```
-
-### Remember!
-
-> We *should* forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil.
-> Yet we should not pass up our opportunities in that critical 3%.
-> 
-> *—Donald Knuth*
-
----
-## Example
-
-We profile the following reimplementation of `gauss()`.
-
-```{r, eval=FALSE, out.width = 600}
-gauss_step <- function(x, h = 1) {
-  exponent <- x^2 / (2 * h^2)
-  numerator <- exp(-exponent)
-  denominator <- h * sqrt(2 * pi)
-  numerator / denominator
-}
-```
-
----
-## Example
-
-```{r cache = TRUE}
-source("R/Lecture.R", keep.source = TRUE)
-x <- rnorm(1e7)
-profvis(gauss_step(x))
-```
-
----
-## Exercise
-
-Consider the implementation of `kern_dens()` from Section 2.2.1 in CSwR.
-
-```{r}
-kern_dens <- function(x, h, m = 512) {
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- numeric(m)
-  for (i in seq_along(xx)) {
-    for (j in seq_along(x)) {
-      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
-    }
+```{r message = FALSE, cache = FALSE}
+res <- bench::press(
+  n = 2^(5:13),
+  {
+    x <- rnorm(2^13)
+    bench::mark(
+      base = density(x[1:n], 0.2),
+      loop = kern_dens(x[1:n], 0.2),
+      vectorized = kern_dens_vec(x[1:n], 0.2),
+      check = FALSE
+    )
   }
-  y <- y / (sqrt(2 * pi) * h * length(x))
-  list(x = xx, y = y)
-}
-```
-
-Use line profiling on this function to investigate where most
-time is spent. 
-
----
-## Environments
-
-Environments control where variables belong and how they are found.
-
---
-
-The "workspace" is the *Global Environment*.
-
---
-
-When a function is evaluated it has an *evaluation environment*.
-
---
-
-Variables are looked for in the evaluation environment and in the 
-list of formal arguments.
-
---
-
-What happens when you refer to a variable in a function body that is 
-neither an argument nor defined in the body?
-
----
-## Enclosing environment
-
-Consider the implementation 
-
-```{r}
-f_bar <- function(x, h) {
-  mean(gauss(x - xs, h))
-}
-```
-
-of the kernel density estimator
-$$\overline{f}_h(x) =  \frac{1}{n} \sum_{i=1}^n K_h(x - x_i).$$
---
-
-```{r}
-xs <- rnorm(10) # A data set with 10 observations
-```
-
---
-
-```{r}
-f_bar(1, 1)
-```
---
-
-The body uses the data `xs`, which is in the Global Environment. It is found 
-by looking in the *enclosing environment* of the function/its evaluation 
-environment.
-
----
-## Exercise
-
-Evaluate the following code. Explain what you see.
-
-```{r, eval=FALSE}
-f_bar <- function(x, h) {
-  print(ls())
-}
-f_bar(1, 1)
-```
-
-```{r, eval=FALSE}
-f_bar <- function(x, h) {
-  print(environment())
-}
-f_bar(1, 1)
-```
-
-```{r, eval=FALSE}
-f_bar <- function(x, h) {
-  print(parent.env(environment()))
-}
-f_bar(1, 1)
-```
-
-See `?environment` for help.
-
----
-## Looking up functions
-
-Functions are found the same way as variables.
-
---
-
-In fact, `gauss()` was found in the Global Environment just as `xs` was 
-found there. 
-
---
-
-```{r}
-environment(sd)
-```
-
---
-
-
-```{r}
-sd
-```
-
-
---
-
-What happens if I redefine `var()` that `sd()` uses?
-
-```{r}
-var <- function(x) mean((x - mean(x))^2)
-```
-
-
-
----
-## Namespaces
-
-
-```{r, echo = FALSE, out.width=700, fig.align='center'}
-knitr::include_graphics("images/namespace.png")
+)
 ```
 
 ---
-## Exercise
 
-
-* Find the enclosing environments of the functions `mean()` and `weighted.mean()`
-
-
-* Implement your own function called `mean()` (that computes the mean)
-
-
-* Various R functions (such as `t.test()` in stats and `barplot()` in graphics)
-use `mean()`. Is their functionality affected by your implementation?
-
-
-* Test your function by comparing to `mean()` (how do you call a function you 
-have overwritten?)
-
----
-## Working with the enclosing environment
-
-It is bad practice to rely on a "global variable", such as `xs`, in the global 
-environment.
---
-
-It is better practice to 
-* include the variable as an argument
-* give the function  such a variable into a 
-
---
-
-```{r}
-f_bar_factory <- function(xs) {
-  function(x, h) {
-    mean(gauss(x - xs, h))
-  }
-}
+```{r, echo=FALSE, warning=FALSE}
+library(tidyverse)
+mutate(
+  res,
+  expr = as.character(expression),
+  median = as.numeric(median)
+) |>
+  ggplot(aes(n, median, color = expr)) +
+  geom_point() +
+  geom_line() +
+  scale_y_log10() +
+  labs(y = "time (µs)")
 ```
 
---
-
-```{r}
-f_bar <- f_bar_factory(xs)
-```
-
----
-## Working with the enclosing environment
-
-```{r}
-f_bar(1, 1)
-```
-
---
-
-```{r}
-rm(xs)
-f_bar(1, 1)
-```
-
---
-
-```{r}
-environment(f_bar)
-```
-
---
-
-```{r}
-ls(environment(f_bar))
-```
-
---
-
-```{r}
-parent.env(environment(f_bar))
-```
-
-
-
-
-
-
----
-
-## Function profiling
-
-The code profiler in the utils package samples at regular intervals the call 
-stack when code is executed. It gives information about the execution time 
-spent "within" each function.
-
-```{r, cache = TRUE, results='hide'}
-x <- rnorm(2^15)
-profFile <- "profiling/prof.Rprof"
-Rprof(profFile)
-kern_dens(x, 0.2)
-Rprof(NULL)
-```
-
-```{r, eval = FALSE}
-summaryRprof("profiling/prof.Rprof")
-```
-
----
-## Function profiling
-
-```{r, echo = FALSE}
-summaryRprof("profiling/prof.Rprof.local")
-```
-
---
-
-
-Not very informative ....
-
-
----
-## Recall the code of `kern_dens` 
-
-```{r}
-kern_dens
-```
-
----
-## Line profiling
-
-The `profvis` package can summarize profiling information 
-by line in the source code. The following code will open a 
-profiling display when evaluated in RStudio. 
-
-```{r, eval=FALSE}
-library("profvis")
-profvis(kern_dens(x, 0.2))
-```
-
-The [result](kern_dens_prof.html) is an interactive HTML page, which can be saved and viewed 
-in a browser. 
-
-In this case the line profiler is not super informative either.
-
----
-## Line Profiling
-
-The one-liner in the loop did too many things. The `kern_dens_detail()` spells out
-the steps in this condensed expression.
-
-```{r, echo=FALSE}
-kern_dens_detail
-```
-
-
----
-## Line Profiling
-
-```{r, eval=FALSE}
-profvis(kern_dens_detail(x, 0.2))
-```
-
-The [result](kern_dens_detail_prof.html) of profiling the code for this function call 
-is more informative.
-
---
-
-You should compare the profiling result above with the 
-[result from the initial `kern_dens`](kern_dens_prof.html) implementation. 
-
-
----
-## Conclusions from profiling
-
-The line profiler revealed that most time is spent on the 
-kernel evaluation. 
---
-
-
-A trick to reduce the $nm$ kernel evaluations to a smaller number is
-*binning*.
---
-
-
-(On the slides and in my implementations, $m$ denotes the number of grid points 
-for the evaluation of the estimate and $n$ the length of the data vector.)
-
-If $n < m$ binning may not be beneficial.
+[Source for R code](R/kernel.R)
 
 ---
 ## Binning
@@ -557,37 +291,45 @@ The `kern_dens_bin()` function (see [the source file](R/kernel.R)) computes bin 
 using `kern_bin()` with grid points as bin centers. 
 
 ---
-## Benchmarking 
 
-```{r micro3, cache = TRUE, echo=FALSE}
-x <- rnorm(2^13)
-tmp <- microbenchmark(
-  kern_dens_bin(x[1:32], 0.2),
-  kern_dens_bin(x[1:64], 0.2),
-  kern_dens_bin(x[1:128], 0.2),
-  kern_dens_bin(x[1:264], 0.2),
-  kern_dens_bin(x[1:512], 0.2),
-  kern_dens_bin(x[1:1024], 0.2),
-  kern_dens_bin(x[1:2048], 0.2),
-  kern_dens_bin(x[1:4096], 0.2),
-  kern_dens_bin(x, 0.2)
+```{r micro3, cache = TRUE, echo=FALSE, message=FALSE}
+res2 <- bench::press(
+  n = 2^(5:13),
+  {
+    h <- 0.2
+    x <- rnorm(n)
+    bench::mark(
+      base = density(x, h),
+      loop = kern_dens(x, h),
+      vectorized = kern_dens_vec(x, h),
+      binning = kern_dens_bin(x, h),
+      check = FALSE
+    )
+  }
 )
-n <- 2^(5:13)
-resKern3 <- cbind(n, aggregate(time ~ expr, tmp, median))
+
+mutate(
+  res2,
+  expr = as.character(expression),
+  median = as.numeric(median)
+) |>
+  ggplot(aes(n, median, color = expr)) +
+  geom_point() +
+  geom_line() +
+  scale_y_log10() +
+  labs(y = "time (µs)")
 ```
 
-
-```{r, dependson = "micro3", warning = FALSE}
-p + geom_point(data = resKern3, size = 4, aes(color = "kern3"))
-```
-
-The computations become faster for long sequences when binning is used.
+The relative benefit of binning increases with the size of the data.
 
 ---
-## Testing 
+## Testing
 
-```{r, echo=2:3, fig.height=3.5, out.height=350}
-par(mar = c(2.1, 4.1, 1, 2.1))
+```{r plot-kern-dens-benchmark, echo=-c(1:2), fig.width = 7, fig.asp = 0.7}
+library(tidyverse)
+set.seed(123)
+x <- rnorm(1e4) + rnorm(1e4, -3, 0.7)
+
 plot(kern_dens(x, 0.2), type = "l", lwd = 4)
 lines(kern_dens_bin(x, 0.2), col = "red", lwd = 2)
 ```
@@ -595,8 +337,7 @@ lines(kern_dens_bin(x, 0.2), col = "red", lwd = 2)
 ---
 ## Testing
 
-```{r, echo=FALSE, fig.height=3.5, out.height=350}
-par(mar = c(2.1, 4.1, 1, 2.1))
+```{r test-kern-dens-bench, echo=FALSE, fig.width=7, fig.asp = 0.65}
 x0 <- kern_dens(x, 0.2)$x
 plot(
   x0,
@@ -639,121 +380,208 @@ The [result](kern_dens_bin_prof.html) shows that now the largest fraction of tim
 in the binning algorithm.
 
 ---
-## Benchmarking
 
-```{r micro4, cache = TRUE, echo=FALSE}
-x <- rnorm(2^18)
-x1 <- x[1:2^8]
-x2 <- x[1:2^9]
-x3 <- x[1:2^10]
-x4 <- x[1:2^11]
-x5 <- x[1:2^12]
-x6 <- x[1:2^13]
-x7 <- x[1:2^14]
-x8 <- x[1:2^15]
-x9 <- x[1:2^16]
-x10 <- x[1:2^17]
+## Caveats About Profiling
 
-tmpKern <- microbenchmark(
-  kern_dens_bin(x1, 0.2),
-  kern_dens_bin(x2, 0.2),
-  kern_dens_bin(x3, 0.2),
-  kern_dens_bin(x4, 0.2),
-  kern_dens_bin(x5, 0.2),
-  kern_dens_bin(x6, 0.2),
-  kern_dens_bin(x7, 0.2),
-  kern_dens_bin(x8, 0.2),
-  kern_dens_bin(x9, 0.2),
-  kern_dens_bin(x10, 0.2),
-  kern_dens_bin(x, 0.2),
-  times = 10L
-)
-tmpDens <- microbenchmark(
-  density(x1, 0.2),
-  density(x2, 0.2),
-  density(x3, 0.2),
-  density(x4, 0.2),
-  density(x5, 0.2),
-  density(x6, 0.2),
-  density(x7, 0.2),
-  density(x8, 0.2),
-  density(x9, 0.2),
-  density(x10, 0.2),
-  density(x, 0.2),
-  times = 10L
-)
+- Anonymous functions make profiling more difficult; prefer using named functions.
+- Resolution may not be enough for small pieces of code (but do you really need to profile them then?)
 
-n <- 2^(8:18)
-resDens4 <- cbind(n, aggregate(time ~ expr, tmpDens, median))
-resKern5 <- cbind(n, aggregate(time ~ expr, tmpKern, median))
+---
+
+class: center, middle
+
+# Improving Performance
+
+---
+
+## Vectorization
+
+- Vectorization is the process of replacing loops with vectorized operations.
+
+- These vectorized operations are also loops, but they are written in C instead or R.
+  - Examples of vectorized functions: `mean()`, `sd()`
+  - Examples of non-vectorized functions: `apply()`, `Vectorize()`
+
+- Vectorizing code is often about finding the right function in R.
+
+---
+
+## Exercise on Vectorization
+
+
+
+---
+
+## Avoiding Copies
+
+- In R, objects are passed by reference, but when an object is modified a copy is created.
+--
+
+- For instance, when subsetting a matrix, a copy is created. It's not possible to access for instance a column by reference.
+--
+
+- Growing vectors (`c()`) and matrices (`rbind()`, `cbind()`) also creates copies.
+
+
+```{r}
+x <- rnorm(100)
+x <- c(x, 4) # 101 values are allocated
+```
+
+---
+
+## Memory
+
+### Memory in R
+
+In R, everything is typically loaded into memory.
+
+### Garbage Collection
+
+R includes a garbage collector, which intermittently releases unused blocks in memory.
+
+### Trade-Offs
+
+Storing intermediate objects that are used multiple times will boost performance at the cost of additional memory storage.
+
+---
+
+## Exercise
+
+Let's say we want to minimize the following function with gradient descent:
+$$f(x) = \frac{1}{2}x^2 - x.$$
+The gradient is $f'(x) = x - 1$.
+
+```{r}
+my_optim <- function(x) {
+  gradient_history <- c()
+
+  while (TRUE) {
+    gradient <- x - 1
+    gradient_history <- c(gradient_history, gradient)
+
+    x <- x - g
+
+    if (abs(g) < 1e-6) {
+      break
+    }
+  }
+
+  x
+}
 ```
 
 
-```{r, echo=FALSE, warning=FALSE}
-p <- ggplot(data = resDens4, aes(n, time / 1e6, color = "dens")) +
-  geom_point(size = 4) +
-  scale_x_continuous(trans = "log2") +
-  scale_y_continuous(
-    trans = "log10",
-    limits = c(0.2, 110),
-    breaks = c(1, 10, 100)
-  ) +
-  geom_point(data = resKern5, size = 4, aes(color = "kern")) +
-  scale_color_manual("R function",
-    labels = c("density", "kern_dens_bin"),
-    breaks = c("dens", "kern"),
-    values = c("black", "purple")
-  ) +
-  ylab("time (ms)")
-p
+---
+
+## Storage Modes
+
+.pull-left[
+- In R, matrices are stored in column-major order.
+- This means that when you access a column of a matrix, you are accessing a contiguous block of memory.
+- Prefer to work with matrices instead of data frames.
+]
+]
+
+.pull-right[
+
+]
+
+---
+
+## Exercise
+
+```{r}
+mat_vec_mul1 <- function(x, y) {
+  n <- NROW(x)
+  z <- double(n)
+
+  for (i in seq_len(n)) {
+    z[i] <- t(x[i, ]) %*% y
+  }
+  z
+}
 ```
 
-When `density()` or `kern_dens_bin()` are used on longer data vectors, we see how they scale
-with the length of the vector. 
+
+```{r, include = FALSE}
+n <- 1e3
+p <- 1e1
+
+x <- matrix(rnorm(n * p), n)
+y <- matrix(rnorm(p), p, 1)
+
+f1 <- function(x, y) {
+  n <- NROW(x)
+  z <- double(n)
+
+  for (i in seq_len(n)) {
+    z[i] <- t(x[i, ]) %*% y
+  }
+  z
+}
+
+f2 <- function(x, y) {
+  n <- NROW(x)
+  x_t <- t(x)
+  z <- double(n)
+
+  for (i in seq_len(n)) {
+    z[i] <- x_t[, i] %*% y
+  }
+
+  z
+}
+
+f3 <- function(x, y) {
+  n <- NROW(x)
+  z <- double(n)
+
+  for (i in seq_len(NCOL(x))) {
+    z <- z + x[, i] * y[i]
+  }
+
+  z
+}
+
+bench::mark(f1(x, y), f2(x, y), f3(x, y))
+```
 
 ---
 
-class: middle, center
+## Parallelization and Asynchronous Programming
 
-# Environments
+- Modern processors today have multiple (physical and virtual) cores
+--
+
+- But unless instructed otherwise, only a single core is going to be used.
+
+--
+
+- The computer doesn't automatically know that your computations are safe to do in parallel.
+
+### Embarassingly Parallel
+
+Means that parallelizing the operation is trivial
+
+Examples:
+
+- Summing a vector (or matrix): `sum()`
+- Linear algebra operations: `%*%` (`crossprod()`)
 
 ---
 
-## Environments
+class: center, middle
 
-An environment is a data structure in R that can best be compared to a list.
-
---
-
-It can contain any other data structures, and data residing in an environment 
-have names and can be accessed using the `$`-operator. 
-
---
-
-However, there is no sequential order of the data in an environment, and 
-*environments are copied by reference*.
+# More on Functions and Scoping
 
 ---
-## Environments
 
-The most important uses of environments are:
-
-* Packages and their namespaces 
---
-
-
-* Function environments implementing scoping rules
---
-
-
-* Data structures with reference semantics  as opposed to lists
-
----
 ## Functions 
 
 R functions consist of three components.
 
-```{r}
+```{r foo_function}
 foo <- function(x) {
   x^2 + x + 1
 }
@@ -918,7 +746,7 @@ foo(10, y^2)
 ```
 
 ---
-## Scoping rules
+## Scoping Rules
 
 For a variable we distinguish between the *symbol* (the `y`) and its value (`2`). 
 The rules for finding the symbol are called *scoping* rules, and R implements *lexical scoping*.
@@ -941,10 +769,10 @@ might not have the "expected effect" if that is *dynamic scoping*, which is diff
 predict and reason about as a programmer. 
 
 ---
-## Function factories
+## Function Factories
 
 ```{r}
-fooFactory <- function(y) {
+foo_factory <- function(y) {
   function(x) {
     y * x^2 + x + 1
   }
@@ -953,18 +781,18 @@ fooFactory <- function(y) {
 --
 
 ```{r}
-foo <- fooFactory(2)
+foo <- foo_factory(2)
 body(foo)
 foo(10)
 ```
 
 ```{r}
-foo2 <- fooFactory(3)
+foo2 <- foo_factory(3)
 ```
 
 
 ---
-## Function factories
+## Function Factories
 
 ```{r}
 foo2(10)
@@ -981,7 +809,7 @@ Setting a value of `y` in the calling environment of `foo` or `foo2` doesn't
 change the behavior of the functions.
 
 ---
-## Function factories
+## Function Factories
 
 ```{r}
 environment(foo)
@@ -998,16 +826,16 @@ environment(foo)$y
 ```
 --
 
-The function `fooFactory` is called a function factory because it returns (produces)
+The function `foo_factor()` is called a function factory because it returns (produces)
 functions.
---
 
+--
 
 It's a way to provide a function with a local storage (its environment) for "configuration 
 values".
 
 ---
-## Function factories
+## Function Factories
 
 ```{r}
 environment(foo2)
@@ -1025,5 +853,3 @@ parent.env(environment(foo))
 
 The parent environment is the enclosing environment of the factory, in this 
 case the global environment. 
-
-
