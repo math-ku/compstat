@@ -18,30 +18,35 @@ output:
 ```{r, echo=FALSE, message=FALSE}
 library("tidyverse")
 library("microbenchmark")
-knitr::opts_chunk$set(fig.width = 6, fig.height = 4, cache = TRUE, dpi = 144,
-                      out.height = 400, 
-                      dev.args = list(bg = 'transparent'), 
-                      fig.align = "center", comment=NA)
+knitr::opts_chunk$set(
+  fig.width = 6, fig.height = 4, cache = TRUE, dpi = 144,
+  out.height = 400,
+  dev.args = list(bg = "transparent"),
+  fig.align = "center", comment = NA
+)
 theme_replace(plot.background = element_rect(fill = NA, color = NA))
-Nuuk <- read_table("../../../../Books/CSwR/data/nuuk.dat.txt", 
-                    col_names = c("Year", 1:12), 
-                    na = "-999", 
-                    skip = 1) %>% 
-  gather(key = "Month", value = "Temperature", -Year, convert = TRUE) %>% 
-  mutate(Temperature = Temperature / 10) %>% 
+Nuuk <- read_table("data/nuuk.dat.txt",
+  col_names = c("Year", 1:12),
+  na = "-999",
+  skip = 1
+) %>%
+  gather(key = "Month", value = "Temperature", -Year, convert = TRUE) %>%
+  mutate(Temperature = Temperature / 10) %>%
   filter(Year > 1866)
 
-Nuuk_year <- group_by(Nuuk, Year) %>% 
-  summarise(Temperature = mean(Temperature),
-            Median = median(Temperature),
-            High = max(Temperature), 
-            Low = min(Temperature))
+Nuuk_year <- group_by(Nuuk, Year) %>%
+  summarise(
+    Temperature = mean(Temperature),
+    Median = median(Temperature),
+    High = max(Temperature),
+    Low = min(Temperature)
+  )
 n <- nrow(Nuuk_year)
 ```
 
 ```{r}
-p <- qplot(Year, Temperature, data = Nuuk_year); p
-
+p <- qplot(Year, Temperature, data = Nuuk_year)
+p
 ```
 
 ---
@@ -120,12 +125,13 @@ $$\hat{f}_{i+1} = \hat{f}_{i} - y_{i - (k-1)/2} / k + y_{i + (k + 1)/2} / k,$$
 run_mean <- function(y, k) {
   n <- length(y)
   m <- floor((k - 1) / 2)
-  k <- 2 * m + 1           # Ensures k to be odd and m = (k - 1) / 2
+  k <- 2 * m + 1 # Ensures k to be odd and m = (k - 1) / 2
   y <- y / k
   s <- rep(NA, n)
   s[m + 1] <- sum(y[1:k])
-  for(i in (m + 1):(n - m - 1)) 
+  for (i in (m + 1):(n - m - 1)) {
     s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m]
+  }
   s
 }
 ```
@@ -144,13 +150,13 @@ p + geom_line(aes(y = f_hat), color = "blue")
 The R function `filter()` computes running means and moving averages 
 
 ```{r runMeanCheck, dependson="runMean"}
-f_hat_filter <- stats::filter(Nuuk_year$Temperature, rep(1/11, 11))
+f_hat_filter <- stats::filter(Nuuk_year$Temperature, rep(1 / 11, 11))
 range(f_hat_filter - f_hat, na.rm = TRUE)
 ```
 
 --
 ```{r, echo=2}
-op <- options(digits=2)
+op <- options(digits = 2)
 f_hat_filter[c(1:10, 137:147)]
 options(digits = op$digits)
 ```
@@ -161,13 +167,13 @@ options(digits = op$digits)
 
 ```{r runMeanBench, dependson="runMean", echo=FALSE, warning=FALSE}
 y <- rnorm(4196)
-w <- c(rep(1/11, 11), rep(0, 512 - 10))
+w <- c(rep(1 / 11, 11), rep(0, 512 - 10))
 S1 <- matrix(w, 512 - 10, 512, byrow = TRUE)
-w <- c(rep(1/11, 11), rep(0, 1024 - 10))
+w <- c(rep(1 / 11, 11), rep(0, 1024 - 10))
 S2 <- matrix(w, 1024 - 10, 1024, byrow = TRUE)
-w <- c(rep(1/11, 11), rep(0, 2048 - 10))
+w <- c(rep(1 / 11, 11), rep(0, 2048 - 10))
 S3 <- matrix(w, 2048 - 10, 2048, byrow = TRUE)
-w <- c(rep(1/11, 11), rep(0, 4196 - 10))
+w <- c(rep(1 / 11, 11), rep(0, 4196 - 10))
 S4 <- matrix(w, 4196 - 10, 4196, byrow = TRUE)
 tmp <- microbenchmark(
   S1 %*% y[1:512],
@@ -178,11 +184,11 @@ tmp <- microbenchmark(
   run_mean(y[1:1024], k = 11),
   run_mean(y[1:2048], k = 11),
   run_mean(y[1:4196], k = 11),
-  stats::filter(y[1:512], rep(1/11, 11)),
-  stats::filter(y[1:1024], rep(1/11, 11)),
-  stats::filter(y[1:2048], rep(1/11, 11)),
-  stats::filter(y[1:4196], rep(1/11, 11))
-  )
+  stats::filter(y[1:512], rep(1 / 11, 11)),
+  stats::filter(y[1:1024], rep(1 / 11, 11)),
+  stats::filter(y[1:2048], rep(1 / 11, 11)),
+  stats::filter(y[1:4196], rep(1 / 11, 11))
+)
 summary(tmp)[, c(1, 5)]
 ```
 
@@ -257,7 +263,7 @@ $$\mathrm{LOOCV} = \sum_{i} (y_i - \hat{f}^{-i}_i)^2 =
 ```{r LOOCV-runMean}
 loocv <- function(k, y) {
   f_hat <- run_mean(y, k)
-  mean(((y - f_hat) / (1 - 1/k))^2, na.rm = TRUE) 
+  mean(((y - f_hat) / (1 - 1 / k))^2, na.rm = TRUE)
 }
 ```
 --
@@ -366,20 +372,20 @@ matplot(xx, B_splines, type = "l", lty = 1)
 ```{r Omega-Simpson, echo=FALSE}
 pen_mat <- function(inner_knots) {
   knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
-  d <- diff(inner_knots)  # the vector of knot differences; b - a 
-  g_ab <- splineDesign(knots, inner_knots, derivs = 2) 
+  d <- diff(inner_knots) # the vector of knot differences; b - a
+  g_ab <- splineDesign(knots, inner_knots, derivs = 2)
   knots_mid <- inner_knots[-length(inner_knots)] + d / 2
   g_ab_mid <- splineDesign(knots, knots_mid, derivs = 2)
   g_a <- g_ab[-nrow(g_ab), ]
   g_b <- g_ab[-1, ]
-  (crossprod(d * g_a,  g_a) + 
-      4 * crossprod(d * g_ab_mid, g_ab_mid) + 
-      crossprod(d * g_b, g_b)) / 6 
+  (crossprod(d * g_a, g_a) +
+    4 * crossprod(d * g_ab_mid, g_ab_mid) +
+    crossprod(d * g_b, g_b)) / 6
 }
 ```
 
 ```{r}
-# See notes for implementation of penalty matrix 
+# See notes for implementation of penalty matrix
 Omega <- pen_mat(seq(0, 1, 0.1))
 image(Matrix(Omega))
 ```
@@ -402,20 +408,21 @@ Phi <- splineDesign(knots, inner_knots) #<<
 
 ```{r Nuuk-smooth-spline2}
 Omega <- pen_mat(inner_knots)
-smoother <- function(lambda) 
+smoother <- function(lambda) {
   Phi %*% solve(
-    crossprod(Phi) + lambda * Omega,    # Phi^T Phi + lambda Omega
-    t(Phi) %*% Nuuk_year$Temperature    # Phi^T y
+    crossprod(Phi) + lambda * Omega, # Phi^T Phi + lambda Omega
+    t(Phi) %*% Nuuk_year$Temperature # Phi^T y
   )
+}
 ```
 
 ---
 ## Fitting a smoothing spline
 
 ```{r}
-p + geom_line(aes(y = smoother(10)), color = "blue") +   # Undersmooth
-  geom_line(aes(y = smoother(1000)), color = "red") +       # Smooth
-  geom_line(aes(y = smoother(100000)), color = "purple")    # Oversmooth
+p + geom_line(aes(y = smoother(10)), color = "blue") + # Undersmooth
+  geom_line(aes(y = smoother(1000)), color = "red") + # Smooth
+  geom_line(aes(y = smoother(100000)), color = "purple") # Oversmooth
 ```
 
 ---
@@ -431,8 +438,8 @@ $$\mathrm{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / n}\
 ```{r gcv-smooth-spline}
 gcv <- function(lambda, y) {
   S <- Phi %*% solve(crossprod(Phi) + lambda * Omega, t(Phi))
-  df <- sum(diag(S))  # The trace of the smoother matrix
-  sum(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE) 
+  df <- sum(diag(S)) # The trace of the smoother matrix
+  sum(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE)
 }
 ```
 
@@ -461,7 +468,7 @@ qplot(lambda, GCV) + geom_vline(xintercept = lambda_opt, color = "red")
 
 ```{r Nuuk-spline-opt, dependson=c("Nuuk-spline-gcv", "NuukData")}
 # Optimal smoother using our implementation
-smooth_opt <- smoother(lambda_opt) 
+smooth_opt <- smoother(lambda_opt)
 p + geom_line(aes(y = smooth_opt), color = "blue")
 ```
 
@@ -470,7 +477,7 @@ p + geom_line(aes(y = smooth_opt), color = "blue")
 
 ```{r Nuuk-spline-opt2, dependson="NuukData"}
 # and using 'smooth.spline()' without fast heuristic
-smooth <- smooth.spline(Nuuk_year$Year, Nuuk_year$Temperature, all.knots = TRUE)  
+smooth <- smooth.spline(Nuuk_year$Year, Nuuk_year$Temperature, all.knots = TRUE)
 p + geom_line(aes(y = smooth$y), color = "blue")
 ```
 
@@ -518,18 +525,18 @@ Omega <- pen_mat(inner_knots)
 Phi_svd <- svd(Phi)
 Omega_tilde <- t(t(crossprod(Phi_svd$v, Omega %*% Phi_svd$v)) / Phi_svd$d) / Phi_svd$d
 # It is safer to use the numerical singular value decomposition ('svd')
-# for diagonalizing a positive semidefinite matrix than to use a 
-# more general numerical diagonalization implementation such as 'eigen'. 
-Omega_tilde_svd <- svd(Omega_tilde)  
+# for diagonalizing a positive semidefinite matrix than to use a
+# more general numerical diagonalization implementation such as 'eigen'.
+Omega_tilde_svd <- svd(Omega_tilde)
 U_tilde <- Phi_svd$u %*% Omega_tilde_svd$u
 
 colnames(U_tilde) <- paste(rep("u", 20), 1:20, sep = "")
-bind_cols(select(Nuuk_year, Year), as_tibble(U_tilde)) %>% 
-  gather(key = "term", value = "value", -Year, factor_key = TRUE) %>% 
-  ggplot(aes(Year, value, color = term)) + 
-  geom_line() + 
-  facet_wrap(~ term) + 
-  theme(legend.position="none") + 
+bind_cols(select(Nuuk_year, Year), as_tibble(U_tilde)) %>%
+  gather(key = "term", value = "value", -Year, factor_key = TRUE) %>%
+  ggplot(aes(Year, value, color = term)) +
+  geom_line() +
+  facet_wrap(~term) +
+  theme(legend.position = "none") +
   ylab("")
 ```
 
@@ -537,7 +544,7 @@ bind_cols(select(Nuuk_year, Year), as_tibble(U_tilde)) %>%
 ## and the eigenvalues $\gamma_i$
 
 ```{r spline-gamma, dependson="spline-diagonalization", echo=FALSE, fig.show='hold'}
-pp <- qplot(1:20, Omega_tilde_svd$d) + xlab("i") + ylab("Eigenvalues") 
+pp <- qplot(1:20, Omega_tilde_svd$d) + xlab("i") + ylab("Eigenvalues")
 gridExtra::grid.arrange(pp, pp + scale_y_log10())
 ```
 
