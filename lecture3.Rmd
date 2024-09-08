@@ -23,6 +23,8 @@ knitr::opts_chunk$set(
 
 library(ggplot2)
 
+source("R/kernel.R")
+
 theme_set(theme_grey(base_size = 16))
 ```
 
@@ -53,13 +55,14 @@ A profiler quantifies how much time each part of a function takes up.
 
 --
 
-R uses a *sampling profiler* which at regular time intervals records which 
-function is currently executing.
+R uses a **sampling profiler**.
 
 --
 
-The R package [profvis](https://CRAN.R-project.org/package=profvis) provides useful visualization tools of the data generated 
-by the profiler. Can also be called activated through the RStudio IDE.
+### profvis
+
+The R package [profvis](https://CRAN.R-project.org/package=profvis) provides useful visualization tools. 
+Can also be called activated through the RStudio IDE.
 
 ```{r load_profvis}
 library(profvis)
@@ -90,57 +93,36 @@ gauss_step <- function(x, h = 1) {
 ```
 
 ---
-## Example
+## Usage
+
+### Simple to Use
+
+- First, make sure the code is sourced (`source()`).
+- Run `profvis()` on the expression you want to profile.
 
 ```{r source_profvis, cache = TRUE, eval = FALSE}
-source("R/Lecture.R", keep.source = TRUE)
+source("R/lecture-3.R", keep.source = TRUE)
 x <- rnorm(1e7)
 profvis(gauss_step(x))
 ```
 
+- The result is an interactive webpage.
+
 ---
 
-## Exercise
+## Benchmarking Density Estimation
 
-Consider the implementation of `kern_dens()`.
+Let's profile our kernel density function.
 
-```{r kern_dens_impl}
-kern_dens <- function(x, h, m = 512) {
-  grid_points <- seq(min(x) - 3 * h, max(x) + 3 * h, length.out = m)
-  y <- numeric(m)
-  for (i in seq_along(grid_points)) {
-    for (j in seq_along(x)) {
-      y[i] <- y[i] + exp(-(grid_points[i] - x[j])^2 / (2 * h^2))
-    }
-  }
-  y <- y / (sqrt(2 * pi) * h * length(x))
-  list(x = grid_points, y = y)
-}
+```{r}
+kern_dens
 ```
 
-Use line profiling on this function to investigate where most
-time is spent. 
-
-
 ---
-## Line Profiling
 
-The `profvis` package can summarize profiling information 
-by line in the source code. The following code will open a 
-profiling display when evaluated in RStudio. 
+## Disecting Expressions
 
-```{r profile_kern_dens, eval=FALSE}
-library("profvis")
-profvis(kern_dens(x, 0.2))
-```
-
-The [result](kern_dens_prof.html) is an interactive HTML page, which can be saved and viewed in a browser.
-
----
-## Line Profiling
-
-The one-liner in the loop did too many things. The `kern_dens_detail()` spells out
-the steps in this condensed expression.
+The one-liner in the loop did too much (for profiling). `kern_dens_detail()` spells out the steps.
 
 ```{r kern_dens_detail, echo=FALSE}
 kern_dens_detail
@@ -153,34 +135,36 @@ kern_dens_detail
 profvis(kern_dens_detail(x, 0.2))
 ```
 
-The [result](kern_dens_detail_prof.html) of profiling the code for this function call 
-is more informative.
-
---
-
-You should compare the profiling result above with the 
-[result from the initial `kern_dens`](kern_dens_prof.html) implementation. 
-
+The result from profiling this call is more informative.
 
 ---
 
-## Binning
+## Exercise
 
-The line profiler revealed that most time is spent on the 
-kernel evaluation. 
+- Profile this implementation of matrix-vector multiplication for an example of $n=p=100$.
+- Before starting: where do you think the bottleneck is?
 
---
+```{r matvec-mul-ex}
+matrix_vector_multiplication <- function(x, y) {
+  n <- NROW(x)
 
-A trick to reduce the $nm$ kernel evaluations to a smaller number is
-**binning**.
+  out <- c()
 
---
+  for (i in seq_len(n)) {
+    xi_y <- t(x[, i]) %*% y
+    out <- c(out, xi_y)
+  }
 
+  out
+}
+```
 
-(On the slides and in my implementations, $m$ denotes the number of grid points 
-for the evaluation of the estimate and $n$ the length of the data vector.)
+---
 
-If $n < m$, then binning may not be beneficial.
+## Caveats About Line Profiling
+
+- Anonymous functions make profiling more difficult; prefer using named functions.
+- Resolution may not be enough for small pieces of code (but do you really need to profile them then?)
 
 ---
 
@@ -195,9 +179,11 @@ used by one or more implementations of a computation.
 
 Benchmarking small pieces of code.
 
+Typical aporoach: find bottleneck through profiling and then (micro)benchmark alternatives.
+
 ### The bench Package
 
-We will use the R package [bench](https://cran.r-project.org/web/package=bench) for benchmarking.
+We use the R package [bench](https://cran.r-project.org/web/package=bench) for benchmarking.
 
 ```{r}
 library(bench)
@@ -275,6 +261,49 @@ mutate(
 [Source for R code](R/kernel.R)
 
 ---
+
+class: center, middle
+
+# Improving Performance
+
+---
+
+## Many Ways
+
+### General Computational Strategies
+
+- Avoiding copies (passing by reference)
+- Parallelization
+
+### R-Specific Tricks
+
+- Vectorization
+
+### Context-Specific Tricks
+
+- Density destimation: binning (up next)
+
+---
+
+## Binning
+
+The line profiler revealed that most time is spent on the
+kernel evaluation.
+
+--
+
+A trick to reduce the $nm$ kernel evaluations to a smaller number is
+**binning**.
+
+--
+
+(On the slides and in my implementations, $m$ denotes the number of grid points 
+for the evaluation of the estimate and $n$ the length of the data vector.)
+
+If $n < m$, then binning may not be beneficial.
+
+---
+
 ## Binning
 
 ```{r}
@@ -366,49 +395,52 @@ decreasing length of data sequence. Here $n = 8192$ is black, $n = 1024$
 is red and $n = 128$ is blue. 
 
 ---
-## Line profiling
+## Line Profiling
 
 The `kern_dens_bin()` function is so much faster for long sequences that to get good 
 profiling results we use a 512 times longer data sequence.
 
-```{r, eval=FALSE}
+```{r eval = FALSE}
 x <- rnorm(2^22)
 profvis(kern_dens_bin(x, 0.2))
 ```
-
-The [result](kern_dens_bin_prof.html) shows that now the largest fraction of time was spent 
-in the binning algorithm.
-
----
-
-## Caveats About Profiling
-
-- Anonymous functions make profiling more difficult; prefer using named functions.
-- Resolution may not be enough for small pieces of code (but do you really need to profile them then?)
-
----
-
-class: center, middle
-
-# Improving Performance
 
 ---
 
 ## Vectorization
 
 - Vectorization is the process of replacing loops with vectorized operations.
-
 - These vectorized operations are also loops, but they are written in C instead or R.
   - Examples of vectorized functions: `mean()`, `sd()`
   - Examples of non-vectorized functions: `apply()`, `Vectorize()`
-
 - Vectorizing code is often about finding the right function in R.
 
 ---
 
 ## Exercise on Vectorization
 
+How do you vectorize this matrix multiplication function?
 
+```{r matvec-mul-ex-vectorize}
+matrix_vector_multiplication <- function(x, y) {
+  n <- NROW(x)
+
+  out <- c()
+
+  for (i in seq_len(n)) {
+    xi_y <- t(x[, i]) %*% y
+    out <- c(out, xi_y)
+  }
+
+  out
+}
+```
+
+```{r ex2-solution, include = FALSE}
+matrix_vector_multiplication_vectorized <- function(x, y) {
+  t(x) %*% y
+}
+```
 
 ---
 
@@ -460,9 +492,9 @@ my_optim <- function(x) {
     gradient <- x - 1
     gradient_history <- c(gradient_history, gradient)
 
-    x <- x - g
+    x <- x - gradient
 
-    if (abs(g) < 1e-6) {
+    if (abs(gradient) < 1e-6) {
       break
     }
   }
@@ -478,7 +510,8 @@ my_optim <- function(x) {
 
 .pull-left[
 - In R, matrices are stored in column-major order.
-- This means that when you access a column of a matrix, you are accessing a contiguous block of memory.
+- This means that when you access a column of a matrix, 
+  you are accessing a contiguous block of memory.
 - Prefer to work with matrices instead of data frames.
 ]
 ]
@@ -560,296 +593,14 @@ bench::mark(f1(x, y), f2(x, y), f3(x, y))
 
 - The computer doesn't automatically know that your computations are safe to do in parallel.
 
-### Embarassingly Parallel
+---
 
-Means that parallelizing the operation is trivial
+### Embarassingly Parallel Tasks
 
-Examples:
+Trivial implementation of parallelization
+
+### Examples
 
 - Summing a vector (or matrix): `sum()`
 - Linear algebra operations: `%*%` (`crossprod()`)
 
----
-
-class: center, middle
-
-# More on Functions and Scoping
-
----
-
-## Functions 
-
-R functions consist of three components.
-
-```{r foo_function}
-foo <- function(x) {
-  x^2 + x + 1
-}
-```
-
-* The *body* of the function, which is the code in the function.
---
-
-
-* The *argument list* that the function takes.
---
-
-
-* The *enclosing environment* where the function was created.
-
----
-## Functions
-
-```{r}
-body(foo)
-```
-
---
-```{r}
-formals(foo) ## formal argument list
-```
-
---
-```{r}
-environment(foo) ## enclosing environment
-```
-
-
----
-## Function evaluation
-
-When functions are called the body is evaluated with formal arguments 
-replaced by actual arguments (values).
-
-
-```{r}
-foo(10) ## body evaluated with x = 10
-```
-
---
-The result is the same as: 
-
-```{r}
-x <- 10
-x^2 + x + 1
-```
-
----
-## A different function body
-
-
-```{r}
-foo <- function(x) {
-  y * x^2 + x + 1
-}
-```
-
-What happens when we try to evaluate the new function?
-
---
-```{r, error = TRUE}
-foo(10)
-```
-
---
-```{r}
-y <- 2 ## y is in the global environment
-foo(10)
-```
-
---
-Variables that are not assigned in the body or are in the list of formal 
-arguments are searched for in the functions *enclosing environment*.
-
----
-## Changing the enclosing environment
-
-The enclosing environment can be changed, and values can be
-assigned to variables in environments.
-
-```{r, error = TRUE}
-environment(foo) <- new.env()
-environment(foo)$y <- 1
-```
-
---
-```{r}
-y
-```
-
---
-```{r, eval=FALSE}
-foo(10) ## What is the result and why?
-```
-
---
-```{r, echo=FALSE}
-foo(10)
-```
-
----
-## A different set of formal arguments
-
-```{r}
-foo <- function(x, y) {
-  y * x^2 + x + 1
-}
-```
-
---
-```{r, eval=FALSE}
-foo(10) ## What will happen?
-```
-
---
-```{r, echo=FALSE, error = TRUE}
-foo(10)
-```
-
---
-```{r}
-foo(10, 2) ## Better?
-```
-
----
-## How functions work in principle
-
-* When a function is called, the actual arguments are matched against the *formal 
-arguments*.
---
-
-
-* Expressions in the actual argument list are evaluated in the *calling environment*.
---
-
-
-* Then the *body* of the function is evaluated.
---
-
-
-* Variables that are not arguments or defined inside the body are searched for 
-in the *enclosing environment*.
---
-
-
-* The value of the last expression in the body is returned by the function.
-
---
-
-```{r, eval=FALSE}
-foo(10, y^2)
-```
-
---
-```{r, echo=FALSE}
-foo(10, y^2)
-```
-
----
-## Scoping Rules
-
-For a variable we distinguish between the *symbol* (the `y`) and its value (`2`). 
-The rules for finding the symbol are called *scoping* rules, and R implements *lexical scoping*.
-
---
-
-Symbols reside in environments, and when a function call is evaluated 
-R searches for symbols in the environment 
-where the function is *defined* and *not* where it is called.
-
---
-
-In practice, symbols are recursively searched for by starting in the functions *evaluation 
-environment*, then its *enclosing environment* and so on until the empty environment. 
-
---
-
-For interactive usage lexical scoping can appear strange. Setting "global variables"
-might not have the "expected effect" if that is *dynamic scoping*, which is difficult to 
-predict and reason about as a programmer. 
-
----
-## Function Factories
-
-```{r}
-foo_factory <- function(y) {
-  function(x) {
-    y * x^2 + x + 1
-  }
-}
-```
---
-
-```{r}
-foo <- foo_factory(2)
-body(foo)
-foo(10)
-```
-
-```{r}
-foo2 <- foo_factory(3)
-```
-
-
----
-## Function Factories
-
-```{r}
-foo2(10)
-```
-
---
-```{r}
-y <- 1
-foo(10)
-foo2(10)
-```
-
-Setting a value of `y` in the calling environment of `foo` or `foo2` doesn't
-change the behavior of the functions.
-
----
-## Function Factories
-
-```{r}
-environment(foo)
-```
---
-
-```{r}
-ls(environment(foo))
-```
---
-
-```{r}
-environment(foo)$y
-```
---
-
-The function `foo_factor()` is called a function factory because it returns (produces)
-functions.
-
---
-
-It's a way to provide a function with a local storage (its environment) for "configuration 
-values".
-
----
-## Function Factories
-
-```{r}
-environment(foo2)
-```
-
-Two different functions produced by the function factory have different enclosing 
-environments. 
-
---
-
-```{r}
-parent.env(environment(foo2))
-parent.env(environment(foo))
-```
-
-The parent environment is the enclosing environment of the factory, in this 
-case the global environment. 
