@@ -6,8 +6,6 @@ date: "September 10, 2024"
 ---
 
 ```{r setup, echo=FALSE}
-source(file.path("R", "kernel.R"))
-
 knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
 
 knitr::opts_chunk$set(
@@ -227,7 +225,7 @@ sqrt_bench
 
 [ggbeeswarm](https://CRAN.R-project.org/package=ggbeeswarm) necessary for default plot behavior.
 
-```{r bee-bench, fig.asp = 0.5, fig.width = 9}
+```{r bee-bench, fig.asp = 0.5, fig.width = 9, message = FALSE}
 library(ggbeeswarm)
 
 plot(sqrt_bench)
@@ -238,7 +236,7 @@ plot(sqrt_bench)
 
 Consider the following implementation of the Gaussian kernel.
 
-```{r}
+```{r gauss-def}
 gauss <- function(x, h = 1) {
   exp(-x^2 / (2 * h^2)) / (h * sqrt(2 * pi))
 }
@@ -247,7 +245,7 @@ gauss <- function(x, h = 1) {
 Benchmark `gauss()` against `dnorm()`; plot and compare the
 results. Before starting: which do you think will be faster?
 
-```{r, include = FALSE}
+```{r gauss-bench, include = FALSE}
 x <- seq(-3, 3, length.out = 10000)
 
 gauss_bench <- bench::mark(
@@ -268,15 +266,15 @@ outer product of its initial arguments
 
 ### Benchmarking Density Estimation
 
-```{r message = FALSE, cache = TRUE}
+```{r dens-bench, message = FALSE, cache = TRUE}
 dens_bench <- bench::press(
   n = 2^(5:13),
   {
-    x <- rnorm(2^13)
+    x <- rnorm(n)
     bench::mark(
-      base = density(x[1:n], 0.2),
-      loop = kern_dens(x[1:n], 0.2),
-      vectorized = kern_dens_vec(x[1:n], 0.2),
+      base = density(x, 0.2),
+      loop = kern_dens(x, 0.2),
+      vectorized = kern_dens_vec(x, 0.2),
       check = FALSE
     )
   }
@@ -289,7 +287,7 @@ dens_bench <- bench::press(
 
 ## Bench Press Results
 
-```{r}
+```{r head-bench}
 head(dens_bench, 6)
 ```
 
@@ -360,6 +358,16 @@ crossprod_bench <- bench::press(
 
 ---
 
+## Notes About Benchmarking
+
+- Look at absolute values. 
+--
+
+- Keep use case in mind.
+--
+
+---
+
 class: center, middle
 
 # Improving Performance
@@ -381,6 +389,7 @@ class: center, middle
 
 - Vectorization
 - Using specialized functions
+- Check function help files: arguments matter
 
 --
 
@@ -444,7 +453,7 @@ using `kern_bin()` with grid points as bin centers.
 
 ---
 
-```{r micro3, cache = TRUE, echo=FALSE, message=FALSE}
+```{r micro3, cache = TRUE, echo=FALSE, message=FALSE, warning = FALSE}
 res2 <- bench::press(
   n = 2^(5:13),
   {
@@ -533,10 +542,15 @@ profvis(kern_dens_bin(x, 0.2))
 ## Vectorization
 
 - Vectorization is the process of replacing loops with vectorized operations.
+--
+
 - These vectorized operations are also loops, but they are written in C instead or R.
   - Examples of vectorized functions: `mean()`, `sd()`
   - Examples of non-vectorized functions: `apply()`, `Vectorize()`
+--
+
 - Vectorizing code is often about finding the right function in R.
+  - `colSums()` instead of for loop or apply-type of function.
 
 ---
 
@@ -728,11 +742,12 @@ It would be embarassing to miss the opportuity to parallelize the task.
 ## The foreach Package
 
 .pull-left[
-```{r}
+```{r foreach-load, message = FALSE, echo = -1}
+options(width = 50)
 library(foreach)
 ```
 
-```{r}
+```{r foreach-sqrt}
 foreach(i = seq_len(3)) %dopar% {
   sqrt(i)
 }
@@ -758,7 +773,8 @@ foreach(i = seq_len(3)) %dopar% {
 - Load and **register** one before using foreach
 - Windows user cannot use forking (which is cheaper)
 
-```{r}
+```{r doparallel, echo = -1, message = FALSE}
+options(width = 80)
 library(doParallel)
 
 cl <- makeCluster(2) # 2 is the number of threads requested
@@ -970,5 +986,27 @@ Benchmark the future-based version against the standard version.
 #   ols_standard(x, y)
 # )
 ```
+
+---
+
+## Summary
+
+- First find bottlenecks through profiling
+--
+
+- Benchmark different implementations and use existing solutions
+--
+
+- 
+
+### Keep in Mind
+
+- Only optimize when it's needed: profile first
+--
+
+- Keep readability in mind: performant code can be hard to read.
+--
+
+- Write tests: performance improvements can introduce bugs.
 
 
