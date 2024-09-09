@@ -266,7 +266,7 @@ outer product of its initial arguments
 
 ### Benchmarking Density Estimation
 
-```{r dens-bench, message = FALSE, cache = TRUE}
+```{r dens-bench, message = FALSE, cache = TRUE, warning = FALSE}
 dens_bench <- bench::press(
   n = 2^(5:13),
   {
