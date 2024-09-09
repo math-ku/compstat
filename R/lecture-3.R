@@ -20,8 +20,3 @@ kern_dens <- function(x, h, m = 512) {
   }
   list(x = xx, y = y)
 }
-
-# Test
-
-c(gauss(1), gauss_step(1))
-c(gauss(0.1, 0.1), gauss_step(0.1, 0.1))
