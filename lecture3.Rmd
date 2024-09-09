@@ -743,7 +743,7 @@ It would be embarassing to miss the opportuity to parallelize the task.
 
 .pull-left[
 ```{r foreach-load, message = FALSE, echo = -1}
-options(width = 50)
+options(width = 40)
 library(foreach)
 ```
 
@@ -997,7 +997,9 @@ Benchmark the future-based version against the standard version.
 - Benchmark different implementations and use existing solutions
 --
 
-- 
+- Vectorize and use domain-specific knowledge to improve performance.
+
+--
 
 ### Keep in Mind
 
