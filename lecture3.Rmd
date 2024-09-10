@@ -90,7 +90,7 @@ gauss_step
 - Run `profvis()` on the expression you want to profile. (Or use the RStudio tool.)
 - The result is an interactive webpage (opens in tab in RStudio).
 
-```{r source_profvis, cache = FALSE, eval = FALSE}
+```{r source_profvis, eval = FALSE}
 source("R/gauss.R", keep.source = TRUE)
 x <- rnorm(1e7)
 profvis(gauss_step(x))
@@ -98,7 +98,7 @@ profvis(gauss_step(x))
 
 ---
 
-```{r source_profvis_result, ref.label="source_profvis", cache = FALSE, eval = TRUE, echo = FALSE}
+```{r source_profvis_result, ref.label="source_profvis", echo = FALSE}
 ```
 
 ---
@@ -126,6 +126,8 @@ kern_dens_detail
 
 ```{r profile_kern_dens_detail, eval=FALSE}
 source("R/kernel.R", keep.source = TRUE)
+
+x <- rnorm(1e3)
 profvis(kern_dens_detail(x, 0.2))
 ```
 
@@ -133,7 +135,7 @@ The result from profiling this call is more informative.
 
 ---
 
-```{r profile-kern-dens-detail-output, ref.label = "profile_kern_dens_detail", echo = FALSE}
+```{r profile-kern-dens-detail-output, echo = FALSE, ref.label = "profile_kern_dens_detail"}
 ```
 
 ---
@@ -162,8 +164,8 @@ matrix_vector_multiplication <- function(x, y) {
 
 ## Caveats About Line Profiling
 
-- Anonymous functions make profiling more difficult; prefer using named functions.
-- Resolution may not be enough for small pieces of code (but do you really need to profile them then?)
+- Anonymous functions complicates profiling; prefer  named functions.
+- Resolution (sampling frequency) may too low for small pieces of code (but do you really need to profile them then?)
 
 ---
 
@@ -178,7 +180,7 @@ used by one or more implementations of a computation.
 
 Benchmarking small pieces of code.
 
-Typical approach: find bottleneck through profiling and then (micro)benchmark alternatives.
+Typically: 1) find bottleneck through profiling and 2) (micro)benchmark alternatives.
 
 ### The bench Package
 
@@ -357,11 +359,16 @@ crossprod_bench <- bench::press(
 
 ## Notes About Benchmarking
 
-- Look at absolute values. 
+- Look at absolute values too: does the difference matter (for your use case)?
 --
 
 - Keep use case in mind.
 --
+
+- Your computer may be doing something else at the same time.
+--
+
+- Hardware matters: different computers may give different results.
 
 ---
 
