@@ -48,11 +48,11 @@ kern_dens_vec <- function(x, h, m = 512) {
 ## lo + (j - 0.5) delta <= x[i] < lo + (j + 0.5) delta
 
 
-kern_bin <- function(x, lo, hi, m) {
-  w <- numeric(m)
-  delta <- (hi - lo) / (m - 1)
+kern_bin <- function(x, l, u, B) {
+  w <- numeric(B)
+  delta <- (u - l) / (B - 1)
   for (j in seq_along(x)) {
-    i <- floor((x[j] - lo) / delta + 0.5) + 1
+    i <- floor((x[j] - l) / delta + 0.5) + 1
     w[i] <- w[i] + 1
   }
   w / sum(w)
