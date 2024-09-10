@@ -7,7 +7,6 @@ date: "September 5, 2024"
 
 ```{r init, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
-library(gridExtra)
 
 knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
 
