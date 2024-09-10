@@ -569,7 +569,7 @@ profvis(kern_dens_bin(x, 0.2))
 kern_bin
 ```
 
-```{r matvec-mul-ex-vectorize, include = FALSE}
+```{r kern-bin-vec, include = FALSE}
 kern_bin_vec <- function(x, lo, hi, m) {
   delta <- (hi - lo) / (m - 1)
   i <- floor((x - lo) / delta + 0.5) + 1
@@ -940,12 +940,10 @@ z # Will block until the value is available
 
 ## Exercise
 
-### Part 1
-
 Write a program for running ordinary least squares regression in parallel using the 
 **futures** package.
 
-**Recall:** The OLS estimator is given by $\hat{\beta} = (X'X)^{-1}X'y$.
+**Recall:** The OLS estimator is given by $\hat{\beta} = (X^TX)^{-1}X^T y$.
 
 ```{r ols-future, include = FALSE}
 n <- 100
@@ -958,38 +956,6 @@ xty %<-% {
 }
 xtx <- crossprod(x)
 solve(xtx, xty)
-```
-
-### Part 2
-
-Benchmark the future-based version against the standard version.
-
-```{r future-benchmark, include = FALSE, cache = TRUE}
-# n <- 100
-# p <- 10
-# x <- matrix(rnorm(n * p), n, p)
-# y <- rnorm(n)
-#
-# ols_future <- function(x, y) {
-#   xtx %<-% crossprod(x)
-#   xty <- crossprod(x, y)
-#
-#   solve(xtx, xty)
-# }
-#
-# ols_standard <- function(x, y) {
-#   xty <- crossprod(x, y)
-#   xtx <- crossprod(x)
-#
-#   solve(xtx, xty)
-# }
-```
-
-```{r future-benchmark-result, include = FALSE, cache = TRUE}
-# bench::mark(
-#   ols_future(x, y),
-#   ols_standard(x, y)
-# )
 ```
 
 ---
