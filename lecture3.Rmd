@@ -621,7 +621,7 @@ Storing intermediate objects that are used multiple times will boost performance
 Can you rewrite the following function to avoid creating copies?
 
 ```{r}
-matrix_vector_multiplication
+matrix_vector_dot
 ```
 
 ---
