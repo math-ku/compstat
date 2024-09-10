@@ -1,5 +1,5 @@
 ---
-title: "Benchmarking and Profiling"
+title: "Measuring and Improving Performance"
 subtitle: Computational Statistics
 author: "Johan Larsson, Niels Richard Hansen"
 date: "September 10, 2024"
