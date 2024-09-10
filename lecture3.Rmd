@@ -437,7 +437,7 @@ Example of context-specific optimization.
 
 --
 
-If $n < m$, then binning will not help
+If $n < B$, then binning will not help
 
 ---
 
