@@ -21,13 +21,13 @@ knitr::opts_chunk$set(
 
 library(ggplot2)
 
-source("R/kernel.R")
+source("R/kernel.R", keep.source = TRUE)
+source("R/lecture-3.R", keep.source = TRUE)
 
 theme_set(theme_grey(base_size = 16))
 ```
 
 ## Today
-
 
 ### Measuring Performance
 
@@ -45,8 +45,8 @@ Comparing performance of different implementations
 
 Writing efficient code
 
-
 ---
+
 ## Profiling
 
 A profiler quantifies how much time each part of a function takes up. R uses a **sampling** profiler.
@@ -75,7 +75,7 @@ library(profvis)
 
 ## Example
 
-We profile the following reimplementation of `gauss()`.
+Let's profile the following reimplementation of `gauss()`.
 
 ```{r gauss_step, eval=FALSE, out.width = 600}
 gauss_step <- function(x, h = 1) {
@@ -104,10 +104,7 @@ profvis(gauss_step(x))
 
 ---
 
-```{r source_profvis_result, cache = TRUE, eval = TRUE, echo = FALSE}
-source("R/lecture-3.R", keep.source = TRUE)
-x <- rnorm(1e7)
-profvis(gauss_step(x))
+```{r source_profvis_result, ref.label="source_profvis", cache = FALSE, eval = TRUE, echo = FALSE}
 ```
 
 ---
