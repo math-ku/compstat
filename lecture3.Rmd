@@ -94,7 +94,7 @@ gauss_step <- function(x, h = 1) {
 - First, make sure the code is sourced (`source()`).
 - Run `profvis()` on the expression you want to profile. (Or use the RStudio tool.)
 
-```{r source_profvis, cache = TRUE, eval = FALSE}
+```{r source_profvis, cache = FALSE, eval = FALSE}
 source("R/lecture-3.R", keep.source = TRUE)
 x <- rnorm(1e7)
 profvis(gauss_step(x))
