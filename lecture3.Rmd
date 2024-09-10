@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 library(ggplot2)
 
 source("R/kernel.R", keep.source = TRUE)
-source("R/lecture-3.R", keep.source = TRUE)
+source("R/gauss.R", keep.source = TRUE)
 
 theme_set(theme_grey(base_size = 16))
 ```
@@ -77,13 +77,8 @@ library(profvis)
 
 Let's profile the following reimplementation of `gauss()`.
 
-```{r gauss_step, eval=FALSE, out.width = 600}
-gauss_step <- function(x, h = 1) {
-  exponent <- x^2 / (2 * h^2)
-  numerator <- exp(-exponent)
-  denominator <- h * sqrt(2 * pi)
-  numerator / denominator
-}
+```{r gauss_step}
+gauss_step
 ```
 
 ---
@@ -93,14 +88,13 @@ gauss_step <- function(x, h = 1) {
 
 - First, make sure the code is sourced (`source()`).
 - Run `profvis()` on the expression you want to profile. (Or use the RStudio tool.)
+- The result is an interactive webpage (opens in tab in RStudio).
 
 ```{r source_profvis, cache = FALSE, eval = FALSE}
-source("R/lecture-3.R", keep.source = TRUE)
+source("R/gauss.R", keep.source = TRUE)
 x <- rnorm(1e7)
 profvis(gauss_step(x))
 ```
-
-- The result is an interactive webpage.
 
 ---
 
