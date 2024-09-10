@@ -143,7 +143,7 @@ The result from profiling this call is more informative.
 
 ## Exercise
 
-- Profile this implementation of computing a matrix-vector inner product for an example of $n=p=100$.
+- Profile this implementation of computing a matrix-vector inner product for different choices of $n$ and $p$.
 - Before starting: where do you think the bottleneck is?
 
 ```{r matvec-mul-ex}
