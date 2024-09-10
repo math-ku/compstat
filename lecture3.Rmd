@@ -5,7 +5,7 @@ author: "Johan Larsson, Niels Richard Hansen"
 date: "September 10, 2024"
 ---
 
-```{r setup, echo=FALSE}
+```{r setup, include=FALSE}
 knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
 
 knitr::opts_chunk$set(
@@ -134,10 +134,16 @@ kern_dens_detail
 ## Line Profiling
 
 ```{r profile_kern_dens_detail, eval=FALSE}
+source("R/kernel.R", keep.source = TRUE)
 profvis(kern_dens_detail(x, 0.2))
 ```
 
 The result from profiling this call is more informative.
+
+---
+
+```{r profile-kern-dens-detail-output, ref.label = "profile_kern_dens_detail", echo = FALSE}
+```
 
 ---
 
