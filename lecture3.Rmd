@@ -75,7 +75,7 @@ library(profvis)
 
 ## Example
 
-Let's profile the following reimplementation of `gauss()`.
+Let's profile the following reimplementation of `gauss()`, which computes the density of a standard Gaussian distribution.
 
 ```{r gauss_step}
 gauss_step
@@ -86,9 +86,10 @@ gauss_step
 
 ### Simple to Use
 
-- First, make sure the code is sourced (`source()`).
-- Run `profvis()` on the expression you want to profile. (Or use the RStudio tool.)
-- The result is an interactive webpage (opens in tab in RStudio).
+1. Source the code you want to profile using `source()`.
+2. Run `profvis()` on the expression you want to profile. (Or use the RStudio tool.)
+
+The result is an interactive webpage (opens in tab in RStudio).
 
 ```{r source_profvis, eval = FALSE}
 source("R/gauss.R", keep.source = TRUE)
@@ -142,16 +143,16 @@ The result from profiling this call is more informative.
 
 ## Exercise
 
-- Profile this implementation of matrix-vector multiplication for an example of $n=p=100$.
+- Profile this implementation of computing a matrix-vector inner product for an example of $n=p=100$.
 - Before starting: where do you think the bottleneck is?
 
 ```{r matvec-mul-ex}
-matrix_vector_multiplication <- function(x, y) {
-  n <- NROW(x)
+matrix_vector_dot <- function(x, y) {
+  p <- NCOL(x)
 
   out <- c()
 
-  for (i in seq_len(n)) {
+  for (i in seq_len(p)) {
     xi_y <- t(x[, i]) %*% y
     out <- c(out, xi_y)
   }
