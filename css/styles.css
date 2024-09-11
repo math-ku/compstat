@@ -82,7 +82,7 @@ author */ .title-slide h3:nth-of-type(1) {
 
 .title-slide {
   background-color: #fff;
-  background-image: url(logo.png);
+  background-image: url(ucph.svg);
   background-position: center bottom 60px;
   background-size: 15%;
 }
