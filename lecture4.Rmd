@@ -106,8 +106,9 @@ where $N_i = N(x_i)$.
 --
 
 
-With $S_{ij} = \frac{1}{k} 1_{N_i}(j)$ and $\mathbf{S} = (S_{ij})$ 
+$S_{ij} = \frac{1}{k} \mathbf{1}_{N_i}(j)$, $\mathbf{S} = (S_{ij})$, and
 $$\hat{\mathbf{f}} = (\hat{f}_i) = \mathbf{S} \mathbf{y}.$$
+
 --
 
 $\hat{\mathbf{f}}$ is an estimator of the vector $(f(x_i))$. 
@@ -295,24 +296,19 @@ The two other algorithms are $O(n)$.
 
 ---
 
-## Bias-Variance Trade-Off
+## Mean-Squared Error
 
 If data is i.i.d. with $V(Y \mid X) = \sigma^2$ and $f(x) = E(Y \mid X = x)$,
 
 \begin{aligned}
-\mathrm{MSE}(x) & = \operatorname{E}\big((f(x) - \hat{f}(x))^2\big) \\
-                & = \operatorname{E}\big((f(x)-\operatorname{E}(\hat{f}(x)))^2\big) +
-                    \operatorname{E}\big((\hat{f}(x)-\operatorname{E}(\hat{f}(x)))^2\big).
+\mathrm{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\
+                & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\
+                & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \underbrace{\left(f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)\right)^2}_{\text{squared bias}}.
 \end{aligned}
 
 --
 
-Thus
-$$\operatorname{MSE}(x) = \underbrace{\left[f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)\right]^2}_{\text{squared bias}} \underbrace{\frac{\sigma^2}{k}}_{\text{variance}}.$$
-
---
-
-### The Trade-Off
+### Bias-Variance Trade-Off
 
 - Small $k$ gives large variance and small bias (if $f$ is smooth).
 - Large $k$ gives small variance and potentially large bias (if $f$ is not constant).
@@ -379,15 +375,16 @@ for this.
 ```{r nuuk-running-loocv}
 k <- seq(3, 40, 2)
 cv_error <- sapply(k, function(kk) loocv(kk, nuuk_year$Temperature))
+k_opt <- k[which.min(cv_error)]
 ```
 --
 
-```{r nuuk-running-loocv-plot}
-k_opt <- k[which.min(cv_error)]
+```{r nuuk-running-loocv-plot, echo = FALSE, fig.width = 9, fig.height = 5}
 ggplot(tibble(k, cv_error), aes(k, cv_error)) +
+  geom_vline(xintercept = k_opt, color = "dark orange") +
   geom_line() +
   geom_point() +
-  geom_vline(xintercept = k_opt, color = "dark orange")
+  labs(y = "LOOCV Error", x = expression(k))
 ```
 
 ---
@@ -397,7 +394,7 @@ ggplot(tibble(k, cv_error), aes(k, cv_error)) +
 
 The optimal choice of $k$ is `r k_opt`.
 
-```{r nuuk-NN-plot3, warning=FALSE}
+```{r nuuk-NN-plot3, warning=FALSE, fig.width = 9, fig.height = 5, echo = FALSE}
 p + geom_line(aes(y = run_mean(nuuk_year$Temperature, k_opt)), color = "blue")
 ```
 
@@ -614,27 +611,26 @@ lambda_opt <- lambda[which.min(gcv)]
 ```{r gc-plot, fig.width = 10, fig.height = 4.5, echo = FALSE}
 tibble(lambda, gcv) |>
   ggplot(aes(lambda, gcv)) +
+  geom_vline(xintercept = lambda_opt, color = "dark orange") +
   geom_line() +
   geom_point() +
-  geom_vline(xintercept = lambda_opt, color = "dark orange")
+  labs(y = "GCV Error", x = expression(lambda))
 ```
 
 ---
 
 ### GCV-Optimal Smoothing Spline
 
-```{r nuuk-spline-opt, fig.width = 9, fig.height = 5.5}
+```{r nuuk-spline-opt, fig.width = 9, fig.height = 5}
 smooth_opt <- smoother(lambda_opt)
 p + geom_line(aes(y = smooth_opt), color = "blue")
 ```
 
 ---
 
-## Using `smooth.spline()`
+### Using `smooth.spline()`
 
-Using `smooth.spline()` without fast heuristic.
-
-```{r nuuk-spline-opt2, fig.width = 9, fig.height = 4.5}
+```{r nuuk-spline-opt2, fig.width = 9, fig.height = 5}
 smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature, all.knots = TRUE)
 p + geom_line(aes(y = smooth$y), color = "blue")
 ```
