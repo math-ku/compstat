@@ -1901,6 +1901,20 @@
       ],
       "Hash": "40a1e30d3fb323f249a5e2fbec50c3b1"
     },
+    "xaringanExtra": {
+      "Package": "xaringanExtra",
+      "Version": "0.8.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "htmltools",
+        "jsonlite",
+        "knitr",
+        "utils",
+        "uuid"
+      ],
+      "Hash": "e13b6d3cbb08e856fa73a565c074db40"
+    },
     "xfun": {
       "Package": "xfun",
       "Version": "0.46",

@@ -19,7 +19,10 @@ knitr::opts_chunk$set(
   crop = TRUE
 )
 
+xaringanExtra::use_tile_view()
+
 library(tidyverse)
+
 theme_set(theme_grey(base_size = 16))
 ```
 
@@ -145,7 +148,7 @@ $$N_i = \{i - (k - 1) / 2, i - (k - 1) / 2 + 1, \ldots, i - 1 , i, i + 1, \ldots
 --
 
 This simplifies computations: we don't need to keep track of metric comparisons,
-only the order matters. 
+only the order matters.
 
 ???
 
@@ -155,9 +158,7 @@ only the order matters.
 
 ---
 
-## Running Mean
-
-### Naive Impolementation
+## Running Mean (Naive Implementation)
 
 Assume $y$ is sorted and $k$ is odd.
 
@@ -176,7 +177,7 @@ run_mean_naive <- function(y, k) {
 }
 ```
 
-??? 
+???
 
 - Can speed this up by replacing mean computation
 
@@ -189,7 +190,7 @@ $$\hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)
 
 --
 
-```{r runMean}
+```{r run_mean_def}
 run_mean <- function(y, k) {
   n <- length(y)
   m <- floor((k - 1) / 2)
@@ -214,7 +215,7 @@ run_mean <- function(y, k) {
 
 ## Visualization
 
-```{r nuuk-NN-plot2, warning=FALSE}
+```{r nuuk-NN-plot2, warning=FALSE, fig.width = 10, fig.height = 5}
 f_hat <- run_mean(nuuk_year$Temperature, 11)
 p + geom_line(aes(y = f_hat), color = "blue")
 ```
@@ -225,14 +226,22 @@ p + geom_line(aes(y = f_hat), color = "blue")
 
 ---
 
-## Using `filter()`
+## `stats::filter()`
 
-The R function `filter()` applies linear filtering (moving averages or autoregression).
+The R function `stats::filter()` applies linear filtering (moving averages or autoregression).
 
-```{r runMeanCheck}
+--
+
+```{r run-mean-nas, echo=2}
+op <- options(digits = 2)
 f_hat_filter <- stats::filter(nuuk_year$Temperature, rep(1 / 11, 11))
-range(f_hat_filter - f_hat, na.rm = TRUE)
+f_hat_filter[c(1:10, 137:147)]
+options(digits = op$digits)
+```
 
+--
+
+```{r runmean-test}
 library(testthat)
 
 test_that("filter() and run_mean() work the same", {
@@ -243,13 +252,6 @@ test_that("filter() and run_mean() work the same", {
 ```
 
 --
-
-```{r, echo=2}
-op <- options(digits = 2)
-f_hat_filter[c(1:10, 137:147)]
-options(digits = op$digits)
-```
-
 
 .footnote[
 There is a `filter()` function in the **dplyr** package (part of the tidyverse), so look 
@@ -262,6 +264,7 @@ out for name clashes. Safest to call `stats::filter()`.
 - Here, `rep(1, /11, 11)` are MA coefficients
 
 ---
+
 ## Benchmarking (Using `bench::press()`)
 
 ```{r runMeanBench, echo=FALSE, warning=FALSE, message = FALSE, cache = TRUE, fig.height = 5.5, fig.width = 12}
@@ -305,10 +308,11 @@ If data is i.i.d. with $V(Y \mid X) = \sigma^2$ and $f(x) = E(Y \mid X = x)$,
 --
 
 Thus
-$$\operatorname{MSE}(x) = \underbrace{\left[f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)\right]^2}_{\text{squared bias}} 
-                          + \underbrace{\frac{\sigma^2}{k}}_{\text{variance}}.$$
+$$\operatorname{MSE}(x) = \underbrace{\left[f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)\right]^2}_{\text{squared bias}} \underbrace{\frac{\sigma^2}{k}}_{\text{variance}}.$$
 
 --
+
+### The Trade-Off
 
 - Small $k$ gives large variance and small bias (if $f$ is smooth).
 - Large $k$ gives small variance and potentially large bias (if $f$ is not constant).
@@ -342,11 +346,13 @@ the identity above holds.
 ---
 ## LOOCV 
 
-It follows that for *leave-one-out cross validation*
+It follows that for **leave-one-out cross validation,**
 $$\mathrm{LOOCV} = \sum_{i} (y_i - \hat{f}^{-i}_i)^2 = 
 \sum_{i} \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2$$
 
 --
+
+### Implementation
 
 ```{r LOOCV-runMean}
 loocv <- function(k, y) {
@@ -354,7 +360,6 @@ loocv <- function(k, y) {
   mean(((y - f_hat) / (1 - 1 / k))^2, na.rm = TRUE)
 }
 ```
---
 
 .footnote[
 The implementation removes missing values due to the way 
@@ -365,6 +370,7 @@ for this.
 ???
 
 - For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$.
+- **Derive the formula on the blackboard!**
 
 ---
 
@@ -434,11 +440,11 @@ Cubic splines are piecewise degree 3 polynomials in between knots.
 
 - Without penalty term, any interpolating function would work well.
 - Penalty term penalizes solutions with large second derivatives (in norm).
-- 
+- **Derive the minimizer on the blackboard!**
 
 ---
 
-## Smoothing Splines
+### Loss Function
 
 In vector notation
 $$\hat{\mathbf{f}} = \boldsymbol{\Phi}\hat{\beta}$$
@@ -461,7 +467,7 @@ $$\mathbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \mathrm{d}z.$$
 
 ---
 
-## Smoothing splines 
+### Solution
 
 The minimizer is 
 $$\hat{\beta} = (\boldsymbol{\Phi}^T \boldsymbol{\Phi} + \lambda \mathbf{\Omega})^{-1}\boldsymbol{\Phi}^T \mathbf{y}$$
@@ -469,7 +475,7 @@ $$\hat{\beta} = (\boldsymbol{\Phi}^T \boldsymbol{\Phi} + \lambda \mathbf{\Omega}
 --
 
 with resulting smoother
-$$\hat{\mathbf{f}} = \underbrace{\boldsymbol{\Phi} ((\boldsymbol{\Phi}^T \boldsymbol{\Phi} + \lambda \mathbf{\Omega})^{-1}\boldsymbol{\Phi}^T}_{\mathbf{S}_{\lambda}} \mathbf{y}.$$
+$$\hat{\mathbf{f}} = \underbrace{\boldsymbol{\Phi} (\boldsymbol{\Phi}^T \boldsymbol{\Phi} + \lambda \mathbf{\Omega})^{-1}\boldsymbol{\Phi}^T}_{\mathbf{S}_{\lambda}} \mathbf{y}.$$
 
 --
 
@@ -582,6 +588,7 @@ we replace $S_{ii}$ in LOOCV by $\mathrm{df} / n$ to get the
 $$\mathrm{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / n}\right)^2.$$
 --
 
+### Implementation
 
 ```{r gcv-smooth-spline}
 gcv <- function(lambda, y) {
@@ -593,10 +600,10 @@ gcv <- function(lambda, y) {
 
 
 ---
-## Generalized Cross-Validation
+### GCV-Optimal $\lambda$
 
-Then we apply this function to a grid of $\lambda$-values and 
-choose the value of $\lambda$ that minimizes GCV.
+Apply `gcv()` across grid of $\lambda$-values and
+choose $\lambda$ that minimizes GCV.
 
 ```{r nuuk-spline-gcv}
 lambda <- seq(50, 250, 2)
@@ -604,10 +611,7 @@ gcv <- sapply(lambda, gcv, y = nuuk_year$Temperature)
 lambda_opt <- lambda[which.min(gcv)]
 ```
 
----
-## Generalized Cross-Validation
-
-```{r gc-plot, fig.width = 10, fig.height = 5}
+```{r gc-plot, fig.width = 10, fig.height = 4.5, echo = FALSE}
 tibble(lambda, gcv) |>
   ggplot(aes(lambda, gcv)) +
   geom_line() +
@@ -617,11 +621,9 @@ tibble(lambda, gcv) |>
 
 ---
 
-## Optimal Smoothing Spline
+### GCV-Optimal Smoothing Spline
 
-An optimal smoother using our implementation
-
-```{r nuuk-spline-opt, fig.width = 9, fig.height = 4.5}
+```{r nuuk-spline-opt, fig.width = 9, fig.height = 5.5}
 smooth_opt <- smoother(lambda_opt)
 p + geom_line(aes(y = smooth_opt), color = "blue")
 ```
@@ -660,23 +662,22 @@ $$D^{-1} \mathbf{V}^T \mathbf{\Omega} \mathbf{V} D^{-1} = \mathbf{W} \Gamma \mat
 
 - Can be done whether we use all or a subset of our basis functions
 - $S_\lambda$ is diagonalized
+- DERIVE $\mathbf{S}_\lambda$ ON BLACKBOARD!
 
 ---
 
-## Efficient Computations
+### Interpretation
 
-The interpretation of this representation is as follows. 
-
-* First, the coefficients, $\hat{\beta} = \widetilde{\mathbf{U}}^Ty$, are computed for 
-expanding $y$ in the basis given by the columns of $\widetilde{\mathbf{U}}$. 
+* The coefficients, $\hat{\beta} = \widetilde{\mathbf{U}}^Ty$, are computed for 
+  expanding $y$ in the basis given by the columns of $\widetilde{\mathbf{U}}$.
 --
 
-* Second, the $i$-th coefficient is shrunk towards 0,
-$$\hat{\beta}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.$$
+* The $i$-th coefficient is shrunk towards 0,
+  $$\hat{\beta}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.$$
 --
 
-* Third, the smoothed values, $\widetilde{\mathbf{U}} \hat{\beta}(\lambda)$, 
-are computed as an expansion using the shrunken coefficients. 
+* The smoothed values, $\widetilde{\mathbf{U}} \hat{\beta}(\lambda)$, 
+  are computed as an expansion using the shrunken coefficients. 
 
 ---
 
@@ -709,9 +710,9 @@ bind_cols(select(nuuk_year, Year), as_tibble(u_tilde)) %>%
 
 ---
 
-### and the Eigenvalues $\gamma_i$
+### The Eigenvalues $\gamma_i$
 
-```{r spline-gamma, echo=FALSE, fig.height = 6, fig.width = 10}
+```{r spline-gamma, echo=FALSE, fig.height = 7, fig.width = 10}
 library(patchwork)
 
 d <- omega_tilde_svd$d
@@ -737,11 +738,16 @@ class: middle, center
 
 ## A LOESS Smoother
 
-LOESS: Locally Weighted Scatterplot Smoothing.
+LOESS: locally weighted scatterplot smoothing
 
-```{r loess, fig.height=5, fig.width = 10}
+```{r loess, fig.height=4, fig.width = 10}
 p + geom_smooth()
 ```
+
+.footnote[
+Default behavior in ggplot2 is to use LOESS for small data sets and
+generalized additive models (GAMs) for larger data sets.
+]
 
 ---
 
@@ -834,9 +840,9 @@ function adhering to the standards of `predict.lm()`.
 
 ---
 
-## Running Means
+## Our Running Mean Implementation
 
-```{r runmean-again}
+```{r run_mean_def_again, ref.label="run_mean_def"}
 run_mean
 ```
 
@@ -861,8 +867,8 @@ running_mean <- function(..., data, k = 5) {
 
 ```{r}
 predict.running_mean <- function(object, newdata, ...) {
-  approx(object$x, object$y, newdata$x)$y
-} # Linear interpolation
+  approx(object$x, object$y, newdata$x)$y # Linear interpolation
+}
 ```
 
 ---
@@ -885,7 +891,8 @@ p + geom_smooth(
 ```
 
 ---
-## Boundary
+
+## Handling Boundary Values
 
 ```{r}
 running_mean <- function(..., data, k = 5, boundary = NULL) {
@@ -910,7 +917,8 @@ running_mean <- function(..., data, k = 5, boundary = NULL) {
 ```
 
 ---
-## No Boundary
+
+### No Boundary Adjustment
 
 ```{r, warning=FALSE, echo = FALSE, message=FALSE, fig.height = 5, fig.width = 10}
 smooth1 <- geom_smooth(
@@ -921,7 +929,8 @@ p + smooth1
 ```
 
 ---
-## Boundary, Padding
+
+### Padding
 
 ```{r, warning=FALSE, echo = FALSE, message=FALSE, fig.height = 5, fig.width = 10}
 smooth2 <- geom_smooth(
@@ -933,7 +942,8 @@ p + smooth2 + smooth1
 ```
 
 ---
-## Boundary, Reversion
+
+### Reversion
 
 ```{r, warning=FALSE, echo = FALSE, message=FALSE, fig.height = 5, fig.width = 10}
 smooth3 <- geom_smooth(
