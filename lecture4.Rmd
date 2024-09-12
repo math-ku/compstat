@@ -577,6 +577,7 @@ p + geom_line(aes(y = smoother(10)), color = "steelblue4") + # Undersmooth
 ```
 
 ---
+
 ## Generalized Cross-Validation
 
 With $\mathrm{df} = \mathrm{trace}(\mathbf{S}) = \sum_{i=1}^n S_{ii}$
