@@ -276,7 +276,7 @@ nn_bench <- bench::press(
     k <- 11
     y <- rnorm(n)
     w <- c(rep(1, k * n), rep(0, n * (n - k)))
-    S <- matrix(w, n, n)
+    S <- matrix(w, n, n, byrow = TRUE)
     bench::mark(
       S %*% y,
       run_mean(y, k = k),
@@ -308,7 +308,7 @@ used for illustration.
 k <- 11
 y <- rnorm(n)
 w <- c(rep(1, k * n), rep(0, n * (n - k)))
-S <- matrix(w, n, n)
+S <- matrix(w, n, n, byrow = TRUE)
 ```
 
 Use the [Matrix package](https://CRAN.R-project.org/package=Matrix) to convert $\mathbf{S}$ to
@@ -326,9 +326,10 @@ sparse_bench <- bench::press(
   n = c(512, 1024, 4196),
   k = c(10, 100),
   {
+    k <- 11
     y <- rnorm(n)
-    w <- c(rep(1 / k, k), rep(0, n - 10))
-    S <- matrix(w, n - 10, n, byrow = TRUE)
+    w <- c(rep(1, k * n), rep(0, n * (n - k)))
+    S <- matrix(w, n, n, byrow = TRUE)
     S_sparse <- Matrix::Matrix(S, sparse = TRUE)
     bench::mark(
       S %*% y,
