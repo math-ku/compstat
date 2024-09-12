@@ -997,8 +997,4 @@ smooth3 <- geom_smooth(
 p + smooth3 + smooth2 + smooth1
 ```
 
----
-
-## Exercise
-
 
