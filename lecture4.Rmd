@@ -581,7 +581,7 @@ p + geom_line(aes(y = smoother(10)), color = "steelblue4") + # Undersmooth
 
 With $\mathrm{df} = \mathrm{trace}(\mathbf{S}) = \sum_{i=1}^n S_{ii}$
 we replace $S_{ii}$ in LOOCV by $\mathrm{df} / n$ to get the
-*generalized* cross-validation criterion
+**generalized** cross-validation criterion
 $$\mathrm{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / n}\right)^2.$$
 --
 
