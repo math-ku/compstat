@@ -194,15 +194,16 @@ $$\hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)
 ```{r run_mean_def}
 run_mean <- function(y, k) {
   n <- length(y)
-  m <- floor((k - 1) / 2)
-  k <- 2 * m + 1 # Ensures k is odd and m = (k - 1) / 2
+  m <- floor((k - 1) / 2) #<<
+  k <- 2 * m + 1 # Ensures k is odd and m = (k - 1) / 2 #<<
   y <- y / k
   s <- rep(NA, n)
-  s[m + 1] <- sum(y[1:k])
+  s[m + 1] <- sum(y[1:k]) #<<
 
   for (i in (m + 1):(n - m - 1)) {
-    s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m]
+    s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m] #<<
   }
+
   s
 }
 ```
@@ -274,8 +275,8 @@ nn_bench <- bench::press(
   {
     k <- 11
     y <- rnorm(n)
-    w <- c(rep(1 / k, k), rep(0, n - 10))
-    S <- matrix(w, n - 10, n, byrow = TRUE)
+    w <- c(rep(1, k * n), rep(0, n * (n - k)))
+    S <- matrix(w, n, n)
     bench::mark(
       S %*% y,
       run_mean(y, k = k),
@@ -293,6 +294,52 @@ The Matrix-vector multiplication is $O(n^2)$.
 --
 
 The two other algorithms are $O(n)$. 
+
+---
+
+## Exercise
+
+$\mathbf{S}$ is a sparse matrix but it is stored in a dense format currently.
+
+**Note:** The following is **not** the real $\mathbf{S}$. It is just
+used for illustration.
+
+```{r ex-sparse, warning = FALSE}
+k <- 11
+y <- rnorm(n)
+w <- c(rep(1, k * n), rep(0, n * (n - k)))
+S <- matrix(w, n, n)
+```
+
+Use the [Matrix package](https://CRAN.R-project.org/package=Matrix) to convert $\mathbf{S}$ to
+a sparse format using `Matrix::Matrix(S, sparse = TRUE)` and then benchmark
+the sparse multiplication against the dense one. Parameterize the benchmark with $n$ and $k$.
+
+Don't include the time used to construct the matrix in the benchmark.
+
+---
+
+class: middle
+
+```{r ex-sparse-result, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 12, fig.height = 7, cache = TRUE}
+sparse_bench <- bench::press(
+  n = c(512, 1024, 4196),
+  k = c(10, 100),
+  {
+    y <- rnorm(n)
+    w <- c(rep(1 / k, k), rep(0, n - 10))
+    S <- matrix(w, n - 10, n, byrow = TRUE)
+    S_sparse <- Matrix::Matrix(S, sparse = TRUE)
+    bench::mark(
+      S %*% y,
+      S_sparse %*% y,
+      check = FALSE
+    )
+  }
+)
+
+plot(sparse_bench)
+```
 
 ---
 
@@ -595,7 +642,6 @@ gcv <- function(lambda, y) {
   sum(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE)
 }
 ```
-
 
 ---
 ### GCV-Optimal $\lambda$
@@ -950,4 +996,9 @@ smooth3 <- geom_smooth(
 )
 p + smooth3 + smooth2 + smooth1
 ```
+
+---
+
+## Exercise
+
 
