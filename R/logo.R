@@ -1,3 +1,5 @@
+# Code to generate logo for the course
+
 phiphsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
 
 from <- 1.5 * -pi
