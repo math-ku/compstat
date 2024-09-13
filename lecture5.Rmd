@@ -2,7 +2,7 @@
 title: "Random Number Generation and Rejection Sampling"
 subtitle: Computational Statistics
 author: "Johan Larsson, Niels Richard Hansen"
-date: "September 10, 2024"
+date: "September 17, 2024"
 ---
 
 ```{r setup, include=FALSE}
@@ -10,7 +10,7 @@ knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
 
 knitr::opts_chunk$set(
   fig.width = 8,
-  fig.asp = 0.8,
+  fig.height = 5,
   fig.retina = 3,
   fig.align = "center",
   cache = FALSE,
@@ -21,11 +21,28 @@ knitr::opts_chunk$set(
 
 library(tidyverse)
 
-source("R/kernel.R", keep.source = TRUE)
-source("R/gauss.R", keep.source = TRUE)
+source("R/vMSim.R", keep.source = TRUE)
 
 theme_set(theme_grey(base_size = 16))
 ```
+
+## Questions 
+
+### Rule of Thumb Bandwidth for Non-Gaussian Kernels
+
+- Depends on kernel $K$ and reference distribution $\tilde{f}$ (plugin for $f$).
+- R's `density()` uses Silverman's rule of thumb and adapt to kernel but not reference distribution.
+
+--
+
+### Alternative Loss Functions for Smoothing Splines
+
+- Definitely several alternatives
+- L1 loss for data-fitting term exists.
+- Not sure about L1 loss on penalty term. Should work but not 
+  sure what the optimal spline would look like.
+
+---
 
 ## Today
 
@@ -36,28 +53,33 @@ theme_set(theme_grey(base_size = 16))
 
 ---
 
-## Pseudo Random Numbers
+## Random Numbers
 
-Simulation of random variables require a pseudo random number generator,
-and this is a research field in itself, see `?RNG` in R for the algorithms 
-available and [Section 4.1 in CSwR](https://cswr.nrhstat.org/4-1-pseudorandom-number-generators.html) 
-for more details. 
+Matter of debate whether true random numbers exist.
 
---
+### Pseudo-Random Numbers
 
-The R default is the 32-bit *Mersenne Twister*, which generates integers in the range
-$$\{0, 1, \ldots, 2^{32} -1\}.$$
-It has a long period and all combinations of consecutive integers up to dimension 623
-occur equally often in a period. It has good statistical properties.
+- Computers usually generate pseudo-random numbers
+- Not really random, but have properties that make them appear to be so
+- A research field in itself, see `?RNG` in R for available algorithms
 
 --
 
-Pseudo random numbers in $(0, 1)$ are returned by `runif` by division with 
+### Mersenne Twister
+
+- Default in R
+- Generates integers in the range $$\{0, 1, \ldots, 2^{32} -1\}.$$
+- Long period; all combinations of consecutive integers up to dimension 623
+  occur equally often in a period.
+
+--
+
+Pseudo-random numbers in $(0, 1)$ are returned by `runif()` by division with 
 $2^{32}$ and a fix to prevent the algorithm from returning 0. 
 
 ---
 
-## Transformation methods 
+## Transformation Methods 
 
 If $T : \mathcal{Z} \to \mathbb{R}$ is a map and $Z \in \mathcal{Z}$ is a random 
 variable we can sample, then we can sample $X = T(Z).$
@@ -73,25 +95,27 @@ has distribution function $F$.
 
 ## Gaussian Random Variables
 
-There are many algorithms for generating Gaussian random variables.
+### [Box-Muller](https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform)
 
-* [Box-Muller](https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform): A 
-transformation of two independent uniforms into two independent Gaussian random
+A transformation of two independent uniforms into two independent Gaussian random
 variables (polar coordinates).
+
 --
 
-* [Inversion](https://en.wikipedia.org/wiki/Inverse_transform_sampling). $X = \Phi^{-1}(U)$
-where $\Phi$ is the distribution function for the Gaussian distribution.
+### [Inversion](https://en.wikipedia.org/wiki/Inverse_transform_sampling)
+
+$X = \Phi^{-1}(U)$ where $\Phi$ is the distribution function for the Gaussian distribution.
+
 --
 
+### [Rejection Sampling](https://cswr.nrhstat.org/4-3-reject-samp.html)
 
-* [Rejection sampling](https://cswr.nrhstat.org/4-3-reject-samp.html). 
-See e.g. [Exercise 4.1 in CSwR](https://cswr.nrhstat.org/4-5-univariate-ex.html) or the 
+See [Exercise 5.1 in CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex) or the
 [Ziggurat algorithm](https://en.wikipedia.org/wiki/Ziggurat_algorithm).
 
 --
 
-```{r rng-kind, eval=TRUE}
+```{r rng-kind}
 RNGkind()
 ```
 
@@ -151,12 +175,6 @@ sample of $n$ i.i.d. observations from $\chi^2_k$.
 
 ### Step 2
 
-Write a test for your implementation.
-
---
-
-### Step 2
-
 Use profiling to optimize your implementation. Use benchmarking to compare two
 different implementations.
 
@@ -180,18 +198,20 @@ a modified Bessel function.
 ```{r vMsim}
 library(movMF)
 xy <- rmovMF(500, 0.5 * c(cos(-1.5), sin(-1.5)))
-## rmovMF represents samples as elements on the unit circle
+
+# rmovMF represents samples as elements on the unit circle
 x <- acos(xy[, 1]) * sign(xy[, 2])
 ```
 
 
 ---
-## Von Mises Distribution
 
-```{r vMhist, fig.height = 5}
-hist(x, breaks = seq(-pi, pi, length.out = 15), prob = TRUE, main = NULL)
+class: middle
+
+```{r vMhist, fig.height = 7, echo = FALSE, fig.cap = "Histogram of samples from rmovMF()", fig.width = 11}
+hist(x, breaks = seq(-pi, pi, length.out = 15), prob = TRUE, main = NULL, )
 rug(x)
-density(x, bw = "SJ", cut = 0) |> lines(col = "red", lwd = 2)
+density(x, bw = "SJ", cut = 0) |> lines(col = "dark orange", lwd = 2)
 curve(
   exp(0.5 * cos(x + 1.5)) / (2 * pi * besselI(0.5, 0)),
   -pi,
@@ -200,30 +220,13 @@ curve(
   lwd = 2,
   add = TRUE
 )
+legend(
+  "topright",
+  legend = c(expression(f(x)), "SJ kernel density estimate"),
+  col = c("blue", "dark orange"),
+  lwd = 2
+)
 ```
-
----
-
-## Pseudo-Random Numbers
-
-Simulation of random variables require a pseudo-random number generator,
-and this is a research field in itself, see `?RNG` in R for the algorithms 
-available and [Section 4.1 in CSwR](https://cswr.nrhstat.org/4-1-pseudorandom-number-generators.html) 
-for more details. 
-
---
-
-
-The R default (v. 4.0.2) is the 32-bit *Mersenne Twister*, which generates integers in the range
-$$\{0, 1, \ldots, 2^{32} -1\}.$$
-It has a long period and all combinations of consecutive integers up to dimension 623
-occur equally often in a period. It has good statistical properties.
---
-
-
-Pseudo random numbers in $(0, 1)$ are returned by `runif` by division with 
-$2^{32}$ and a fix to prevent the algorithm from returning 0. 
-
 
 ---
 
@@ -270,38 +273,41 @@ $$e^{\kappa(\cos(y) - 1)} = \alpha' e^{\kappa \cos(y)} \leq 1,$$
 where $\alpha' = \exp(-\kappa)$ we reject if 
 $$U > e^{\kappa(\cos(Y) - 1)}.$$
 
-
 ---
-## von Mises rejection sampling
-
+## Von Mises rejection sampling
 
 ```{r vM-rejection}
 vMsim_slow <- function(n, kappa) {
   y <- numeric(n)
+
   for (i in 1:n) {
     reject <- TRUE
+
     while (reject) {
       y0 <- runif(1, -pi, pi)
       u <- runif(1)
       reject <- u > exp(kappa * (cos(y0) - 1))
     }
+
     y[i] <- y0
   }
   y
 }
 ```
 
-
 ---
 
 ## Von Mises Rejection Sampling
 
-```{r vMsim2, fig.pos="h", fig.show='hold', out.width="50%"}
+```{r vMsim2}
 f <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
 x <- vMsim_slow(100000, 0.5)
+x <- vMsim_slow(100000, 2)
+```
+
+```{r vMsim2-figs, fig.show='hold', echo = FALSE}
 hist(x, breaks = seq(-pi, pi, length.out = 20), prob = TRUE)
 curve(f(x, 0.5), -pi, pi, col = "blue", lwd = 2, add = TRUE)
-x <- vMsim_slow(100000, 2)
 hist(x, breaks = seq(-pi, pi, length.out = 20), prob = TRUE)
 curve(f(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
 ```
@@ -310,34 +316,29 @@ curve(f(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
 
 ```{r profile-vsim}
 source("R/vMSim.R")
-profvis::profvis(vMsim_slow(10000, 5))
+# profvis::profvis(vMsim_slow(10000, 5))
 ```
 
-<!---->
-<!-- ```{r profvis-vMsim-image, out.width="70%", echo=FALSE} -->
-<!-- knitr::include_graphics("images/vMsim_slow.png") -->
-<!-- ``` -->
-
+```{r profvis-vMsim-image, out.width="70%", echo=FALSE} 
+knitr::include_graphics("images/vMsim_slow.png")
+```
 
 ---
+
 ## Summary
 
-Calling random number generators in R sequentially is relatively slow. 
+- Calling random number generators in R sequentially is relatively slow. 
 --
 
-
-It is faster to generate all random numbers once and store them in a vector. 
+- It is faster to generate all random numbers once and store them in a vector. 
 --
 
-
-How to do that for rejection sampling with an unknown number of rejections?
+- How to do that for rejection sampling with an unknown number of rejections?
 --
-
 
 ---
 
-
-## von Mises rejection sampling
+## Von Mises Rejection Sampling
 
 * $Y \sim \mathrm{unif}(-\pi, \pi)$  (proposal)
 
@@ -345,8 +346,8 @@ How to do that for rejection sampling with an unknown number of rejections?
 
 * Accept if $U \leq e^{\kappa(\cos(Y) - 1)}$
 
-
 ---
+
 ## Vectorized von Mises simulation
 
 ```{r vM-rejection-vec}
@@ -360,17 +361,17 @@ vMsim_vec_ran <- function(m, kappa) {
 
 --
 
-While the implementation above is simple and vectorized it returns a random 
-number of samples. To return a fixed number of samples we can write a wrapper 
-of the call to the function. 
+- Simple and performant expression
+- But returns **random** number of samples
+
 --
 
-
 In fact, we can write a generic function factory that can convert any generator
-of a random size output into a generator of a fixed size output. 
+of a random size output into a generator of a fixed size output.
 
 ---
-## Vectorization function factory
+
+## Vectorization Function Factory
 
 ```{r vM-rejection-fast}
 vec_sim <- function(generator) {
@@ -378,14 +379,14 @@ vec_sim <- function(generator) {
   function(n, ...) {
     y <- list()
     j <- 1
-    l <- 0 # The number of accepted samples
+    l <- 0 # Number of accepted samples
     while (l < n) {
       m <- ceiling((n - l) / alpha)
       y[[j]] <- generator(m, ...) #<<
       l <- l + length(y[[j]])
       if (j == 1) {
-        alpha <<- (l + 1) / (m + 1)
-      } # Estimate of alpha #<<
+        alpha <<- (l + 1) / (m + 1) # Estimate of alpha #<<
+      }
       j <- j + 1
     }
     unlist(y)[1:n]
@@ -394,47 +395,45 @@ vec_sim <- function(generator) {
 ```
 --
 
-
 ```{r}
 vMsim_vec <- vec_sim(vMsim_vec_ran)
 ```
 
-
 ---
+
 ## Profiling
 
 ```{r, eval=FALSE}
-profvis(vMsim_vec_ran(5000000, 5))
+# profvis(vMsim_vec_ran(5000000, 5))
 ```
-
 
 ```{r profvis-vMsim-image2, out.width="50%", echo=FALSE}
 knitr::include_graphics("images/vMsim_vec_ran.png")
 ```
 
 ---
+
 ## Profiling
 
 ```{r, eval=FALSE}
-profvis(vMsim_vec(1000000, 5))
+# profvis(vMsim_vec(1000000, 5))
 ```
-
 
 ```{r profvis-vMsim-image3, out.width="50%", echo=FALSE}
 knitr::include_graphics("images/vMsim_vec.png")
 ```
-
 ---
-## Gamma distribution
+
+## Gamma Distribution
 
 Can we find a suitable envelope? 
---
 
+--
 
 Perhaps, but here rejection sampling of a non-standard distribution will 
 be used in combination with a simple transformation. 
---
 
+--
 
 Let $t(y) = a(1 + by)^3$ for $y \in (-b^{-1}, \infty)$, then $t(Y) \sim \Gamma(r,1)$ if
 $Y$ has density 
@@ -443,25 +442,25 @@ $$f(y) \propto t(y)^{r-1}t'(y) e^{-t(y)} = e^{(r-1)\log t(y) + \log t'(y) - t(y)
 [Proof: Use univariate density transformation theorem.]
 --
 
-
 The density $f$ will be the *target density* for a rejection sampler. 
 
 ---
-## Gamma distribution
 
-With 
+## Gamma Distribution
+
+With
 $$f(y) \propto e^{(r-1)\log t(y) + \log t'(y) - t(y)},$$
 $a = r - 1/3$ and $b = 1/(3 \sqrt{a})$ 
 $$f(y) \propto e^{a \log t(y)/a - t(y) + a \log a} \propto \underbrace{e^{a \log t(y)/a - t(y) + a}}_{q(y)}.$$
 --
-
 
 An analysis of $w(y) := - y^2/2 - \log q(y)$ shows that it is convex on $(-b^{-1}, \infty)$ 
 and it attains its minimum in 0 with $w(0) = 0$, whence 
 $$q(y) \leq e^{-y^2/2}.$$
 
 ---
-## gamma rejection sampling
+
+## Gamma Rejection Sampling
 
 * $Y \sim \mathcal{N}(0,1)$  (proposal)
 
@@ -471,10 +470,9 @@ $$q(y) \leq e^{-y^2/2}.$$
 
 * If accept, return $t(Y)$
 
-
 ---
-## Gamma distribution implementation
 
+## Gamma Distribution Implementation
 
 ```{r}
 # r >= 1
@@ -492,9 +490,9 @@ qfun <- function(y, r) {
 }
 ```
 
-
 ---
-## Gamma distribution implementation
+
+## Gamma Distribution Implementation
 
 ```{r}
 gammasim_ran <- function(m, r) {
@@ -510,10 +508,9 @@ gammasim_ran <- function(m, r) {
 gammasim_vec <- vec_sim(gammasim_ran)
 ```
 
-
 ---
-## Gamma distribution test
 
+## Gamma Distribution Test
 
 ```{r}
 tmp <- gammasim_vec(10000, 8)
@@ -522,8 +519,8 @@ curve(dgamma(x, 8), col = "blue", lwd = 2, add = TRUE)
 ```
 
 ---
-## Gamma distribution test
 
+## Gamma Distribution Test
 
 ```{r}
 tmp <- gammasim_vec(10000, 3)
@@ -531,14 +528,19 @@ hist(tmp, freq = FALSE)
 curve(dgamma(x, 3), col = "blue", lwd = 2, add = TRUE)
 ```
 
-
-```{r, include=FALSE, eval=FALSE}
+```{r, include=FALSE, eval=FALSE, cache = TRUE}
 r <- 10
-bench::mark(gammasim(1000, r), gammasim_vec(1000, r), rgamma(1000, r), check = FALSE) %>% autoplot()
+bench::mark(
+  gammasim(1000, r),
+  gammasim_vec(1000, r),
+  rgamma(1000, r),
+  check = FALSE
+) |> plot()
 ```
 
 ---
-## Rejection probabilities
+
+## Rejection Probabilities
 
 ```{r}
 tmp <- gammasim_vec(1e5, 16)
@@ -551,17 +553,17 @@ tmp <- gammasim_vec(1e5, 1)
 1 - environment(gammasim_vec)$alpha
 ```
 
-
 ---
-## Adaptive envelopes
+
+## Adaptive Envelopes
 
 When $f$ is *log-concave* on $I$ we can construct bounds of the form 
 $$f(x) \leq e^{V(x)}$$
 --
 
-where 
+where
 $$V(x) = \sum_{i=1}^m  (a_i x + b_i) 1_{I_i}(x),$$
-for intervals $I_i$ forming a partition of $I$. 
+for intervals $I_i$ forming a partition of $I$.
 
 --
 
@@ -569,9 +571,9 @@ Typically, $a_i x + b_i$ is tangent to the graph of $\log(f)$ at
 $x_i \in I_i = (z_{i-1}, z_i]$ for 
 $$z_0 < x_1 < z_1 < x_2 < \ldots < z_{m-1} < x_m < z_m.$$
 
-
 ---
-## Beta distribution
+
+## Beta Distribution
 
 ```{r}
 Betasim_ran <- function(m, x1, x2, alpha, beta) {
@@ -602,7 +604,7 @@ Betasim_ran <- function(m, x1, x2, alpha, beta) {
 ```
 
 ---
-## Beta distribution test
+## Beta Distribution Test
 
 ```{r}
 Betasim_vec <- vec_sim(Betasim_ran)
@@ -622,36 +624,64 @@ envelope <- function(x, x1, x2, alpha, beta) {
   ifelse(x < z1, exp(a1 * x + b1), exp(a2 * x + b2))
 }
 
-hist(Betasim_vec(100000, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2),
-  prob = TRUE, main = "", ylim = c(0, 3)
+hist(
+  Betasim_vec(100000, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2),
+  prob = TRUE,
+  main = "",
+  ylim = c(0, 3)
 )
 curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, add = TRUE)
-curve(envelope(x, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2) / beta(4, 2),
-  col = "red", lwd = 2, add = TRUE, n = 400
+curve(
+  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2) / beta(4, 2),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
 )
 
-hist(Betasim_vec(100000, x1 = 0.3, x2 = 0.7, alpha = 1.8, beta = 2.4),
-  prob = TRUE, main = "", ylim = c(0, 3)
+hist(
+  Betasim_vec(100000, x1 = 0.3, x2 = 0.7, alpha = 1.8, beta = 2.4),
+  prob = TRUE,
+  main = "",
+  ylim = c(0, 3)
 )
 curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, add = TRUE)
-curve(envelope(x, x1 = 0.3, x2 = 0.7, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
-  col = "red", lwd = 2, add = TRUE, n = 400
+curve(
+  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
 )
 
-hist(Betasim_vec(100000, x1 = 0.2, x2 = 0.5, alpha = 4, beta = 2),
-  prob = TRUE, main = "", ylim = c(0, 3)
+hist(
+  Betasim_vec(100000, x1 = 0.2, x2 = 0.5, alpha = 4, beta = 2),
+  prob = TRUE,
+  main = "",
+  ylim = c(0, 3)
 )
 curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, add = TRUE)
-curve(envelope(x, x1 = 0.2, x2 = 0.5, alpha = 4, beta = 2) / beta(4, 2),
-  col = "red", lwd = 2, add = TRUE, n = 400
+curve(
+  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 4, beta = 2) / beta(4, 2),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
 )
 
-hist(Betasim_vec(100000, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4),
-  prob = TRUE, main = "", ylim = c(0, 3)
+hist(
+  Betasim_vec(100000, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4),
+  prob = TRUE,
+  main = "",
+  ylim = c(0, 3)
 )
 curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, add = TRUE)
-curve(envelope(x, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
-  col = "red", lwd = 2, add = TRUE, n = 400
+curve(
+  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
 )
 ```
 
