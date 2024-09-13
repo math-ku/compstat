@@ -289,6 +289,34 @@
       ],
       "Hash": "3f038e5ac7f41d4ac41ce658c85e3042"
     },
+    "clue": {
+      "Package": "clue",
+      "Version": "0.3-65",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cluster",
+        "graphics",
+        "methods",
+        "stats"
+      ],
+      "Hash": "d6b53853800595408a776900bcc0c23f"
+    },
+    "cluster": {
+      "Package": "cluster",
+      "Version": "2.1.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "grDevices",
+        "graphics",
+        "stats",
+        "utils"
+      ],
+      "Hash": "0aaa05204035dc43ea0004b9c76611dd"
+    },
     "codetools": {
       "Package": "codetools",
       "Version": "0.2-20",
@@ -780,6 +808,16 @@
       ],
       "Hash": "9171f898db9d9c4c1b2c745adc2c1ef1"
     },
+    "here": {
+      "Package": "here",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "rprojroot"
+      ],
+      "Hash": "24b224366f9c2e7534d2344d10d59211"
+    },
     "highr": {
       "Package": "highr",
       "Version": "0.11",
@@ -1073,6 +1111,20 @@
         "vctrs"
       ],
       "Hash": "4f50122dc256b1b6996a4703fecea821"
+    },
+    "movMF": {
+      "Package": "movMF",
+      "Version": "0.2-8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "clue",
+        "skmeans",
+        "slam",
+        "stats"
+      ],
+      "Hash": "5e48a8d73296d37c0cafff4935e41d92"
     },
     "munsell": {
       "Package": "munsell",
@@ -1552,6 +1604,31 @@
         "xfun"
       ],
       "Hash": "562294886e51319dfad3f3e6e61fb0b8"
+    },
+    "skmeans": {
+      "Package": "skmeans",
+      "Version": "0.2-17",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "clue",
+        "cluster",
+        "slam",
+        "stats",
+        "utils"
+      ],
+      "Hash": "8cfca2afa9e0690388940f55e5c9226f"
+    },
+    "slam": {
+      "Package": "slam",
+      "Version": "0.1-53",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "stats"
+      ],
+      "Hash": "530404612c10533ff2deb1622c458b36"
     },
     "stringi": {
       "Package": "stringi",
