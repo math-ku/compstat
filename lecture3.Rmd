@@ -550,7 +550,7 @@ profvis(kern_dens_bin(x, 0.2))
 --
 
 - These vectorized operations are also loops, but they are written in C instead or R.
-  - Examples of vectorized functions: `mean()`, `sd()`
+  - Examples of vectorized functions: `mean()`, `exp()`
   - Examples of non-vectorized functions: `apply()`, `Vectorize()`
 --
 
