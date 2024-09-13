@@ -761,6 +761,10 @@ lines(density(phipsi$psi), col = "red", lwd = 2)
 ```
 ]
 
+???
+
+TODO: is silverman's rule of thumb fine for other kernels?
+
 ---
 ## Amino Acid Angles (Scott, using 1.06)
 
