@@ -1,3 +1,31 @@
 ---
 title: Computational Statistics
 ---
+
+## Slides
+
+- [Lecture 1](lecture1)
+- [Lecture 2](lecture2)
+- [Lecture 3](lecture3)
+- [Lecture 4](lecture4)
+- [Lecture 5](lecture5)
+- [Lecture 6](lecture6)
+- [Lecture 7](lecture7)
+- [Lecture 8](lecture8)
+- [Lecture 9](lecture9)
+- [Lecture 10](lecture10)
+- [Lecture 11](lecture11)
+- [Lecture 12](lecture12)
+- [Lecture 13](lecture13)
+- [Lecture 14](lecture14)
+
+## Assignments
+
+- [Assignment 1](assignment1)
+- [Assignment 2](assignment2)
+- [Assignment 3](assignment3)
+- [Assignment 4](assignment4)
+
+## Data
+
+- [Poisson Data](data/poisson.csv)
