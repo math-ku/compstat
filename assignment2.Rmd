@@ -30,8 +30,8 @@ solution to be more generic.
 
 # A: Rejection Sampling
 
-This assignment uses the Poisson data available from Absalon. It is a table 
-with 100 rows and two variables, $z$ and $x$, where $z$ takes integer values and $x$ 
+This assignment uses the Poisson data available from [this link](https://raw.githubusercontent.com/math-ku/compstat/main/data/poisson.csv).
+It is a table with 100 rows and two variables, $z$ and $x$, where $z$ takes integer values and $x$ 
 takes positive real values. 
 
 The purpose of this assignment is to sample from the probability distribution on $[0, \infty)$ with density 
