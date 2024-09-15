@@ -42,10 +42,10 @@ $$H(\beta) = - \frac{1}{N} \sum_{i=1}^N \Big(y_i \log p_i(\beta) + (1 - y_i) \lo
 over the basis coefficients $\beta \in \mathbb{R}^p$. 
 Implement stochastic optimization algorithms for estimating $\beta$ for fixed 
 $\lambda$. Use e.g. polynomial or B-spline basis functions, and test the 
-regression model using the horse 
-data and simulated data. (Data is available on Absalon. The binary variable 
+regression model using the [`horses.csv`](data/horses.csv) as well as simulated data. For the
+former, the binary variable 
 indicates if the horse dies after hospital admission, and $x$ is the temperature 
-of the horse when admitted.)
+of the horse when admitted.
 
 Compare the stochastic gradient algorithms to other optimization algorithms and 
 investigate how different choices of basis (e.g. the default B-spline basis 
