@@ -1,18 +1,24 @@
-vMsim_slow <- function(n, kappa) {
+## ---- vmsim-slow ----
+sample_vonmises_slow <- function(n, kappa) {
   y <- numeric(n)
-  for (i in 1:n) {
+
+  for (i in seq_len(n)) {
     reject <- TRUE
+
     while (reject) {
       y0 <- runif(1, -pi, pi)
       u <- runif(1)
       reject <- u > exp(kappa * (cos(y0) - 1))
     }
+
     y[i] <- y0
   }
+
   y
 }
 
-vMsim_vec <- function(n, kappa) {
+## ---- vmsim_vec ---
+vmsim_vec <- function(n, kappa) {
   fact <- 1
   j <- 1
   l <- 0 ## The number of accepted samples
@@ -25,7 +31,9 @@ vMsim_vec <- function(n, kappa) {
     l <- l + sum(accept)
     y[[j]] <- y0[accept]
     j <- j + 1
-    if (fact == 1) fact <- n / l
+    if (fact == 1) {
+      fact <- n / l
+    }
   }
   unlist(y)[1:n]
 }
@@ -59,7 +67,7 @@ rng_stream <- function(m, rng, ...) {
   next_rn
 }
 
-gammasim <- function(n, r, trace = FALSE) {
+gamma_sim <- function(n, r, trace = FALSE) {
   count <- 0
   y <- numeric(n)
   y0 <- rng_stream(n, rnorm)
@@ -79,3 +87,21 @@ gammasim <- function(n, r, trace = FALSE) {
   tfun(y, r - 1 / 3)
 }
 
+# ---- new_rejection_sampler
+new_rejection_sampler <- function(generator) {
+  function(n, ...) {
+    alpha <- 1
+    y <- numeric(0)
+    n_accepted <- 0
+    while (n_accepted < n) {
+      m <- ceiling((n - n_accepted) / alpha)
+      y_new <- generator(m, ...) #<<
+      n_accepted <- n_accepted + length(y_new)
+      if (length(y) == 0) {
+        alpha <- (n_accepted + 1) / (m + 1) # Estimate of alpha #<<
+      }
+      y <- c(y, y_new)
+    }
+    list(x = y[seq_len(n)], alpha = alpha)
+  }
+}
