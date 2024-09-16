@@ -58,10 +58,10 @@ theme_set(theme_grey(base_size = 16))
 
 ---
 
-## Random Numbers
+## Pseudo-Random Numbers
 
 - Computers usually generate pseudo-random numbers
-- Not really random, but have properties that make them appear to be so
+- Not really random (are any numbers?), but have properties that make them appear to be so
 - A research field in itself, see `?RNG` in R for available algorithms
 
 --
@@ -86,16 +86,16 @@ If $T : \mathcal{Z} \to \mathbb{R}$ is a map and $Z \in \mathcal{Z}$ is a random
 variable we can sample, then we can sample $X = T(Z).$
 --
 
-**Classical example:** If $F^{\leftarrow} : (0,1) \mapsto \mathbb{R}$ is the
-(generalized) inverse of a distribution function and $U$ is uniformly
-distributed on $(0, 1)$ then  $$F^{\leftarrow}(U)$$ has distribution function
+**Classical example:** If $F^{-1} : (0,1) \mapsto \mathbb{R}$ is the
+generalized inverse of a distribution function and $U$ is uniformly
+distributed on $(0, 1)$ then  $$F^{-1}(U)$$ has distribution function
 $F$.
 
 ---
 
 ## Gaussian Random Variables
 
-### [Box-Muller](https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform)
+### [Box–Muller](https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform)
 
 A transformation of two independent uniforms into two independent Gaussian random
 variables (polar coordinates).
@@ -121,15 +121,15 @@ RNGkind()
 
 ---
 
-## How Can $\Phi^{-1}$ be Computed?
+### Computing $\Phi^{-1}$
 
 Recall that 
 $$\Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \mathrm{d} z$$
 
 --
 
-This is [how R](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/snorm.c#L265) generates samples from $\mathcal{N}(0,1)$, with this 
-[technical approximation](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52) of $\Phi^{-1}$. 
+[This](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/snorm.c#L265), together with [this technical approximation](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52) of $\Phi^{-1}$. 
+is how R generates samples from $\mathcal{N}(0,1)$.
 
 --
 
@@ -137,7 +137,7 @@ The technical approximation is a rational function.
 
 ---
 
-## Sampling From a $t$-Distribution 
+## Sampling from a $t$-Distribution 
 
 Let $Z = (Y, W) \in \mathbb{R} \times (0, \infty)$ with $Z \sim \mathcal{N}(0, 1)$ and 
 $W \sim \chi^2_k$ independent.
@@ -152,10 +152,6 @@ $$X = T(Z, W) = \frac{Z}{\sqrt{W/k}} \sim t_k.$$
 
 This is how R simulates from a $t$-distribution with $W$ generated from a Gamma distribution 
 with shape parameter $k / 2$ and scale parameter $2$.
-
-???
-
-Derive some example of the inversion sampling scheme.
 
 ---
 
@@ -242,7 +238,9 @@ class: center, middle
 
 ## Rejection Sampling
 
-We want to sample from a target distribution $f(x)$ but we can only sample from a proposal $g(x)$.
+We want to sample from a target distribution $f(x)$ but we can only (or want to) sample from a proposal $g(x)$.
+
+--
 
 Let $Y_1, Y_2, \ldots$ be i.i.d. with density $g$ on $\mathbb{R}$ and $U_1, U_2, \ldots$
 be i.i.d. uniform and independent of $Y_i$ for all $i$. 
@@ -452,10 +450,13 @@ $$q(y) \leq e^{-y^2/2}.$$
 ### Gamma Rejection Sampling
 
 * $Y \sim \mathcal{N}(0,1)$  (proposal)
+--
 
 * $U \sim \mathrm{unif}(0, 1)$
+--
 
 * Accept if $U \leq q(Y) e^{Y^2/2}$
+--
 
 * If accept, return $t(Y)$
 
@@ -723,7 +724,6 @@ von_mises_adapt_random <- function(N, x1, x2, kappa) {
 
 von_mises_adapt <- new_rejection_sampler(von_mises_adapt_random)
 
-
 envelope <- function(x, x1, x2, kappa) {
   lf <- function(x) kappa * cos(x)
   lf_deriv <- function(x) -kappa * sin(x)
@@ -834,3 +834,72 @@ bench::mark(
 - Efficiency depends on number of rejections and also 
   how good the implementation is.
 
+---
+
+## Exercise: Box–Muller Transform
+
+Write your own version of the
+`rnorm()` function using the Box–Muller transform:
+
+Suppose $U_1$ and $U_2$ are independent samples chosen
+from the uniform distribution on the unit interval $(0,1)$. Let
+$$Z_0 = R \cos(\Theta) = \sqrt{-2 \log U_1} \sin (2\pi U_2)$$
+and
+$$Z_1 = R \sin(\Theta) = \sqrt{-2 \log U_1} \sin(2 \pi U_2).$$
+Then $Z_0$ and $Z_1$ are i.i.d. $\mathcal{N}(0,1)$.
+
+--
+
+- Test your method
+- Benchmark it against `rnorm()`
+
+---
+
+### Solution
+
+```{r}
+boxmuller_rnorm <- function(n) {
+  m <- ceiling(n / 2)
+
+  u1 <- runif(m)
+  u2 <- runif(m)
+
+  z0 <- sqrt(-2 * log(u1)) * cos(2 * pi * u2)
+  z1 <- sqrt(-2 * log(u1)) * sin(2 * pi * u2)
+
+  c(z0, z1)[seq_len(n)]
+}
+```
+
+---
+
+```{r}
+library(testthat)
+
+test_that("Box-Muller transform generates normal values", {
+  set.seed(633)
+  x <- boxmuller_rnorm(1e5)
+
+  # Check moments
+  expect_equal(mean(x), 0, tolerance = 1e-2)
+  expect_equal(sd(x), 1, tolerance = 1e-2)
+
+  # Check ECDF against CDF
+  emp <- ecdf(x)
+  z <- seq(-3, 3, length.out = 100)
+  ref <- pnorm(z)
+
+  expect_equal(emp(z), ref, tolerance = 1e-3)
+})
+```
+
+---
+
+```{r}
+bench::mark(
+  boxmuller_rnorm(1e6),
+  rnorm(1e6),
+  check = FALSE
+) |>
+  plot()
+```
