@@ -29,13 +29,16 @@ source("R/vMSim.R", keep.source = TRUE)
 theme_set(theme_grey(base_size = 16))
 ```
 
-## Questions 
+## Questions from Last Time
 
 ### Rule of Thumb Bandwidth for Non-Gaussian Kernels
 
 - Depends on kernel $K$ and reference distribution $\tilde{f}$ (plugin for
-  $f$).
-- R's `density()` uses Silverman's rule of thumb and adapt to kernel but not
+  $f$):
+  $$\mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}$$
+--
+
+- R's `density()` uses Silverman's rule of thumb and adapts to kernel but **not**
   reference distribution.
 
 --
@@ -53,8 +56,14 @@ theme_set(theme_grey(base_size = 16))
 
 ### Pseudo-Random Numbers
 
+- How do you simulate random numbers in R?
+
+--
 
 ### Rejection Sampling
+
+- General and useful method for sampling from a 
+  target distribution
 
 ---
 
@@ -86,10 +95,19 @@ If $T : \mathcal{Z} \to \mathbb{R}$ is a map and $Z \in \mathcal{Z}$ is a random
 variable we can sample, then we can sample $X = T(Z).$
 --
 
-**Classical example:** If $F^{-1} : (0,1) \mapsto \mathbb{R}$ is the
+--
+
+### Inversion Sampling
+
+If $F^{-1} : (0,1) \mapsto \mathbb{R}$ is the
 generalized inverse of a distribution function and $U$ is uniformly
 distributed on $(0, 1)$ then  $$F^{-1}(U)$$ has distribution function
 $F$.
+
+--
+
+Computing quantile function easy for discrete distriutions but hard
+for continuous ones.
 
 ---
 
@@ -159,7 +177,7 @@ with shape parameter $k / 2$ and scale parameter $2$.
 
 ### Step 1
 
-Use that $$W = X_1^2 + \ldots + X_k^2 \sim  \chi^2_k$$ for $X_1, \ldots, X_k$
+Use that $W = X_1^2 + \ldots + X_k^2 \sim  \chi^2_k$ for $X_1, \ldots, X_k$
 i.i.d. $\mathcal{N}(0, 1)$ to implement a function, `my_rchisq()`, such that
 `my_rchisq(n, k)` returns a sample of $n$ i.i.d. observations from $\chi^2_k$.
 
@@ -171,19 +189,51 @@ my_rchisq <- function(n, k) {
 
 ```{r rchisq2-implementation, include = FALSE}
 my_rchisq <- function(n, k) {
-  x <- runif(n, 0, 1)
+  y <- numeric(n)
+  for (i in seq_len(n)) {
+    x <- rnorm(k)
+    y[i] <- sum(x^2)
+  }
+  y
+}
+```
+
+```{r rchisq2-implementation-faster, include = FALSE}
+my_fast_rchisq <- function(n, k) {
+  x <- matrix(rnorm(k * n), k)
+  colSums(x)
+}
+```
+
+### Step 2
+
+Make another function `my_other_rchisq()` that uses inverse sampling.
+
+```{r rchisq2, include = FALSE}
+my_other_rchisq <- function(n, k) {
+  x <- rnorm(n)
   qchisq(x, k)
 }
 ```
 
 --
 
-### Step 2
+### Step 3
 
-Use profiling to optimize your implementation. Use benchmarking to compare two
-different implementations.
+Benchmark your implementations against one another and `rchisq()`.
 
-You can compare to or start with this (unoptimized) [reference implementation](rchisq.R).
+```{r rchisq-bench, include = FALSE}
+n <- 1e4
+k <- 5
+bench::mark(
+  rchisq(n, k),
+  my_rchisq(n, k),
+  my_fast_rchisq(n, k),
+  my_other_rchisq(n, k),
+  check = FALSE
+) |>
+  plot()
+```
 
 ---
 
@@ -203,6 +253,10 @@ xy <- rmovMF(500, 0.5 * c(cos(-1.5), sin(-1.5)))
 # rmovMF represents samples as elements on the unit circle
 x <- acos(xy[, 1]) * sign(xy[, 2])
 ```
+
+--
+
+Hard to compute quantile function!
 
 ---
 
@@ -238,7 +292,8 @@ class: center, middle
 
 ## Rejection Sampling
 
-We want to sample from a target distribution $f(x)$ but we can only (or want to) sample from a proposal $g(x)$.
+We want to sample from a target distribution $f(x)$ but have no readily available
+transform $T$ for our proposal $g(x)$.
 
 --
 
@@ -386,22 +441,15 @@ sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
 
 ---
 
-```{r vonmises-profiling}
-profvis(sample_vonmises(1e5, 5))
-```
-
----
-
 ### Benchmarking
 
-```{r vmises-bench}
-vmises_bench <- bench::mark(
+```{r vmises-bench, fig.width = 9, fig.height = 4}
+bench::mark(
   sample_vonmises(1e5, 5),
   sample_vonmises_slow(1e5, 5),
   check = FALSE
-)
-
-plot(vmises_bench)
+) |>
+  plot()
 ```
 
 ---
@@ -426,7 +474,6 @@ Let $t(y) = a(1 + by)^3$ for $y \in (-b^{-1}, \infty)$, then $t(Y) \sim \Gamma(r
 $Y$ has density 
 $$f(y) \propto t(y)^{r-1}t'(y) e^{-t(y)} = e^{(r-1)\log t(y) + \log t'(y) - t(y)}.$$
 
-[Proof: Use univariate density transformation theorem.]
 --
 
 The density $f$ will be the *target density* for a rejection sampler. 
@@ -671,6 +718,31 @@ par(mfrow = c(1, 1))
 
 ---
 
+class: middle
+
+```{r beta-envelopes, echo = FAlSE, fig.width = 12, fig.height = 6}
+par(mfrow = c(1, 2))
+curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, log = "y")
+curve(
+  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2) / beta(4, 2),
+  col = "red",
+  lwd = 2,
+  n = 400,
+  add = TRUE
+)
+curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, log = "y")
+curve(
+  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+par(mfrow = c(1, 1))
+```
+
+---
+
 ### Von Mises Adaptive Envelope
 
 ```{r vonmises-adaptive, echo = FALSE}
@@ -821,6 +893,10 @@ bench::mark(
   plot()
 ```
 
+--
+
+Differences due to R implementation.
+
 ---
 
 ### Notes about Adaptive Envelopes
@@ -833,20 +909,24 @@ bench::mark(
 
 - Efficiency depends on number of rejections and also 
   how good the implementation is.
+--
+
+- A good implementation should make use of new points to
+  update envelope.
 
 ---
 
 ## Exercise: Box–Muller Transform
 
 Write your own version of the
-`rnorm()` function using the Box–Muller transform:
+`rnorm()` function using the Box–Muller transform.
 
-Suppose $U_1$ and $U_2$ are independent samples chosen
-from the uniform distribution on the unit interval $(0,1)$. Let
-$$Z_0 = R \cos(\Theta) = \sqrt{-2 \log U_1} \sin (2\pi U_2)$$
-and
-$$Z_1 = R \sin(\Theta) = \sqrt{-2 \log U_1} \sin(2 \pi U_2).$$
-Then $Z_0$ and $Z_1$ are i.i.d. $\mathcal{N}(0,1)$.
+> Suppose $U_1$ and $U_2$ are independent samples chosen
+> from the uniform distribution on the unit interval $(0,1)$. Let
+> $$Z_0 = R \cos(\Theta) = \sqrt{-2 \log U_1} \cos (2\pi U_2)$$
+> and
+> $$Z_1 = R \sin(\Theta) = \sqrt{-2 \log U_1} \sin(2 \pi U_2).$$
+> Then $Z_0$ and $Z_1$ are i.i.d. $\mathcal{N}(0,1)$.
 
 --
 
@@ -873,6 +953,8 @@ boxmuller_rnorm <- function(n) {
 
 ---
 
+class: middle
+
 ```{r}
 library(testthat)
 
@@ -895,7 +977,9 @@ test_that("Box-Muller transform generates normal values", {
 
 ---
 
-```{r}
+class: middle
+
+```{r boxmuller-bench, fig.width = 9, fig.height = 4}
 bench::mark(
   boxmuller_rnorm(1e6),
   rnorm(1e6),
