@@ -309,7 +309,7 @@ distribution of $Y_{\sigma}$ has density $f$.
 
 --
 
-$\alpha$ is the **rejection probability** and $\alpha g(y)$ the **envelope** of $f$.
+$\alpha$ is the **rejection probability** and $g(y)/\alpha$ the **envelope** of $f$.
 
 ---
 
