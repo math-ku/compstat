@@ -181,12 +181,6 @@ Use that $W = X_1^2 + \ldots + X_k^2 \sim  \chi^2_k$ for $X_1, \ldots, X_k$
 i.i.d. $\mathcal{N}(0, 1)$ to implement a function, `my_rchisq()`, such that
 `my_rchisq(n, k)` returns a sample of $n$ i.i.d. observations from $\chi^2_k$.
 
-```{r rchisq2-template}
-my_rchisq <- function(n, k) {
-  # Your code here
-}
-```
-
 ```{r rchisq2-implementation, include = FALSE}
 my_rchisq <- function(n, k) {
   y <- numeric(n)
@@ -204,6 +198,8 @@ my_fast_rchisq <- function(n, k) {
   colSums(x)
 }
 ```
+
+--
 
 ### Step 2
 
