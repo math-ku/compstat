@@ -309,7 +309,7 @@ distribution of $Y_{\sigma}$ has density $f$.
 
 --
 
-$\alpha$ is the **rejection probability** and $g(y)/\alpha$ the **envelope** of $f$.
+$\alpha$ is the **acceptance probability** and $g(y)/\alpha$ the **envelope** of $f$.
 
 ---
 
@@ -318,8 +318,8 @@ $\alpha$ is the **rejection probability** and $g(y)/\alpha$ the **envelope** of 
 If $f(y) = c q(y)$ and $g(y) = d p(y)$ for (unknown) normalizing constants 
 $c, d > 0$ and $\alpha' q \leq p$ then <br> <br>
 $$\underbrace{\left(\frac{\alpha' d}{c}\right)}_{= \alpha} \ f \leq g.$$
---
 
+--
 
 Moreover, $$u > \frac{\alpha f(y)}{g(y)} \Leftrightarrow u > \frac{\alpha'
 q(y)}{p(y)},$$ and rejection sampling can be implemented without computing $c$
