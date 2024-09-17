@@ -720,7 +720,7 @@ par(mfrow = c(1, 1))
 
 class: middle
 
-```{r beta-envelopes, echo = FALSE, fig.width = 12, fig.height = 6}
+```{r beta-envelopes, echo = FALSE, fig.width = 12, fig.height = 6, warning = FALSE}
 par(mfrow = c(1, 2))
 curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, log = "y")
 curve(
