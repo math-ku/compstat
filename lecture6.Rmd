@@ -5,7 +5,6 @@ author: "Johan Larsson, Niels Richard Hansen"
 date: "September 19, 2024"
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
 
@@ -29,11 +28,13 @@ theme_set(theme_grey(base_size = 16))
 
 ## Today
 
+### Monte Carlo Methods and Importance Sampling
+
 ---
 
 ## Rejection Sampling Recap
 
-Suppose that $f(y) \propto q(y)$ is the *target* density, known up to 
+Suppose that $f(y) \propto q(y)$ is the *target* density, known up to
 normalization.
 
 --
@@ -46,16 +47,16 @@ $$\alpha' q \leq p$$
 for some $\alpha' > 0$.
 --
 
-If $Y$ has density $g$ and $U$ is uniform on $(0,1)$ then the conditional 
+If $Y$ has density $g$ and $U$ is uniform on $(0,1)$ then the conditional
 distribution
 $$Y \mid U \leq \alpha' q(Y) / p(Y)$$
-has density $f$. 
+has density $f$.
 
 ---
 
 ## Rejection Sampling Recap
 
-To simulate one variable with density $f$, run the following code until 
+To simulate one variable with density $f$, run the following code until
 it returns a value:
 
 --
@@ -82,7 +83,7 @@ it returns a value:
 
 ## Monte Carlo Integration
 
-A typical usage of simulation is Monte Carlo integration. 
+A typical usage of simulation is Monte Carlo integration.
 
 --
 
@@ -94,11 +95,11 @@ for $n \to \infty$ by the law of large numbers (LLN).
 
 ## Monte Carlo Integration
 
-The CLT gives that 
-$$\frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\textrm{approx}} \sim 
+The CLT gives that
+$$\frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\textrm{approx}} \sim
 \mathcal{N}(\mu, \sigma^2_{\textrm{MC}} / n)$$
 
-where 
+where
 $$\sigma^2_{\textrm{MC}} = \mathbb{V} h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.$$
 
 ---
@@ -108,13 +109,13 @@ $$\sigma^2_{\textrm{MC}} = \mathbb{V} h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.$$
 We can estimate $\sigma^2_{\textrm{MC}}$ using the empirical variance
 $$\hat{\sigma}^2_{\textrm{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\textrm{MC}})^2,$$
 
-then the variance of $\hat{\mu}_{\textrm{MC}}$ is estimated as $\hat{\sigma}^2_{\textrm{MC}} / n$ and a standard 95% 
-confidence interval for $\mu$ is 
+then the variance of $\hat{\mu}_{\textrm{MC}}$ is estimated as $\hat{\sigma}^2_{\textrm{MC}} / n$ and a standard 95%
+confidence interval for $\mu$ is
 $$\hat{\mu}_{\textrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\textrm{MC}}}{\sqrt{n}}.$$
 
 ---
 
-## Gamma Example 
+## Gamma Example
 
 ```{r gamma-sim, echo=-1}
 set.seed(1234)
@@ -156,17 +157,17 @@ p + geom_ribbon(
 
 ## Importance Sampling
 
-When we are only interested in Monte Carlo integration, we do not 
+When we are only interested in Monte Carlo integration, we do not
 need to sample from the target distribution.
 
 --
 
-Observe that 
+Observe that
 \begin{aligned}
 \mu = \int h(x) f(x) \ dx & = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx \\
 & = \int h(x) w^*(x) g(x) \ dx
 \end{aligned}
-whenever $g$ is a density fulfilling that 
+whenever $g$ is a density fulfilling that
 $$g(x) = 0 \Rightarrow f(x) = 0.$$
 
 ---
@@ -186,7 +187,7 @@ It has mean $\mu$.
 
 ---
 
-## Gamma Importance Sampling 
+## Gamma Importance Sampling
 
 ```{r gamma-sim-IS, echo=-1}
 set.seed(1234)
@@ -214,14 +215,14 @@ p
 
 ---
 
-## Importance Sampling Variance 
+## Importance Sampling Variance
 
-Again by the LLN 
+Again by the LLN
 $$\hat{\mu}_{\textrm{IS}}^* \rightarrow \mathbb{E} h(X_1) w^*(X_1) = \mu,$$
-and by the CLT 
-$$\hat{\mu}_{\textrm{IS}}^* \overset{\textrm{approx}} \sim 
+and by the CLT
+$$\hat{\mu}_{\textrm{IS}}^* \overset{\textrm{approx}} \sim
 \mathcal{N}(\mu, \sigma^{*2}_{\textrm{IS}} / n)$$
-where 
+where
 $$\sigma^{*2}_{\textrm{IS}} = \mathbb{V} h(X_1)w^*(X_1) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.$$
 
 ---
@@ -238,8 +239,8 @@ $$\hat{\mu}^*_{\textrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\textrm{IS}}}{\sqrt{n
 
 --
 
-We may have $\sigma^{*2}_{\textrm{IS}} > \sigma^2_{\textrm{MC}}$ or 
-$\sigma^{*2}_{\textrm{IS}} < \sigma^2_{\textrm{MC}}$ depending on $h$ and $g$. 
+We may have $\sigma^{*2}_{\textrm{IS}} > \sigma^2_{\textrm{MC}}$ or
+$\sigma^{*2}_{\textrm{IS}} < \sigma^2_{\textrm{MC}}$ depending on $h$ and $g$.
 
 --
 
@@ -249,7 +250,7 @@ MC.
 
 ---
 
-## Gamma Importance Sampling  
+## Gamma Importance Sampling
 
 ```{r gamma-IS-sd, echo=FALSE}
 sigma_hat_IS <- sd(x * w_star)
@@ -286,7 +287,7 @@ $$\int e^{-\frac{1}{2}\left(x_1^2 + \sum_{i=2}^p (x_i - \alpha x_{i-1})^2\right)
 
 ## Standardized Weights
 
-If $f = c^{-1} q$ with $c$ unknown then 
+If $f = c^{-1} q$ with $c$ unknown then
 $$c = \int q(x) \ dx = \int \frac{q(x)}{g(x)} g(x) \ d x.$$
 
 --
@@ -297,9 +298,9 @@ where $w^*(x) = q(x) / g(x).$
 
 ---
 
-## IS with Standardized Weights 
+## IS with Standardized Weights
 
-An importance sampling estimate of $\mu$ is thus 
+An importance sampling estimate of $\mu$ is thus
 
 \begin{align}
 \hat{\mu}_{\textrm{IS}} & = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \\
@@ -307,13 +308,13 @@ An importance sampling estimate of $\mu$ is thus
 \end{align}
 
 where $w^*(X_i) = q(X_i) / g(X_i)$ and
-$$w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}$$ 
-are the *standardized weights*. This works irrespectively of the value of 
+$$w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}$$
+are the *standardized weights*. This works irrespectively of the value of
 the normalizing constant $c$, and also if an unnormalized $g$ is used.
 
 ---
 
-## Gamma Standardized Weights 
+## Gamma Standardized Weights
 
 ```{r gamma-sim-ISw, echo=-1}
 set.seed(1234)
@@ -328,7 +329,7 @@ mu_hat_IS[B] # Theoretical value 8
 
 ---
 
-## Gamma Importance Sampling  
+## Gamma Importance Sampling
 
 ```{r gamma-ISw-fig1}
 p <- qplot(1:B, mu_hat_IS) +
@@ -343,19 +344,19 @@ p
 ## Importance Sampling Variance
 
 The variance of the IS estimator with standardized weights is a little more complicated,
-because the estimator is a ratio of random variables. 
+because the estimator is a ratio of random variables.
 
 --
 
-From the multivariate CLT, we have 
+From the multivariate CLT, we have
 $$\frac{1}{n} \sum_{i=1}^n \left(\begin{array}{c}
  h(X_i) w^*(X_i) \\
- w^*(X_i) 
-\end{array}\right) \overset{\textrm{approx}}{\sim} 
+ w^*(X_i)
+\end{array}\right) \overset{\textrm{approx}}{\sim}
 \mathcal{N}\left( c \left(\begin{array}{c} \mu  \\   {1} \end{array}\right),
 \frac{1}{n} \left(\begin{array}{cc} \sigma^{*2}_{\textrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
 \end{array} \right)\right),$$
-where 
+where
 \begin{aligned}
 \sigma^{*2}_{\textrm{IS}} & = \mathbb{V} h(X_1)w^*(X_1) \\
 \gamma & = \mathrm{cov}(h(X_1)w^*(X_1), w^*(X_1)) \\
@@ -366,23 +367,23 @@ where
 
 ## Importance Sampling Variance
 
-We can then apply the $\Delta$-method with $t(x, y) = x / y$. 
+We can then apply the $\Delta$-method with $t(x, y) = x / y$.
 
 --
 
-Observe that $Dt(x, y) = (1 / y, - x / y^2)$, whence 
+Observe that $Dt(x, y) = (1 / y, - x / y^2)$, whence
 $$Dt(c\mu, c)   \left(\begin{array}{cc} \hat{\sigma}^{*2}_{\textrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
 \end{array} \right) Dt(c\mu, c)^T = c^{-2} (\sigma^{*2}_{\textrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma).$$
 
 --
 
-By the $\Delta$-method 
-$$\hat{\mu}_{\textrm{IS}} \overset{\textrm{approx}}{\sim} 
+By the $\Delta$-method
+$$\hat{\mu}_{\textrm{IS}} \overset{\textrm{approx}}{\sim}
 \mathcal{N}(\mu, c^{-2} (\sigma^{*2}_{\textrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma) / n).$$
 
 --
 
-For $c = 1$, the asymptotic variance can be 
+For $c = 1$, the asymptotic variance can be
 estimated by plugging in empirical estimates. For $c \neq 1$ it is necessary to estimate $c$ as
 $\hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)$.
 
@@ -439,7 +440,7 @@ knitr::include_graphics("images/networkfig.png")
 ```
 --
 
-The different edges "fail" independently with probability $p$. 
+The different edges "fail" independently with probability $p$.
 
 --
 
@@ -538,7 +539,7 @@ mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
 
 ## Importance Sampling
 
-We will simulate with failure probability $p_0$ and compute the 
+We will simulate with failure probability $p_0$ and compute the
 importance weights.
 
 ```{r impw}
@@ -594,19 +595,19 @@ when compared to importance sampling to obtain the same precision.
 
 --
 
-A benchmark will show that the extra computing time for importance sampling is small compared 
+A benchmark will show that the extra computing time for importance sampling is small compared
 to the reduction of variance.
 
 --
 
-It is worth the coding effort if used repeatedly, but not 
+It is worth the coding effort if used repeatedly, but not
 if it is a one-off computation.
 
 ---
 
 ## Enumeration
 
-There are $2^{18} = 262,144$ different networks with any number of the edges failing, 
+There are $2^{18} = 262,144$ different networks with any number of the edges failing,
 so complete enumeration is possible.
 
 ```{r, cache = TRUE}
@@ -645,16 +646,16 @@ $$\mu := (2 \pi)^{-p/2} \int e^{-\frac{1}{2}\left(x_1^2 + \sum_{i=2}^p (x_i - \a
 --
 
 \begin{align*}
-\mu & =  (2 \pi)^{-p/2} \int e^{- \frac{1}{2} \sum_{i = 2}^p \alpha^2 
+\mu & =  (2 \pi)^{-p/2} \int e^{- \frac{1}{2} \sum_{i = 2}^p \alpha^2
 x_{i-1}^2 - 2\alpha x_i x_{i-1}}  e^{-\frac{||x||_2^2}{2}} \mathrm{d} x \\
-& =  \int \underbrace{e^{- \frac{1}{2} \sum_{i = 2}^p \alpha^2 
+& =  \int \underbrace{e^{- \frac{1}{2} \sum_{i = 2}^p \alpha^2
 x_{i-1}^2 - 2\alpha x_i x_{i-1}}}_{h(x)} f(x) \mathrm{d} x
 \end{align*}
-where $f$ is the density for the  $\mathcal{N}(0, I_p)$ distribution. 
+where $f$ is the density for the  $\mathcal{N}(0, I_p)$ distribution.
 
 --
 
-In fact, 
+In fact,
 $$\mu = 1.$$
 
 ---
@@ -666,8 +667,8 @@ First we define the function we want to integrate.
 ```{r MC_hfun}
 h <- function(x, alpha = 0.1) {
   p <- length(x)
-  tmp <- alpha * x[1:(p - 1)]
-  exp(-sum((tmp / 2 - x[2:p]) * tmp))
+  tmp <- alpha * x[1L:(p - 1L)]
+  exp(-sum((tmp / 2.0 - x[2L:p]) * tmp))
 }
 ```
 
@@ -731,7 +732,7 @@ lines(1:n, mu_hat + 1.96 * sigma_hat / sqrt(1:n))
 lines(1:n, mu_hat - 1.96 * sigma_hat / sqrt(1:n))
 ```
 
-Setting $\alpha = 0.4$ illustrates a limitation of importance sampling 
+Setting $\alpha = 0.4$ illustrates a limitation of importance sampling
 when the target and proposal are too different. The results cannot be trusted,
 and the estimated confidence band is too small.
 
