@@ -20,21 +20,17 @@ knitr::opts_chunk$set(
 )
 
 library(tidyverse)
+library(patchwork)
 
 old_options <- options(digits = 4)
 
 theme_set(theme_grey(base_size = 16))
 ```
 
-## Today
-
-### Monte Carlo Methods and Importance Sampling
-
----
 
 ## Rejection Sampling Recap
 
-Suppose that $f(y) \propto q(y)$ is the *target* density, known up to
+Suppose that $f(y) \propto q(y)$ is the **target** density, known up to
 normalization.
 
 --
@@ -45,16 +41,15 @@ that we can simulate from, and suppose
 $$\alpha' q \leq p$$
 
 for some $\alpha' > 0$.
+
 --
 
 If $Y$ has density $g$ and $U$ is uniform on $(0,1)$ then the conditional
-distribution
-$$Y \mid U \leq \alpha' q(Y) / p(Y)$$
-has density $f$.
+distribution $$Y \mid U \leq \alpha' q(Y) / p(Y)$$ has density $f$.
 
 ---
 
-## Rejection Sampling Recap
+### Basic Algorithm
 
 To simulate one variable with density $f$, run the following code until
 it returns a value:
@@ -64,7 +59,7 @@ it returns a value:
 * Simulate $y$ from $g$
 --
 
-* Simulate $u$ from uniform on $(0,1)$
+* Simulate $u$ from $\operatorname{Uniform}(0,1)$
 --
 
 * If $u > \alpha' q(y) / p(y)$ return to step one
@@ -76,16 +71,39 @@ it returns a value:
 
 ### Two Challenges
 
-* To find an *envelope*, $p/\alpha'$, of $q$ in the first place
-* To find a tight envelope
+* Finding an envelope $p/\alpha'$, of $q$
+--
+
+* Finding a **tight-enough** envelope
 
 ---
 
-## Monte Carlo Integration
+## Today
 
-A typical usage of simulation is Monte Carlo integration.
+### Monte Carlo Methods
+
+General class of methods for estimating integrals and means
+
+Rejection sampling is a type of Monte Carlo method.
+
+### Importance Sampling
+
+Focus on integrating functions and estimating means
+
+Useful when we cannot analytically compute the integral
+
+Variance reduction technique
+
+---
+
+## Monte Carlo Methods
+
+- Basic idea: use random sampling to obtain numerical results
+- Useful when analytical solutions are infeasible
 
 --
+
+### Monte Carlo Integration
 
 With $X_1, \ldots, X_n$ i.i.d. with density $f$
 $$\hat{\mu}_{\textrm{MC}} := \frac{1}{n} \sum_{i=1}^n h(X_i) \rightarrow \mu := \mathbb{E} h(X_1) = \int h(x) f(x) \ dx$$
@@ -115,24 +133,41 @@ $$\hat{\mu}_{\textrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\textrm{MC}}}{\sqrt{n}}.$
 
 ---
 
-## Gamma Example
+## Example: Gamma Distribution
 
+.pull-left[
 ```{r gamma-sim, echo=-1}
 set.seed(1234)
 B <- 1000
-x <- rgamma(B, 8) # h(x) = x
+x <- rgamma(B, 8)
+
 mu_hat <- (cumsum(x) / (1:B))
 sigma_hat <- sd(x)
-mu_hat[B] # Theoretical value 8
-sigma_hat # Theoretical value sqrt(8) = 2.8284
+mu_hat[B] # Theoretical value: 8
+sigma_hat # Theoretical value: √8
 ```
+]
+
+.pull-right[
+```{r gamma-fig, echo = FALSE, fig.width = 5, fig.height = 4}
+x <- seq(0, 20, length.out = 100)
+y <- dgamma(x, 8)
+
+tibble(x, y) |>
+  ggplot(aes(x, y)) +
+  geom_line() +
+  geom_vline(xintercept = 8, linetype = "dashed", color = "steelblue4") +
+  annotate("text", x = 8, y = 0.02, label = "E(X)", hjust = -0.5)
+```
+]
 
 ---
 
-class: middle
+### Convergence
 
-```{r gamma-fig1}
+```{r gamma-fig1, fig.height = 4}
 p <- ggplot(tibble(x = 1:B, y = mu_hat), aes(x, y)) +
+  geom_hline(yintercept = 8, linetype = "dashed", col = "steelblue4") +
   geom_line() +
   geom_point() +
   coord_cartesian(ylim = c(6, 10))
@@ -149,9 +184,40 @@ p + geom_ribbon(
     ymin = mu_hat - 1.96 * sigma_hat / sqrt(1:B),
     ymax = mu_hat + 1.96 * sigma_hat / sqrt(1:B)
   ),
-  fill = "gray"
+  fill = "dark orange",
+  alpha = 0.4
 ) + geom_line() + geom_point()
 ```
+
+---
+
+## When to Stop?
+
+- Can use concentration inequalities to get a stopping rule
+--
+
+- But need to know variance for Chebychev-based bound and
+  moment generating functions for Chernoff-based bounds.
+--
+
+- If you overshoot then you waste
+  computer resources, and if you undershoot then you get a bad estimate.
+
+--
+
+### Exercise
+
+Implement a heuristic stopping rule that stops when the confidence interval is 0.1 units wide.
+
+```{r excercise-stop, include = FALSE}
+# TO DO
+```
+
+---
+
+class: middle, center
+
+# Importance Sampling
 
 ---
 
@@ -162,54 +228,98 @@ need to sample from the target distribution.
 
 --
 
-Observe that
-\begin{aligned}
-\mu = \int h(x) f(x) \ dx & = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx \\
-& = \int h(x) w^*(x) g(x) \ dx
-\end{aligned}
+### Basic Idea
+
+- Usually, some regions of the target distribution are more important
+--
+
+- So let's oversample these regions
+--
+
+- But we need to correct for this oversampling
+
+--
+
+We want to find $\mu = \operatorname{E} h(X)$. Observe that
+$$\mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx$$
 whenever $g$ is a density fulfilling that
 $$g(x) = 0 \Rightarrow f(x) = 0.$$
 
+
 ---
 
-## Importance Sampling
+### Weights
 
 With $X_1, \ldots, X_n$ i.i.d. with density $g$ define the *weights*
-$$w^*(X_i) = f(X_i) / g(X_i).$$
+$$w^*(X_i) = \frac{f(X_i)}{g(X_i)}.$$
 
-The *importance sampling* estimator is
+--
+
+- $f/g$ is called the *likelihood ratio*.
+- $f$ is the *nominal* density
+- $g$ is the *importance* density
+
+--
+
+### Estimator
+
 $$\hat{\mu}_{\textrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).$$
 
 --
 
 It has mean $\mu$.
 
-
 ---
 
 ## Gamma Importance Sampling
 
+.pull-left[
 ```{r gamma-sim-IS, echo=-1}
 set.seed(1234)
 B <- 1000
 x <- rnorm(B, 10, 3)
-w_star <- dgamma(x, 8) / dnorm(x, 10, 3) #<<
-mu_hat_IS <- (cumsum(x * w_star) / (1:B))
+w_star <-
+  dgamma(x, 8) / dnorm(x, 10, 3) #<<
+mu_hat_IS <-
+  cumsum(x * w_star) / (1:B)
 mu_hat_IS[B] # Theoretical value 8
 ```
+]
+
+.pull-right[
+```{r gammasim-fig, echo = FALSE, fig.height = 6, fig.width = 6}
+z <- seq(-12, 12, length.out = 100) + 10
+f_x <- dgamma(z, 8)
+g_x <- dnorm(z, 10, 3)
+w <- f_x / g_x
+
+p1 <- tibble(x = z, f_x, g_x) |>
+  pivot_longer(c(f_x, g_x)) |>
+  ggplot(aes(x, value, color = name)) +
+  geom_line() +
+  labs(y = "Density", color = NULL)
+
+p2 <- tibble(x = z, w) |>
+  ggplot(aes(x, w)) +
+  geom_line()
+
+p1 / p2
+```
+]
 
 ---
 
-class: middle
+### Convergence
 
-```{r gamma-IS-fig1}
+```{r gamma-IS-fig1, echo = FALSE}
 p <- ggplot(
   tibble(x = 1:B, y = mu_hat_IS),
   aes(x, y)
 ) +
   geom_line() +
   geom_point() +
-  coord_cartesian(ylim = c(6, 10))
+  coord_cartesian(ylim = c(6, 10)) +
+  geom_hline(yintercept = 8, linetype = "dashed", col = "steelblue4")
 p
 ```
 
@@ -252,9 +362,9 @@ MC.
 
 ## Gamma Importance Sampling
 
-```{r gamma-IS-sd, echo=FALSE}
+```{r gamma-IS-sd, echo=TRUE}
 sigma_hat_IS <- sd(x * w_star)
-sigma_hat_IS # Theoretical value ??
+sigma_hat_IS # Theoretical value?
 ```
 
 ```{r gamma-IS-fig2, echo=FALSE}
@@ -275,13 +385,6 @@ mu_hat_IS <- replicate(10000, {
 })
 sd(mu_hat_IS) * sqrt(B)
 ```
-
----
-
-## Computing a High-Dimensional Integral
-
-How to compute
-$$\int e^{-\frac{1}{2}\left(x_1^2 + \sum_{i=2}^p (x_i - \alpha x_{i-1})^2\right)}  \mathrm{d} x?$$
 
 ---
 
@@ -323,19 +426,22 @@ x <- rnorm(B, 10, 3)
 w_star <- numeric(B)
 x_pos <- x[x > 0]
 w_star[x > 0] <- exp((x_pos - 10)^2 / 18 - x_pos + 7 * log(x_pos))
+
 mu_hat_IS <- cumsum(x * w_star) / cumsum(w_star)
 mu_hat_IS[B] # Theoretical value 8
 ```
 
 ---
 
-## Gamma Importance Sampling
+### Convergence
 
-```{r gamma-ISw-fig1}
-p <- qplot(1:B, mu_hat_IS) +
+```{r gamma-ISw-fig1, echo = FALSE}
+p <- tibble(x = 1:B, y = mu_hat_IS) |>
+  ggplot(aes(x, y)) +
   geom_line() +
   geom_point() +
-  coord_cartesian(ylim = c(6, 10))
+  coord_cartesian(ylim = c(6, 10)) +
+  labs(y = expression(hat(mu)[IS]), x = "Number of samples")
 p
 ```
 
@@ -424,6 +530,16 @@ p + geom_ribbon(
   fill = "gray"
 ) + geom_line() + geom_point()
 ```
+
+---
+
+## Exercise: Rejection vs Importance Sampling
+
+- Pretend it is hard to sample from the Exponential distribution.
+- Implement rejection sampling and importance sampling for the Exponential distribution
+  to estimate the mean of the distribution.
+- Use your stopping rule from before to stop when the confidence interval is 0.1 units wide.
+- Benchmark your methods against each other.
 
 ---
 
