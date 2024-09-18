@@ -62,7 +62,7 @@ theme_set(theme_grey(base_size = 16))
 
 ### Rejection Sampling
 
-- General and useful method for sampling from a 
+- General and useful method for sampling from a
   target distribution
 
 ---
@@ -84,14 +84,14 @@ theme_set(theme_grey(base_size = 16))
 
 --
 
-Pseudo-random numbers in $(0, 1)$ are returned by `runif()` by division with 
-$2^{32}$ and a fix to prevent the algorithm from returning 0. 
+Pseudo-random numbers in $(0, 1)$ are returned by `runif()` by division with
+$2^{32}$ and a fix to prevent the algorithm from returning 0.
 
 ---
 
 ## Transformation Methods
 
-If $T : \mathcal{Z} \to \mathbb{R}$ is a map and $Z \in \mathcal{Z}$ is a random 
+If $T : \mathcal{Z} \to \mathbb{R}$ is a map and $Z \in \mathcal{Z}$ is a random
 variable we can sample, then we can sample $X = T(Z).$
 --
 
@@ -141,12 +141,12 @@ RNGkind()
 
 ### Computing $\Phi^{-1}$
 
-Recall that 
+Recall that
 $$\Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \mathrm{d} z$$
 
 --
 
-[This](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/snorm.c#L265), together with [this technical approximation](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52) of $\Phi^{-1}$. 
+[This](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/snorm.c#L265), together with [this technical approximation](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52) of $\Phi^{-1}$.
 is how R generates samples from $\mathcal{N}(0,1)$.
 
 --
@@ -155,20 +155,20 @@ The technical approximation is a rational function.
 
 ---
 
-## Sampling from a $t$-Distribution 
+## Sampling from a $t$-Distribution
 
-Let $Z = (Y, W) \in \mathbb{R} \times (0, \infty)$ with $Z \sim \mathcal{N}(0, 1)$ and 
+Let $Z = (Y, W) \in \mathbb{R} \times (0, \infty)$ with $Z \sim \mathcal{N}(0, 1)$ and
 $W \sim \chi^2_k$ independent.
 
 --
 
-Define $T : \mathbb{R} \times (0, \infty) \to \mathbb{R}$ by 
+Define $T : \mathbb{R} \times (0, \infty) \to \mathbb{R}$ by
 $$T(z,w) = \frac{z}{\sqrt{w/k}},$$
 then
 $$X = T(Z, W) = \frac{Z}{\sqrt{W/k}} \sim t_k.$$
 --
 
-This is how R simulates from a $t$-distribution with $W$ generated from a Gamma distribution 
+This is how R simulates from a $t$-distribution with $W$ generated from a Gamma distribution
 with shape parameter $k / 2$ and scale parameter $2$.
 
 ---
@@ -237,7 +237,7 @@ bench::mark(
 
 The density on $(-\pi, \pi]$ is
 $$f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x - \mu)}$$
-for $\kappa > 0$ and $\mu \in (-\pi, \pi]$ parameters and $I_0$ is 
+for $\kappa > 0$ and $\mu \in (-\pi, \pi]$ parameters and $I_0$ is
 a modified Bessel function.
 
 --
@@ -294,7 +294,7 @@ transform $T$ for our proposal $g(x)$.
 --
 
 Let $Y_1, Y_2, \ldots$ be i.i.d. with density $g$ on $\mathbb{R}$ and $U_1, U_2, \ldots$
-be i.i.d. uniform and independent of $Y_i$ for all $i$. 
+be i.i.d. uniform and independent of $Y_i$ for all $i$.
 
 Define
 $$\sigma = \inf\{n \geq 1 \mid U_n \leq \alpha f(Y_n) / g(Y_n)\},$$
@@ -304,7 +304,7 @@ for $\alpha \in (0, 1]$, where $f$ is a density.
 
 ### Theorem
 
-If $\alpha f(y) \leq g(y)$ for all $y \in \mathbb{R}$ then the 
+If $\alpha f(y) \leq g(y)$ for all $y \in \mathbb{R}$ then the
 distribution of $Y_{\sigma}$ has density $f$.
 
 --
@@ -315,7 +315,7 @@ $\alpha$ is the **acceptance probability** and $g(y)/\alpha$ the **envelope** of
 
 ## Normalizing Constants
 
-If $f(y) = c q(y)$ and $g(y) = d p(y)$ for (unknown) normalizing constants 
+If $f(y) = c q(y)$ and $g(y) = d p(y)$ for (unknown) normalizing constants
 $c, d > 0$ and $\alpha' q \leq p$ then <br> <br>
 $$\underbrace{\left(\frac{\alpha' d}{c}\right)}_{= \alpha} \ f \leq g.$$
 
@@ -323,7 +323,7 @@ $$\underbrace{\left(\frac{\alpha' d}{c}\right)}_{= \alpha} \ f \leq g.$$
 
 Moreover, $$u > \frac{\alpha f(y)}{g(y)} \Leftrightarrow u > \frac{\alpha'
 q(y)}{p(y)},$$ and rejection sampling can be implemented without computing $c$
-or $d$. 
+or $d$.
 
 ---
 
@@ -335,7 +335,7 @@ Rejection sampling using the uniform proposal, $g(y) \propto 1$
 
 Since
 $$e^{\kappa(\cos(y) - 1)} = \alpha' e^{\kappa \cos(y)} \leq 1,$$
-where $\alpha' = \exp(-\kappa)$ we reject if 
+where $\alpha' = \exp(-\kappa)$ we reject if
 $$U > e^{\kappa(\cos(Y) - 1)}.$$
 
 ---
@@ -378,10 +378,10 @@ profvis(sample_vonmises_slow(10000, 5))
 
 ## Summary
 
-- Calling random number generators in R sequentially is relatively slow. 
+- Calling random number generators in R sequentially is relatively slow.
 --
 
-- It is faster to generate all random numbers once and store them in a vector. 
+- It is faster to generate all random numbers once and store them in a vector.
 --
 
 - How to do that for rejection sampling with an unknown number of rejections?
@@ -418,7 +418,7 @@ fixed_vonmises_sampler <- function(m, kappa) {
 - But returns **random** number of samples
 --
 
-- We need a function that returns exactly $n$ samples and 
+- We need a function that returns exactly $n$ samples and
 --
 
 - Problem is we don't know $\alpha$ in advanced
@@ -452,27 +452,24 @@ bench::mark(
 
 ## Gamma Distribution
 
-We want to sample from
-\[
-  f_r(x) = \frac{1}{\Gamma(r)} x^{r - 1} e^{-x}, \qquad x > 0.
-\]
+We want to sample from $$f_r(x) = \frac{1}{\Gamma(r)} x^{r - 1} e^{-x}, \qquad x > 0.$$
 
-Can we find a suitable envelope? 
+Can we find a suitable envelope?
 
 --
 
-Perhaps, but here rejection sampling of a non-standard distribution will 
-be used in combination with a simple transformation. 
+Perhaps, but here rejection sampling of a non-standard distribution will
+be used in combination with a simple transformation.
 
 --
 
 Let $t(y) = a(1 + by)^3$ for $y \in (-b^{-1}, \infty)$, then $t(Y) \sim \Gamma(r,1)$ if
-$Y$ has density 
+$Y$ has density
 $$f(y) \propto t(y)^{r-1}t'(y) e^{-t(y)} = e^{(r-1)\log t(y) + \log t'(y) - t(y)}.$$
 
 --
 
-The density $f$ will be the *target density* for a rejection sampler. 
+The density $f$ will be the *target density* for a rejection sampler.
 
 ---
 
@@ -480,12 +477,12 @@ The density $f$ will be the *target density* for a rejection sampler.
 
 With
 $$f(y) \propto e^{(r-1)\log t(y) + \log t'(y) - t(y)},$$
-$a = r - 1/3$ and $b = 1/(3 \sqrt{a})$ 
+$a = r - 1/3$ and $b = 1/(3 \sqrt{a})$
 $$f(y) \propto e^{a \log t(y)/a - t(y) + a \log a} \propto \underbrace{e^{a \log t(y)/a - t(y) + a}}_{q(y)}.$$
 --
 
-An analysis of $w(y) := - y^2/2 - \log q(y)$ shows that it is convex on $(-b^{-1}, \infty)$ 
-and it attains its minimum in 0 with $w(0) = 0$, whence 
+An analysis of $w(y) := - y^2/2 - \log q(y)$ shows that it is convex on $(-b^{-1}, \infty)$
+and it attains its minimum in 0 with $w(0) = 0$, whence
 $$q(y) \leq e^{-y^2/2}.$$
 
 ---
@@ -589,7 +586,7 @@ tmp <- sample_gamma(1e5, 1)
 
 ## Adaptive Envelopes
 
-When $f$ is *log-concave* on $I$ we can construct bounds of the form 
+When $f$ is *log-concave* on $I$ we can construct bounds of the form
 $$f(x) \leq e^{V(x)}$$
 --
 
@@ -599,8 +596,8 @@ for intervals $I_i$ forming a partition of $I$.
 
 --
 
-Typically, $a_i x + b_i$ is tangent to the graph of $\log(f)$ at 
-$x_i \in I_i = (z_{i-1}, z_i]$ for 
+Typically, $a_i x + b_i$ is tangent to the graph of $\log(f)$ at
+$x_i \in I_i = (z_{i-1}, z_i]$ for
 $$z_0 < x_1 < z_1 < x_2 < \ldots < z_{m-1} < x_m < z_m.$$
 
 ---
@@ -903,7 +900,7 @@ Differences due to R implementation.
 - But tricky to implement
 --
 
-- Efficiency depends on number of rejections and also 
+- Efficiency depends on number of rejections and also
   quality of implementation.
 --
 
