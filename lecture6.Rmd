@@ -354,9 +354,9 @@ $\sigma^{*2}_{\textrm{IS}} < \sigma^2_{\textrm{MC}}$ depending on $h$ and $g$.
 
 --
 
-By choosing $g$ cleverly so that $h(x) w^*(x)$ becomes as constant as possible,
-importance sampling can reduce the variance considerably compared to standard
-MC.
+### Goal
+
+Choose $g$ so that $h(x) w^*(x)$ becomes as constant as possible.
 
 ---
 
@@ -536,8 +536,7 @@ p + geom_ribbon(
 ## Exercise: Von Mises Importance Sampling
 
 Implement an importance sampling algorithm for
-computing the mean of the von Mises distribution (with location
-parameter = 0).
+computing the mean of the von Mises distribution.
 
 ```{r vonmises-density}
 dvmises <- function(x, mu = 0, kappa = 2) {
@@ -731,13 +730,12 @@ The ratio of variances is estimated as
 mu_hat * (1 - mu_hat) / var(tmp)
 ```
 
-We need around `r round(mu_hat * (1 - mu_hat) / var(tmp))` times more naive samples
-when compared to importance sampling to obtain the same precision.
+- Need about `r round(mu_hat * (1 - mu_hat) / var(tmp))` times more naive samples
+  compared to importance sampling for same precision.
 
 --
 
-A benchmark will show that the extra computing time for importance sampling is small compared
-to the reduction of variance.
+- Benchmarking would should that the extra computing time for importance sampling is small compared to the reduction of variance.
 
 --
 
@@ -873,11 +871,22 @@ lines(1:n, mu_hat + 1.96 * sigma_hat / sqrt(1:n))
 lines(1:n, mu_hat - 1.96 * sigma_hat / sqrt(1:n))
 ```
 
-Setting $\alpha = 0.4$ illustrates a limitation of importance sampling
-when the target and proposal are too different. The results cannot be trusted,
-and the estimated confidence band is too small.
+### Caution
+
+With $\alpha = 0.4$, proposal and target are too different
 
 ```{r, echo=FALSE}
 options(digits = old_options$digits)
 ```
 
+---
+
+## Summary
+
+- Monte Carlo methods are useful for estimating integrals and means
+--
+
+- Importance sampling can reduce variance considerably
+--
+
+- But the proposal distribution must be chosen carefully
