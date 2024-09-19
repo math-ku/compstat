@@ -3,7 +3,7 @@ name: Render RMarkdown and Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Set a branch to deploy
+      - main # Set a branch to deploy
 
 jobs:
   render-and-deploy:
@@ -21,6 +21,7 @@ jobs:
 
       - name: Install system dependencies
         run: |
+          sudo apt-get update
           sudo apt-get install -y \
             libcurl4-openssl-dev \
             libharfbuzz-dev \
