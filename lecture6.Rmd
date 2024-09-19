@@ -533,40 +533,6 @@ p + geom_ribbon(
 
 ---
 
-## Exercise: Von Mises Importance Sampling
-
-Implement an importance sampling algorithm for
-computing the mean of the von Mises distribution.
-
-```{r vonmises-density}
-dvmises <- function(x, mu = 0, kappa = 2) {
-  exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0))
-}
-```
-
-Try various proposals.
-
-If you have time, create a function that takes
-parameters of the von Mises distribution and
-adjusts the proposal distribution based
-on these.
-
-Plot the result and check convergence.
-
-```{r vmises-importance, echo = FALSE}
-vonmises_importance <- function(n, mu = 0, kappa = 2) {
-  x <- rnorm(n, 0, pi / 2)
-  w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)
-  cumsum(x * w_star) / 1:n
-}
-
-# x <- seq(-pi, pi, length.out = 100)
-# plot(x, dvmises(x))
-# lines(x, dnorm(x, 0, pi / 2))
-```
-
----
-
 class: middle, center
 
 # Examples
@@ -885,6 +851,40 @@ options(digits = old_options$digits)
 
 ---
 
+## Exercise: Von Mises Importance Sampling
+
+Implement an importance sampling algorithm for
+computing the mean of the von Mises distribution.
+
+```{r vonmises-density}
+dvmises <- function(x, mu = 0, kappa = 2) {
+  exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0))
+}
+```
+
+Try various proposals.
+
+If you have time, create a function that takes
+parameters of the von Mises distribution and
+adjusts the proposal distribution based
+on these.
+
+Plot the result and check convergence.
+
+```{r vmises-importance, echo = FALSE}
+vonmises_importance <- function(n, mu = 0, kappa = 2) {
+  x <- rnorm(n, 0, pi / 2)
+  w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)
+  cumsum(x * w_star) / 1:n
+}
+
+# x <- seq(-pi, pi, length.out = 100)
+# plot(x, dvmises(x))
+# lines(x, dnorm(x, 0, pi / 2))
+```
+
+---
+
 ## Summary
 
 - Monte Carlo methods are useful for estimating integrals and means
@@ -894,3 +894,5 @@ options(digits = old_options$digits)
 --
 
 - But the proposal distribution must be chosen carefully
+
+
