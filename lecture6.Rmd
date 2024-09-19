@@ -533,13 +533,38 @@ p + geom_ribbon(
 
 ---
 
-## Exercise: Rejection vs Importance Sampling
+## Exercise: Von Mises Importance Sampling
 
-- Pretend it is hard to sample from the Exponential distribution.
-- Implement rejection sampling and importance sampling for the Exponential distribution
-  to estimate the mean of the distribution.
-- Use your stopping rule from before to stop when the confidence interval is 0.1 units wide.
-- Benchmark your methods against each other.
+Implement an importance sampling algorithm for
+computing the mean of the von Mises distribution (with location
+parameter = 0).
+
+```{r vonmises-density}
+dvmises <- function(x, mu = 0, kappa = 2) {
+  exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0))
+}
+```
+
+Try various proposals.
+
+If you have time, create a function that takes
+parameters of the von Mises distribution and
+adjusts the proposal distribution based
+on these.
+
+Plot the result and check convergence.
+
+```{r vmises-importance, echo = FALSE}
+vonmises_importance <- function(n, mu = 0, kappa = 2) {
+  x <- rnorm(n, 0, pi / 2)
+  w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)
+  cumsum(x * w_star) / 1:n
+}
+
+# x <- seq(-pi, pi, length.out = 100)
+# plot(x, dvmises(x))
+# lines(x, dnorm(x, 0, pi / 2))
+```
 
 ---
 
