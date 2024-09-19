@@ -637,7 +637,7 @@ discon <- function(Aup) {
 ## Sampling a Graph
 
 
-```{r simNet}
+```{r simNet, cache = TRUE}
 sim_net <- function(Aup, p) {
   ones <- which(Aup == 1)
   Aup[ones] <- sample(
@@ -683,7 +683,7 @@ mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
 We will simulate with failure probability $p_0$ and compute the
 importance weights.
 
-```{r impw}
+```{r impw, cache = TRUE}
 weights <- function(Aup, Aup0, p0, p) {
   w <- discon(Aup0)
   if (w) {
@@ -805,7 +805,7 @@ $$\mu = 1.$$
 
 First we define the function we want to integrate.
 
-```{r MC_hfun}
+```{r MC_hfun, cache = TRUE}
 h <- function(x, alpha = 0.1) {
   p <- length(x)
   tmp <- alpha * x[1L:(p - 1L)]
@@ -820,7 +820,7 @@ h <- function(x, alpha = 0.1) {
 Then we specify various parameters and implement the simulations as a
 simple loop.
 
-```{r MC_loop, dependson="MC_hfun"}
+```{r MC_loop, dependson="MC_hfun", cache = TRUE}
 n <- 10000 # The number of random variables to generate
 p <- 100 # The dimension of each random variable
 alpha <- 0.2
@@ -849,7 +849,7 @@ lines(1:n, mu_hat - 1.96 * sigma_hat / sqrt(1:n))
 ---
 ## Different Target
 
-```{r MC4}
+```{r MC4, cache = TRUE}
 alpha <- 0.4 #<<
 evaluations <- numeric(n)
 set.seed(123)
