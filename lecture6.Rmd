@@ -196,7 +196,7 @@ p + geom_ribbon(
 - Can use concentration inequalities to get a stopping rule
 --
 
-- But need to know variance for Chebychev-based bound and
+- But need variance estimate for Chebychev-based bound and
   moment generating functions for Chernoff-based bounds.
 --
 
@@ -496,7 +496,7 @@ $\hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)$.
 ---
 ## Gamma Standardized Weights, Variance
 
-```{r}
+```{r sigma_hat_is_w}
 c_hat <- mean(w_star)
 sigma_hat_IS <- sd(x * w_star)
 sigma_hat_w_star <- sd(w_star)
@@ -604,9 +604,8 @@ A[9, c(5, 8, 10)] <- 1
 A[10, c(3, 6, 7, 9)] <- 1
 A # Graph adjacency matrix
 ```
---
 
-We will use the upper triangular part of the matrix to represent the graph.
+--
 
 ```{r}
 Aup <- A
@@ -663,6 +662,7 @@ bench::bench_time(replicate(1e5, sim_net(Aup, 0.5)))
 set.seed(27092016)
 n <- 1e5
 tmp <- replicate(n, discon(sim_net(Aup, 0.05)))
+
 mu_hat <- mean(tmp)
 mu_hat
 ```
@@ -685,10 +685,12 @@ importance weights.
 ```{r impw, cache = TRUE}
 weights <- function(Aup, Aup0, p0, p) {
   w <- discon(Aup0)
+
   if (w) {
     s <- sum(Aup0)
     w <- (p / p0)^18 * (p0 * (1 - p) / (p * (1 - p0)))^s
   }
+
   as.numeric(w)
 }
 ```
@@ -749,14 +751,16 @@ if it is a one-off computation.
 There are $2^{18} = 262,144$ different networks with any number of the edges failing,
 so complete enumeration is possible.
 
-```{r, cache = TRUE}
+```{r enumeration, cache = TRUE}
 ones <- which(Aup == 1)
 Atmp <- Aup
 p <- 0.05
 prob <- numeric(2^18)
+
 for (i in 0:(2^18 - 1)) {
   on <- as.numeric(intToBits(i)[1:18])
   Atmp[ones] <- on
+
   if (discon(Atmp)) {
     s <- sum(on)
     prob[i + 1] <- p^(18 - s) * (1 - p)^s
@@ -768,7 +772,7 @@ for (i in 0:(2^18 - 1)) {
 
 ## Probability of 1 and 10 Being Disconnected
 
-```{r}
+```{r disconnect-prob}
 sum(prob) # True value
 # MC estimate and interval
 mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
@@ -833,9 +837,9 @@ for (i in 1:n) {
 
 ---
 
-## Results with Confidence Band
+### Convergence
 
-```{r MC_CLT, dependson="MC_loop", fig.height=6}
+```{r MC_CLT, dependson="MC_loop", fig.height=6, echo = FALSE}
 plot(cumsum(evaluations) / 1:n, pch = 20)
 abline(h = 1, col = "red")
 mu_hat <- cumsum(evaluations) / 1:n
@@ -860,7 +864,7 @@ for (i in 1:n) {
 
 ---
 
-## Results with "Confidence Band"
+### Convergence
 
 ```{r MC4_CLT, dependson="MC4", echo=FALSE, fig.height=6}
 plot(cumsum(evaluations) / 1:n, pch = 20)
@@ -875,7 +879,7 @@ lines(1:n, mu_hat - 1.96 * sigma_hat / sqrt(1:n))
 
 With $\alpha = 0.4$, proposal and target are too different
 
-```{r, echo=FALSE}
+```{r reset-options, echo=FALSE}
 options(digits = old_options$digits)
 ```
 
