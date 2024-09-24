@@ -810,6 +810,37 @@ for (int i = 0; i < 10; ++i) {
 
 ---
 
+## Linear Algebra
+
+### RcppArmadillo
+
+```cpp
+#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+arma::mat
+armaMatrixMultiply(const arma::mat& A, const arma::mat& B) {
+    return A * B;
+}
+```
+
+--
+
+### RppEigen
+
+```cpp
+#include <RcppEigen.h>
+// [[Rcpp::depends(RcppEigen)]]
+// [[Rcpp::export]]
+Eigen::MatrixXd
+eigenMatrixMultiply(const Eigen::MatrixXd& A,
+                    const Eigen::MatrixXd& B) {
+    return A * B;
+}
+```
+
+---
+
 
 ## R Markdown
 
