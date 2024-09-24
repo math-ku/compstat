@@ -1,0 +1,642 @@
+---
+title: "Optimization"
+subtitle: "Computational Statistics"
+author: "Johan Larsson, Niels Richard Hansen"
+date: "September 26, 2024"
+---
+
+```{r setup, include=FALSE}
+knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
+
+knitr::opts_chunk$set(
+  fig.width = 8,
+  fig.height = 5,
+  fig.retina = 3,
+  fig.align = "center",
+  cache = FALSE,
+  autodep = TRUE,
+  dev.args = list(pointsize = 18),
+  crop = TRUE
+)
+
+library(tidyverse)
+library(patchwork)
+
+old_options <- options(digits = 4)
+
+theme_set(theme_grey(base_size = 18))
+```
+
+```{Rcpp source-rcpp, ref.label=knitr::all_rcpp_labels(), include=FALSE}
+```
+
+```{Rcpp namespace, include = FALSE}
+#include <Rcpp.h>
+using namespace Rcpp;
+```
+
+```{r data, echo=FALSE}
+vegetables <- read.table(
+  "data/vegetables.txt",
+  header = TRUE,
+  colClasses = c(
+    "numeric",
+    "numeric",
+    "factor",
+    "factor",
+    "numeric",
+    "numeric",
+    "numeric"
+  )
+)[, c(1, 2, 3)]
+```
+
+## Today
+
+### Optimization
+
+
+### Poisson Regression
+
+---
+
+class: middle, center
+
+# Poisson Regression
+
+---
+
+## Poisson regression
+
+Consider observations $y_i \in \mathbb{N}_0$, $x_i \in \mathbb{R}^p$ for
+$i = 1, \ldots, n$, and Poisson point probabilities
+$$f_i(y_i) = e^{-\mu(x_i)} \frac{\mu(x_i)^{y_i}}{y_i!}.$$
+
+--
+
+
+If $\log(\mu(x_i)) = x_i^T \beta$ we rewrite
+
+$$f_i(y_i) = e^{\beta^T x_i y_i - \exp( x_i^T \beta)} \frac{1}{y_i!}.$$
+
+This is a *Poisson regression model*.
+
+---
+## Example
+
+```{r}
+summary(vegetables)
+dim(vegetables)
+```
+
+---
+
+## Poisson Model
+
+$$\log(E(\text{sale})) = \beta_0 + \beta_1 \log(\text{normalSale}) + \beta_{\text{store}}.$$
+
+--
+
+```{r pois-model, dependson="data"}
+## Note, variable store is a factor with 352 levels!
+pois_model <- glm(
+  sale ~ log(normalSale) + store,
+  data = vegetables,
+  family = poisson()
+)
+```
+
+--
+
+```{r pois-sum, echo=2, dependson="pois-model"}
+old_options <- options(digits = 2)
+summary(pois_model) %>%
+  coefficients() %>%
+  head()
+options(digits = old_options$digits)
+```
+
+
+---
+## Exponential families
+
+Joint density
+
+\begin{equation}
+f(\mathbf{y} \mid \theta) = \prod_{i=1}^n \frac{1}{\varphi_i(\theta)} e^{\theta^T t_i(y_i)} = e^{\theta^T \sum_{i=1}^n t_i(y_i) - \sum_{i=1}^n \kappa_i(\theta)}
+\end{equation}
+
+where $\varphi_i(\theta) = \int e^{\theta^T t_i(u)} \mu_i(\mathrm{d}u)$ and $\kappa_i(\theta) = \log(\varphi_i(\theta)).$
+The log-likelihood is
+$$\ell(\theta) = \theta^T t(\mathbf{y}) - \kappa(\theta)$$
+where
+
+$$t(\mathbf{y}) = \sum_{i=1}^m t_i(y_i) \quad \text{and} \quad
+\kappa(\theta) = \sum_{i=1}^m \log \varphi_i(\theta).$$
+
+The gradient is
+$$\nabla \ell(\theta) = t(\mathbf{y}) - \nabla \kappa(\theta).$$
+
+---
+
+## The Poisson Regression model
+
+For the Poisson regression model we find that
+
+$$t(\mathbf{y}) = \sum_{i=1}^n x_i y_i = \mathbf{X}^T \mathbf{y} \quad \text{and} \quad
+\kappa(\beta) = \sum_{i=1}^n e^{x_i^T \beta}$$
+
+Moreover,
+$$\nabla \kappa(\beta) = \sum_{i=1}^n x_i e^{x_i^T \beta} = \mathbf{X}^T \mathbf{w}(\beta)$$
+where
+$$ \mathbf{w}(\beta) = \exp(\mathbf{X}^T \beta)$$
+with $\exp$ applied coordinatewisely.
+
+---
+
+## Model matrix and `glm.fit()`
+
+```{r implement, dependson="data"}
+X <- model.matrix(
+  sale ~ log(normalSale) + store,
+  data = vegetables
+)
+y <- vegetables$sale
+```
+
+--
+
+```{r glm.fit}
+system.time(
+  pois_fit <- glm.fit(X, y, family = poisson())
+)
+```
+
+---
+
+## `glm.fit()`
+
+```{r}
+pois_fit$iter
+pois_fit$converged
+```
+
+--
+
+The objective function is not computed directly as the negative log-likelihood
+but as twice the negative log-likelihood plus an additive constant. For comparisons
+it's easiest to compute deviance differences.
+
+```{r}
+pois_fit0 <- glm.fit(X[, 1], y, family = poisson())
+pois_fit0$deviance - pois_fit$deviance
+```
+
+---
+
+## `glm.fit()`
+
+```{r glm.fit-trace}
+pois_fit <- glm.fit(X, y, family = poisson(), control = list(trace = TRUE))
+```
+--
+
+The stopping criterion is *small relative descent* in terms of deviance,
+that is
+$$|\mathrm{deviance}_{n-1} - \mathrm{deviance}_n| < \varepsilon (\mathrm{deviance}_n + 0.1)$$
+with the default tolerance parameter $\varepsilon = 10^{-8}$ and with a maximal
+number of iterations set to 25.
+
+---
+## Implementation of objective function
+
+```{r implement_H, dependson="implement"}
+t_map <- drop(crossprod(X, y))
+
+H <- function(beta) {
+  drop(sum(exp(X %*% beta)) - beta %*% t_map) / nrow(X)
+}
+
+grad_H <- function(beta) {
+  (drop(crossprod(X, exp(X %*% beta))) - t_map) / nrow(X)
+}
+```
+
+--
+
+Recomputing the deviance difference
+
+```{r objective-value-deviance}
+2 * nrow(X) * (H(c(pois_fit0$coefficients, rep(0, 352))) - H(pois_fit$coefficients))
+```
+
+--
+
+and the value of the negative log-likelihood
+
+
+```{r objective-value}
+H(pois_fit$coefficients)
+```
+
+---
+
+## Using `optim()` with Conjugate Gradient
+
+
+```{r CG, dependson="implement_H"}
+system.time(
+  pois_CG <- optim(
+    rep(0, length = ncol(X)),
+    H,
+    grad_H,
+    method = "CG",
+    control = list(maxit = 10000)
+  )
+)
+```
+
+--
+
+```{r CG-results, dependson="CG"}
+pois_CG$value
+pois_CG$counts
+```
+
+---
+
+## Using `optim()` with BFGS
+
+```{r BFGS, dependson="implement_H"}
+system.time(
+  pois_BFGS <- optim(
+    rep(0, length = ncol(X)),
+    H,
+    grad_H,
+    method = "BFGS",
+    control = list(maxit = 10000)
+  )
+)
+```
+
+--
+
+
+```{r BFGS-results, dependson="BFGS"}
+pois_BFGS$value
+pois_BFGS$counts
+```
+
+
+---
+
+## Using sparse matrices
+
+```{r Matrix, message=FALSE, cache=FALSE}
+library(Matrix)
+```
+
+
+```{r sparse, dependson="implement"}
+X <- Matrix(X)
+```
+
+--
+
+```{r BFGS-sparse, dependson=c("implement_H", "sparse")}
+system.time(
+  pois_BFGS_sparse <- optim(
+    rep(0, length = ncol(X)),
+    H,
+    grad_H,
+    method = "BFGS",
+    control = list(maxit = 10000)
+  )
+)
+```
+
+--
+
+
+```{r BFGS-sparse-results, dependson="BFGS-sparse"}
+range(pois_BFGS$par - pois_BFGS_sparse$par)
+```
+
+---
+
+## Line Search and the Wolfe Conditions
+
+Let $\Theta \subseteq \mathbb{R}^p$ be open and $H : \Theta \to \mathbb{R}$
+twice differentiable.
+
+--
+
+Starting from $\theta_0$ and with a *descent direction* $\rho_0$
+( $\nabla H(\theta_0)^T \rho_0 < 0$ ) define
+$$\theta_1 = \theta_0 + \gamma \rho_0$$
+for a suitably chosen $\gamma > 0$.
+--
+
+By Taylor's theorem,
+$$H(\theta_1) < H(\theta_0)$$
+for $\gamma$ small enough.
+--
+
+
+Let $h(\gamma) = H(\theta_{0} + \gamma \rho_{0})$ and observe that
+
+$$h'(\gamma) = \nabla H(\theta_{0} + \gamma \rho_{0})^T \rho_{0}.$$
+--
+
+We could search for the maximal descent in direction $\rho_0$ by solving
+for $h'(\gamma) = 0$.
+
+---
+
+## Line Search and the Wolfe Conditions
+
+Instead we will be satisfied by a *sufficient descent*, choosing $\gamma > 0$
+so that
+$$h(\gamma) \leq h(0) + c \gamma h'(0)$$
+for a $c \in (0, 1)$ that satisfies the *curvature condition*
+$$h'(\gamma) \geq \tilde{c} h'(0)$$
+for a $\tilde{c} \in (c, 1)$.
+--
+
+
+These two conditions are collectively known as the *Wolfe conditions*.
+
+---
+
+## Backtracking
+
+Choosing $\gamma_0$ (to be one, say) and a constant $d \in (0, 1)$ we
+can search through the sequence of step-lengths
+$$\gamma_0, d \gamma_0, d^2 \gamma_0, d^3 \gamma_0, \ldots$$
+and stop the first time we find a step-length satisfying the Wolfe
+conditions.
+
+--
+
+Using backtracking, we can dispense of the curvature condition and simply
+check if
+
+$$H(\theta_{n} + d^k \gamma_0 \rho_{n}) \leq H(\theta_n) +   cd^k \gamma_0 \nabla H(\theta_{n})^T \rho_{n}.$$
+
+--
+
+For gradient descent this amounts to
+
+$$H(\theta_{n} - d^k \gamma_0 \nabla H(\theta_{n})) \leq H(\theta_n) -  cd^k \gamma_0 \|\nabla H(\theta_{n})\|_2^2.$$
+
+---
+
+## Implementation
+
+```{r GD}
+source("R/optim_alg.R")
+```
+
+[Source code](R/optim_alg.R)
+
+---
+
+## Poisson Regression Problem
+
+```{r}
+poisson_model <- function(form, data, response) {
+  X <- model.matrix(form, data)
+  y <- data[[response]]
+  t_map <- drop(crossprod(X, y))
+  n <- nrow(X)
+  p <- ncol(X)
+
+  H <- function(beta) {
+    drop(sum(exp(X %*% beta)) - beta %*% t_map) / n
+  }
+
+  grad_H <- function(beta) {
+    (drop(crossprod(X, exp(X %*% beta))) - t_map) / n
+  }
+
+  Hessian_H <- function(beta) {
+    crossprod(X, drop(exp(X %*% beta)) * X) / n
+  }
+
+  list(par = rep(0, p), H = H, grad_H = grad_H, Hessian_H = Hessian_H)
+}
+```
+
+---
+
+## Test
+
+Gradient descent is very slow for the full Poisson model, so
+we consider a much smaller problem.
+
+```{r GD-test, dependson=c("Implement", "GD")}
+veg_pois <- poisson_model(~ log(normalSale), vegetables, response = "sale")
+pois_GD <- GD(veg_pois$par, veg_pois$H, veg_pois$grad_H)
+```
+
+--
+
+```{r GD-comp, dependson="GD-test", echo=2:3}
+old_options <- options(digits = 5)
+pois_glm <- glm(sale ~ log(normalSale), data = vegetables, family = poisson())
+rbind(pois_glm = coefficients(pois_glm), pois_GD)
+options(digits = old_options$digits)
+```
+
+
+---
+## Test
+
+
+```{r GD-object, dependson=c("Implement", "GD-test"), echo=2:3}
+old_options <- options(digits = 15)
+veg_pois$H(coefficients(pois_glm))
+veg_pois$H(pois_GD)
+options(digits = old_options$digits)
+```
+
+---
+
+## Tracer
+
+```{r GD-trace, dependson=c("GD-test", "vegetables-data"), results='hide', echo=-3}
+library(CSwR)
+GD_tracer <- tracer(c("value", "h_prime", "gamma"), N = 50)
+gc() ## Garbage collection
+```
+
+--
+
+```{r pois-trace, dependson=c("GD-trace", "GD-test", "vegetables-data")}
+pois_GD <- GD(veg_pois$par, veg_pois$H, veg_pois$grad_H, cb = GD_tracer$tracer)
+```
+
+
+---
+
+## Trace Information
+
+```{r trace-sum, dependson=c("GD-trace", "pois-trace")}
+trace_sum <- summary(GD_tracer)
+head(trace_sum)
+```
+
+--
+
+```{r trace-sum2, dependson="trace-sum"}
+tail(trace_sum)
+val_min <- veg_pois$H(coefficients(pois_glm))
+```
+
+---
+
+## Trace information
+
+```{r, warning=FALSE}
+ggplot(trace_sum, aes(.time, value - val_min)) +
+  geom_point() +
+  geom_line() +
+  scale_y_log10()
+```
+
+---
+
+## Trace information
+
+```{r}
+ggplot(trace_sum, aes(.time, h_prime)) +
+  geom_point() +
+  geom_line() +
+  scale_y_log10()
+```
+
+```{r prof1, eval=FALSE, echo=FALSE}
+library(profvis)
+profvis(replicate(40, {
+  GD(veg_pois$par, veg_pois$H, veg_pois$grad_H, epsilon = 1e-10)
+  NULL
+}))
+```
+
+
+---
+
+## Newton algorithm
+
+Descent direction
+$$\rho_n = - D^2 H(\theta_n)^{-1} \nabla H(\theta_n).$$
+
+See [source code](optim_alg.R) for implementation.
+
+---
+
+## Test
+
+```{r pois2}
+veg_pois <- poisson_model(~ store + log(normalSale) - 1, vegetables, response = "sale")
+```
+
+
+```{r Newton-test, dependson=c("Implement", "GD-test", "pois2")}
+system.time(
+  pois_Newton <- Newton(
+    veg_pois$par,
+    veg_pois$H,
+    veg_pois$grad_H,
+    veg_pois$Hessian_H
+  )
+)
+```
+
+---
+
+## Test
+
+
+```{r Newton-comp, dependson="Newton-test"}
+pois_glm <- glm(sale ~ store + log(normalSale) - 1, data = vegetables, family = poisson())
+range(pois_Newton - pois_glm$coefficients)
+```
+--
+
+```{r Newton-object, dependson=c("Implement", "Newton-test"), echo=2:3, results='hold'}
+old_options <- options(digits = 20)
+veg_pois$H(pois_Newton)
+veg_pois$H(pois_glm$coefficients)
+options(digits = old_options$digits)
+```
+
+--
+
+The R function `glm()` (and the workhorse `glm.fit()`) uses a
+Newton algorithm (without backtracking).
+
+
+---
+## Tracing
+
+```{r Newton-trace}
+Newton_tracer <- tracer(c("value", "grad_norm_sq"),
+  N = 0,
+  expr = expression(grad_norm_sq <- sum(grad^2))
+)
+pois_Newton <- Newton(
+  veg_pois$par,
+  veg_pois$H,
+  veg_pois$grad_H,
+  veg_pois$Hessian_H,
+  epsilon = 8e-28,
+  cb = Newton_tracer$tracer
+)
+```
+
+---
+
+## Tracing
+
+```{r Newton-summary-trace, dependson="Newton-trace"}
+trace_sum <- summary(Newton_tracer)
+val_min <- veg_pois$H(pois_Newton)
+trace_sum
+```
+
+---
+
+## Trace information
+
+```{r trace-sum-Newton, warning=FALSE, dependson="Newton-summary-trace"}
+ggplot(trace_sum, aes(.time, value - val_min)) +
+  geom_point() +
+  geom_line() +
+  scale_y_log10()
+```
+
+---
+
+## Trace information
+
+```{r trace-sum-Newton2, dependson="Newton-summary-trace"}
+ggplot(trace_sum, aes(.time, grad_norm_sq)) +
+  geom_point() +
+  geom_line() +
+  scale_y_log10()
+```
+
+
+```{r prof2, eval=FALSE, echo=FALSE}
+library(profvis)
+profvis(
+  Newton(
+    veg_pois$par,
+    veg_pois$H,
+    veg_pois$grad_H,
+    veg_pois$Hessian_H
+  )
+)
+```
+
