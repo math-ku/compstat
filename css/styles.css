@@ -25,10 +25,6 @@ body {
   font-size: 1.38em;
 }
 
-.remark-code {
-  font-size: 0.75;
-}
-
 .remark-slide-content h1,
 h2,
 h3,
@@ -116,7 +112,11 @@ author */ .title-slide h3:nth-of-type(1) {
 }
 
 .footnote {
-  font-size: 0.7em;
+  font-size: 0.7rem;
+}
+
+.remark-code .small {
+  font-size: 0.8rem;
 }
 
 .vcenter {
@@ -158,4 +158,13 @@ author */ .title-slide h3:nth-of-type(1) {
 .two-column-right {
   float: right;
   width: 47%;
+}
+
+.inverse {
+  background-color: #222;
+  color: #d6d6d6;
+}
+
+.inverse .caption {
+  color: #d6d6d6;
 }
