@@ -2,7 +2,7 @@
 title: "Rcpp"
 subtitle: "Computational Statistics"
 author: "Johan Larsson, Niels Richard Hansen"
-date: "September 19, 2024"
+date: "September 24, 2024"
 ---
 
 ```{r setup, include=FALSE}
