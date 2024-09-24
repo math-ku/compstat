@@ -629,6 +629,8 @@ double sum_cpp_sugar(const Rcpp::NumericVector& x) {
   vector. Benchmark against `sd()`.
 - Remember to test your functions.
 - Don't use `Rcpp:sd()`, please ☺
+- If you have time over, try a different algorithm for computing the
+  standard deviation.
 
 ```{Rcpp rcpp-sd, eval = FALSE, echo = FALSE}
 // [[Rcpp::export]]
