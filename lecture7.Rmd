@@ -503,7 +503,7 @@ pi = 3.14; // Error!
 
 ## Passing by Reference
 
-- Useful when we want to avoid copying large objects or when we want to modify the object.
+- Useful to avoid copying large objects or when we want to modify the input.
 - Post-fix `&` to the type.
 
 ```{Rcpp rcpp-sum-ref, eval = FALSE}
