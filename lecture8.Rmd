@@ -633,7 +633,7 @@ In practice, this is often just called Newton's method.
 
 At each iteration $t \gets 1$ and while
 $$f(x + t v) > f(x) + \alpha t \nabla f(x)^T v$$
-with $v = (\nabla^2 f(x)^{-1} \nabla f(x))$
+with $v = -(\nabla^2 f(x)^{-1} \nabla f(x))$
 set $$t \gets \beta t.$$
 ]
 
