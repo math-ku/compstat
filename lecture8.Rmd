@@ -1,5 +1,5 @@
 ---
-title: "Numerical Optimization"
+title: "Optimization"
 subtitle: "Computational Statistics"
 author: "Johan Larsson, Niels Richard Hansen"
 date: "September 26, 2024"
@@ -45,7 +45,7 @@ vegetables <- read.table(
 
 ## Today
 
-### Numerical Optimization
+### Optimization
 
 - What is an optimization problem?
 --
@@ -238,10 +238,38 @@ where $g_i$ are convex but $f$ is **quasiconvex**.
 
 **Biggest difference:** local minima are not necessarily global.
 
+#### Examples
+
+- Utility functions (economics)
+- The floor function $f(x) = \lfloor x \rfloor$
+
+--
+
+#### Algorithms
+
+Won't cover here, but for instance the **bisection** method.
 
 ---
 
 ## Nonconvex Optimization Problems
+
+- Generally hard to solve.
+- No standard form (can be anything).
+- Local minima are not necessarily global.
+
+--
+
+### Examples
+
+- Deep learning
+- Hyperparameter tuning (cross-validation)
+- Combinatorial problems
+
+--
+
+### Algorithms
+
+Won't cover here, but typically **stochastic algorithms** (next week) or **global optimization methods** (not in this course).
 
 ---
 
@@ -379,22 +407,19 @@ but what happens under the hood?
 
 ---
 
+.pull-left[
 ### Zero-Order Methods
 
 Use only the function value.
 
-Typically called global optimization methods; assume very little.
-
 #### Examples
 
 - Grid search (cross validation)
-- Random search
-- Simulated annealing
 - Genetic algorithms
 - Bisection
+]
 
----
-
+.pull-right[
 ### First-Order Methods
 
 Use the gradient of the function (**first** derivative).
@@ -403,6 +428,17 @@ Use the gradient of the function (**first** derivative).
 
 - **Gradient descent**
 - Conjugate gradient
+]
+
+### Second-Order Methods
+
+Use the gradient of the function (**first** derivative).
+
+#### Examples
+
+- **Newton's Method**
+- Trust-region methods
+]
 
 ---
 
@@ -436,6 +472,8 @@ $$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \
 
 Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize w.r.t $y$ to get
 $$x^+ = x - t\nabla f(x).$$
+
+But how do we choose $t$?
 ]
 
 .pull-right[
@@ -444,25 +482,9 @@ knitr::include_graphics("images/gd-approx.png")
 ```
 ]
 
-
-
 ---
 
-## Step Size
-
-How to choose $t$?
-
-#### Too Small
-
-Algorithm will converge very slowly.
-
-#### Too large
-
-Algorithm might diverge (or oscillate).
-
----
-
-### Too Small
+### Too Small Step Size
 
 ```{r stepsize-small, echo=FALSE, out.width = "50%"}
 knitr::include_graphics("images/gd-stepsize-small.png")
@@ -470,7 +492,7 @@ knitr::include_graphics("images/gd-stepsize-small.png")
 
 ---
 
-### Too Large
+### Too Large Step Size
 
 ```{r stepsize-large, echo=FALSE, out.width = "50%"}
 knitr::include_graphics("images/gd-stepsize-large.png")
@@ -491,7 +513,7 @@ knitr::include_graphics("images/gd-stepsize-good.png")
 #### Theorem
 
 For gradient descent with step size $t \leq 1/L$ and Lipschitz constant of $\nabla f$ being $L$, we have
-$$f(x^{(k)}) - f(x^*) \leq \frac{1}{2tk} \lVert x^{(0)} - x^*\rVert_2^2$$
+$$f(x^{(k)}) - f(x^*) \leq \frac{1}{2tk} \lVert x^{(0)} - x^*\rVert_2^2.$$
 
 --
 
@@ -690,7 +712,7 @@ In practice, results depend on the problem.
 
 ---
 
-### Quasi-Newton Methods
+## Quasi-Newton Methods
 
 Replace $\nabla^2 f(x)$ with an approximation $B_k$.
 
@@ -733,7 +755,7 @@ This is a *Poisson regression model*.
 
 ### Example
 
-```{r}
+```{r vegetables-summary}
 summary(vegetables)
 dim(vegetables)
 ```
@@ -805,6 +827,8 @@ X <- model.matrix(
   data = vegetables
 )
 y <- vegetables$sale
+
+dim(X)
 ```
 
 --
@@ -1108,7 +1132,11 @@ profvis(
 ### Newton Method
 
 ```{r pois2, cache = TRUE}
-veg_pois <- poisson_model(~ store + log(normalSale) - 1, vegetables, response = "sale")
+veg_pois <- poisson_model(
+  ~ store + log(normalSale) - 1,
+  vegetables,
+  response = "sale"
+)
 ```
 
 ```{r Newton-test, dependson=c("Implement", "GD-test", "pois2"), cache = TRUE}
@@ -1165,6 +1193,13 @@ pois_newton <- newton(
   veg_pois$Hessian_H,
   epsilon = 8e-28,
   cb = newton_tracer$tracer
+)
+
+gd_tracer <- tracer(c("value"), N = 0)
+pois_gd <- gradient_descent(
+  veg_pois$par,
+  veg_pois$H,
+  veg_pois$grad_H
 )
 ```
 
@@ -1247,4 +1282,6 @@ ggplot(trace_sum_merged, aes(time, value - val_min + 1e-8, color = method)) +
 
 - Accelerated gradient methods
 - Conjugate gradient
+- Constrained optimization
+- Nonsmooth objectives
 
