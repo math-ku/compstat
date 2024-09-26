@@ -605,7 +605,7 @@ $$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \
 
 Instead of replacing $\nabla^2 f(x)$ with $\frac{1}{t} I$ (gradient descent update),
 minimize $\hat{f}(y)$ directly:
-$$x^+ = x - \nabla^2 f(x)^{-1} \nabla f(x).$$
+$$x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).$$
 ]
 
 .pull-right[
