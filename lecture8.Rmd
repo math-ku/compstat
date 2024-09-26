@@ -1245,25 +1245,20 @@ profvis(
 
 ---
 
-### Newton vs Gradient Descent
+## Exercise
 
-```{r newton-vs-gd-poisson, echo = FALSE}
-d1 <- trace_sum_gd |>
-  select(value, time = .time) |>
-  mutate(iteration = seq_along(time), method = "Gradient Descent")
+### Step 1
 
+Implement the gradient descent algorithm to solve ridge regression:
+$$\operatorname{minmize}_{\beta in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lVert \beta \rVert_2^2}{2} \right)$$
 
-d2 <- trace_sum_newton |>
-  select(value, time = .time) |>
-  mutate(iteration = seq_along(time), method = "Newton")
+--
 
-trace_sum_merged <- bind_rows(d1, d2)
+### Step 2
 
-ggplot(trace_sum_merged, aes(time, value - val_min + 1e-8, color = method)) +
-  geom_line() +
-  scale_y_log10() +
-  labs(color = NULL, y = "Suboptimality")
-```
+Implement a method for solving ridge regression directly.
+
+Explicitly factorize (i.e. don't use `solve()`)
 
 ---
 
@@ -1284,4 +1279,5 @@ ggplot(trace_sum_merged, aes(time, value - val_min + 1e-8, color = method)) +
 - Conjugate gradient
 - Constrained optimization
 - Nonsmooth objectives
+
 
