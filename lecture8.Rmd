@@ -1250,7 +1250,7 @@ profvis(
 ### Step 1
 
 Implement the gradient descent algorithm to solve ridge regression:
-$$\operatorname{minmize}_{\beta in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lVert \beta \rVert_2^2}{2} \right)$$
+$$\operatorname{minmize}_{\beta \in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lambda \lVert \beta \rVert_2^2}{2} \right)$$
 
 --
 
