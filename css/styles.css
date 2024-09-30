@@ -14,11 +14,15 @@ body {
 }
 
 .remark-slide-content h2 {
-  font-size: 1.8em;
+  font-size: 1.6em;
 }
 
 .remark-slide-content h3 {
   font-size: 1.3em;
+}
+
+.remark-slide-content h4 {
+  font-size: 1.1em;
 }
 
 .remark-slide-content {
