@@ -195,13 +195,6 @@ $$f(\lambda x + (1 - \lambda) y) \leq \lambda f(x) + (1 - \lambda) f(y).$$
 If $f$ is **differentiable**, then the condition is equivalent to
 $$f(y) \geq f(x) + \nabla f(x)^T(y - x).$$
 
---
-
-#### Second-Order Conditions
-
-Assume $f$ twice-differentiable, then $f$ is convex if
-$$\nabla^2 f(x) \succeq 0.$$
-
 ---
 
 ### Optimality
