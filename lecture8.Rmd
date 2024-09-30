@@ -227,10 +227,6 @@ $$\begin{aligned}
   \end{aligned}$$
 where $g_i$ are convex but $f$ is **quasiconvex**.
 
---
-
-**Biggest difference:** local minima are not necessarily global.
-
 #### Examples
 
 - Utility functions (economics)
