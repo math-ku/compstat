@@ -99,7 +99,8 @@ author */ .title-slide h3:nth-of-type(1) {
 
 .section-title h1,
 .section-title h2,
-.section-title h3 {
+.section-title h3,
+.section-title h4 {
   margin-top: 10px;
   margin-bottom: 10px;
 }
