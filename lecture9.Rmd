@@ -68,6 +68,13 @@ theme_set(theme_grey(base_size = 18))
 knitr::include_graphics("images/xkcd-debugging.png")
 ```
 
+---
+
+class: inverse
+
+```{r first-bug, out.width = "80%", echo = FALSE, fig.cap = "The original bug(?), 1947"}
+knitr::include_graphics("images/first-bug-reduced.jpg")
+```
 
 ---
 
