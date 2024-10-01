@@ -465,7 +465,7 @@ contour(pC, pI, z, levels = levels, col = pal(30), asp = 1, drawlabels = FALSE)
 
 ### Change of Variables?
 
-Let $$p_j = \frac{\exp{(\theta_j)}}{\sum_{i = 1}^K \exp(\theta_i)}$$
+Let $$p_j = \frac{\exp{(\theta_j)}}{\sum_{i = 1}^K \exp(\theta_i)}$$.
 
 --
 
