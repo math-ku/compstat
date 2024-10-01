@@ -52,11 +52,13 @@ newton_method <- function(
     beta = 0.5,
     t0 = 1,
     epsilon = 1e-10,
-    maxit = 50) {
+    maxit = 50,
+    verbosity = 0) {
   obj_history <- rep(NA, maxit)
 
   for (i in 1:maxit) {
     obj <- objective(x)
+    obj_history[i] <- obj
     grad <- gradient(x)
 
     if (norm(grad, "2") <= epsilon) {
@@ -64,14 +66,17 @@ newton_method <- function(
     }
 
     hess <- hessian(x)
-    d <- drop(solve(hess, grad))
+    d <- -drop(solve(hess, grad))
     t <- t0
     x_new <- x + t * d
     grad_d_prod <- crossprod(grad, d)
-
+    
     while (objective(x_new) > obj_history[i] + alpha * t * grad_d_prod) {
-      gamma <- beta * t
-      x_new <- x + gamma * d
+      if (verbosity == 1) {
+        print("objective(x_new)", objective(x_new))
+      }
+      t <- beta * t
+      x_new <- x + t * d
     }
 
     x <- x_new

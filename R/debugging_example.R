@@ -1,3 +1,5 @@
-source("R/rchisq.R")
+source("R/debugging_example_source.R")
 
-my_rchisq(1000, 2)
+x <- c()
+
+my_log_sum(x)
