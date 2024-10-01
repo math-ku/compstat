@@ -368,7 +368,7 @@ $$M(n_1, \ldots, n_6) = (n_1 + n_2 + n_3, n_4 + n_5, n_6).$$
 
 ---
 
-## Multinomial Cell Collapsing
+### Cell Collapsing
 
 In terms of the $(p_C, p_I)$ parametrization, $p_T = 1 - p_C - p_I$ and
 $$p = (p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2).$$
