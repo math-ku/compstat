@@ -637,6 +637,8 @@ holding for each observation, we can compute the empirical variance.
 
 ### Moths Empirical Fisher
 
+Can think of the moths as i.i.d. observations.
+
 ```{r}
 emp_Fisher <- function(p, x = c(85, 196, 341)) {
   grad1 <- grad_Q(p, c(1, 0, 0))
@@ -713,7 +715,7 @@ ihat
 
 ---
 
-## The Information Identity
+## Second Way: The Information Identity
 
 From
 $$\ell(\theta) = Q(\theta \mid \theta') + H(\theta \mid \theta')$$
@@ -729,19 +731,28 @@ $$\hat{i}_X = \hat{i}_Y - \hat{i}_{Y \mid X}.$$
 
 --
 
-Here $\hat{i}_Y$ is directly computable from $Q$ while it is not clear how to
-compute $\hat{i}_{Y \mid X}$.
+### Interpretation
+
+- $\hat{i}_Y$ is the Fisher information for complete $Y$.
+--
+
+- $\hat{i}_{Y \mid X}$ is the information "lost" from not observing full $X$.
+
 
 ---
 
 ### More Identities
+
+How to compute the information loss?
+
+--
 
 The second **Bartlett identity** can be reformulated as
 
 $$\partial_{\theta_i} \partial_{\theta_j} H(\bar{\theta} \mid \bar{\theta})
 = - \partial_{\theta'_i} \partial_{\theta_j} H(\bar{\theta} \mid \bar{\theta})$$
 
-which follows from differentiation under the integral of $\int h(y \mid x, \theta) \mu_x(d y) = 1.$
+which follows from differentiation under the integral of $\int h(y \mid x, \theta) \mathrm{d}y = 1.$
 
 --
 
@@ -762,7 +773,7 @@ $$\hat{i}_{Y \mid X} = D_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\the
 
 ---
 
-## Numerical Differentiation of $Q$
+### New Implementations
 
 First we implement the map $Q$ as an R function.
 
@@ -790,9 +801,7 @@ grad_Q <- function(p, pp, x = c(85, 196, 341)) {
 
 ### Numerical Differentiation of $Q$
 
-We use the numDeriv functions `jacobian()` and `hessian()` to differentiate numerically.
-
-Either numerically differentiate the function twice:
+We use numDeriv functions `jacobian()` and `hessian()` to differentiate numerically.
 
 ```{r q-hess}
 iY <- -hessian(Q, p_hat, pp = p_hat)
@@ -800,15 +809,20 @@ iY
 ```
 --
 
-Or differentiate the gradient:
-
 ```{r q-jacobian}
 -jacobian(grad_Q, p_hat, pp = p_hat) # This should be the same as iY
 ```
 
+--
+
+```{r iyx-jacobian}
+iYX <- jacobian(function(pp) grad_Q(p_hat, pp), p_hat)
+iY - iYX # same as `emp_Fisher(p_hat)`
+```
+
 ---
 
-## The EM-Mapping
+## Third Way: The EM-Mapping
 
 Define $\Phi : \Theta \mapsto \Theta$ by
 $$\Phi(\theta') = \textrm{arg max}_{\theta} \ Q(\theta \mid \theta').$$
@@ -818,7 +832,6 @@ $$\Phi(\theta') = \textrm{arg max}_{\theta} \ Q(\theta \mid \theta').$$
 A global maximum of the likelihood is a fixed point of $\Phi$, $\Phi(\theta) = \theta.$
 
 --
-
 
 Using that the limit of the EM algorithm, $\hat{\theta}$, is a fixed point and
 other identities above, it can be shown that
@@ -1155,3 +1168,12 @@ autoplot(
 ---
 
 ## Summary
+
+- We introduced the EM-algorithm, using the pepper moth example throughout
+--
+
+- We showed three ways to compute the Fisher information
+--
+
+- We covered Gaussian mixtures and how to
+  optimize over their parameters using the EM algorithm
