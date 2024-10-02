@@ -24,6 +24,8 @@ library(patchwork)
 
 old_options <- options(digits = 4)
 
+xaringanExtra::use_tile_view()
+
 theme_set(theme_grey(base_size = 18))
 ```
 
@@ -938,6 +940,7 @@ sigma2 <- 2
 mu1 <- -0.5
 mu2 <- 4
 p <- 0.5
+
 n <- 5000
 z <- sample(
   c(TRUE, FALSE),
@@ -976,12 +979,14 @@ We assume $\sigma_1$ and $\sigma_2$ known.
 ```{r gaus-mix-loglik}
 loglik <- function(par, x) {
   p <- par[1]
+
   if (p < 0 || p > 1) {
     return(Inf)
   }
 
   mu1 <- par[2]
   mu2 <- par[3]
+
   -sum(log(p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1 +
     (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2))
 }
