@@ -1192,6 +1192,32 @@ autoplot(
 
 ---
 
+```{r mixture-convergence, echo = FALSE, fig.width = 10, fig.height = 8, fig.show = "animate"}
+gaussdens2 <- function(x, p, mu1, mu2) {
+  (p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1 +
+    (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) / sqrt(2 * pi)
+}
+
+old_par <- par(no.readonly = TRUE)
+
+# par(mfrow = c(2, 3), mai = c(0.5, 0.5, 0.1, 0.1))
+
+for (i in seq_len(nrow(EM_trace))) {
+  hist(x, freq = FALSE, ylim = c(0, 0.25), main = "", border = "transparent")
+  lines(xx, gausdens(xx), col = "steelblue4", lwd = 2)
+  p_i <- EM_trace$par0.1[i]
+  mu1_i <- EM_trace$par0.2[i]
+  mu2_i <- EM_trace$par0.3[i]
+  lines(xx, gaussdens2(xx, p_i, mu1_i, mu2_i), col = "dark orange", lwd = 2)
+  text(9, 0.20, labels = paste0("k = ", i))
+}
+
+# par(old_par)
+```
+
+
+---
+
 ## Summary
 
 - We introduced the EM-algorithm, using the pepper moth example throughout
