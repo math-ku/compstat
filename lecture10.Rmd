@@ -1213,11 +1213,7 @@ for (i in seq_len(20)) {
   mu1_i <- EM_trace$par0.2[i]
   mu2_i <- EM_trace$par0.3[i]
   lines(xx, gaussdens2(xx, p_i, mu1_i, mu2_i), col = "dark orange", lwd = 2)
-  text(
-    9,
-    0.20,
-    labels = paste0("k = ", i, "\nmu_1 = ", mu1_i, "\nmu_2 = ", mu2_i, "\np = ", p_i)
-  )
+  text(9, 0.20, labels = paste0("k = ", i))
 }
 
 # par(old_par)
