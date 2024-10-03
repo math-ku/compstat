@@ -1192,6 +1192,8 @@ autoplot(
 
 ---
 
+class: center, middle
+
 ```{r mixture-convergence, echo = FALSE, fig.width = 10, fig.height = 8, fig.show = "animate"}
 gaussdens2 <- function(x, p, mu1, mu2) {
   (p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1 +
