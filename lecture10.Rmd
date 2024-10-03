@@ -29,15 +29,23 @@ xaringanExtra::use_tile_view()
 theme_set(theme_grey(base_size = 18))
 ```
 
----
-
 ## Today
 
 ### The EM Algorithm
 
+Useful method for likelihood optimization in the presence of missing data or latet variables.
+
+--
+
 ### Fisher Information
 
+When the likelihood is optimized, the Fisher information gives the variance of the MLE.
+
+--
+
 ### Gaussian Mixtures
+
+Example of a finite mixture model where the EM-algorithm is useful.
 
 ```{r moth_likelihood, echo = FALSE}
 M <- function(y, group) {
@@ -185,6 +193,12 @@ In general
 $$\ell(\theta) = \log g(x \mid \theta) = \log f(y \mid \theta) - \log h(y \mid x, \theta),$$
 and under some integrability conditions, this decomposition is used to show
 that the EM-algorithm increases the log-likelihood, $\ell(\theta)$, in each iteration.
+
+---
+
+```{r emiterations-figure, echo = FALSE, out.width = "87%", fig.cap = "EM iterations, © 2024 Matthew N. Bernstein"}
+knitr::include_graphics("images/em-iterations.png")
+```
 
 ---
 
@@ -461,6 +475,12 @@ class: middle
 ggplot(EM_trace, aes(n, par_norm_diff)) +
   geom_point() +
   geom_line() +
+  labs(y = expression(paste("||", theta^
+    {
+      (n)
+    } - theta^{
+      (n - 1)
+    }, "||"))) +
   scale_y_log10()
 ```
 
@@ -491,9 +511,10 @@ rate close to 1.
 
 class: middle
 
-```{r loglikelihood-convergence, warning=FALSE, echo = FALSE, fig.cap="Log-likelihood convergence"}
+```{r loglikelihood-convergence, warning=FALSE, echo = FALSE, fig.cap="Log-likelihood convergence", fig.height = 6}
 mutate(EM_trace, diff_loglik = loglik - min(loglik)) |>
   ggplot(aes(n, diff_loglik)) +
+  labs(y = expression(l[theta] - min(l))) +
   geom_point() +
   geom_line() +
   scale_y_log10()
@@ -1041,11 +1062,10 @@ $$P(Z = z \mid X = x) = \frac{p_z f_z(x \mid \psi_z)}{\sum_{k = 1}^K p_k f_k(x \
 --
 
 which for the $K = 2$ Gaussian case gives
-
 $$\hat{p}_i = P_{\theta'} (Z_i = 1 \mid X = x_i) =
 \frac{ p'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}}}{
 \left( p'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}} +
-\frac{\sigma_1 (1 - p'_1)}{\sigma_2} e^{-\frac{(x_i - \mu_2')^2}{2 \sigma_2^2}}\right) }$$
+\frac{\sigma_1 (1 - p'_1)}{\sigma_2} e^{-\frac{(x_i - \mu_2')^2}{2 \sigma_2^2}}\right) }.$$
 
 
 --
@@ -1181,4 +1201,4 @@ autoplot(
 --
 
 - We covered Gaussian mixtures and how to
-  optimize over their parameters using the EM algorithm
+ optimize over their parameters using the EM algorithm
