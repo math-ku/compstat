@@ -19,6 +19,7 @@ knitr::opts_chunk$set(
   crop = TRUE
 )
 
+library(animate)
 library(tidyverse)
 library(patchwork)
 
@@ -154,21 +155,6 @@ for $n = 0, 1, 2, \ldots$.
 
 ---
 
-## Ascent Algorithm
-
-It can be shown that
-$$\log g(x \mid \theta) - \log g(x \mid \theta') \geq Q(\theta | \theta') - Q(\theta' \mid \theta)$$
-
---
-
-In other words, marginal likelihood **weakly** increases in each iteration.
-
---
-
-If $Q(\theta^{(n+1)} \mid \theta) > Q(\theta^{(n)} \mid \theta)$ then the
-algorithm **strictly** increases the likelihood.
-
----
 
 ## Conditional Distributions
 
@@ -193,6 +179,22 @@ In general
 $$\ell(\theta) = \log g(x \mid \theta) = \log f(y \mid \theta) - \log h(y \mid x, \theta),$$
 and under some integrability conditions, this decomposition is used to show
 that the EM-algorithm increases the log-likelihood, $\ell(\theta)$, in each iteration.
+
+---
+
+## An Ascent Method
+
+It can be shown that
+$$\log g(x \mid \theta) - \log g(x \mid \theta') \geq Q(\theta | \theta') - Q(\theta' \mid \theta)$$
+
+--
+
+In other words, marginal likelihood **weakly** increases in each iteration.
+
+--
+
+If $Q(\theta^{(n+1)} \mid \theta) > Q(\theta^{(n)} \mid \theta)$ then the
+algorithm **strictly** increases the likelihood.
 
 ---
 
@@ -1204,14 +1206,18 @@ old_par <- par(no.readonly = TRUE)
 
 # par(mfrow = c(2, 3), mai = c(0.5, 0.5, 0.1, 0.1))
 
-for (i in seq_len(nrow(EM_trace))) {
+for (i in seq_len(20)) {
   hist(x, freq = FALSE, ylim = c(0, 0.25), main = "", border = "transparent")
   lines(xx, gausdens(xx), col = "steelblue4", lwd = 2)
   p_i <- EM_trace$par0.1[i]
   mu1_i <- EM_trace$par0.2[i]
   mu2_i <- EM_trace$par0.3[i]
   lines(xx, gaussdens2(xx, p_i, mu1_i, mu2_i), col = "dark orange", lwd = 2)
-  text(9, 0.20, labels = paste0("k = ", i))
+  text(
+    9,
+    0.20,
+    labels = paste0("k = ", i, "\nmu_1 = ", mu1_i, "\nmu_2 = ", mu2_i, "\np = ", p_i)
+  )
 }
 
 # par(old_par)
