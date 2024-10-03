@@ -101,7 +101,8 @@ $f(\cdot \mid \theta)$ and that $X$ has marginal density $g(x \mid \theta)$.
 --
 
 The marginal density is typically of the form
-$$g(x \mid \theta) = \int f(y \mid \theta)  \mathrm{d} y.$$
+$$g(x \mid \theta) = \int_{\{y: M(y) = x\}} f(y \mid \theta) \ \mu_x(\mathrm{d} y)$$
+for a suitable measure $\mu_x$ depending on $M$ and $x$ but not $\theta$.
 
 --
 
@@ -158,13 +159,13 @@ for $n = 0, 1, 2, \ldots$.
 
 ## Conditional Distributions
 
-Often,
-$$h(y \mid x, \theta) = \frac{f(y \mid \theta)}{g(x \mid \theta)}.$$
+Generally, conditional distribution of $Y$ given $X = x$ has density
+$$h(y \mid x, \theta) = \frac{f(y \mid \theta)}{g(x \mid \theta)}$$
+w.r.t. a suitable measure $\mu_x$ that does not depend upon $\theta$.
 
 --
 
-You can verify this for discrete distributions and when
-$Y = (Z, X)$.
+$Y = (Z, X)$ with joint density w.r.t. a product measure $\mu \otimes \nu$ that does not depend upon $\theta$.
 
 --
 
@@ -776,8 +777,7 @@ The second **Bartlett identity** can be reformulated as
 
 $$\partial_{\theta_i} \partial_{\theta_j} H(\bar{\theta} \mid \bar{\theta})
 = - \partial_{\theta'_i} \partial_{\theta_j} H(\bar{\theta} \mid \bar{\theta})$$
-
-which follows from differentiation under the integral of $\int h(y \mid x, \theta) \mathrm{d}y = 1.$
+which follows from differentiation under the integral of $\int h(y \mid x, \theta) \mu_x(d y) = 1.$
 
 --
 
@@ -1048,7 +1048,7 @@ where $\hat{p}_i = P_{\theta'}(Z_i = 1 \mid X_i = x_i)$.
 
 --
 
-The maximum is attined at
+The maximum is attained at
 
 $$\theta = \left(\frac{1}{n} \sum_{i} \hat{p}_i, \frac{1}{\sum_{i} \hat{p}_i} \sum_{i} \hat{p}_i x_i,
 \frac{1}{\sum_{i} (1 - \hat{p}_i)} \sum_{i} (1 - \hat{p}_i) x_i \right).$$
@@ -1196,7 +1196,7 @@ autoplot(
 
 class: center, middle
 
-```{r mixture-convergence, echo = FALSE, fig.width = 10, fig.height = 8, fig.show = "animate"}
+```{r mixture-convergence, echo = FALSE, fig.width = 10, fig.height = 8, fig.show = "animate", cache = TRUE}
 gaussdens2 <- function(x, p, mu1, mu2) {
   (p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1 +
     (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) / sqrt(2 * pi)
