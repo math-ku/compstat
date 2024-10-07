@@ -22,6 +22,7 @@ knitr::opts_chunk$set(
 library(animate)
 library(tidyverse)
 library(patchwork)
+library(Matrix)
 
 xaringanExtra::use_tile_view()
 
@@ -69,16 +70,17 @@ where $\hat{p}_i = P_{\theta'}(Z_i = 1 \mid X_i = x_i)$,
 --
 which attains its maximum in
 
-$$\theta = \left(\frac{1}{n} \sum_{i} \hat{p}_i, \frac{1}{\sum_{i} \hat{p}_i} \sum_{i} \hat{p}_i x_i,
+$$\theta = \left(\frac{1}{n} \sum_{i} \hat{p}_i,\quad \frac{1}{\sum_{i} \hat{p}_i} \sum_{i} \hat{p}_i x_i,\quad
 \frac{1}{\sum_{i} (1 - \hat{p}_i)} \sum_{i} (1 - \hat{p}_i) x_i \right).$$
 
 ---
 
 ### Simulation
 
+.pull-left[
 ```{r}
 sigma1 <- 1.5
-sigma2 <- 1.5 # Note, same variances
+sigma2 <- 1.5 # Same variances
 
 p <- 0.5
 mu1 <- -0.5
@@ -86,29 +88,36 @@ mu2 <- 4
 
 n <- 5000
 set.seed(321)
-z <- sample(c(TRUE, FALSE), n, replace = TRUE, prob = c(p, 1 - p))
+z <- sample(
+  c(TRUE, FALSE),
+  n,
+  replace = TRUE,
+  prob = c(p, 1 - p)
+)
 
-# Conditional simulation from the mixture components
 x <- numeric(n)
 n1 <- sum(z)
 x[z] <- rnorm(n1, mu1, sigma1)
 x[!z] <- rnorm(n - n1, mu2, sigma2)
 ```
+]
 
+.pull-right[
 
----
+</br>
+</br>
+</br>
 
-class: center, middle
-
-```{r, echo=FALSE, fig.height=6, fig.width = 9}
+```{r, echo=FALSE, fig.height=5, fig.width = 6}
 gausdens <- function(x) {
   (p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1 +
     (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) / sqrt(2 * pi)
 }
-xx <- seq(-3, 11, 0.1)
-hist(x, freq = FALSE, ylim = c(0, 0.25), main = "")
-lines(xx, gausdens(xx), col = "dark orange", lwd = 2)
+xx <- seq(-5, 9, 0.1)
+hist(x, freq = FALSE, ylim = c(0, 0.25), main = "", border = "transparent")
+curve(gausdens(x), add = TRUE, col = "dark orange", lwd = 2)
 ```
+]
 
 ---
 
@@ -128,7 +137,6 @@ source("R/em_gauss_mix_exercise.R")
 EM <- EM_gauss_mix(x)
 ```
 
-Download the [source code here](R/em_gauss_mix_exercise.R)
 --
 
 ```{r}
@@ -148,9 +156,9 @@ EM(c(0.6, 3, 1))
 
 ## Exercise
 
+- Download the [source code here](R/em_gauss_mix_exercise.R)
 - Profile the EM-algorithm.
-- Set `n` to 500000 to get meaningful
-profiling information
+- Set `n` to 500,000 to get meaningful profiling information
 - Remember to source `em_gauss_mix_exercise.R`
   to make source code available to the profiler.
 
@@ -210,337 +218,285 @@ Let $\hat{i}_X = - D^2_{\theta} \ell(\hat{\theta})$ denote the observed
 Fisher information.
 
 --
+.pull-left[
 
 Then
-
-$$\hat{i}_X = - D_{\overline{\theta}} (
-\nabla_{\theta} Q(\overline{\theta} \mid \overline{\theta}))
-|_{\overline{\theta} = \hat{\theta}}$$
-
---
-
-$$\hat{i}_X = - D^2_{\theta} Q(\hat{\theta} \mid \hat{\theta}) -
-D_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\theta})$$
-
---
-
-$$\hat{i}_X = - (I - D_{\theta} \Phi(\hat{\theta})^T) D^2_{\theta} Q(\hat{\theta} \mid \hat{\theta})$$
+\begin{align}
+\hat{i}_X &= - D_{\overline{\theta}} \left( \nabla_{\theta} Q(\overline{\theta} \mid \overline{\theta})\right) |_{\overline{\theta} = \hat{\theta}} \\
+         & = - D^2_{\theta} Q(\hat{\theta} \mid \hat{\theta}) - D_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\theta})\\
+         & = - \left(I - D_{\theta} \Phi(\hat{\theta})^T\right) D^2_{\theta} Q(\hat{\theta} \mid \hat{\theta})
+\end{align}
 where
 $$\Phi(\theta') = \textrm{arg max}_{\theta} \ Q(\theta \mid \theta')$$
 is the EM-map.
+]
 
----
+--
 
-## Exercise
+.pull-right[
+### Exercise
 
-Implement the three methods for computing the Fisher information.
-Compare with (numerical) differentiation of the log-likelihood.
+- Implement these three methods for computing the Fisher information
+  in the Gaussian mixture problem.
+- Compare with (numerical) differentiation of the log-likelihood.
+]
 
 ---
 
 class: center, middle
 
-## Mixed Models
+# Mixed Models
 
 ---
 
-## Mixed Model
+## Mixed Model (General Form)
 
-$$X_{ij} = \beta_0 + \nu Z_i + \varepsilon_{ij}$$
+General form is
+$$y = X\beta + Zu + \varepsilon$$
+where
 
-for $i = 1, \ldots, m$, $j = 1, \ldots, n_i$, $Z_1, \ldots, Z_m$ i.i.d.
-$\mathcal{N}(0, 1)$, independent of $\varepsilon_{ij}$-s that are themselves
-i.i.d. $\mathcal{N}(0, \sigma^2)$.
+.pull-left[
+
+
+- $y \in \mathbb{R}^n$ is the response vector,
+- $X \in \mathbb{R}^{n \times p}$ is the fixed effects design matrix,
+- $\beta \in \mathbb{R}^p$ is the fixed effects parameter vector,
+- $Z \in \mathbb{R}^{n \times m}$ is the random effects design matrix, and
+- $u \in \mathbb{R}^m$ is the random effects vector.
+]
 
 --
 
-The parameter $\theta = (\beta_0, \nu, \sigma^2) \in \mathbb{R} \times (0, \infty)^2$
-is three-dimensional.
+.pull-right[
+### Example
 
---
-
-The model has two components:
-
-$$\mathbf{Z} \sim \mathcal{N}(0, I_m)$$
-
-and with $n = n_1 + \ldots + n_m$
-
-$$ \mathbf{X} \mid \mathbf{Z} \sim \mathcal{N}(\beta_0 \mathbf{1} + \nu A \mathbf{Z}, \sigma^2 I_n)$$
-
-where $A$ is the $n \times m$ matrix with $A_{ij, i'} = \delta_{ii'}.$
+$$Z = \begin{bmatrix} 1 & 0 & 0 & x_{1j} \\ 0 & 1 & 0 & x_{2j} \\ 0 & 0 & 1 & x_{3j} \\ \vdots & \vdots & \vdots & \vdots \\ 0 & 1 & 0 & x_{nj} \end{bmatrix}$$
+]
 
 ---
 
-## Complete Data Log-Likelihood
+## Estimation
 
-Observing $(\mathbf{X}, \mathbf{Z})$ gives the likelihood
+Typical assumptions are
 
-$$\prod_{i=1}^m \prod_{j=1}^{n_i} \frac{1}{\sqrt{2 \pi \sigma^2}}
-e^{- \frac{(x_{ij} - \beta_0 - \nu z_i)^2}{2 \sigma^2}} \frac{1}{\sqrt{2 \pi}}
-e^{- \frac{z_i^2}{2}}.$$
+- $u \sim \mathcal{N}(0, \Sigma_u)$
+--
+
+- $\varepsilon \sim \mathcal{N}(0, \sigma^2 I)$
+--
+
+- $\operatorname{cov}(u, \varepsilon) = 0$
 
 --
 
-Or the log-likelihood up to an additive constant that doesn't depend on the
-parameters
-
-$$\ell(\theta) =  - \sum_{i=1}^m \sum_{j=1}^{n_i} \frac{(x_{ij} - \beta_0 - \nu z_i)^2}{2 \sigma^2} - \frac{n}{2} \log \sigma^2.$$
-
---
-
-We recognize this as a log-likelihood for linear regression, which can also be written
-as
-$$\ell(\theta) = - \frac{1}{2\sigma^2} \left( \| \mathbf{X} \|_2^2 -
-2(\beta_0, \nu) \mathbb{X}^T \mathbf{X} +  (\beta_0, \nu) \mathbb{X}^T \mathbb{X} \left(
-\begin{array}{c} \beta_0 \\ \nu \end{array} \right) \right) - \frac{n}{2} \log \sigma^2$$
-where $\mathbb{X} = \left[ \mathbf{1} \ \ A \mathbf{Z}\right].$
+Then we have
+$$\begin{bmatrix}u \\ \varepsilon\end{bmatrix} \sim \mathcal{N}\left(0,\begin{bmatrix}\Sigma_u & 0 \\ 0 & I\sigma^2\end{bmatrix}\right)$$
 
 ---
 
-## The $Q$-Function
+## Marginal Likelihood
 
-Taking conditional expectations w.r.t. $\theta'$ gives
+$$y = X\beta + Zu + \varepsilon = \begin{bmatrix}Z & I_n\end{bmatrix}\begin{bmatrix}u \\ \varepsilon\end{bmatrix} + X\beta$$ is a linear combination, so we have
+$$y \sim \mathcal{N}(\mu_y = X\beta,\Sigma_y =  Z\Sigma_u Z^T + \sigma^2 I_n).$$
 
-\begin{align*}
-& Q(\theta \mid \theta') = E_{\theta'}( \ell(\theta) \mid \mathbf{X}) \\
-& = - \frac{1}{2\sigma^2} \left( \| \mathbf{X} \|_2^2 -
-2 (\beta_0, \nu) E_{\theta'}( \mathbb{X}^T \mid \mathbf{X}) \mathbf{X} +  (\beta_0, \nu) E_{\theta'}( \mathbb{X}^T \mathbb{X} \mid \mathbf{X})  \left(
-\begin{array}{c} \beta_0 \\ \nu \end{array} \right) \right) - \frac{n}{2} \log \sigma^2
-\end{align*}
 --
 
-With $\hat{\mathbb{X}}= E_{\theta'}( \mathbb{X} \mid \mathbf{X})$
-and $\hat{S} = E_{\theta'}( \mathbb{X}^T \mathbb{X} \mid \mathbf{X}),$ (Note: $\hat{S} \neq \hat{\mathbb{X}}^T \hat{\mathbb{X}}$)
+So, we can write the log-likelihood as
+$$\ell(\theta) = -\frac{1}{2} \left( (y - X\beta)^T \Sigma_y^{-1} (y - X\beta) + \log\lvert \Sigma_y \rvert \right).$$
 
-$$Q(\theta \mid \theta') = - \frac{1}{2\sigma^2} \left( \| \mathbf{X} \|_2^2 -
-2(\beta_0, \nu) \hat{\mathbb{X}}^T \mathbf{X} +  (\beta_0, \nu) \hat{S}  \left(
-\begin{array}{c} \beta_0 \\ \nu \end{array} \right) \right) - \frac{n}{2} \log \sigma^2.$$
 --
 
-Which is maximized in
-$$\left(\begin{array}{c} \hat{\beta}_0 \\ \hat{\nu} \end{array} \right)  =
-\hat{S}^{-1} \hat{\mathbb{X}}^T \mathbf{X}, \qquad \hat{\sigma}^2 =
-\frac{1}{n} \left( \| \mathbf{X} \|_2^2 -  \mathbf{X}^T \hat{\mathbb{X}} \hat{S}^{-1} \hat{\mathbb{X}}^T \mathbf{X} \right)$$
+Can actually solve this problem directly!
+
+--
+
+**But** requires solving a large linear system and computing the log-determinant of the $n \times n$ matrix $Z \Sigma_u Z^T + \sigma^2 I_n$.
 
 
 ---
 
-## Conditional Expectations
+## Joint Distribution
 
-With $\mathbb{X} = \left[ \mathbf{1} \ \ A \mathbf{Z}\right],$ we need to compute
-
-\begin{align*}
-\hat{\mathbb{X}}= E_{\theta'}( \mathbb{X} \mid \mathbf{X}) =
-\left[ \mathbf{1} \ \ A E_{\theta'}( \mathbf{Z} \mid \mathbf{X}) \right]
-\end{align*}
+The conditional distribution of $y$ given $u$ is
+$$(y \mid u) \sim \mathcal{N}(X\beta + Zu, \sigma^2 I).$$
 
 --
 
-and
-\begin{align*}
-\hat{S} & = E_{\theta'}( \mathbb{X}^T \mathbb{X} \mid \mathbf{X}) = E_{\theta'}\left(
-\left[ \begin{array}{c}  \mathbf{1}^T \\ \mathbf{Z}^T A^T \end{array} \right]
-\left[ \mathbf{1} \ \ A \mathbf{Z} \right] \ \Bigg| \ \mathbf{X} \right) \\ &=
-\left[ \begin{array}{cc}  n & \sum_i n_i E_{\theta'}(Z_i \mid \mathbf{X}) \\
-\sum_i n_i E_{\theta'}(Z_i \mid \mathbf{X}) & \sum_i n_i E_{\theta'}(Z_i^2 \mid \mathbf{X}) \end{array}\right]
-\end{align*}
+And since $f(y, u) = f(y \mid u) f(u)$, we have
+$$f(y, u) \propto \frac{1}{\lvert\Sigma_u\rvert^{1/2} \sigma^{n/2}}  \exp\left( -\frac{1}{2\sigma^2} \lVert y - X\beta - Zu \rVert_2^2 - \frac{1}{2} u^T \Sigma_u^{-1} u\right).$$
 
 --
 
-which amounts to conditional expectations and conditional second moments of
-the $Z_i$-s given $\mathbf{X}$.
-
----
-
-## Conditional Expectations
-
-By computing variances and covariances of $\mathbf{Z}$ and $\mathbf{X}$ we
-find that
-\begin{align*}
-\left(\begin{array}{c} \mathbf{Z} \\ \mathbf{X} \end{array} \right) \sim
-\mathcal{N}\left( \left(\begin{array}{c} 0 \\ \beta_0 \mathbf{1} \end{array} \right),
-\left(\begin{array}{cc} I_m & \nu A^T \\ \nu A & \nu^2 A A^T + \sigma^2 I_n \end{array} \right) \right)
-\end{align*}
-
-
---
-
-which gives
-
-$$\mathbf{Z} \mid \mathbf{X} \sim
-\mathcal{N}(\nu A^T (\nu^2 A A^T + \sigma^2 I_n)^{-1}(\mathbf{X} - \beta_0 \mathbf{1}),
-I_m - \nu^2 A^T (\nu^2 A A^T + \sigma^2 I_n)^{-1} A).$$
-
---
-
-So
-
-\begin{align*}
-\xi & := E_{\theta'}( \mathbf{Z} \mid \mathbf{X}) = \nu' A^T ((\nu')^2 A A^T + (\sigma')^2 I_n)^{-1}(\mathbf{X} - \beta_0' \mathbf{1})\\
-\zeta_i & := E_{\theta'}( Z_i^2 \mid \mathbf{X}) = 1 - (\nu')^2 \left(A^T \left( (\nu')^2 A A^T + (\sigma')^2 I_n \right)^{-1} A \right)_{ii} + \xi_i^2
-\end{align*}
+The log-likelihood is then
+$$\ell(\theta) = -\frac{1}{2\sigma^2} \lVert y - X\beta - Zu\rVert^2_2  - \frac{1}{2}u^T \Sigma_u^{-1} u  - \frac{n}{2}\log(\sigma^2) - \frac{1}{2}\log\lvert\Sigma_u\rvert.$$
 
 
 ---
 
-## Maximizing Q
+## Distribution of $(u \mid y)$
 
-```{r}
-max_Q <- function(xi, zeta, x, ni) {
-  # t is hat{X}^T x, where hat{X} depends on xi
-  t <- c(sum(x), sum(rep(xi, times = ni) * x))
-  ni_xi <- sum(ni * xi)
-  S_hat <- matrix(
-    c(
-      sum(ni), ni_xi,
-      ni_xi, sum(ni * zeta)
-    ),
-    ncol = 2,
-    nrow = 2
-  )
-  hat <- solve(S_hat, t)
-  sigmasq_hat <- (sum(x^2) - sum(t * hat)) / sum(ni)
-  c(hat, sigmasq_hat)
-}
-```
+We want the $Q$-function, but first
+need the distribution of $(u \mid y$).
+
+--
+
+By Bayes' theorem, we have
+$$\begin{aligned}f(u \mid y) = \frac{f(y \mid u) f(u)}{f(y)} &\propto \exp\left(-\frac{1}{2\sigma^2} \lVert y - X\beta - Z u\rVert_2^2 - \frac{1}{2} u^T \Sigma_u u\right) \\
+&\propto \exp\left(-\frac{1}{2}(u - \eta)^T G^{-1} (u - \eta)\right)\end{aligned}$$
+with
+$$G = \left(\frac{Z^T Z}{\sigma^2} + \Sigma_u^{-1}\right)^{-1}\qquad \text{and} \quad \eta = \frac{G Z^T (y - X \beta)}{\sigma^2}.$$
+
+--
+
+So $(u \mid y)$ is Gaussian with mean $\eta$ and covariance $G$.
+
+---
+
+### The $Q$ Function
+
+Now we can compute the $Q$ function:
+$$\operatorname{E}_{u \sim p(\cdot \mid y, \theta')} \ell(\theta) = ...$$
+
+--
+
+Finally we just need to minimize this with respect to $\theta$.
+
+--
+
+We find that
+$$\begin{aligned}\beta^* &= (X^T X)^{-1} X^T (y - Z \eta) \\
+                  (\sigma^2)^* &= \frac{1}{n}\left( \lVert y = X\beta\rVert_2^2 - 2 (y - X\beta)^T Z \eta + \operatorname{tr}(Z^T Z G)\right)\\
+                \Sigma_u^* &= \frac{1}{m}\left(G + \eta \eta^T\right)\end{aligned}$$
 
 
 ---
 
-## Setup and Test
+### Simplification
+
+To test out how this works, we introduce two simplifications:
+
+- $$\Sigma_u(\nu) = \nu^2 I_m$$
+--
+
+- $\beta = \beta_0 \mathbf{1}$ (intercept only)
+
+--
+
+Makes the update easier:
+$$\nu^* = \operatorname{tr}(G + \eta \eta^T) / m$$
+
+---
+
+## Simple Example
 
 ```{r setup-experiment}
 beta0 <- 1
-nu <- 5
-sigma <- 1
+beta <- cbind(beta0)
+nu <- 2
+sigma <- 3
 
 m <- 20
-ni <- rep(10, m)
+N <- 10
+ni <- rep(N, m)
 n <- sum(ni)
-```
---
 
-```{r test}
-z <- rnorm(m)
-mu <- beta0 + nu * rep(z, times = ni)
-x <- rnorm(n, mu, sigma)
+X <- cbind(rep(1, n))
+Z <- Matrix::bdiag(lapply(ni, function(d) matrix(1, nrow = d, ncol = 1)))
 
-max_Q(z, z^2, x, ni) # This gives the regression solution
+u <- rnorm(m, 0, sqrt(nu))
+mu <- X %*% beta + Z %*% u
+y <- rnorm(n, as.vector(mu), sigma)
 ```
 --
 
 ```{r test2}
-lm_test <- lm(x ~ rep(z, times = ni))
+lm_test <- lm(y ~ rep(u, times = ni))
 c(coefficients(lm_test), mean(residuals(lm_test)^2))
 ```
 
 ---
 
-## Computing the Conditional Expectations
+### Visualizing $Z$
 
-```{r}
-cond_exp <- function(par, x, A, AAt) {
-  beta0 <- par[1]
-  nu <- par[2]
-  sigmasq <- par[3]
-  m <- ncol(A)
-  n <- nrow(A)
-  Sigma <- nu^2 * AAt + diag(sigmasq, n)
-  xi <- nu * drop(t(A) %*% solve(Sigma, x - beta0))
-  zeta <- 1 - nu^2 * diag(t(A) %*% solve(Sigma, A)) + xi^2
-  list(xi = xi, zeta = zeta)
+```{r, fig.width = 7, fig.height = 6, echo = FALSE, cache = TRUE}
+Matrix::image(Z, aspect = 1)
+```
+
+---
+
+### Define the Log-Likelihood
+
+```{r loglik-def}
+loglik <- function(y, X, Z, beta, sigma, nu) {
+  n <- length(y)
+  m <- ncol(Z)
+
+  r <- y - X %*% beta
+  U <- Z %*% tcrossprod(nu * diag(m), Z) + sigma^2 * diag(n)
+  inv_U_r <- solve(U, r)
+  log_det_U <- log(det(U))
+
+  -0.5 * (crossprod(r, inv_U_r) + log_det_U + n * log(2 * pi))
 }
 ```
 
---
-
-How are we going to construct $A$?
-
---
-
-We borrow a block-diagonal constructor from the Matrix package.
-
-```{r}
-A <- Matrix::bdiag(lapply(ni, function(d) matrix(1, nrow = d, ncol = 1)))
-```
-
 ---
 
-### Visualizing the Matrix $A$
+```{r em-algorithm, echo = FALSE}
+library(Matrix)
+mixed_model_em <- function(y, X, Z, beta = 0, sigma2 = 1, nu = 0.5, maxit = 100, tol = 1e-6) {
+  n <- length(y)
+  m <- ncol(Z)
+  loss <- double(maxit)
 
-```{r, fig.width = 7, fig.height = 6, echo = FALSE}
-Matrix::image(A, aspect = 1)
-```
+  XtX <- crossprod(X)
+  ZtZ <- crossprod(Z)
 
----
+  for (i in seq_len(maxit)) {
+    loss[i] <- -loglik(y, X, Z, beta, sqrt(sigma2), nu)
 
-## Test (Approximately ...)
+    r <- y - X %*% beta
+    Gamma <- solve(ZtZ / drop(sigma2) + diag(m) / nu)
+    eta <- Gamma %*% crossprod(Z, r) / drop(sigma2)
+    Z_eta <- Z %*% eta
+    G <- tcrossprod(eta) + Gamma
 
-```{r A-ez}
-A <- as.matrix(A)
-Ez <- cond_exp(c(beta0, nu, sigma * 2), x, A, A %*% t(A))
-```
+    beta <- solve(XtX, crossprod(X, y - Z_eta))
+    nu <- sum(diag(G)) / m
+    sigma2 <- (norm(r, "2")^2 + sum(diag((ZtZ %*% G))) - 2 * crossprod(r, Z_eta)) / n
 
---
-
-```{r plotting-Ez, echo=FALSE, fig.height=5, fig.width=11, echo = FALSE}
-dat <- tibble(z = z, xi = Ez$xi, zeta = Ez$zeta)
-p1 <- ggplot(dat, (aes(z, xi))) +
-  geom_point()
-p2 <- ggplot(dat, (aes(z, zeta))) +
-  geom_point()
-p1 + p2
-```
-
----
-
-### Implementing the EM Algorithm
-
-```{r EM-implementation}
-EM_mixed <- function(x, ni) {
-  force(x)
-
-  A <- as.matrix(Matrix::bdiag(
-    lapply(ni, function(d) matrix(1, nrow = d, ncol = 1))
-  ))
-  AAt <- tcrossprod(A)
-  e_step <- function(par) cond_exp(par, x, A, AAt)
-  m_step <- function(zz) max_Q(zz$xi, zz$zeta, x, ni)
-
-  function(par, epsilon = 1e-10, cb = NULL, maxit = 1e4) {
-    for (i in 1:maxit) {
-      par0 <- par
-      par <- m_step(e_step(par))
-      if (!is.null(cb)) cb()
-      if (sum((par - par0)^2) <= epsilon * (sum(par^2) + epsilon)) {
+    if (i > 1) {
+      if (loss[i - 1] - loss[i] <= loss[i] * tol) {
         break
       }
     }
-    par
   }
+
+  list(
+    par = c("beta" = drop(beta), "nu" = nu, "sigma2" = drop(sigma2)),
+    loss = loss[seq_len(i)]
+  )
 }
 ```
 
----
+## Testing
 
-## Test
-
-```{r EM}
-EM <- EM_mixed(x, ni)
+```{r A-ez}
+par0 <- c(0.2, 2.1, 0.9)
+res_em <- mixed_model_em(y, X, Z, par0[1], par0[2], par0[3])
+res_em$par
 ```
 
-```{r EM-run, cache = TRUE}
-par_hat <- EM(c(beta0, nu, sigma^2))
-par_hat
-```
-```{r lmer, message=FALSE, cache = TRUE}
+--
+
+```{r lmer, message=FALSE}
 library(lme4)
 
-mixed_data <- data.frame(x = x, Subject = factor(rep(1:m, times = ni)))
-mixed_lmer <- lmer(x ~ (1 | Subject), data = mixed_data, REML = FALSE)
+mixed_data <- data.frame(y = y, Subject = factor(rep(1:m, times = ni)))
+mixed_lmer <- lmer(y ~ (1 | Subject), data = mixed_data, REML = FALSE)
 ```
 
-.pull-left[
+.pull-left-40[
 ```{r lmer-effects}
 fixef(mixed_lmer)
 ```
@@ -548,87 +504,113 @@ fixef(mixed_lmer)
 
 --
 
-.pull-right[
+.pull-right-60[
 ```{r var-corr}
-VarCorr(mixed_lmer)
+as.data.frame(VarCorr(mixed_lmer))[, c(1, 4)]
 ```
 ]
 
 ---
 
-## The Log-Likelihood
+### Convergence
 
-Since
-
-$$\mathbf{X}  \sim \mathcal{N}\left( \beta_0 \mathbf{1}, \nu^2 A A^T + \sigma^2 I_n \right)$$
-
---
-
-the log-likelihood when observing $\mathbf{X} = \mathbf{x}$ is
-
-\begin{align*}
-\ell(\beta_0, \nu, \sigma^2) = & - \frac{1}{2} (\mathbf{x} - \beta_0 \mathbf{1})^T
-(\nu^2 A A^T + \sigma^2 I_n)^{-1} (\mathbf{x} - \beta_0 \mathbf{1}) \\
-& - \frac{1}{2} \log \det (\nu^2 A A^T + \sigma^2 I_n ).
-\end{align*}
---
-
-It is straightforward but does involve the computation of a log-determinant.
-
+```{r plot-convergence, echo = FALSE, warning = FALSE, fig.height = 7}
+tibble(it = seq_along(res_em$loss), loss = res_em$loss - min(res_em$loss)) |>
+  ggplot(aes(x = it, y = loss)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Iteration", y = "Suboptimality") +
+  scale_y_log10()
+```
 
 ---
 
-## Implementing the Negative Log-Likelihood
+## Exercise: The Marginal Model
 
-```{r loglik}
-loglik <- function(par, x, AAt) {
-  beta0 <- par[1]
-  nu <- par[2]
-  sigmasq <- par[3]
-  Sigma <- nu^2 * AAt + diag(sigmasq, length(x))
-  log_determinant <- determinant(Sigma)$modulus
-  (drop((x - beta0) %*% solve(Sigma, (x - beta0))) + log_determinant) / 2
+Recall that
+$$y \sim \mathcal{N}(\mu_y = X\beta,\Sigma_y =  Z\Sigma_u Z^T + \sigma^2 I_n).$$
+
+--
+
+So, we can write the log-likelihood (of the simplified model) as
+$$\ell(\theta) = -\frac{1}{2} \left( (y - \beta_0)^T (\nu ZZ^T + \sigma^2 I_n)^{-1} (y - \beta_0) + \log\big\lvert \nu Z Z^T + \sigma^2 I_n \big\rvert \right).$$
+
+### Exercise
+
+Solve this log-likelihood directly using `optim()`. You don't need to provide the gradient or Hessian directly.
+
+#### Hints
+
+- Use the `Matrix` package when working with sparse matrices
+--
+
+- Use `crossprod()` instead of `%*%` when possible
+--
+
+- How should you parameterize the problem?
+
+
+```{r marginal-loglik-optim, include = FALSE, cache = TRUE}
+marginal_loglik <- function(theta, y, X, ZZt) {
+  beta <- cbind(theta[1])
+  nu <- theta[2]
+  sigma2 <- theta[3]^2
+
+  r <- X %*% beta - y
+  U <- nu * ZZt + sigma2 * Matrix::diag(n)
+
+  out <- 0.5 * (crossprod(r, solve(U, r)) + log(Matrix::det(U)) + n * log(2 * pi))
+  drop(out)
 }
+
+theta0 <- c(2, 6, 0.2)
+res_optim <- optim(
+  theta0,
+  marginal_loglik,
+  method = "BFGS",
+  y = y,
+  X = X,
+  ZZt = tcrossprod(Z)
+)
+c(res_optim$par[1:2], res_optim$par[3]^2)
+
+res_em$par
+```
+
+---
+
+### Benchmark
+
+```{r benchmark, cache = TRUE, warning = FALSE, echo = FALSE}
+par0 <- c(0.2, 2.1, 0.9)
+
+bench::mark(
+  optim = {
+    optim(
+      par0,
+      marginal_loglik,
+      method = "BFGS",
+      y = y,
+      X = X,
+      ZZt = tcrossprod(Z)
+    )
+  },
+  em = {
+    mixed_model_em(y, X, Z, par0[1], par0[2], par0[3]^2)
+  },
+  check = FALSE
+) |> plot()
 ```
 
 --
 
-```{r optim-par, cache = TRUE}
-par0 <- c(beta0, nu, sigma^2)
-optim(par0, loglik, method = "BFGS", x = x, AAt = tcrossprod(A))[1:3]
-```
+But this is admittedly a flawed comparison. Why?
 
----
+- No standard convergence criterion
+--
 
-## Tracing
+- Numerical gradients (and Hessian) used in `optim()`
 
-```{r EM-init, cache = TRUE}
-par_hat <- EM(c(beta0, nu, sigma^2), epsilon = 1e-20)
-loglik_min <- loglik(par_hat, x, A %*% t(A))
-loglik_min
-```
-
-```{r EM-trace, cache = TRUE}
-library(CSwR)
-EM_tracer <- tracer(
-  "loglik",
-  Delta = 0,
-  expr = quote(loglik <- loglik(par, x, tcrossprod(A)))
-)
-par_hat2 <- EM(c(0, 4, 1), epsilon = 1e-16, cb = EM_tracer$tracer)
-```
-
-```{r loglik-min2}
-loglik(par_hat2, x, tcrossprod(A))
-```
-
----
-
-## Tracing
-
-```{r EM-trace-plot, echo = FALSE}
-autoplot(EM_tracer, y = loglik - loglik_min)
-```
 
 ---
 

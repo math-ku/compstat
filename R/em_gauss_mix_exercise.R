@@ -1,6 +1,7 @@
-## This is the NEGATIVE log-likelihood as used in the video lecture on
-## mixture models.
-loglik <- function(par, x) {
+library(numDeriv)
+
+# The negative log-likelihood function
+neg_loglik <- function(par, x) {
   p <- par[1]
   if (p < 0 || p > 1) {
     return(Inf)
@@ -12,8 +13,7 @@ loglik <- function(par, x) {
     (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2))
 }
 
-## The EM function factory for Gaussian mixtures
-
+# The EM function factory for Gaussian mixtures
 EM_gauss_mix <- function(x) {
   n <- length(x)
 
@@ -43,8 +43,7 @@ EM_gauss_mix <- function(x) {
   }
 }
 
-### Simulation
-
+# Simulation
 sigma1 <- 1.5
 sigma2 <- 1.5 # Note, same variances
 
@@ -55,6 +54,7 @@ mu2 <- 4
 n <- 5000
 set.seed(321)
 z <- sample(c(TRUE, FALSE), n, replace = TRUE, prob = c(p, 1 - p))
+
 # Conditional simulation from the mixture components
 x <- numeric(n)
 n1 <- sum(z)
@@ -62,7 +62,7 @@ x[z] <- rnorm(n1, mu1, sigma1)
 x[!z] <- rnorm(n - n1, mu2, sigma2)
 EM <- EM_gauss_mix(x)
 
-### Gradients
+# Gradients
 Q <- function(par, par_prime, EStep) {
   phat <- EStep(par_prime)
   p <- par[1]
@@ -72,8 +72,7 @@ Q <- function(par, par_prime, EStep) {
     (1 - phat) * (log(1 - p) - (x - mu2)^2 / (2 * sigma2^2)))
 }
 
-library(numDeriv)
-grad1 <- function(par) grad(function(par) -loglik(par, x), par)
+grad1 <- function(par) grad(function(par) -neg_loglik(par, x), par)
 grad2 <- function(par) {
   grad(Q, par, par_prime = par, EStep = environment(EM)$EStep)
 }
