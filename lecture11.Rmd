@@ -275,6 +275,22 @@ $$Z = \begin{bmatrix} 1 & 0 & 0 & x_{1j} \\ 0 & 1 & 0 & x_{2j} \\ 0 & 0 & 1 & x_
 
 ---
 
+### Examples
+
+- Hierarchical models
+
+--
+
+### Fits the EM Framework
+
+- $u, \varepsilon$ are latent (unobserved)
+--
+
+- $y$ is observed
+
+
+---
+
 ## Estimation
 
 Typical assumptions are
@@ -344,7 +360,7 @@ By Bayes' theorem, we have
 $$\begin{aligned}f(u \mid y) = \frac{f(y \mid u) f(u)}{f(y)} &\propto \exp\left(-\frac{1}{2\sigma^2} \lVert y - X\beta - Z u\rVert_2^2 - \frac{1}{2} u^T \Sigma_u u\right) \\
 &\propto \exp\left(-\frac{1}{2}(u - \eta)^T G^{-1} (u - \eta)\right)\end{aligned}$$
 with
-$$G = \left(\frac{Z^T Z}{\sigma^2} + \Sigma_u^{-1}\right)^{-1}\qquad \text{and} \quad \eta = \frac{G Z^T (y - X \beta)}{\sigma^2}.$$
+$$G = \left(\frac{Z^T Z}{\sigma^2} + \Sigma_u^{-1}\right)^{-1}\qquad \text{and} \qujd \eta = \frac{G Z^T (y - X \beta)}{\sigma^2}.$$
 
 --
 
@@ -406,12 +422,6 @@ Z <- Matrix::bdiag(lapply(ni, function(d) matrix(1, nrow = d, ncol = 1)))
 u <- rnorm(m, 0, sqrt(nu))
 mu <- X %*% beta + Z %*% u
 y <- rnorm(n, as.vector(mu), sigma)
-```
---
-
-```{r test2}
-lm_test <- lm(y ~ rep(u, times = ni))
-c(coefficients(lm_test), mean(residuals(lm_test)^2))
 ```
 
 ---
@@ -535,16 +545,14 @@ $$y \sim \mathcal{N}(\mu_y = X\beta,\Sigma_y =  Z\Sigma_u Z^T + \sigma^2 I_n).$$
 So, we can write the log-likelihood (of the simplified model) as
 $$\ell(\theta) = -\frac{1}{2} \left( (y - \beta_0)^T (\nu ZZ^T + \sigma^2 I_n)^{-1} (y - \beta_0) + \log\big\lvert \nu Z Z^T + \sigma^2 I_n \big\rvert \right).$$
 
-### Exercise
-
-Solve this log-likelihood directly using `optim()`. You don't need to provide the gradient or Hessian directly.
+Optimize this log-likelihood directly using `optim()`. Use a numerical gradient.
 
 #### Hints
 
 - Use the `Matrix` package when working with sparse matrices
 --
 
-- Use `crossprod()` instead of `%*%` when possible
+- How should you deal with the inverse?
 --
 
 - How should you parameterize the problem?
