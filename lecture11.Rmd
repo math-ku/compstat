@@ -386,7 +386,7 @@ $$\begin{aligned}\operatorname{E}_{u \sim p(\cdot \mid y, \theta')} \ell(\theta)
 
 Minimizing this with respect to $\theta$, we find
 $$\begin{aligned}\beta^* &= (X^T X)^{-1} X^T (y - Z \eta) \\
-                  (\sigma^2)^* &= \frac{1}{n}\left( \lVert y = X\beta\rVert_2^2 - 2 (y - X\beta)^T Z \eta + \operatorname{tr}(Z^T Z G)\right)\\
+                  (\sigma^2)^* &= \frac{1}{n}\left( \lVert y - X\beta\rVert_2^2 - 2 (y - X\beta)^T Z \eta + \operatorname{tr}(Z^T Z G)\right)\\
                 \Sigma_u^* &= \frac{1}{m}\left(G + \eta \eta^T\right)\end{aligned}$$
 
 
