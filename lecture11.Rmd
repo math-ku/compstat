@@ -33,15 +33,16 @@ theme_set(theme_grey(base_size = 18))
 
 ## Today
 
-Continue with the EM algorith. Two examples.
+Continue with the EM algorithm. Two examples.
 
 ### Gaussian Mixtures
 
-Hands-on example with Gaussian mixtures
+Hands-on example with Gaussian mixtures, computing the empirical Fisher information
+in multiple ways.
 
 ### Mixed Models
 
-Example on mixed models
+Fitting mixed models using the EM algorithm
 
 ---
 
@@ -154,16 +155,6 @@ EM(c(0.6, 3, 1))
 
 ---
 
-## Exercise
-
-- Download the [source code here](R/em_gauss_mix_exercise.R)
-- Profile the EM-algorithm.
-- Set `n` to 500,000 to get meaningful profiling information
-- Remember to source `em_gauss_mix_exercise.R`
-  to make source code available to the profiler.
-
----
-
 ## Gradients and numDeriv
 
 Recall that
@@ -186,8 +177,7 @@ Q <- function(par, par_prime, EStep) {
 
 ```{r numderiv-load}
 library(numDeriv)
-# Note that loglik() is implemented as the negative log-likelihood
-grad1 <- function(par) grad(function(par) -loglik(par, x), par)
+grad1 <- function(par) grad(function(par) -neg_loglik(par, x), par)
 grad2 <- function(par) {
   grad(Q, par, par_prime = par, EStep = environment(EM)$EStep)
 }
@@ -208,7 +198,6 @@ par_hat <- EM(c(0.5, 0, 4))
 grad1(par_hat)
 grad2(par_hat)
 ```
-
 
 ---
 
@@ -236,9 +225,11 @@ is the EM-map.
 .pull-right[
 ### Exercise
 
+- Download the [source code here](R/em_gauss_mix_exercise.R)
 - Implement these three methods for computing the Fisher information
   in the Gaussian mixture problem.
-- Compare with (numerical) differentiation of the log-likelihood.
+- Test that they work.
+- Benchmark them against one another.
 ]
 
 ---
@@ -258,11 +249,11 @@ where
 .pull-left[
 
 
-- $y \in \mathbb{R}^n$ is the response vector,
-- $X \in \mathbb{R}^{n \times p}$ is the fixed effects design matrix,
-- $\beta \in \mathbb{R}^p$ is the fixed effects parameter vector,
-- $Z \in \mathbb{R}^{n \times m}$ is the random effects design matrix, and
-- $u \in \mathbb{R}^m$ is the random effects vector.
+- $y$ is the length $n$ response vector,
+- $X$ is the $n \times p$ fixed effects design matrix,
+- $\beta$ is the length $p$ fixed effects parameter vector,
+- $Z$ is the $n \times m$ random effects design matrix, and
+- $u$ is the length $m$ random effects vector.
 ]
 
 --
@@ -275,19 +266,25 @@ $$Z = \begin{bmatrix} 1 & 0 & 0 & x_{1j} \\ 0 & 1 & 0 & x_{2j} \\ 0 & 0 & 1 & x_
 
 ---
 
-### Examples
+```{r effects-image, echo = FALSE, out.width = "85%"}
+knitr::include_graphics("images/mixed-model-effects.jpg")
+```
 
-- Hierarchical models
+---
 
---
+### Hierarchical Data
 
-### Fits the EM Framework
+```{r hierarchical-data-image, echo = FALSE, out.width = "90%"}
+knitr::include_graphics("images/hierarchical-data.png")
+```
 
-- $u, \varepsilon$ are latent (unobserved)
---
+---
 
-- $y$ is observed
+### Simpson's Paradox
 
+```{r simpsons-paradox-images, echo = FALSE, out.width = "90%"}
+knitr::include_graphics("images/simpsons-paradox.png")
+```
 
 ---
 
@@ -305,7 +302,17 @@ Typical assumptions are
 
 --
 
-Then we have
+### Fits the EM Framework
+
+- $u, \varepsilon$ are latent (unobserved)
+--
+
+- $y$ is observed
+
+--
+
+### Distribution of $(u, \varepsilon)$
+
 $$\begin{bmatrix}u \\ \varepsilon\end{bmatrix} \sim \mathcal{N}\left(0,\begin{bmatrix}\Sigma_u & 0 \\ 0 & I\sigma^2\end{bmatrix}\right)$$
 
 ---
@@ -339,7 +346,7 @@ $$(y \mid u) \sim \mathcal{N}(X\beta + Zu, \sigma^2 I).$$
 --
 
 And since $f(y, u) = f(y \mid u) f(u)$, we have
-$$f(y, u) \propto \frac{1}{\lvert\Sigma_u\rvert^{1/2} \sigma^{n/2}}  \exp\left( -\frac{1}{2\sigma^2} \lVert y - X\beta - Zu \rVert_2^2 - \frac{1}{2} u^T \Sigma_u^{-1} u\right).$$
+$$f(y, u) \propto \frac{1}{\sqrt{\lvert\Sigma_u\rvert \sigma^{2n}}}  \exp\left( -\frac{1}{2\sigma^2} \lVert y - X\beta - Zu \rVert_2^2 - \frac{1}{2} u^T \Sigma_u^{-1} u\right).$$
 
 --
 
@@ -360,26 +367,24 @@ By Bayes' theorem, we have
 $$\begin{aligned}f(u \mid y) = \frac{f(y \mid u) f(u)}{f(y)} &\propto \exp\left(-\frac{1}{2\sigma^2} \lVert y - X\beta - Z u\rVert_2^2 - \frac{1}{2} u^T \Sigma_u u\right) \\
 &\propto \exp\left(-\frac{1}{2}(u - \eta)^T G^{-1} (u - \eta)\right)\end{aligned}$$
 with
-$$G = \left(\frac{Z^T Z}{\sigma^2} + \Sigma_u^{-1}\right)^{-1}\qquad \text{and} \qujd \eta = \frac{G Z^T (y - X \beta)}{\sigma^2}.$$
+$$G = \left(\frac{Z^T Z}{\sigma^2} + \Sigma_u^{-1}\right)^{-1}\qquad \text{and} \qquad \eta = \frac{G Z^T (y - X \beta)}{\sigma^2}.$$
 
 --
 
-So $(u \mid y)$ is Gaussian with mean $\eta$ and covariance $G$.
+So $(u \mid y) \sim \mathcal{N}(\eta,  G)$.
 
 ---
 
 ### The $Q$ Function
 
 Now we can compute the $Q$ function:
-$$\operatorname{E}_{u \sim p(\cdot \mid y, \theta')} \ell(\theta) = ...$$
+$$\begin{aligned}\operatorname{E}_{u \sim p(\cdot \mid y, \theta')} \ell(\theta) &= \frac{1}{2\sigma^2}\left(r^Tr - 2r^T Z \eta + \operatorname{tr}(Z^T Z G) + \eta^T Z^T Z \eta \right) \\
+&\phantom{={}}- \frac{1}{2}\left(\operatorname{tr}(\Sigma_u^{-1} G) + \eta^T \Sigma_u^{-1} \eta\right) \\
+&\phantom{={}} - \frac{n}{2} \log \sigma^2 - \frac{1}{2} \log | \Sigma_u |.\end{aligned}$$
 
 --
 
-Finally we just need to minimize this with respect to $\theta$.
-
---
-
-We find that
+Minimizing this with respect to $\theta$, we find
 $$\begin{aligned}\beta^* &= (X^T X)^{-1} X^T (y - Z \eta) \\
                   (\sigma^2)^* &= \frac{1}{n}\left( \lVert y = X\beta\rVert_2^2 - 2 (y - X\beta)^T Z \eta + \operatorname{tr}(Z^T Z G)\right)\\
                 \Sigma_u^* &= \frac{1}{m}\left(G + \eta \eta^T\right)\end{aligned}$$
@@ -391,14 +396,18 @@ $$\begin{aligned}\beta^* &= (X^T X)^{-1} X^T (y - Z \eta) \\
 
 To test out how this works, we introduce two simplifications:
 
-- $$\Sigma_u(\nu) = \nu^2 I_m$$
+- $\Sigma_u(\nu) = \nu I_m$
 --
 
-- $\beta = \beta_0 \mathbf{1}$ (intercept only)
+- $X = \mathbf{1}$ (intercept-only fixed effects)
+--
+
+- $z_{ij} \in \{0, 1\}$ (random intercept, fixed slope)
 
 --
 
-Makes the update easier:
+#### Easier Update
+
 $$\nu^* = \operatorname{tr}(G + \eta \eta^T) / m$$
 
 ---
@@ -549,7 +558,8 @@ Optimize this log-likelihood directly using `optim()`. Use a numerical gradient.
 
 #### Hints
 
-- Use the `Matrix` package when working with sparse matrices
+- Make sure to load the `Matrix` package or use the namespace directly when
+  working with sparse matrices.
 --
 
 - How should you deal with the inverse?
@@ -626,7 +636,27 @@ But this is admittedly a flawed comparison. Why?
 
 ### Gaussian Mixtures
 
+- We profiled implementations of our EM algorithm for Gaussian mixtures
+--
+
+- We experimented with various implementations of the empirical Fisher
+  information.
+
+--
+
 ### Mixed Models
+
+- We fit mixed models using the EM algoroithm.
+--
+
+- We compared this approach to directly optimizing the marginal
+  likelihood.
+
+--
+
+## Next Time
+
+Stochastic gradient descent
 
 
 
