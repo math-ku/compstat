@@ -220,6 +220,12 @@ computational reasons, but somewhat **less** robust to local minima.
 
 ---
 
+```{r batch-sgd-conv, echo = FALSE, fig.cap = "Impact of batch size"}
+knitr::include_graphics("images/lecture12-batch-sizes.png")
+```
+
+---
+
 ## So, Why Use SGD?
 
 - If $n \gg p$, then we can pick a batch size that is reasonably accurate but
