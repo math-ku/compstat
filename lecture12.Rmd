@@ -824,7 +824,7 @@ dplyr::bind_rows(
 ## Exercise
 
 Recall that our learning rate schedule is
-$$\gamma_k = \frac{\gamma_0 K}{K + n^a}$$
+$$\gamma_k = \frac{\gamma_0 K}{K + k^a}$$
 with initial learning rate $\gamma_0 > 0$ and constants $K, a > 0$, with convergence
 ensured if $a \in (0.5, 1]$.
 
