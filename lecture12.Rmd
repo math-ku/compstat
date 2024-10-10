@@ -54,7 +54,7 @@ $$\frac{1}{n} \sum_{i=1}^n f_i(x).$$
 
 Since $\nabla \left(\sum_{i=1}^n f_i(x)\right) = \sum_{i=1}^n \nabla f_i(x)$, GD
 steps are
-$$x_{n+1} = x_n - \gamma \sum_{i=1}^n \nabla f_i(x_n).$$
+$$x_{k+1} = x_k - \gamma \sum_{i=1}^n \nabla f_i(x_k).$$
 ]
 
 --
@@ -63,8 +63,8 @@ $$x_{n+1} = x_n - \gamma \sum_{i=1}^n \nabla f_i(x_n).$$
 ### Stochastic Gradient Descent
 
 SGD instead takes steps
-$$x_{n+1} = x_n - \gamma \nabla f_{i_n}(x_n)$$
-where $i_n$ is an index in $\{1, \ldots, n\}$ drawn at random.
+$$x_{k+1} = x_k - \gamma \nabla f_{i}(x_k)$$
+where $i$ is an index in $\{1, \ldots, n\}$ drawn at random.
 ]
 
 ---
@@ -200,8 +200,8 @@ So SGD does **not** enjoy linear convergence rates under strong convexity.
 
 ## (Mini-)Batch Gradient Descent
 
-Idea: take (mini-)batch of size $b$ of the data and iterate through
-$$x_{k+1} = x_k - \frac{\gamma}{b} \sum_{i=1}^b \nabla f_i(x_k).$$
+Idea: take (mini-)batch $A_k$ of size $b$ of the data and iterate through
+$$x_{k+1} = x_k - \frac{\gamma}{b} \sum_{i \in A_k} \nabla f_i(x_k).$$
 
 --
 
@@ -251,7 +251,7 @@ Convergence theorem does not give much of a hint.
 
 ### A Class of Decay Schedules
 
-$$\gamma_k = \frac{\gamma_0 K}{K + n^a} = \frac{\gamma_0 }{1 + K^{-1} k^{a}}$$
+$$\gamma_k = \frac{\gamma_0 K}{K + k^a} = \frac{\gamma_0 }{1 + K^{-1} k^{a}}$$
 with initial learning rate $\gamma_0 > 0$ and constants $K, a > 0$.
 
 --
