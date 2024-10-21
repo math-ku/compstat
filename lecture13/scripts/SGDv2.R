@@ -3,7 +3,7 @@ library(CSwR)
 #### SG ----
 
 SG <- function(
-  par, 
+  par,
   N,                 # Sample size
   gamma,             # Decay schedule or a fixed learning rate
   epoch = batch,     # Epoch update function 
@@ -25,9 +25,9 @@ SG <- function(
 #### mini-batch ----
 
 batch <- function(
-  par, 
+  par,
   samp,
-  gamma,  
+  gamma,
   grad,              # Function of parameter and observation index
   m = 50,            # Mini-batch size 
   ...
@@ -45,18 +45,18 @@ batch <- function(
 momentum <- function() {
   rho <- 0 #<<
   function(
-    par, 
+    par,
     samp,
-    gamma,  
+    gamma,
     grad,
     m = 50,             # Mini-batch size
     beta = 0.95,        # Momentum memory 
     ...
   ) {
     M <- floor(length(samp) / m)
-    for(j in 0:(M - 1)) {
+    for (j in 0:(M - 1)) {
       i <- samp[(j * m + 1):(j * m + m)]
-      rho <<- beta * rho + (1 - beta) * grad(par, i, ...)  
+      rho <<- beta * rho + (1 - beta) * grad(par, i, ...)
       par <- par - gamma * rho
     }
     par
@@ -66,28 +66,26 @@ momentum <- function() {
 #### Adam ------
 
 adam <- function() {
-  rho <- v <- 0 
+  rho <- v <- 0
   function(
-    par, 
+    par,
     samp,
-    gamma,   
+    gamma,
     grad,
     m = 50,          # Mini-batch size
-    beta1 = 0.9,     # Momentum memory     
-    beta2 = 0.9,     # Second moment memory 
+    beta1 = 0.9,     # Momentum memory
+    beta2 = 0.9,     # Second moment memory
     ...
   ) {
     M <- floor(length(samp) / m)
-    
-    for(j in 0:(M - 1)) {
+
+    for (j in 0:(M - 1)) {
       i <- samp[(j * m + 1):(j * m + m)]
-      gr <- grad(par, i, ...) 
-      rho <<- beta1 * rho + (1 - beta1) * gr 
-      v <<- beta2 * v + (1 - beta2) * gr^2 
-      par <- par - gamma * (rho / (sqrt(v) + 1e-8))  
+      gr <- grad(par, i, ...)
+      rho <<- beta1 * rho + (1 - beta1) * gr
+      v <<- beta2 * v + (1 - beta2) * gr^2
+      par <- par - gamma * (rho / (sqrt(v) + 1e-8))
     }
     par
   }
 }
-
-

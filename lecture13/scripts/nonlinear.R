@@ -6,6 +6,15 @@ library(numDeriv)
 library(CSwR)
 library(here)
 
+my_theme <- theme_bw(base_size = 8) +
+  theme(
+    plot.background = element_rect(fill = "transparent", colour = NA),
+    legend.background = element_rect(fill = "transparent"),
+    panel.background = element_rect(fill = "transparent", colour = NA),
+    legend.box.background = element_rect(fill = "transparent", colour = NA)
+  )
+theme_set(my_theme)
+
 source("scripts/SGDv2.R")
 
 ## -----------------------------------------------------------------------------
@@ -97,8 +106,17 @@ persp(
 dev.off()
 knitr::plot_crop(fn2)
 
-fn3 <- here("images", "nonlinear-contour.pdf")
-pdf(fn3, width = 3.2, height = 2.8, pointsize = 7)
+alpha_seq <- seq(-2, 2, length.out = 101)
+beta_seq <- seq(8, 12, length.out = 101)
+z <- Heval <- outer(alpha_seq, beta_seq, Vectorize(function(a, b) H(c(a, b))))
+nrz <- nrow(z)
+ncz <- ncol(z)
+
+nbcol <- 100
+
+fn3 <- here("images", "nonlinear-contour.png")
+png(fn3, width = 3.2, height = 2.8, pointsize = 7, units = "in", res = 192)
+par(bg = "transparent")
 filled.contour(beta_seq, alpha_seq, z, color.palette = pal, key.border = NA)
 dev.off()
 knitr::plot_crop(fn3)
@@ -134,28 +152,54 @@ i <- sample(N, 50)
 
 gamma <- 1e-2
 par_init <- expand.grid(
-  alpha = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5),
-  beta = c(8.4, 8.8, 9.3, 10.7, 11.2, 11.6)
+  alpha = c(-1, -0.5, 0, 1.5),
+  beta = c(8.4, 9.3, 10.7, 11.2, 11.6)
 ) %>% as.matrix()
-SG_tracer <- tracer(c("value", "par"), Delta = 50, expr = quote(value <- H(par)))
+SG_tracer <- tracer(
+  c("value", "par"),
+  Delta = 50,
+  expr = quote(value <- H(par))
+)
 
 set.seed(123)
 
 paths <- vector("list", nrow(par_init))
 
-for(i in 1:nrow(par_init)) {
-  SG(par_init[i, ], grad = grad_batch, N = N, gamma = gamma, cb = SG_tracer$tracer)
+for(i in seq_len(nrow(par_init))) {
+  SG(
+    par_init[i, ],
+    grad = grad_batch,
+    N = N,
+    gamma = gamma,
+    cb = SG_tracer$tracer
+  )
   SG_trace_batch <- summary(SG_tracer)
   SG_tracer$clear()
-  SG(par_init[i, ], grad = grad_batch, epoch = momentum(), N = N, gamma = gamma, cb = SG_tracer$tracer)
+  SG(
+    par_init[i, ],
+    grad = grad_batch,
+    epoch = momentum(),
+    N = N,
+    gamma = gamma,
+    cb = SG_tracer$tracer
+  )
   SG_trace_momentum <- summary(SG_tracer)
   SG_tracer$clear()
-  SG(par_init[i, ], grad = grad_batch, epoch = adam(), N = N, gamma = 0.1 * gamma, cb = SG_tracer$tracer)
+  SG(
+    par_init[i, ],
+    grad = grad_batch,
+    epoch = adam(),
+    N = N,
+    gamma = 0.1 * gamma,
+    cb = SG_tracer$tracer
+  )
   SG_trace_adam <- summary(SG_tracer)
-  SG_tracer_comb <- bind_rows(batch = SG_trace_batch,  
-                              momentum = SG_trace_momentum, 
-                              adam = SG_trace_adam,
-                              .id = "Alg")
+  SG_tracer_comb <- bind_rows(
+    batch = SG_trace_batch,
+    momentum = SG_trace_momentum,
+    adam = SG_trace_adam,
+    .id = "Alg"
+  )
   SG_tracer_comb$init <- i
   paths[[i]] <- SG_tracer_comb
   SG_tracer$clear()
@@ -163,57 +207,105 @@ for(i in 1:nrow(par_init)) {
 
 SG_tracer_comb <- do.call(bind_rows, paths)
 
-# comb <- bind_cols(par_init, init = 1:42) |>
-#   right_join(SG_tracer_comb)
+bind_cols(par_init, init = 1:20) |>
+  right_join(SG_tracer_comb) |>
+  ggplot(aes(
+    x = .time,
+    y = value,
+    color = Alg,
+    group = interaction(Alg, init)
+  )) +
+  geom_line() +
+  facet_grid(vars(alpha), vars(beta))
 
-bind_cols(par_init, init = 1:42) %>% 
-  right_join(SG_tracer_comb) %>% 
-  ggplot(aes(x = .time, y = par.alpha, color = Alg, group = interaction(Alg, init))) +
+alpha_plot <- bind_cols(par_init, init = 1:20) %>%
+  right_join(SG_tracer_comb) %>%
+  ggplot(aes(
+    x = .time,
+    y = par.alpha,
+    color = Alg,
+    group = interaction(Alg, init)
+  )) +
   geom_line(size = 1) +
-  facet_grid(vars(alpha), vars(beta), scales = "free_y", 
-             labeller = label_bquote(rows = paste(alpha, " = ", .(alpha)), cols = paste(beta, " = ", .(beta)))) + 
+  facet_grid(
+    vars(alpha),
+    vars(beta),
+    scales = "free_y",
+    labeller = label_bquote(
+      rows = paste(alpha, " = ", .(alpha)),
+      cols = paste(beta, " = ", .(beta))
+    )
+  ) +
   coord_cartesian(xlim = c(0, 0.025)) +
   scale_x_continuous("time", breaks = c(0, 0.01, 0.02)) +
-  scale_y_continuous(quote(alpha))
+  scale_y_continuous(quote(alpha)) +
+  theme(
+    plot.background = element_rect(fill = "transparent", colour = NA),
+    legend.background = element_rect(fill = "transparent"),
+    panel.background = element_rect(fill = "transparent", colour = NA),
+    legend.box.background = element_rect(fill = "transparent", colour = NA)
+  )
 
-bind_cols(par_init, init = 1:42) %>% 
-  right_join(SG_tracer_comb) %>% 
-ggplot(aes(x = .time, y = par.beta, color = Alg, group = interaction(Alg, init))) +
+fn_alpha <- here("images", "nonlinear-alpha.pdf")
+ggsave(fn_alpha, alpha_plot, width = 5.4, height = 3.1)
+
+beta_plot <- bind_cols(par_init, init = 1:20) %>%
+  right_join(SG_tracer_comb) %>%
+  ggplot(aes(
+    x = .time,
+    y = par.beta,
+    color = Alg,
+    group = interaction(Alg, init)
+  )) +
   geom_line(size = 1) +
-  facet_grid(vars(beta), vars(alpha), scales = "free_y", 
-             labeller = label_bquote(cols = paste(alpha, " = ", .(alpha)), rows = paste(beta, " = ", .(beta)))) + 
+  facet_grid(
+    vars(beta),
+    vars(alpha),
+    scales = "free_y",
+    labeller = label_bquote(
+      cols = paste(alpha, " = ", .(alpha)),
+      rows = paste(beta, " = ", .(beta))
+    )
+  ) +
   coord_cartesian(xlim = c(0, 0.025)) +
   scale_x_continuous("time", breaks = c(0, 0.01, 0.02)) +
   scale_y_continuous(quote(beta))
 
-p + geom_path(data = SG_tracer_comb, mapping = aes(x = par.alpha, y = par.beta, fill = NULL, color = Alg, group = interaction(Alg, init)), 
-              size = 1, arrow = arrow(length = unit(0.015, "npc")))
-
-
-# filled.contour(beta_seq, alpha_seq, z, color.palette = pal, key.border = NA)
+ggsave(here("images", "nonlinear-beta.pdf"), beta_plot, width = 5.4, height = 3.1)
 
 cols <- c("steelblue4", "dark orange", "black")
 algs <- c("ADAM", "momentum", "batch")
 
-init <- c(1, 5, 10, 15, 20, 25, 30, 42)
+init <- c(1, 3, 7, 8, 16, 17, 19)
 
 fn4base <- here("images", "nonlinear-convergence-")
 
 for (k in seq_along(init)) {
   s <- init[k]
   fn4 <- paste0(fn4base, k - 1, ".pdf")
-  pdf(fn4, width = 6, height = 3.5, pointsize = 8)
+  pdf(fn4, width = 5.5, height = 3.3, pointsize = 8)
   par(mfrow = c(1, 3))
   for (i in seq_along(algs)) {
-    contour(alpha_seq, beta_seq, z, drawlabels = FALSE, col = "dark grey", main = algs[i])
+    contour(
+      alpha_seq,
+      beta_seq,
+      z,
+      drawlabels = FALSE,
+      col = "dark grey",
+      main = algs[i]
+    )
     alg <- tolower(algs[i[]])
     dd <- filter(SG_tracer_comb, Alg == alg, init == s)
     points(dd$par.alpha[1], dd$par.beta[1], col = cols[i])
     lines(dd$par.alpha, dd$par.beta, col = cols[i])
-    points(dd$par.alpha[nrow(dd)], dd$par.beta[nrow(dd)], pch = 19, col = cols[i])
+    points(
+      dd$par.alpha[nrow(dd)],
+      dd$par.beta[nrow(dd)],
+      pch = 19,
+      col = cols[i]
+    )
   }
   par(mfrow = c(1, 1))
   dev.off()
   knitr::plot_crop(fn4)
 }
-

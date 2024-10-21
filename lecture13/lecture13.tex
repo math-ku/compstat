@@ -67,7 +67,7 @@
 
 % bibliography
 \usepackage[style=authoryear]{biblatex}
-\addbibresource{lecture12.bib}
+\addbibresource{lecture13.bib}
 
 % title block
 \title{Variations on Stochastic Gradient Descent}
@@ -242,26 +242,6 @@
 \end{frame}
 
 \begin{frame}[c]
-  \frametitle{Motivation for Momentum}
-  \begin{itemize}
-    \item Escape local minima
-    \item Accelerate
-  \end{itemize}
-
-  \pause
-
-  \begin{block}{Problems}
-    No longer a descent method!
-
-    \medskip
-
-    More problematic: might not converge any more
-
-  \end{block}
-
-\end{frame}
-
-\begin{frame}[c]
   \frametitle{Convergence Failure}
 
   \begin{columns}
@@ -314,21 +294,21 @@
 
   \bigskip
 
-  Overcomes problem classical (Polyak) momentum has.
+  Overcomes convergence problem of classical (Polyak) momentum.
 
 \end{frame}
 
 \begin{frame}[c]
   \frametitle{Nesterov: Sutskever Perspective}
-  \begin{columns}
+  \begin{columns}[T]
     \begin{column}{0.45\textwidth}
       Consider two iterations of Nesterov algorithm:
       \[
         \begin{aligned}
-          v_{t}   & = x_{t-1} - \gamma \nabla f\left(x_{t-1} \right) \\
-          x_{t}   & = v_{t} + \mu\left(v_{t} - v_{{t-1}} \right)     \\
-          v_{t+1} & = x_{t} - \gamma \nabla f\left(x_{t} \right)     \\
-          x_{t+1} & = v_{t+1} + \mu\left(v_{t+1} - v_{t} \right)
+          v_{t}               & = x_{t-1} - \gamma \nabla f\left(x_{t-1} \right)         \\
+          \alert<2->{x_{t}}   & \alert<2->{= v_{t} + \mu\left(v_{t} - v_{{t-1}} \right)} \\
+          \alert<2->{v_{t+1}} & \alert<2->{= x_{t} - \gamma \nabla f\left(x_{t} \right)} \\
+          x_{t+1}             & = v_{t+1} + \mu\left(v_{t+1} - v_{t} \right)
         \end{aligned}
       \]
     \end{column}
@@ -412,12 +392,15 @@
   \frametitle{Convergence}
   \begin{columns}
     \begin{column}{0.45\textwidth}
-      Convergence rate with Nesterov acceleration goes from $O(1/k)$ to $O(1/k^2)$---optimal
-      for a first-order method.
+      Convergence rate with Nesterov acceleration goes from $O(1/k)$ to $O(1/k^2)$
 
-      \bigskip\pause
+      \medskip\pause
 
-      Even better for quadratic and strongly convex!
+      This is \alert{optimal} for a first-order method.
+
+      \medskip\pause
+
+      Convergence improves further for quadratic and strongly convex!
 
     \end{column}
     \begin{column}{0.45\textwidth}
@@ -425,8 +408,8 @@
         \centering
         \includegraphics[]{images/momentum-convergence.pdf}
         \caption{%
-          Practical suboptimality plot for logistic regression with
-          $n = 1\,000$, $p = 100$.
+          Suboptimality plot for a
+          logistic regression problem with $n = 1\,000$, $p = 100$.
         }
       \end{figure}
     \end{column}
@@ -652,7 +635,7 @@
 
       Then
       \[
-        \nabla_{\theta} f(x, \theta) =
+        \nabla_{\theta} f(\theta) =
         \begin{bmatrix}
           \cos(\beta x) \\ - \alpha x \sin(\beta x)
         \end{bmatrix}.
@@ -671,7 +654,6 @@
 \end{frame}
 
 \begin{frame}[c]
-  \frametitle{Surfaces}
   \begin{columns}
     \begin{column}{0.4\textwidth}
       \begin{figure}[htpb]
@@ -686,7 +668,7 @@
     \begin{column}{0.5\textwidth}
       \begin{figure}[htpb]
         \centering
-        \includegraphics[]{images/nonlinear-contour.pdf}
+        \includegraphics[]{images/nonlinear-contour.png}
         \caption{%
           Contour plot of \(f\)
         }
@@ -701,6 +683,29 @@
     \multiinclude[<+>][format=pdf]{images/nonlinear-convergence}
     \caption{%
 
+    }
+  \end{figure}
+\end{frame}
+
+\begin{frame}[c]
+  \begin{figure}[htpb]
+    \centering
+    \includegraphics[]{images/nonlinear-alpha.pdf}
+    \caption{%
+      Updates of \(\alpha\) parameter over time for the different algorithms over
+      different starting values.
+    }
+  \end{figure}
+
+\end{frame}
+
+\begin{frame}[c]
+  \begin{figure}[htpb]
+    \centering
+    \includegraphics[]{images/nonlinear-beta.pdf}
+    \caption{%
+      Updates of \(\beta\) parameter over time for the different algorithms over
+      different starting values.
     }
   \end{figure}
 \end{frame}
@@ -722,50 +727,51 @@
   \end{block}
 \end{frame}
 
-\begin{frame}[c,fragile]
-  \frametitle{Gradient Descent in RcppArmadillo}
-  \begin{lstlisting}[language=C++]
-    arma::vec gradient_descent(
-      arma::vec x0,
-      double alpha,
-      int max_iter,
-      double tol
-    ) {
-      int n = x0.n_elem;
-      arma::vec x = x0;
-      arma::vec grad(n);
-
-      for (int iter = 0; iter < max_iter; ++iter) {
-        grad = grad_f(x);
-        x = x - alpha * grad;
-
-        if (arma::norm(grad, 2) < tol) {
-            break;
-        }
-      }
-      return x;
-    }
-  \end{lstlisting}
-\end{frame}
-
 \begin{frame}[c]
-  \frametitle{Exercise: SGD with Rcpp}
+  \frametitle{Exercise: Rosenbrock Revisited}
 
-  \begin{enumerate}
-    \item Use Rcpp to write a stochastic gradient descent algorithm. Don't
-          bother with the batch version: stick to standard one-sample version.
-    \item Introduce momentum.
-  \end{enumerate}
+  \begin{block}{Steps}
+    \begin{enumerate}
+      \item Convert your gradient descent algorithm to C++ through Rcpp.
+      \item Modify it to be a stochastic gradient descent algorithm instead.
+    \end{enumerate}
+  \end{block}
+
+  \pause\bigskip
+
+  \begin{block}{Hints}
+    \begin{itemize}
+      \item Use the Rcpp function \texttt{Rcpp::sugar()} to sample indices.
+      \item Don't bother with a stopping criterion to begin with; just set a maximum number of
+            iterations.
+      \item You can return a list by calling \texttt{Rcpp::List::create(Rcpp::named("name") = x)}.
+      \item Use a pure Rcpp implementation.
+    \end{itemize}
+  \end{block}
 
 \end{frame}
 
 \begin{frame}[c]
   \frametitle{Summary}
 
+  We introduced several new concepts:
+  \begin{itemize}
+    \item Polyak momentum,
+    \item Nesterov acceleration (momentum), and
+    \item adapative gradients (AdaGrad),
+  \end{itemize}
+
+  \bigskip
+
+  We practically implemented versions of gradient descent and stochastic gradient
+  descent with momentum.
+
+  \pause\bigskip
+
   \begin{block}{Additional Resources}
     \begin{itemize}
-      \item \textcite{gohWhyMomentumReally2017} is a great treatise on momentum
-            in gradient descent; lots of interactive visualizations
+      \item \textcite{gohWhyMomentumReally2017} is a article on momentum
+            in gradient descent with lots of interactive visualizations.
     \end{itemize}
   \end{block}
 \end{frame}
@@ -800,11 +806,11 @@
   Thank you!
 \end{frame}
 
-% \appendix
-% 
-% \begin{frame}[allowframebreaks]{References}
-%   \printbibliography[heading=none]
-% \end{frame}
+\appendix
+
+\begin{frame}[allowframebreaks]{References}
+  \printbibliography[heading=none]
+\end{frame}
 
 
 \end{document}
