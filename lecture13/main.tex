@@ -110,7 +110,7 @@
     \end{column}
     \begin{column}{0.51\textwidth}
       \begin{algorithm}[H]
-        \KwData{$\gamma_0 >0$ }
+        \KwData{$\gamma_0 >0$}
         \For{$k \gets 1, 2, \dots$}{
           $A_k \gets$ random mini-batch of $m$ samples\;
           $x_k \gets x_{k-1} - \frac{\gamma_k }{|A_k|} \sum_{i \in A_k} \nabla f_i(x_{k-1})$\;
@@ -246,7 +246,8 @@
 
   \begin{columns}
     \begin{column}{0.45\textwidth}
-      For some problems, the momentum method may instead lead to a failure to converge.
+      For some problems, the momentum method may fail to
+      converge~\parencite{lessardAnalysisDesignOptimization2016}.
 
       \pause
 
@@ -494,7 +495,7 @@
 
   \begin{columns}
     \begin{column}{0.45\textwidth}
-      \begin{block}{AdaGrad}
+      \begin{block}{AdaGrad~\parencite{duchiAdaptiveSubgradientMethods2011}}
         Store matrix of gradient history,
         \[
           G_k = \sum_{i = 1}^k \nabla f(x_k) \nabla f(x_k)^\intercal,
@@ -504,7 +505,7 @@
     \end{column}
     \begin{column}{0.45\textwidth}
       \begin{algorithm}[H]
-        \KwData{$\gamma >0$}
+        \KwData{$\gamma >0$, $G = 0$}
         \For{$k \gets 1, 2, \dots$}{
         $G_k \gets G_{k-1} + \nabla f(x_{k-1}) \nabla f(x_{k-1})^\intercal$\;
         $x_k \gets x_{k-1} - \gamma G_k^{-1/2} \nabla f(x_{k-1})$\;
@@ -560,7 +561,7 @@
 \begin{frame}[c]
   \frametitle{RMSProp}
 
-  Acronym for \textbf{R}oot \textbf{M}ean \textbf{S}quare \textbf{Prop}agation.
+  Acronym for \textbf{R}oot \textbf{M}ean \textbf{S}quare \textbf{Prop}agation~\parencite{hintonLecture62018}
 
   \begin{block}{Idea}
     Divide learning rate by running average of magnitude of recent gradients:
@@ -588,9 +589,9 @@
 \end{frame}
 
 \begin{frame}[c]
-  \frametitle{ADAM}
+  \frametitle{Adam}
 
-  Acronym for \textbf{Ada}ptive \textbf{m}oment estimation
+  Acronym for \textbf{Ada}ptive \textbf{m}oment estimation~\parencite{kingmaAdamMethodStochastic2015}
 
   \medskip
 
@@ -675,6 +676,24 @@
       \end{figure}
     \end{column}
   \end{columns}
+\end{frame}
+
+\begin{frame}[c]
+  \frametitle{Variants}
+  We will consider three variants:
+  \begin{itemize}
+    \item Batch gradient descent
+    \item Batch gradient descent \alert{with momentum}
+    \item Adam
+  \end{itemize}
+
+  \bigskip
+
+  In each case, we'll use a batch of size $m=50$.
+
+  \bigskip
+
+  We initialize at different starting values and see how well the algorithm converges.
 \end{frame}
 
 \begin{frame}[c]
