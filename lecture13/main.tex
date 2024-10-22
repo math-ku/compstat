@@ -178,7 +178,7 @@
       \begin{algorithm}[H]
         \KwData{$\gamma >0$, $\mu \in [0,1)$}
         \For{$k \gets 1, 2, \dots$}{
-          $x_k \gets x_{k-1} - \gamma  \nabla f(x_{k-1}) + \mu (x_{k-2} - x_{k-2}) $\;
+          $x_k \gets x_{k-1} - \gamma  \nabla f(x_{k-1}) + \mu (x_{k-1} - x_{k-2}) $\;
         }
         \caption{GD with Polyak Momentum}
       \end{algorithm}
@@ -305,10 +305,10 @@
       Consider two iterations of Nesterov algorithm:
       \[
         \begin{aligned}
-          v_{t}               & = x_{t-1} - \gamma \nabla f\left(x_{t-1} \right)         \\
-          \alert<2->{x_{t}}   & \alert<2->{= v_{t} + \mu\left(v_{t} - v_{{t-1}} \right)} \\
-          \alert<2->{v_{t+1}} & \alert<2->{= x_{t} - \gamma \nabla f\left(x_{t} \right)} \\
-          x_{t+1}             & = v_{t+1} + \mu\left(v_{t+1} - v_{t} \right)
+          v_{k}               & = x_{k-1} - \gamma \nabla f\left(x_{k-1} \right)         \\
+          \alert<2->{x_{k}}   & \alert<2->{= v_{k} + \mu\left(v_{k} - v_{{k-1}} \right)} \\
+          \alert<2->{v_{k+1}} & \alert<2->{= x_{k} - \gamma \nabla f\left(x_{k} \right)} \\
+          x_{k+1}             & = v_{k+1} + \mu\left(v_{k+1} - v_{k} \right)
         \end{aligned}
       \]
     \end{column}
@@ -319,8 +319,8 @@
       Idea: focus on interim step:
       \[
         \begin{aligned}
-          x_{t}   & = v_{t} + \mu\left(v_{t} - v_{{t-1}} \right) \\
-          v_{t+1} & = x_{t} - \gamma \nabla f\left(x_{t} \right)
+          x_{k}   & = v_{k} + \mu\left(v_{k} - v_{{k-1}} \right) \\
+          v_{k+1} & = x_{k} - \gamma \nabla f\left(x_{k} \right)
         \end{aligned}
       \]
 
@@ -329,8 +329,8 @@
       Reindex:
       \[
         \begin{aligned}
-          x_{t} & = v_{t-1} + \mu\left(v_{t-1} - v_{{t-2}} \right) \\
-          v_{t} & = x_{t} - \gamma \nabla f\left(x_{t} \right)
+          x_{k} & = v_{k-1} + \mu\left(v_{k-1} - v_{{k-2}} \right) \\
+          v_{k} & = x_{k} - \gamma \nabla f\left(x_{k} \right)
         \end{aligned}
       \]
     \end{column}
@@ -369,7 +369,7 @@
       \[
         a_k = \frac{1 + \sqrt{4a_{k-1}^2 + 1}}{2}
       \]
-      with \(a_1 = 1\) (and hence \(\mu_1 = 0\)).
+      with \(a_0 = 1\) (and hence \(\mu_1 = 0\)).
 
       \bigskip\pause
 
@@ -439,7 +439,7 @@
       \begin{algorithm}[H]
         \KwData{$\gamma >0$, $\mu \in [0,1)$}
         \For{$k \gets 1, 2, \dots$}{
-          $x_k \gets x_{k-1} - \gamma  \nabla f(x_{k-1}) + \mu (x_{k-2} - x_{k-2}) $\;
+          $x_k \gets x_{k-1} - \gamma  \nabla f(x_{k-1}) + \mu (x_{k-1} - x_{k-2}) $\;
         }
         \caption{GD with Polyak Momentum}
       \end{algorithm}
