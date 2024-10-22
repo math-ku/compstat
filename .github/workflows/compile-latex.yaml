@@ -16,13 +16,20 @@ jobs:
           root_file: |
             lecture14/main.tex
 
+      - name: Create temporary directory for artifacts
+        run: mkdir -p artifacts
+
+      - name: Copy files to artifacts directory
+        run: |
+          cp lecture14/main.pdf artifacts/lecture14.pdf
+
       - name: Setup pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: lecture14/main.pdf
+          path: artifacts
 
       - name: Deploy to GitHub Pages
         id: deployment
