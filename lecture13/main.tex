@@ -167,16 +167,12 @@
 
         \medskip
 
-        Typically let $x_{-1} = x_{0}$.
-
-        \medskip
-
         Guaranteed convergence for quadratic functions
       \end{block}
     \end{column}
     \begin{column}{0.45\textwidth}
       \begin{algorithm}[H]
-        \KwData{$\gamma >0$, $\mu \in [0,1)$}
+        \KwData{$\gamma >0$, $\mu \in [0,1)$, $x_{-1} = x_0$}
         \For{$k \gets 1, 2, \dots$}{
           $x_k \gets x_{k-1} - \gamma  \nabla f(x_{k-1}) + \mu (x_{k-1} - x_{k-2}) $\;
         }
