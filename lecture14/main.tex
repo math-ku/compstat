@@ -8,20 +8,22 @@
 \usefonttheme{professionalfonts}
 \setbeamertemplate{page number in head/foot}[appendixframenumber]
 
+\usepackage{dirtree}
+
 \usepackage{listings}
 \usepackage{lstautogobble}
 \lstset{
   autogobble,
   language=R,
-  showspaces = false,
+  showspaces=false,
   morekeywords={TRUE, FALSE},
-  showtabs = false,
-  breaklines = true,
-  tabsize = 2,
+  showtabs=false,
+  breaklines=true,
+  tabsize=2,
   keywordstyle=\color{SteelBlue4},
   stringstyle=\color{RedViolet},
   deletekeywords={data,frame,length,as,character},
-  basicstyle=\ttfamily\footnotesize
+  basicstyle=\ttfamily
 }
 
 \usepackage{lmodern}
@@ -117,40 +119,40 @@
   \end{block}
 \end{frame}
 
+\section{Organizing Code as an R Package}
+
 \begin{frame}[c]
   \frametitle{Organizing Code}
 
-  \begin{itemize}
-    \item Important to organize code in a meaningful structure
-    \item We have several components we want:
-          \begin{itemize}
-            \item Experiment code
-            \item Source code for functions (which we should be able to reuse)
-            \item Tests
-            \item Rcpp code
-          \end{itemize}
-  \end{itemize}
+  \begin{columns}[T]
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Components}
+        \begin{itemize}
+          \item Code for experiments
+          \item Source code for functions (which we should be able to reuse)
+          \item Tests
+          \item Rcpp code
+          \item Data
+        \end{itemize}
+      \end{block}
 
-  There is a plethora of ways to organize this. Which one to choose?
+      There is a plethora of ways to organize this. Which one to choose?
+    \end{column}
 
-  \begin{block}{R Package}
-    One way is to make an R package
+    \pause
 
-    \medskip
-
-    % Makes it easy to distribute the package. Someone could just call \texttt{remotes::install_github("user/my_r_package")}
-    % and then your functions would be available through \texttt{library(my_r_package)} in R.
-
-    \medskip
-
-    Lots of infrastructure for:
-    \begin{itemize}
-      \item Connecting to C++ code through Rcpp (no more manual call to \texttt{Rcpp::sourceCpp()}.
-      \item Testing: tests go into separate directory and are automaically discovered and run.
-      \item Documentation
-      \item Declare dependencies (other packages, R version)
-    \end{itemize}
-  \end{block}
+    \begin{column}{0.45\textwidth}
+      \begin{block}{R Package}
+        One way is to make an R package, which helps in many ways:
+        \begin{itemize}
+          \item Easy to connect to C++ code through Rcpp.
+          \item Built-in support for automatic testing
+          \item Documentation
+          \item Declare dependencies (other packages, R version)
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[c,fragile]
@@ -158,18 +160,8 @@
 
   \begin{columns}
     \begin{column}{0.45\textwidth}
-      Different approaches, but we will follow \textbf{R Packages}~\parencite{wickhamPackagesOrganizeTest2023} throughout
-      this lecture, which makes heavy use of the \textbf{devtools} package.
-
-      \begin{lstlisting}
-        install.packages(c(
-          "devtools",
-          "usethis"
-        ))
-
-        library(devtools)
-        library(usethis)
-      \end{lstlisting}
+      Different approaches, but we will follow \textbf{R Packages}~\parencite{wickhamPackagesOrganizeTest2023},
+      which is based around the \textbf{devtools} package.
     \end{column}
     \begin{column}{0.45\textwidth}
       \begin{figure}[htpb]
@@ -181,11 +173,587 @@
       \end{figure}%
     \end{column}
   \end{columns}
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{Devtools}
+
+  Meta-package for various helpers that
+  aid in developing R packages (and projects).
+
+  First off, install and load \textbf{devtools}:
+  \begin{lstlisting}
+        install.packages("devtools")
+        library(devtools)
+      \end{lstlisting}
+
+  \begin{columns}
+    \begin{column}{0.45\textwidth}
+
+      This loads other packages that will be useful
+      for setting up your package, most importantly the \textbf{usethis}
+      package.
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \begin{figure}[htpb]
+        \centering
+        \includegraphics[width=2.5cm]{images/usethis-logo.png}%
+        \includegraphics[width=2.5cm]{images/devtools.pdf}
+      \end{figure}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[c]
+  \frametitle{A Toy Example}
+
+  \begin{block}{Rosenbrock Package}
+    Let's build a simple package that solves the Rosenbrock optimization problem, i.e.
+    find
+    \[
+      x^* = \operatorname{arg\,min}\left((a - x_1)^2 + b(x_2 - x_1^2)^2\right).
+    \]
+  \end{block}
+
+  \bigskip\pause
+
+  \begin{block}{What We Will Learn}
+    \begin{itemize}[<+->]
+      \item Adding R functions to our package
+      \item Interfacing with Rcpp
+      \item Testing our code
+      \item Adding dependencies to other packages
+      \item Licensing our package
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{A First Package}
+  \begin{block}{Create It}
+    Call
+    \begin{lstlisting}
+          usethis::create_package("rosenbrock")
+        \end{lstlisting}
+    or use \texttt{File > New Project > New Directory > R Package using devtools} in R Studio.
+  \end{block}
+
+  \pause\bigskip
+
+  \begin{columns}[T]
+    \begin{column}{0.45\textwidth}
+      This gives you a \alert{minimal} package:
+
+      \medskip
+
+      \dirtree{%
+        .1 rosenbrock/.
+        .2 R/.
+        .2 DESCRIPTION.
+        .2 NAMESPACE.
+      }
+
+      \medskip\pause
+
+      You may also have \texttt{.Rbuildignore} and \texttt{.rosenbrock.Rproj}
+      depending on how you created the package.
+    \end{column}
+
+    \pause
+
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Install It}
+        Open up the package in your editor (R Studio\footnote{In which case it
+          should alread be opened.}).
+        \begin{lstlisting}
+          devtools::install()
+        \end{lstlisting}
+
+        \bigskip
+
+        Voila, you have made an R package!
+      \end{block}
+    \end{column}
+  \end{columns}
 
 \end{frame}
 
 \begin{frame}[standout]
   Thank you!
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{R Code}
+
+  \begin{block}{\texttt{.R/}}
+    \begin{itemize}
+      \item All R code should live in \texttt{.R}-files in \texttt{R/}.
+      \item These files should (almost) always contain \alert{only} functions.
+      \item Many ways to organize your files: one function per file, all functions
+            of a certain S3 class in one file etc.
+    \end{itemize}
+  \end{block}
+
+  \pause\bigskip
+
+  Let's create a first file: \texttt{R/objective.R}. Use \lstinline{usethis::use_r("objective")} and insert this:
+
+  \begin{lstlisting}
+    objective <- function(x, a = 1, b = 100) {
+      (a - x[1])^2 + b * (x[2] - x[1]^2)^2
+    }
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{Workflow}
+  We have created a first R file, but how do we use it? Two major options:
+
+  \begin{columns}[T]
+    \begin{column}{0.45\textwidth}
+      \begin{block}{\lstinline{devtools::install()}}
+        Installs the package, like calling \lstinline{install.packages()}.
+
+        \medskip\pause
+
+        Robust but slow. Need to call \lstinline{library(rosenbrock)}
+        to load package\footnote{Done automatically in R Studio}.
+      \end{block}
+    \end{column}
+
+    \pause
+
+    \begin{column}{0.45\textwidth}
+      \begin{block}{\lstinline{devtools::load_all()}}
+        Sources all of your code.
+
+        \medskip
+
+        Quick but not as robust.
+
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \pause\bigskip
+
+  \begin{block}{Try It}
+    Try both options and see if you can call your newly defined function, \lstinline{objective()}.
+  \end{block}
+\end{frame}
+
+\begin{frame}[c]
+  \begin{figure}[htpb]
+    \centering
+    \frame{\includegraphics[width=0.92\textwidth]{images/install-load-states.png}}
+    \caption{%
+      The various states of a package and how to move between them.
+    }
+  \end{figure}
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{Exporting Functions}
+
+  If you called \lstinline{devtools::load_all()} then everything is sourced and you can
+  just call \lstinline{objective()} directly.
+
+  \bigskip
+
+  But if you use \lstinline{devtools::install()} and \lstinline{library(rosenbrock)}, the
+  you would need to use \lstinline{rosenbrock:::objective()}. The reason is that
+  the function is not yet exported.
+
+  \medskip\pause
+
+  \begin{block}{\texttt{NAMESPACE}}
+
+    Decides what functions you want exported. But right now it just contains a comment:
+    \begin{lstlisting}
+      # Generated by roxygen2: do not edit by hand
+    \end{lstlisting}
+
+    \pause\medskip
+
+    If you want to just export everything, you can remove this file and recreate it with this content:
+    \begin{lstlisting}
+      exportPattern("^[[:alpha:]]+")
+    \end{lstlisting}
+
+  \end{block}
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{roxygen2}
+
+  \textbf{roxygen2} is a package that helps with package documentation\footnote{More on this later.},
+  but it can also be used for handling the namespace.
+
+  \bigskip\pause
+
+  To export a function, you need to place a special roxygen2 comment just before the function:
+  \begin{lstlisting}
+    #' @export
+  \end{lstlisting}
+
+  \medskip\pause
+
+  Go ahead and place this before your \lstinline{objective()} definition. Then run
+  \lstinline{devtools::document()} to roxygenize your package.
+
+  \bigskip\pause
+
+  Now \texttt{NAMESPACE} will (should) contain this:
+  \begin{lstlisting}
+    export(objective)
+  \end{lstlisting}
+
+  \medskip\pause
+
+  Reinstall the package and see if you can call \lstinline{objective()} after
+  loading it.
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{Tests}
+
+  \begin{block}{testthat}
+    \begin{itemize}
+      \item We have already encountered \textbf{testthat} for writing tests in a formalized way.
+      \item But \textbf{testthat} was actually written especially for packages.
+    \end{itemize}
+  \end{block}
+
+  \pause\bigskip
+
+  Let's start using \textbf{testthat} with our package:
+  \begin{lstlisting}
+    usethis::use_testthat()
+  \end{lstlisting}
+
+  \bigskip\pause
+
+  This creates some new files and directories:
+
+  \medskip
+
+  \dirtree{%
+    .1 rosenbrock/.
+    .2 tests/.
+    .3 testthat/.
+    .4 test-<some\_fun>.R\DTcomment{Your test file for \texttt{some\_fun()}}.
+    .3 testthat.R.
+  }
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{A First Simple Test}
+
+  For the Rosenbrock function, \(f^* = f(a,a^2) = f(1,1) = 0\). Let's make sure this is the case for us too!
+
+  \bigskip\pause
+
+  To create a test, we can use \lstinline[basicstyle=\ttfamily]{usethis::use_test()}.
+
+  \bigskip\pause
+
+  Call \lstinline[basicstyle=\ttfamily]{use_test("objective")}\footnote<3->{It's good practice to name the test file the same as the file where the function you're testing is defined.} and insert this:
+  \begin{lstlisting}
+    test_that("multiplication works", {
+      # add a test using expect_equal()
+    })
+  \end{lstlisting}
+
+  \medskip\pause
+
+  \begin{block}{Check That Everything Works}
+    Run \lstinline[basicstyle=\ttfamily]{devtools::test()}, and hopefully see:
+
+    \medskip
+
+    \begin{lstlisting}
+      [ FAIL 0 | WARN 0 | SKIP 0 | PASS 1 ]
+    \end{lstlisting}
+  \end{block}
+\end{frame}
+
+\begin{frame}[c]
+  \frametitle{Checking}
+  \begin{block}{\texttt{R CMD check}}
+    R contains functionality for checking that your package is built correctly and you can
+    access this functionality through \lstinline{devtools::check()}.
+  \end{block}
+
+  \bigskip\pause
+
+  No requirement that your package needs to pass these checks (if you're using it as a project), but it's
+  good practice to make sure it does.
+
+  \bigskip\pause
+
+  \begin{description}[<+->]
+    \item[ERROR] Major problem with your package
+    \item[WARNING] Something that is most likely not great but not critical
+    \item[NOTE] Typically small issues with your package
+  \end{description}
+
+  \bigskip\pause
+
+  Now run \lstinline{devtools::check()}. Is there a problem? Yes, let's fix it!
+
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{Metadata}
+
+  The metadata for your package lives in \texttt{DESCRIPTION}. Right now it looks like this:
+  \begin{lstlisting}[basicstyle=\ttfamily\small]
+    Package: rosenbrock
+    Title: What the Package Does (One Line, Title Case)
+    Version: 0.0.0.9000
+    Authors@R:
+        person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+               comment = c(ORCID = "YOUR-ORCID-ID"))
+    Description: What the package does (one paragraph).
+    License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+        license
+    Encoding: UTF-8
+    Roxygen: list(markdown = TRUE)
+    RoxygenNote: 7.3.2
+  \end{lstlisting}
+
+  \pause\bigskip
+
+  For now we'll leave most of these files alone, but let's
+  fix one thing: the license
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{Licensing}
+
+  \begin{block}{Why Do You Need a License?}
+    \begin{itemize}[<+->]
+      \item Licensing software tells other people about how they are allowed to reuse your
+            code.
+      \item If you do not provide a license, this generally means that \alert{nobody is allowed to copy,
+              distribute, or modify your code.}
+
+      \item If you have other contributors, then ``nobody'' includes \alert{you too!}
+    \end{itemize}
+
+  \end{block}
+
+  \pause
+
+  \begin{block}{Choosing a License}
+    So we need to pick a license: for now we'll pick the MIT license.\footnote<5->{Read more about picking a license at \url{https://choosealicense.com}.}
+
+    \medskip\pause
+
+    \begin{lstlisting}
+      usethis::use_mit_license()
+    \end{lstlisting}
+
+    \medskip
+
+    This will add new files to your package: \texttt{LICENSE}, \texttt{LICENSE.md}, and
+    modify \texttt{DESCRIPTION}, in which you should see:
+
+    \begin{lstlisting}
+      License: MIT + file LICENSE
+    \end{lstlisting}
+  \end{block}
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{Dependencies}
+
+  In R packages, you make dependencies explicit, defined in \texttt{DESCRIPTION}
+
+  \medskip\pause
+
+  \begin{block}{Gradient}
+    Let's say that we want to compute the gradient for the Rosenbrock function.
+
+    \medskip\pause
+
+    One way to do so is to use numerical differentiation through the \textbf{numDeriv} package:
+
+    \begin{lstlisting}
+      gradient <- function(x, a = 1, b = 100) {
+        numDeriv::grad(objective, x, a = a, b = b)
+      }
+    \end{lstlisting}
+  \end{block}
+
+  Now our package depends on \textbf{numDeriv}, so we need to add it
+  to \texttt{DESCRIPTION}:
+  \begin{lstlisting}
+    usethis::use_package("numDeriv")
+  \end{lstlisting}
+
+  \medskip\pause
+
+  In \texttt{DESCRIPTION}, you should now see this:
+
+  \begin{lstlisting}
+    Imports: 
+      numDeriv
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{Rcpp}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+
+      Rcpp works best in a package:
+      \begin{itemize}
+        \item No more manual sourcing (no need to call \lstinline{Rcpp::sourceCpp()})
+        \item You don't need to add directives for dependencies to \textbf{RcppArmadillo} and other
+              packages.
+      \end{itemize}
+
+      \pause\medskip
+
+      We will rely on \textbf{roxygen2}. First, call
+      \begin{lstlisting}
+        usethis::use_package_doc()
+      \end{lstlisting}
+      to set up a package doc file in \texttt{R/rosenbrock-package.R}.
+    \end{column}
+
+    \pause
+
+    \begin{column}{0.42\textwidth}
+      Then use \lstinline{usethis::use_rcpp()} to put the pieces in place:
+
+      \medskip
+
+      \dirtree{%
+        .1 rosenbrock/.
+        .2 src/.
+        .3 slop-package.cpp/.
+      }
+
+      \medskip\pause
+
+      Now just need to run \texttt{devtools::document()} and
+      \lstinline{devtools::load_all()} or \lstinline{devtools::install()}
+      and no your code is available (but not exported).
+
+      \medskip\pause
+
+      To export, easiest is to write an R wrapper.
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+\begin{frame}[c]
+  \frametitle{Documentation}
+
+  Writing documentation is useful for others who want to use your code as well as for your future self.
+
+  \medskip\pause
+
+  Many aspects of documentation
+  \begin{itemize}
+    \item Comments in code
+    \item Manual (help files)
+    \item Long-form articles (vignettes)
+  \end{itemize}
+
+  \medskip\pause
+
+  For the manual part, you can use \textbf{roxygen2} (it's main purpose).
+
+\end{frame}
+
+\begin{frame}[c]
+  \begin{figure}[htpb]
+    \centering
+    \frame{\includegraphics[width=0.8\textwidth]{images/pkgs-workflow.png}}
+    \caption{%
+      The whole game
+    }
+  \end{figure}
+\end{frame}
+
+\begin{frame}[c]
+  \frametitle{Exercise: Optimize the Rosenbrock Function}
+
+  Write a gradient descent (or stochastic gradient descent) that
+  minimizes the rosenbrock function.
+
+  \medskip\pause
+
+  Write the code in Rcpp. If you want, you can first write it in R to
+  see that everything is working, and then port it.
+
+  \medskip\pause
+
+  Feel free to use generative AI to write the code.
+
+  \medskip\pause
+
+  Export everything and document the package.
+\end{frame}
+
+\begin{frame}[c]
+  \frametitle{What We Didn't Cover}
+
+  \begin{itemize}[<+->]
+    \item Version control through git and github
+    \item Metadata
+    \item Publishing to CRAN
+  \end{itemize}
+
+\end{frame}
+
+\section{Oral Examination Prep}
+
+\begin{frame}[c]
+  \frametitle{The Five Points}
+
+  Remember the five points:
+  \begin{itemize}
+    \item How can you test that your implementation is correct?
+    \item Can you implement alternative solutions?
+    \item Can the code be restructured e.g. by modularization, abstraction or object oriented programming to improve generality, extendability and readability?
+    \item How does the implementation perform (benchmarking)?
+    \item Where are the bottlenecks (profiling), and what can you do about them?
+  \end{itemize}
+
+
+\end{frame}
+
+\section{Course Summary}
+
+\begin{frame}[c]
+  \frametitle{Course Summary}
+
+  \begin{block}{Statistical Topics}
+    \begin{description}[<+->][Optimization]
+      \item[Smoothing] Kernel density smoothing and splines (topic 1)
+      \item[Simulation] MC methods: rejection and importance sampling (topic 2)
+      \item[Optimization] The EM algorithm (topic 3), gradient descent and stochastic optimization (topic 4)
+    \end{description}
+  \end{block}
+
+  \pause
+
+  \begin{block}{Computational Topics}
+    \begin{itemize}
+      \item Debugging
+      \item Profiling
+      \item Benchmarking
+      \item Debugging
+      \item Writing performant code
+    \end{itemize}
+  \end{block}
 \end{frame}
 
 \appendix

@@ -1,0 +1,80 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global}
+    \entry{wickhamPackagesOrganizeTest2023}{book}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=1d0f6977ce2d043e298a59a1cd75b7ef}{%
+           family={Wickham},
+           familyi={W\bibinitperiod},
+           given={Hadley},
+           giveni={H\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=0f88b724c9f070dbceda00a5027d25bb}{%
+           family={Bryan},
+           familyi={B\bibinitperiod},
+           given={Jennifer},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{location}{1}{%
+        {Beijing}%
+      }
+      \list{publisher}{1}{%
+        {O'Reilly Media}%
+      }
+      \strng{namehash}{0502df7548147d8c367ca426bcfaecd3}
+      \strng{fullhash}{0502df7548147d8c367ca426bcfaecd3}
+      \strng{bibnamehash}{0502df7548147d8c367ca426bcfaecd3}
+      \strng{authorbibnamehash}{0502df7548147d8c367ca426bcfaecd3}
+      \strng{authornamehash}{0502df7548147d8c367ca426bcfaecd3}
+      \strng{authorfullhash}{0502df7548147d8c367ca426bcfaecd3}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{Turn your R code into packages that others can easily install and use. With this fully updated edition, developers and data scientists will learn how to bundle reusable R functions, sample data, and documentation together by applying the package development philosophy used by the team that maintains the "tidyverse" suite of packages. In the process, you'll learn how to automate common development tasks using a set of R packages, including devtools, usethis, testthat, and roxygen2. Authors Hadley Wickham and Jennifer Bryan from Posit (formerly known as RStudio) help you create packages quickly, then teach you how to get better over time. You'll be able to focus on what you want your package to do as you progressively develop greater mastery of the structure of a package. With this book, you will: Learn the key components of an R package, including code, documentation, and tests Streamline your development process with devtools and the RStudio IDE Get tips on effective habits such as organizing functions into files Get caught up on important new features in the devtools ecosystem Learn about the art and science of unit testing, using features in the third edition of testthat Turn your existing documentation into a beautiful and user friendly website with pkgdown Gain an appreciation of the benefits of modern code hosting platforms, such as GitHub}
+      \field{day}{25}
+      \field{edition}{2}
+      \field{isbn}{978-1-09-813494-5}
+      \field{langid}{english}
+      \field{month}{7}
+      \field{pagetotal}{381}
+      \field{shorttitle}{R {{Packages}}}
+      \field{title}{R Packages: Organize, Test, Document, and Share Your Code}
+      \field{urlday}{22}
+      \field{urlmonth}{10}
+      \field{urlyear}{2024}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://r-pkgs.org/
+      \endverb
+      \verb{url}
+      \verb https://r-pkgs.org/
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
