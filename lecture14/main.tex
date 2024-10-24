@@ -16,13 +16,14 @@
   autogobble,
   language=R,
   showspaces=false,
-  morekeywords={TRUE, FALSE},
+  showstringspaces=false,
   showtabs=false,
+  morekeywords={TRUE,FALSE},
   breaklines=true,
   tabsize=2,
   keywordstyle=\color{SteelBlue4},
   stringstyle=\color{RedViolet},
-  deletekeywords={data,frame,length,as,character},
+  deletekeywords={data,frame,length,as,character,package,license,Version,or,install,load,all,packages,create},
   basicstyle=\ttfamily
 }
 
@@ -634,7 +635,7 @@
 
       Now just need to run \texttt{devtools::document()} and
       \lstinline{devtools::load_all()} or \lstinline{devtools::install()}
-      and no your code is available (but not exported).
+      and now your code is available (but not exported).
     \end{column}
   \end{columns}
 
@@ -661,7 +662,7 @@
     \begin{column}{0.45\textwidth}
       \begin{block}{Direct Export}
         You can add roxygen2 comments in Rcpp code too:
-        \begin{lstlisting}
+        \begin{lstlisting}[language=C++]
           //' @export
           double my_fun_cpp() {...}
         \end{lstlisting}
