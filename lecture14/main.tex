@@ -89,21 +89,16 @@
 % \end{frame}
 %
 
-\begin{frame}[c]
-  \frametitle{Last Time}
-
-\end{frame}
+% \begin{frame}[c]
+%   \frametitle{Last Time}
+%
+% \end{frame}
 
 \begin{frame}[c]
   \frametitle{Today}
 
   \begin{block}{Distributing and Organizing Code}
-
-    \begin{itemize}
-      \item Reproducibility
-      \item R packages
-    \end{itemize}
-
+    Workshop in creating an R package
   \end{block}
 
   \pause
@@ -114,7 +109,7 @@
 
   \pause
 
-  \begin{block}{Oral Examination Prep}
+  \begin{block}{Oral Examination Prep (Afternoon Session)}
     What to think of during examination
   \end{block}
 \end{frame}
@@ -136,19 +131,19 @@
         \end{itemize}
       \end{block}
 
-      There is a plethora of ways to organize this. Which one to choose?
+      There are many ways to organize this. Which one to choose?
     \end{column}
 
     \pause
 
     \begin{column}{0.45\textwidth}
       \begin{block}{R Package}
-        One way is to make an R package, which helps in many ways:
+        One way is to make an R package, makes it easy to
         \begin{itemize}
-          \item Easy to connect to C++ code through Rcpp.
-          \item Built-in support for automatic testing
-          \item Documentation
-          \item Declare dependencies (other packages, R version)
+          \item connect to C++ code through Rcpp,
+          \item set up automatic testing,
+          \item document your code, and
+          \item declare dependencies (other packages, R version).
         \end{itemize}
       \end{block}
     \end{column}
@@ -220,10 +215,11 @@
   \begin{block}{What We Will Learn}
     \begin{itemize}[<+->]
       \item Adding R functions to our package
-      \item Interfacing with Rcpp
       \item Testing our code
+      \item Interfacing with Rcpp
       \item Adding dependencies to other packages
       \item Licensing our package
+      \item Documenting the code
     \end{itemize}
   \end{block}
 \end{frame}
@@ -242,7 +238,7 @@
 
   \begin{columns}[T]
     \begin{column}{0.45\textwidth}
-      This gives you a \alert{minimal} package:
+      Gives you a \alert{minimal} package:
 
       \medskip
 
@@ -276,10 +272,6 @@
     \end{column}
   \end{columns}
 
-\end{frame}
-
-\begin{frame}[standout]
-  Thank you!
 \end{frame}
 
 \begin{frame}[c,fragile]
@@ -643,39 +635,120 @@
       Now just need to run \texttt{devtools::document()} and
       \lstinline{devtools::load_all()} or \lstinline{devtools::install()}
       and no your code is available (but not exported).
-
-      \medskip\pause
-
-      To export, easiest is to write an R wrapper.
     \end{column}
   \end{columns}
 
 \end{frame}
 
+\begin{frame}[c,fragile]
+  \frametitle{Exporting Rcpp Code}
+  \begin{columns}[T]
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Wrapping}
+        Call your Rcpp function through an R wrapper:
+        \begin{lstlisting}
+          my_fun <- function(x) {
+            my_fun_cpp(x)
+          }
+        \end{lstlisting}
+
+        \pause
+
+        Typically easier because checking input and preparing output is
+        easier on the R side.
+      \end{block}
+    \end{column}\pause
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Direct Export}
+        You can add roxygen2 comments in Rcpp code too:
+        \begin{lstlisting}
+          //' @export
+          double my_fun_cpp() {...}
+        \end{lstlisting}
+
+        \pause
+
+        Saves you having to write and maintain an R function.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 \begin{frame}[c]
   \frametitle{Documentation}
 
-  Writing documentation is useful for others who want to use your code as well as for your future self.
+  \begin{columns}[T]
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Why?}
+        Because
+        \begin{itemize}[<+->]
+          \item you make your code accessible to others,
+          \item it makes you think an extra time about what your function is doing, and
+          \item your future self will thank you.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \medskip\pause
 
-  \medskip\pause
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Types}
+        \begin{itemize}
+          \item Comments in code
+          \item Manual (help files)
+          \item Long-form articles (vignettes)
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
 
-  Many aspects of documentation
+  \begin{block}{roxygen2}
+    Primary purpose of the package. You write code is a special syntax
+    and it converts it into manual files that R understands.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[c,fragile]
+  \frametitle{roxygen2 Syntax}
+  \begin{lstlisting}
+    #' Function Title
+    #' 
+    #' Here you describe what the function does, possibly 
+    #' using several lines.
+    #' 
+    #' @param x Explanation of argument x
+    #'
+    #' @return Explanation of what the function returns
+    #'
+    #' @export
+    my_fun <- function(x) {
+      ...
+    }
+  \end{lstlisting}
+
+  \pause
+
+  \begin{block}{Your Turn}
+    Document \lstinline{objective()} with roxygen2 syntax. No need for
+    sensible documentation. Just make sure you have the bare minimum.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[c]
+  \frametitle{Documentation in This Course}
+
   \begin{itemize}
-    \item Comments in code
-    \item Manual (help files)
-    \item Long-form articles (vignettes)
+    \item Not making a package for CRAN, so lower standards.
+    \item You don't need to document to benefit from building a package.
+    \item But it's not a bad idea to do so anyway!
   \end{itemize}
-
-  \medskip\pause
-
-  For the manual part, you can use \textbf{roxygen2} (it's main purpose).
-
 \end{frame}
 
 \begin{frame}[c]
   \begin{figure}[htpb]
     \centering
-    \frame{\includegraphics[width=0.8\textwidth]{images/pkgs-workflow.png}}
+    \includegraphics[width=0.9\textwidth]{images/pkgs-workflow.png}
     \caption{%
       The whole game
     }
@@ -683,23 +756,52 @@
 \end{frame}
 
 \begin{frame}[c]
-  \frametitle{Exercise: Optimize the Rosenbrock Function}
+  \frametitle{Projects}
 
-  Write a gradient descent (or stochastic gradient descent) that
-  minimizes the rosenbrock function.
+  When you have a project, you typically need more things:
+  \begin{itemize}
+    \item scripts with simulations, etc, which produce output
+    \item datasets stored in different formats
+    \item notebooks (or latex sources)
+  \end{itemize}
 
-  \medskip\pause
+  These things do not naturally fit into a package framework.
 
-  Write the code in Rcpp. If you want, you can first write it in R to
-  see that everything is working, and then port it.
+  \pause
 
-  \medskip\pause
+  \begin{block}{Two Choies of Structure}
+    \begin{enumerate}[<+->]
+      \item Just store these things directly into the package folder. Optionally, you can use \texttt{.Rbuildignore}
+            to ignore these files when building the package.
+      \item Put your \textbf{package} into a \alert{subdirectory} of your project. This cleanly separates
+            the part of your project that contains reusable code (the package) and the
+            part that is experiments and reports. But a little trickier to setup.
+    \end{enumerate}
 
-  Feel free to use generative AI to write the code.
+  \end{block}
 
-  \medskip\pause
+\end{frame}
 
-  Export everything and document the package.
+\begin{frame}[c]
+  \frametitle{Exercise: Two Options}
+
+  \begin{block}{Rosenbrock}
+    Continue building the \textbf{rosenbrock} package:
+    \begin{itemize}[<+->]
+      \item Write a gradient descent (or stochastic gradient descent) implementation that
+            minimizes the rosenbrock function.
+      \item Write the code in Rcpp. If you want, you can first write it in R to
+            see that everything is working, and then port it.
+      \item Feel free to use generative AI to write the code.
+      \item Export everything and document the package.
+    \end{itemize}
+  \end{block}
+
+  \pause
+
+  \begin{block}{An Assignment}
+    Start trying to convert your work for one assignment into a package
+  \end{block}
 \end{frame}
 
 \begin{frame}[c]
@@ -707,8 +809,10 @@
 
   \begin{itemize}[<+->]
     \item Version control through git and github
-    \item Metadata
+    \item How to properly format metadata (\texttt{DESCRIPTION})
+    \item Integrating data into our package
     \item Publishing to CRAN
+    \item Principled approaches to reproducibility (renv, containers)
   \end{itemize}
 
 \end{frame}
@@ -716,17 +820,80 @@
 \section{Oral Examination Prep}
 
 \begin{frame}[c]
+  \frametitle{Procedure}
+  \begin{enumerate}[<+->]
+    \item After entering the room you will connect the computer and check that
+          it works with the projector.
+    \item When all technical issues are settled,
+          you will draw the assignment and find the presentation on the computer.
+    \item Time starts and you have 15 min for the presentation. The examiners
+          may ask questions if something needs to be clarified.
+    \item After 15 min
+          your presentation will be stopped, and the examiners will ask questions
+          related to the assignment as well as to the general content of the
+          course.
+    \item After at most 25 min the exam ends, and after assessment
+          you will be given a grade.
+  \end{enumerate}
+
+  \pause
+
+  \begin{block}{Examiners}
+    Me and Jonas Gyde Hermansen
+
+    \medskip
+
+    It's possible that Niels will show up during one or two of the examinations.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[c]
   \frametitle{The Five Points}
 
-  Remember the five points:
-  \begin{itemize}
-    \item How can you test that your implementation is correct?
-    \item Can you implement alternative solutions?
-    \item Can the code be restructured e.g. by modularization, abstraction or object oriented programming to improve generality, extendability and readability?
-    \item How does the implementation perform (benchmarking)?
-    \item Where are the bottlenecks (profiling), and what can you do about them?
-  \end{itemize}
+  \begin{block}{Remember the Five Points}
+    \begin{itemize}[<+->]
+      \item How can you test that your implementation is correct?
+      \item Can you implement alternative solutions?
+      \item Can the code be restructured e.g. by modularization, abstraction or object oriented programming to improve generality, extendability and readability?
+      \item How does the implementation perform (benchmarking)?
+      \item Where are the bottlenecks (profiling), and what can you do about them?
+    \end{itemize}
+  \end{block}
+\end{frame}
 
+\begin{frame}[c]
+  \frametitle{Advice}
+
+  \begin{itemize}[<+->]
+    \item You \alert{only} have 15 minutes.
+    \item Focus on aspects of the problem you thought were interesting.
+    \item You aren't expected to have covered every aspect of the problem in depth.
+    \item Try to tell a story about what you tried, what didn't work, and why
+          you settled for a particular solution.
+    \item Use plots as much as possible
+    \item Good to include math and code, but avoid overwhelming us.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[c]
+  \frametitle{Evaluation Criteria}
+
+  \begin{block}{Knowledge}
+    Knowledge of fundamental algorithms for statistical computations and R packages that implement some of these algorithms or are useful for developing novel implementations.
+  \end{block}
+
+  \pause
+  \begin{block}{Skills}
+    Ability to implement, test, debug, benchmark, profile and optimize statistical software.
+  \end{block}
+
+  \pause
+
+  \begin{block}{Competence}
+    Ability to select appropriate numerical algorithms for statistical computations and
+    evaluate implementations in terms of correctness, robustness, accuracy and memory and speed efficiency.
+  \end{block}
 
 \end{frame}
 
@@ -756,7 +923,11 @@
   \end{block}
 \end{frame}
 
-\appendix
+\begin{frame}[standout]
+  Thank you (for real this time)!
+\end{frame}
+
+% \appendix
 
 % \begin{frame}[allowframebreaks]{References}
 %   \printbibliography[heading=none]
