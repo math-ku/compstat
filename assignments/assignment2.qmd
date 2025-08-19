@@ -1,10 +1,5 @@
 ---
-title: 'Assignment Topic 2: Univariate Simulation'
-author: "Johan Larsson, Niels Richard Hansen"
-date: "`r format(Sys.time(), '%-d %B, %Y')`"
-output:
-  html_document:
-    highlight: pygments
+title: 'Assignment 2: Univariate Simulation'
 ---
 
 The second assignment topic is univariate simulation.
@@ -71,4 +66,3 @@ for suitable $\theta$. Is there an optimal choice of $\theta$?
 
 *Note that you should consider number of samples as well as run time
 to discuss what "optimal" means.*
-

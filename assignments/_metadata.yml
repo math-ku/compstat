@@ -1,0 +1,10 @@
+author:
+  - Johan Larsson
+  - Niels Richard Hansen
+
+subtitle: Computational Statistics
+date: today
+
+output:
+  html_document:
+    highlight: pygments

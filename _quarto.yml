@@ -1,0 +1,15 @@
+project:
+  type: website
+  render:
+    - "*.qmd"
+
+website:
+  title: "Computational Statistics"
+
+format:
+  html:
+    toc: true
+
+date-format: long
+
+bibliography: assets/bibliography.bib

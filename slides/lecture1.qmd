@@ -1,0 +1,74 @@
+---
+title: "Lecture 1: Introduction"
+---
+
+```{r}
+load(here::here("data", "top100dih.RData"))
+phipsi2 <- na.omit(dataset)
+phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
+phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
+
+library(ggplot2)
+
+theme_set(theme_grey(base_size = 9))
+```
+
+## What is Computational Statistics?
+
+:::: {.columns}
+
+::: {.column width="50%"}
+- Broad field that can mean different things depending on context.
+- One definitions is that it is the use of computational methods to solve statistical problems,
+  for instance
+  - simulation,
+  - optimization,
+  - numerical integration,
+  - data analysis, and
+  - visualization.
+
+:::
+
+::: {.column width="50%"}
+
+![Running examples: Amino Acid Angles](../images/PhiPsi_creative.jpg){width=70%}
+
+:::
+
+::::
+
+---
+
+## Histograms
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+```{r hist1}
+hist(
+  phipsi$phi,
+  prob = TRUE,
+  xlab = expression(phi),
+  main = NULL
+)
+rug(phipsi$phi)
+```
+
+:::
+
+::: {.column width="50%"}
+
+```{r hist2}
+hist(
+  phipsi$psi,
+  prob = TRUE,
+  xlab = expression(psi),
+  main = NULL
+)
+rug(phipsi$psi)
+```
+
+:::
+
+::::

@@ -1,0 +1,31 @@
+---
+title: Computational Statistics
+---
+
+This is the resources web site for the Computational Statistics
+course. This is where all the slides are hosted, as well as
+the assignments, and data.
+
+This is not meant to be the main interface to the course, which is
+hosted on Absalon
+
+## Slides
+
+- [Lecture 1](slides/lecture1.pdf)
+
+## Exercises
+
+Here is a list of all the exercises for the exercise sessions.
+
+## Assignments
+
+- [Assignment 1](assignments/assignment1.html)
+- [Assignment 2](assignments/assignment2.html)
+- [Assignment 3](assignments/assignment3.html)
+- [Assignment 4](assignments/assignment4.html)
+
+## Data
+
+These are links to data files used in the course.
+
+- [Poisson Data](data/poisson.csv)

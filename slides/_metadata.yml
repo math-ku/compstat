@@ -1,0 +1,26 @@
+author: Johan Larsson
+subtitle: Computational Statistics
+date: today
+
+titlegraphic: ../images/ucph-horizontal-left.pdf
+titlegraphicoptions: right
+
+pdf-engine: lualatex
+
+format:
+  beamer:
+    aspectratio: 169
+    incremental: true
+    theme: moloch
+    colortheme: moloch-tomorrow
+    fig-width: 2.6
+    fig-height: 2
+
+knitr:
+  opts_chunk:
+    dev.args:
+      pdf:
+        pointsize: 8
+
+header-includes:
+  - \usepackage[export]{adjustbox}

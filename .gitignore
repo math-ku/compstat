@@ -55,8 +55,6 @@ _site/
 *_cache
 *_files
 
-assignments/
-
 # nix -----------------------------------------------
 
 # Ignore build outputs from performing a nix-build or `nix build` command
@@ -65,3 +63,5 @@ result-*
 
 # Ignore direnv folder
 .direnv/
+
+/.quarto/
