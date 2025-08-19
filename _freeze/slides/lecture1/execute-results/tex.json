@@ -1,0 +1,17 @@
+{
+  "hash": "791d714839079c3975146a9531db24b6",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Lecture 1: Introduction\"\n---\n\n\n::: {.cell}\n\n:::\n\n\n## What is Computational Statistics?\n\n:::: {.columns}\n\n::: {.column width=\"50%\"}\n- Broad field that can mean different things depending on context.\n- One definitions is that it is the use of computational methods to solve statistical problems,\n  for instance\n  - simulation,\n  - optimization,\n  - numerical integration,\n  - data analysis, and\n  - visualization.\n\n:::\n\n::: {.column width=\"50%\"}\n\n![Running examples: Amino Acid Angles](../images/PhiPsi_creative.jpg){width=70%}\n\n:::\n\n::::\n\n---\n\n## Histograms\n\n:::: {.columns}\n\n::: {.column width=\"50%\"}\n\n\n::: {.cell}\n::: {.cell-output-display}\n![](lecture1_files/figure-beamer/hist1-1.pdf)\n:::\n:::\n\n\n:::\n\n::: {.column width=\"50%\"}\n\n\n::: {.cell}\n::: {.cell-output-display}\n![](lecture1_files/figure-beamer/hist2-1.pdf)\n:::\n:::\n\n\n:::\n\n::::\n",
+    "supporting": [
+      "lecture1_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": null,
+    "postProcess": false
+  }
+}

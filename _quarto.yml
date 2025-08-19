@@ -13,4 +13,7 @@ format:
 
 date-format: long
 
+execute:
+  freeze: auto
+
 bibliography: assets/bibliography.bib
