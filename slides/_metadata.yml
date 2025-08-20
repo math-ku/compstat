@@ -24,4 +24,4 @@ knitr:
   opts_chunk:
     dev.args:
       pdf:
-        pointsize: 8
+        pointsize: 9
