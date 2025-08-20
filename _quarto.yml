@@ -6,6 +6,8 @@ project:
 
 website:
   title: "Computational Statistics"
+  description: |
+    Resources page for the Computational Statistics course
 
 format:
   html:
