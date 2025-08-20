@@ -15,6 +15,9 @@ format:
     colortheme: moloch-tomorrow
     fig-width: 2.6
     fig-height: 2
+    colorlinks: true
+    linkcolor: black
+    urlcolor: DodgerBlue3
     highlight-style: tango
     include-in-header:
       text: |
