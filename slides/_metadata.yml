@@ -19,6 +19,7 @@ format:
     linkcolor: black
     urlcolor: DodgerBlue3
     highlight-style: tango
+    indent: true
     include-in-header:
       text: |
         \usepackage[export]{adjustbox}
