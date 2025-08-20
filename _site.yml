@@ -1,9 +1,0 @@
-output:
-  xaringan::moon_reader:
-    css: ["default", "css/styles.css"]
-    nature:
-      highlightStyle: github
-      highlightLines: true
-      titleSlideClass: [middle, center]
-      ratio: "16:10"
-      countIncrementalSlides: false
