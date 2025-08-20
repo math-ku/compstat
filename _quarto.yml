@@ -16,6 +16,7 @@ website:
 format:
   html:
     toc: true
+    theme: cosmo
     html-math-method: katex
 
 date-format: long
