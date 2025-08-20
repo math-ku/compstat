@@ -9,7 +9,7 @@ pdf-engine: lualatex
 
 format:
   beamer:
-    aspectratio: 169
+    aspectratio: 1610
     incremental: true
     theme: moloch
     colortheme: moloch-tomorrow
