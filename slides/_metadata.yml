@@ -16,12 +16,12 @@ format:
     fig-width: 2.6
     fig-height: 2
     highlight-style: tango
+    include-in-header:
+      text: |
+        \usepackage[export]{adjustbox}
 
 knitr:
   opts_chunk:
     dev.args:
       pdf:
         pointsize: 8
-
-header-includes:
-  - \usepackage[export]{adjustbox}
