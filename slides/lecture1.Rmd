@@ -347,6 +347,7 @@ But you **do not** need to be an experienced programmer.
 
 
 ---
+
 ## Warm-Up Exercises
 
 ### Exercise 1
@@ -551,7 +552,8 @@ testthat::test_dir("tests")
 ```{r}
 count_zeros <- function(x) {
   n_zeros <- 0
-  for (i in seq_along(x)) { #<<
+  for (i in seq_along(x)) {
+    #<<
     if (x[i] == 0) {
       n_zeros <- n_zeros + 1
     }
@@ -775,7 +777,8 @@ kern_dens <- function(x, h, m = 512) {
   y <- numeric(m)
 
   for (i in seq_along(xx)) {
-    for (j in seq_along(x)) { #<<
+    for (j in seq_along(x)) {
+      #<<
       y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2)) #<<
     } #<<
   }
