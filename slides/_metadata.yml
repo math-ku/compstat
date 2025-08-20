@@ -25,6 +25,7 @@ format:
     include-in-header:
       text: |
         \usepackage[export]{adjustbox}
+        \setbeamertemplate{page number in head/foot}[appendixframenumber]
 
 knitr:
   opts_chunk:
