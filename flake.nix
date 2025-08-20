@@ -59,6 +59,7 @@
             pkgs.bashInteractive
             R
             pkgs.quartoMinimal
+            pkgs.go-task
           ];
         };
       }
