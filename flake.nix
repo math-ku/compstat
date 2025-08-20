@@ -50,6 +50,9 @@
             animate
             here
             dqrng
+            usethis
+            devtools
+            testthat
           ];
         };
       in
