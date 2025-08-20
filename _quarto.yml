@@ -10,6 +10,7 @@ website:
     Resources page for the Computational Statistics course
   site-url: "https://math-ku.github.io/compstat/"
   repo-url: "https://github.com/math-ku/compstat"
+  repo-actions: [edit, issue]
 
 format:
   html:
