@@ -8,6 +8,7 @@ website:
   title: "Computational Statistics"
   description: |
     Resources page for the Computational Statistics course
+  site-url: "https://math-ku.github.io/compstat/"
 
 format:
   html:
