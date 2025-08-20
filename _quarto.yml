@@ -11,6 +11,7 @@ website:
   site-url: "https://math-ku.github.io/compstat/"
   repo-url: "https://github.com/math-ku/compstat"
   repo-actions: [edit, issue]
+  search: true
 
 format:
   html:
