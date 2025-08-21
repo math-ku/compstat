@@ -1,0 +1,886 @@
+---
+title: "Random Number Generation and Rejection Sampling"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(profvis)
+
+knitr::read_chunk(here::here("R", "vMSim.R"))
+
+source(here::here("R/vMSim.R"), keep.source = TRUE)
+
+theme_set(theme_grey(base_size = 16))
+```
+
+## Questions from Last Time
+
+### Rule of Thumb Bandwidth for Non-Gaussian Kernels
+
+- Depends on kernel $K$ and reference distribution $\tilde{f}$ (plugin for $f$):
+  $$\mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}$$
+- R's `density()` uses Silverman's rule of thumb and adapts to kernel but
+  **not** reference distribution.
+
+. . .
+
+### Alternative Loss Functions for Smoothing Splines
+
+- Definitely several alternatives
+- L1 loss for data-fitting term exists.
+- Not sure about L1 loss on penalty term. Should work but not sure what the
+  optimal spline would look like.
+
+## Today
+
+### Pseudo-Random Numbers
+
+- How do you simulate random numbers in R?
+
+. . .
+
+### Rejection Sampling
+
+- General and useful method for sampling from a target distribution
+
+## Pseudo-Random Numbers
+
+- Computers usually generate pseudo-random numbers
+- Not really random (are any numbers?), but have properties that make them
+  appear to be so
+- A research field in itself, see `?RNG` in R for available algorithms
+
+. . .
+
+### Mersenne Twister
+
+- Default in R
+- Generates integers in the range $$\{0, 1, \ldots, 2^{32} -1\}.$$
+- Long period; all combinations of consecutive integers up to dimension 623
+  occur equally often in a period.
+
+. . .
+
+Pseudo-random numbers in $(0, 1)$ are returned by `runif()` by division with
+$2^{32}$ and a fix to prevent the algorithm from returning 0.
+
+## Transformation Methods
+
+If $T : \mathcal{Z} \to \mathbb{R}$ is a map and $Z \in \mathcal{Z}$ is a random
+variable we can sample, then we can sample $X = T(Z).$ --
+
+. . .
+
+### Inversion Sampling
+
+If $F^{-1} : (0,1) \mapsto \mathbb{R}$ is the generalized inverse of a
+distribution function and $U$ is uniformly distributed on $(0, 1)$ then
+$$F^{-1}(U)$$ has distribution function $F$.
+
+. . .
+
+Computing quantile function easy for discrete distriutions but hard for
+continuous ones.
+
+## Gaussian Random Variables
+
+### [Box–Muller](https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform)
+
+A transformation of two independent uniforms into two independent Gaussian
+random variables (polar coordinates).
+
+. . .
+
+### [Inversion](https://en.wikipedia.org/wiki/Inverse_transform_sampling)
+
+$X = \Phi^{-1}(U)$ where $\Phi$ is the distribution function for the Gaussian
+distribution.
+
+. . .
+
+### [Rejection Sampling](https://cswr.nrhstat.org/4-3-reject-samp.html)
+
+See
+[Exercise 5.1 in CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex)
+or the [Ziggurat algorithm](https://en.wikipedia.org/wiki/Ziggurat_algorithm).
+
+. . .
+
+```{r rng-kind}
+RNGkind()
+```
+
+### Computing $\Phi^{-1}$
+
+Recall that
+$$\Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \mathrm{d} z$$
+
+. . .
+
+[This](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/snorm.c#L265),
+together with
+[this technical approximation](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52)
+of $\Phi^{-1}$. is how R generates samples from $\mathcal{N}(0,1)$.
+
+. . .
+
+The technical approximation is a rational function.
+
+## Sampling from a $t$-Distribution
+
+Let $Z = (Y, W) \in \mathbb{R} \times (0, \infty)$ with
+$Z \sim \mathcal{N}(0, 1)$ and $W \sim \chi^2_k$ independent.
+
+. . .
+
+Define $T : \mathbb{R} \times (0, \infty) \to \mathbb{R}$ by
+$$T(z,w) = \frac{z}{\sqrt{w/k}},$$ then
+$$X = T(Z, W) = \frac{Z}{\sqrt{W/k}} \sim t_k.$$ --
+
+This is how R simulates from a $t$-distribution with $W$ generated from a Gamma
+distribution with shape parameter $k / 2$ and scale parameter $2$.
+
+## Exercise
+
+### Step 1
+
+Use that $W = X_1^2 + \ldots + X_k^2 \sim  \chi^2_k$ for $X_1, \ldots, X_k$
+i.i.d. $\mathcal{N}(0, 1)$ to implement a function, `my_rchisq()`, such that
+`my_rchisq(n, k)` returns a sample of $n$ i.i.d. observations from $\chi^2_k$.
+
+```{r rchisq2-implementation, include = FALSE}
+my_rchisq <- function(n, k) {
+  y <- numeric(n)
+  for (i in seq_len(n)) {
+    x <- rnorm(k)
+    y[i] <- sum(x^2)
+  }
+  y
+}
+```
+
+```{r rchisq2-implementation-faster, include = FALSE}
+my_fast_rchisq <- function(n, k) {
+  x <- matrix(rnorm(k * n), k)
+  colSums(x)
+}
+```
+
+. . .
+
+### Step 2
+
+Make another function `my_other_rchisq()` that uses inverse sampling.
+
+```{r rchisq2, include = FALSE}
+my_other_rchisq <- function(n, k) {
+  x <- rnorm(n)
+  qchisq(x, k)
+}
+```
+
+. . .
+
+### Step 3
+
+Benchmark your implementations against one another and `rchisq()`.
+
+```{r rchisq-bench, include = FALSE}
+n <- 1e4
+k <- 5
+bench::mark(
+  rchisq(n, k),
+  my_rchisq(n, k),
+  my_fast_rchisq(n, k),
+  my_other_rchisq(n, k),
+  check = FALSE
+) |>
+  plot()
+```
+
+## Von Mises Distribution
+
+The density on $(-\pi, \pi]$ is
+$$f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x - \mu)}$$ for
+$\kappa > 0$ and $\mu \in (-\pi, \pi]$ parameters and $I_0$ is a modified Bessel
+function.
+
+. . .
+
+```{r vMsim}
+library(movMF)
+xy <- rmovMF(500, 0.5 * c(cos(-1.5), sin(-1.5)))
+
+# rmovMF represents samples as elements on the unit circle
+x <- acos(xy[, 1]) * sign(xy[, 2])
+```
+
+. . .
+
+Hard to compute quantile function!
+
+```{r vMhist, fig.height = 7, echo = FALSE, fig.cap = "Histogram of samples from rmovMF()", fig.width = 11}
+hist(x, breaks = seq(-pi, pi, length.out = 15), prob = TRUE, main = NULL, )
+rug(x)
+density(x, bw = "SJ", cut = 0) |> lines(col = "dark orange", lwd = 2)
+curve(
+  exp(0.5 * cos(x + 1.5)) / (2 * pi * besselI(0.5, 0)),
+  -pi,
+  pi,
+  col = "blue",
+  lwd = 2,
+  add = TRUE
+)
+legend(
+  "topright",
+  legend = c(expression(f(x)), "SJ kernel density estimate"),
+  col = c("blue", "dark orange"),
+  lwd = 2
+)
+```
+
+# Rejection Sampling
+
+## Rejection Sampling
+
+We want to sample from a target distribution $f(x)$ but have no readily
+available transform $T$ for our proposal $g(x)$.
+
+. . .
+
+Let $Y_1, Y_2, \ldots$ be i.i.d. with density $g$ on $\mathbb{R}$ and
+$U_1, U_2, \ldots$ be i.i.d. uniform and independent of $Y_i$ for all $i$.
+
+Define $$\sigma = \inf\{n \geq 1 \mid U_n \leq \alpha f(Y_n) / g(Y_n)\},$$ for
+$\alpha \in (0, 1]$, where $f$ is a density.
+
+. . .
+
+### Theorem
+
+If $\alpha f(y) \leq g(y)$ for all $y \in \mathbb{R}$ then the distribution of
+$Y_{\sigma}$ has density $f$.
+
+. . .
+
+$\alpha$ is the **acceptance probability** and $g(y)/\alpha$ the **envelope** of
+$f$.
+
+## Normalizing Constants
+
+If $f(y) = c q(y)$ and $g(y) = d p(y)$ for (unknown) normalizing constants
+$c, d > 0$ and $\alpha' q \leq p$ then <br> <br>
+$$\underbrace{\left(\frac{\alpha' d}{c}\right)}_{= \alpha} \ f \leq g.$$
+
+. . .
+
+Moreover,
+
+$$
+u > \frac{\alpha f(y)}{g(y)} \Leftrightarrow u > \frac{\alpha'
+q(y)}{p(y)},
+$$
+
+and rejection sampling can be implemented without computing $c$ or $d$.
+
+## Von Mises Rejection Sampling
+
+Rejection sampling using the uniform proposal, $g(y) \propto 1$
+
+. . .
+
+Since $$e^{\kappa(\cos(y) - 1)} = \alpha' e^{\kappa \cos(y)} \leq 1,$$ where
+$\alpha' = \exp(-\kappa)$ we reject if $$U > e^{\kappa(\cos(Y) - 1)}.$$
+
+## Von Mises Rejection Sampling
+
+```{r vmsim-slow}
+
+```
+
+## Von Mises Rejection Sampling
+
+```{r vMsim2}
+f <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
+x1 <- sample_vonmises_slow(100000, 0.5)
+x2 <- sample_vonmises_slow(100000, 2)
+```
+
+```{r vMsim2-figs, echo = FALSE, fig.width = 12, fig.height = 6}
+par(mfrow = c(1, 2))
+
+hist(x1, breaks = seq(-pi, pi, length.out = 20), prob = TRUE, main = NULL)
+curve(f(x, 0.5), -pi, pi, col = "blue", lwd = 2, add = TRUE)
+
+hist(x2, breaks = seq(-pi, pi, length.out = 20), prob = TRUE, main = NULL)
+curve(f(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
+
+par(mfrow = c(1, 1))
+```
+
+```{r profile-vsim}
+source(here::here("R/vMSim.R"), keep.source = TRUE)
+profvis(sample_vonmises_slow(10000, 5))
+```
+
+## Summary
+
+- Calling random number generators in R sequentially is relatively slow.
+- It is faster to generate all random numbers once and store them in a vector.
+- How to do that for rejection sampling with an unknown number of rejections?
+
+## Von Mises Rejection Sampling
+
+- $Y \sim \mathrm{unif}(-\pi, \pi)$ (proposal)
+- $U \sim \mathrm{unif}(0, 1)$
+- Accept if $U \leq e^{\kappa(\cos(Y) - 1)}$
+
+## Vectorized von Mises Simulation
+
+```{r vM-rejection-vec}
+fixed_vonmises_sampler <- function(m, kappa) {
+  y <- runif(m, -pi, pi)
+  u <- runif(m)
+  accept <- u <= exp(kappa * (cos(y) - 1))
+  y[accept]
+}
+```
+
+. . .
+
+- Simple and performant expression
+- But returns **random** number of samples
+- We need a function that returns exactly $n$ samples and
+- Problem is we don't know $\alpha$ in advanced
+
+### Function Factory for Rejection Sampling
+
+```{r new_rejection_sampler}
+
+```
+
+. . .
+
+```{r}
+sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
+```
+
+### Benchmarking
+
+```{r vmises-bench, fig.width = 9, fig.height = 4}
+bench::mark(
+  sample_vonmises(1e5, 5),
+  sample_vonmises_slow(1e5, 5),
+  check = FALSE
+) |>
+  plot()
+```
+
+## Gamma Distribution
+
+We want to sample from
+$$f_r(x) = \frac{1}{\Gamma(r)} x^{r - 1} e^{-x}, \qquad x > 0.$$
+
+Can we find a suitable envelope?
+
+. . .
+
+Perhaps, but here rejection sampling of a non-standard distribution will be used
+in combination with a simple transformation.
+
+. . .
+
+Let $t(y) = a(1 + by)^3$ for $y \in (-b^{-1}, \infty)$, then
+$t(Y) \sim \Gamma(r,1)$ if $Y$ has density
+$$f(y) \propto t(y)^{r-1}t'(y) e^{-t(y)} = e^{(r-1)\log t(y) + \log t'(y) - t(y)}.$$
+
+. . .
+
+The density $f$ will be the _target density_ for a rejection sampler.
+
+## Gamma Distribution
+
+With $$f(y) \propto e^{(r-1)\log t(y) + \log t'(y) - t(y)},$$ $a = r - 1/3$ and
+$b = 1/(3 \sqrt{a})$
+$$f(y) \propto e^{a \log t(y)/a - t(y) + a \log a} \propto \underbrace{e^{a \log t(y)/a - t(y) + a}}_{q(y)}.$$
+--
+
+An analysis of $w(y) := - y^2/2 - \log q(y)$ shows that it is convex on
+$(-b^{-1}, \infty)$ and it attains its minimum in 0 with $w(0) = 0$, whence
+$$q(y) \leq e^{-y^2/2}.$$
+
+### Gamma Rejection Sampling
+
+- $Y \sim \mathcal{N}(0,1)$ (proposal)
+- $U \sim \mathrm{unif}(0, 1)$
+- Accept if $U \leq q(Y) e^{Y^2/2}$
+- If accept, return $t(Y)$
+
+### Implementation
+
+```{r}
+tfun <- function(y, a) {
+  b <- 1 / (3 * sqrt(a))
+  (y > -1 / b) * a * (1 + b * y)^3 # 0 when y <= -1/b
+}
+```
+
+. . .
+
+```{r}
+qfun <- function(y, r) {
+  a <- r - 1 / 3
+  tval <- tfun(y, a)
+  exp(a * log(tval / a) - tval + a)
+}
+```
+
+. . .
+
+```{r}
+fixed_gamma_sampler <- function(m, r) {
+  y <- rnorm(m)
+  u <- runif(m)
+  accept <- u <= qfun(y, r) * exp(y^2 / 2)
+  tfun(y[accept], r - 1 / 3)
+}
+```
+
+--
+
+```{r}
+sample_gamma <- new_rejection_sampler(fixed_gamma_sampler)
+```
+
+### Gamma Rejection Sampler Tests
+
+```{r}
+tmp <- sample_gamma(10000, 8)
+hist(tmp$x, freq = FALSE)
+curve(dgamma(x, 8), col = "blue", lwd = 2, add = TRUE)
+```
+
+### Gamma Rejection Sampler Tests
+
+```{r}
+tmp <- sample_gamma(10000, 3)
+hist(tmp$x, freq = FALSE, ylim = c(0, 0.3))
+curve(dgamma(x, 3), col = "blue", lwd = 2, add = TRUE)
+```
+
+```{r, include=FALSE, eval=FALSE, cache = TRUE}
+r <- 10
+bench::mark(
+  gamma_sim(1000, r),
+  sample_gamma(1000, r),
+  rgamma(1000, r),
+  check = FALSE
+) |>
+  plot()
+```
+
+### Rejection Probabilities
+
+```{r}
+tmp <- sample_gamma(1e5, 16)
+1 - tmp$alpha
+tmp <- sample_gamma(1e5, 8)
+1 - tmp$alpha
+tmp <- sample_gamma(1e5, 4)
+1 - tmp$alpha
+tmp <- sample_gamma(1e5, 1)
+1 - tmp$alpha
+```
+
+## Adaptive Envelopes
+
+When $f$ is _log-concave_ on $I$ we can construct bounds of the form
+$$f(x) \leq e^{V(x)}$$ --
+
+where $$V(x) = \sum_{i=1}^m  (a_i x + b_i) \mathbf{1}_{I_i}(x)$$ for intervals
+$I_i$ forming a partition of $I$.
+
+. . .
+
+Typically, $a_i x + b_i$ is tangent to the graph of $\log(f)$ at
+$x_i \in I_i = (z_{i-1}, z_i]$ for
+$$z_0 < x_1 < z_1 < x_2 < \ldots < z_{m-1} < x_m < z_m.$$
+
+### Beta Distribution
+
+```{r, echo = FALSE, fig.width = 13, fig.height = 9}
+fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
+  lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+  lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
+  a1 <- lf_deriv(x1)
+  a2 <- lf_deriv(x2)
+  if (a1 == 0 || a2 == 0 || a1 - a2 == 0) {
+    stop(
+      "\nThe implementation requires a_1 and a_2 different and both different from zero. Choose different values of x_1 and x_2."
+    )
+  }
+  b1 <- lf(x1) - a1 * x1
+  b2 <- lf(x2) - a2 * x2
+  z1 <- (b2 - b1) / (a1 - a2)
+  Q1 <- exp(b1) * (exp(a1 * z1) - 1) / a1
+  c <- Q1 + exp(b2) * (exp(a2 * 1) - exp(a2 * z1)) / a2
+
+  y <- ratio <- numeric(m)
+  uy <- c * runif(m)
+  u <- runif(m)
+  i <- uy < Q1
+  y[i] <- z <- log(a1 * exp(-b1) * uy[i] + 1) / a1
+  y[!i] <- zz <- log(a2 * exp(-b2) * (uy[!i] - Q1) + exp(a2 * z1)) / a2
+  ratio[i] <- exp(lf(z) - a1 * z - b1)
+  ratio[!i] <- exp(lf(zz) - a2 * zz - b2)
+  accept <- u <= ratio
+  y[accept]
+}
+
+sample_beta <- new_rejection_sampler(fixed_beta_sampler)
+```
+
+```{r Beta-fig, echo=FALSE, fig.width = 13, fig.height = 8}
+par(mfrow = c(2, 2))
+envelope <- function(x, x1, x2, alpha, beta) {
+  lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+  lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
+  a1 <- lf_deriv(x1)
+  a2 <- lf_deriv(x2)
+  b1 <- lf(x1) - a1 * x1
+  b2 <- lf(x2) - a2 * x2
+  z1 <- (b2 - b1) / (a1 - a2)
+  ifelse(x < z1, exp(a1 * x + b1), exp(a2 * x + b2))
+}
+
+hist(
+  sample_beta(100000, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2)$x,
+  prob = TRUE,
+  main = "",
+  ylim = c(0, 3)
+)
+curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, add = TRUE)
+curve(
+  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2) / beta(4, 2),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+
+hist(
+  sample_beta(100000, x1 = 0.3, x2 = 0.7, alpha = 1.8, beta = 2.4)$x,
+  prob = TRUE,
+  main = "",
+  ylim = c(0, 3)
+)
+curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, add = TRUE)
+curve(
+  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+
+hist(
+  sample_beta(100000, x1 = 0.2, x2 = 0.5, alpha = 4, beta = 2)$x,
+  prob = TRUE,
+  main = "",
+  ylim = c(0, 3)
+)
+curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, add = TRUE)
+curve(
+  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 4, beta = 2) / beta(4, 2),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+
+hist(
+  sample_beta(100000, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4)$x,
+  prob = TRUE,
+  main = "",
+  ylim = c(0, 3)
+)
+curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, add = TRUE)
+curve(
+  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+par(mfrow = c(1, 1))
+```
+
+```{r beta-envelopes, echo = FALSE, fig.width = 12, fig.height = 6, warning = FALSE}
+par(mfrow = c(1, 2))
+curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, log = "y")
+curve(
+  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2) / beta(4, 2),
+  col = "red",
+  lwd = 2,
+  n = 400,
+  add = TRUE
+)
+curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, log = "y")
+curve(
+  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+par(mfrow = c(1, 1))
+```
+
+### Von Mises Adaptive Envelope
+
+```{r vonmises-adaptive, echo = FALSE}
+dvm <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
+
+von_mises_adapt_random <- function(N, x1, x2, kappa) {
+  lf <- function(x) kappa * cos(x)
+  lf_deriv <- function(x) -kappa * sin(x)
+  a1 <- 2 * kappa / pi
+  a2 <- lf_deriv(x1)
+  a3 <- lf_deriv(x2)
+  a4 <- -a1
+
+  b1 <- kappa
+  b2 <- lf(x1) - a2 * x1
+  b3 <- lf(x2) - a3 * x2
+  b4 <- kappa
+
+  z0 <- -pi
+  z1 <- -pi / 2
+  z2 <- (b3 - b2) / (a2 - a3)
+  z3 <- pi / 2
+  z4 <- pi
+
+  Q1 <- exp(b1) * (exp(a1 * z1) - exp(a1 * z0)) / a1
+  Q2 <- Q1 + exp(b2) * (exp(a2 * z2) - exp(a2 * z1)) / a2
+  Q3 <- Q2 + exp(b3) * (exp(a3 * z3) - exp(a3 * z2)) / a3
+  c <- Q3 + exp(b4) * (exp(a4 * z4) - exp(a4 * z3)) / a4
+
+  u0 <- c * runif(N)
+  u <- runif(N)
+
+  I1 <- (u0 < Q1)
+  I2 <- (u0 >= Q1) & (u0 < Q2)
+  I3 <- (u0 >= Q2) & (u0 < Q3)
+  I4 <- (u0 >= Q3)
+
+  x <- numeric(N)
+  accept <- logical(N)
+  x[I1] <- log(a1 * exp(-b1) * u0[I1] + exp(a1 * z0)) / a1
+  accept[I1] <- u[I1] <= exp(lf(x[I1]) - a1 * x[I1] - b1)
+  x[I2] <- log(a2 * exp(-b2) * (u0[I2] - Q1) + exp(a2 * z1)) / a2
+  accept[I2] <- u[I2] <= exp(lf(x[I2]) - a2 * x[I2] - b2)
+  x[I3] <- log(a3 * exp(-b3) * (u0[I3] - Q2) + exp(a3 * z2)) / a3
+  accept[I3] <- u[I3] <= exp(lf(x[I3]) - a3 * x[I3] - b3)
+  x[I4] <- log(a4 * exp(-b4) * (u0[I4] - Q3) + exp(a4 * z3)) / a4
+  accept[I4] <- u[I4] <= exp(lf(x[I4]) - a4 * x[I4] - b4)
+
+  x[accept]
+}
+
+von_mises_adapt <- new_rejection_sampler(von_mises_adapt_random)
+
+envelope <- function(x, x1, x2, kappa) {
+  lf <- function(x) kappa * cos(x)
+  lf_deriv <- function(x) -kappa * sin(x)
+  a1 <- 2 * kappa / pi
+  a2 <- lf_deriv(x1)
+  a3 <- lf_deriv(x2)
+  a4 <- -a1
+
+  b1 <- kappa
+  b2 <- lf(x1) - a2 * x1
+  b3 <- lf(x2) - a3 * x2
+  b4 <- kappa
+
+  z0 <- -pi
+  z1 <- -pi / 2
+  z2 <- (b3 - b2) / (a2 - a3)
+  z3 <- pi / 2
+  z4 <- pi
+
+  env <- numeric(length(x))
+  i1 <- x < z1
+  i2 <- x >= z1 & x < z2
+  i3 <- x >= z2 & x < z3
+  i4 <- x >= z3
+
+  env[i1] <- exp(a1 * x[i1] + b1)
+  env[i2] <- exp(a2 * x[i2] + b2)
+  env[i3] <- exp(a3 * x[i3] + b3)
+  env[i4] <- exp(a4 * x[i4] + b4)
+
+  env
+}
+```
+
+```{r vonmises-adaptive-plot, echo = FALSE, fig.width = 13, fig.height = 8}
+par(mfrow = c(2, 2))
+
+x <- von_mises_adapt(100000, -0.4, 0.4, 5)$x
+hist(
+  x,
+  breaks = seq(-pi, pi, length.out = 30),
+  prob = TRUE,
+  main = expression(paste(kappa == 5, ", ", x[1] == -0.4, ", ", x[2] == 0.4)),
+  ylim = c(0, 1.5)
+)
+curve(dvm(x, 5), -pi, pi, col = "blue", lwd = 2, add = TRUE, n = )
+curve(
+  envelope(x, -0.4, 0.4, 5) / (2 * pi * besselI(5, 0)),
+  -pi,
+  pi,
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+
+x <- von_mises_adapt(100000, -0.1, 0.1, 5)$x
+hist(
+  x,
+  breaks = seq(-pi, pi, length.out = 30),
+  prob = TRUE,
+  main = expression(paste(kappa == 5, ", ", x[1] == -0.1, ", ", x[2] == 0.1)),
+  ylim = c(0, 1.5)
+)
+curve(dvm(x, 5), -pi, pi, col = "blue", lwd = 2, add = TRUE, n = )
+curve(
+  envelope(x, -0.1, 0.1, 5) / (2 * pi * besselI(5, 0)),
+  -pi,
+  pi,
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+
+x <- von_mises_adapt(100000, -0.4, 0.4, 2)$x
+hist(
+  x,
+  breaks = seq(-pi, pi, length.out = 30),
+  prob = TRUE,
+  main = expression(paste(kappa == 2, ", ", x[1] == -0.4, ", ", x[2] == 0.4)),
+  ylim = c(0, 1.5)
+)
+curve(dvm(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
+curve(
+  envelope(x, -0.4, 0.4, 2) / (2 * pi * besselI(2, 0)),
+  -pi,
+  pi,
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+
+x <- von_mises_adapt(100000, -1, 1, 2)$x
+hist(
+  x,
+  breaks = seq(-pi, pi, length.out = 30),
+  prob = TRUE,
+  main = expression(paste(kappa == 2, ", ", x[1] == -1, ", ", x[2] == 1)),
+  ylim = c(0, 1.5)
+)
+curve(dvm(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
+curve(
+  envelope(x, -1, 1, 2) / (2 * pi * besselI(2, 0)),
+  -pi,
+  pi,
+  col = "red",
+  lwd = 2,
+  add = TRUE,
+  n = 400
+)
+```
+
+### Benchmark
+
+```{r benchmark-vonmises-adaptive, echo = FALSE, fig.width = 12, fig.height = 4}
+bench::mark(
+  adaptive = von_mises_adapt(100, -1, 1, 5),
+  vec = sample_vonmises(100, 5),
+  check = FALSE
+) |>
+  plot()
+```
+
+. . .
+
+Differences due to R implementation.
+
+### Notes about Adaptive Envelopes
+
+- General and powerful technique
+- But tricky to implement
+- Efficiency depends on number of rejections and also quality of implementation.
+- A good implementation should make use of new points to update envelope.
+
+## Exercise: Box–Muller Transform
+
+Write your own version of the `rnorm()` function using the Box–Muller transform.
+
+> Suppose $U_1$ and $U_2$ are independent samples chosen from the uniform
+> distribution on the unit interval $(0,1)$. Let
+> $$Z_0 = R \cos(\Theta) = \sqrt{-2 \log U_1} \cos (2\pi U_2)$$ and
+> $$Z_1 = R \sin(\Theta) = \sqrt{-2 \log U_1} \sin(2 \pi U_2).$$ Then $Z_0$ and
+> $Z_1$ are i.i.d. $\mathcal{N}(0,1)$.
+
+. . .
+
+- Test your method
+- Benchmark it against `rnorm()`
+
+### Solution
+
+```{r}
+boxmuller_rnorm <- function(n) {
+  m <- ceiling(n / 2)
+
+  u1 <- runif(m)
+  u2 <- runif(m)
+
+  z0 <- sqrt(-2 * log(u1)) * cos(2 * pi * u2)
+  z1 <- sqrt(-2 * log(u1)) * sin(2 * pi * u2)
+
+  c(z0, z1)[seq_len(n)]
+}
+```
+
+```{r}
+library(testthat)
+
+test_that("Box-Muller transform generates normal values", {
+  set.seed(633)
+  x <- boxmuller_rnorm(1e5)
+
+  # Check moments
+  expect_equal(mean(x), 0, tolerance = 1e-2)
+  expect_equal(sd(x), 1, tolerance = 1e-2)
+
+  # Check ECDF against CDF
+  emp <- ecdf(x)
+  z <- seq(-3, 3, length.out = 100)
+  ref <- pnorm(z)
+
+  expect_equal(emp(z), ref, tolerance = 1e-3)
+})
+```
+
+```{r boxmuller-bench, fig.width = 9, fig.height = 4}
+bench::mark(
+  boxmuller_rnorm(1e6),
+  rnorm(1e6),
+  check = FALSE
+) |>
+  plot()
+```

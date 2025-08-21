@@ -1,11 +1,15 @@
 author: Johan Larsson
 subtitle: Computational Statistics
+institute: Department of Mathematical Sciences, University of Copenhagen
 date: today
 
 titlegraphic: ../images/ucph-horizontal-left.pdf
 titlegraphicoptions: right
 
 pdf-engine: lualatex
+
+execute:
+  echo: true
 
 format:
   beamer:
@@ -26,6 +30,7 @@ format:
       text: |
         \usepackage[export]{adjustbox}
         \setbeamertemplate{page number in head/foot}[appendixframenumber]
+        \setbeameroption{show notes}
 
 knitr:
   opts_chunk:

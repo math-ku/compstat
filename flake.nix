@@ -44,8 +44,13 @@
             profvis
             Rcpp
             RcppArmadillo
+            ggbeeswarm
+            webshot2
+            foreach
+            movMF
             tidyverse
             knitr
+            doParallel
             rmarkdown
             animate
             here
@@ -53,6 +58,7 @@
             usethis
             devtools
             testthat
+            future
           ];
         };
       in
@@ -63,6 +69,8 @@
             R
             pkgs.quartoMinimal
             pkgs.go-task
+            pkgs.ungoogled-chromium
+            pkgs.librsvg
           ];
         };
       }

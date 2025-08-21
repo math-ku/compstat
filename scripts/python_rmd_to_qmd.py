@@ -51,13 +51,25 @@ def keep_only_title_in_yaml(lines, new_title=None):
 
 
 def fix_r_file_paths(lines):
-    # Only replace file.path(...) with here::here(...) in R code lines
+    # Replace file.path(...) and read_table("data/xxx") with here::here(...)
     out = []
     for line in lines:
         # Replace file.path("data", ...) or file.path("images", ...) with here::here(...)
         line = re.sub(
             r'file\.path\((["\'](?:data|images)["\'],\s*[^)]*)\)',
             r"here::here(\1)",
+            line,
+        )
+        # Replace read_table("data/xxx") or read_csv("data/xxx") with read_table(here::here("data", "xxx"))
+        line = re.sub(
+            r'(read_table|read_csv|read_delim)\(\s*["\'](data|images)/([^"\']+)["\']',
+            r'\1(here::here("\2", "\3")',
+            line,
+        )
+        # Replace source("R/xxx.R"...) with source(here::here("R/xxx.R")...)
+        line = re.sub(
+            r'source\((["\']R/[^"\']+["\'])',
+            r"source(here::here(\1)",
             line,
         )
         out.append(line)
@@ -86,10 +98,11 @@ def remove_knitr_setup(lines):
             continue
         # Remove knitr::opts_chunk$set( ... )
         if re.match(r"\s*knitr::opts_chunk\$set\s*\(", lines[i]):
-            # Skip lines until closing ')'
-            while i < n and ")" not in lines[i]:
+            i += 1
+            # Skip all lines until a line that contains only ')' (possibly with whitespace)
+            while i < n and not re.match(r"^\s*\)\s*$", lines[i]):
                 i += 1
-            # Skip the line with ')'
+            # Skip the closing parenthesis line as well
             i += 1
             continue
         out.append(lines[i])
@@ -217,6 +230,25 @@ def convert_pull_columns(lines):
     return out
 
 
+def convert_sidenotes(lines):
+    out = []
+    n = len(lines)
+    i = 0
+    while i < n:
+        if lines[i].strip() == "???":
+            out.append("::: {.notes}\n")
+            i += 1
+            # Collect lines until next slide delimiter or end of file
+            while i < n and not lines[i].strip().startswith("---"):
+                out.append(lines[i])
+                i += 1
+            out.append(":::\n\n")
+        else:
+            out.append(lines[i])
+            i += 1
+    return out
+
+
 def convert_knitr_images(lines):
     out = []
     n = len(lines)
@@ -273,7 +305,10 @@ def convert_knitr_images(lines):
     return out
 
 
-def comment_out_patterns(lines, patterns):
+def comment_out_patterns(lines):
+    patterns = [
+        r'testthat::test_dir\("tests"\)',
+    ]
     out = []
     compiled = [re.compile(p) for p in patterns]
     for line in lines:
@@ -288,9 +323,54 @@ def comment_out_patterns(lines, patterns):
     return out
 
 
-patterns = [
-    r'testthat::test_dir\("tests"\)',
-]
+def remove_patterns(lines):
+    patterns = [
+        r"^xaringanExtra\:\:",
+    ]
+    out = []
+    compiled = [re.compile(p) for p in patterns]
+    for line in lines:
+        if any(p.match(line) for p in compiled):
+            continue  # Skip lines that match any pattern
+        out.append(line)
+    return out
+
+
+def convert_footnotes(lines):
+    out = []
+    n = len(lines)
+    i = 0
+    while i < n:
+        if lines[i].strip().startswith(".footnote["):
+            # Start collecting footnote content
+            content = []
+            line = lines[i]
+            # Handle possible content on the same line
+            start = line.find("[") + 1
+            if line.rstrip().endswith("]") and start < len(line.rstrip()) - 1:
+                # Single-line footnote
+                content.append(line[start:-1].strip())
+                i += 1
+            else:
+                # Multi-line footnote
+                if start < len(line):
+                    content.append(line[start:].rstrip())
+                i += 1
+                while i < n and not lines[i].strip().endswith("]"):
+                    content.append(lines[i].rstrip())
+                    i += 1
+                if i < n:
+                    # Add last line without the closing ]
+                    end = lines[i].rfind("]")
+                    if end != -1:
+                        content.append(lines[i][:end].rstrip())
+                    i += 1
+            # Join and format as markdown footnote
+            out.append("^[" + "\n".join(content).strip() + "]\n")
+        else:
+            out.append(lines[i])
+            i += 1
+    return out
 
 
 def convert_rmd_to_qmd(rmd_path, qmd_path):
@@ -298,6 +378,7 @@ def convert_rmd_to_qmd(rmd_path, qmd_path):
         lines = infile.readlines()
 
     lines = keep_only_title_in_yaml(lines)
+    lines = convert_sidenotes(lines)
 
     # Remove YAML 'class:' lines and slide breaks
     out_lines = []
@@ -322,7 +403,8 @@ def convert_rmd_to_qmd(rmd_path, qmd_path):
 
         out_lines.append(line)
 
-    out_lines = comment_out_patterns(out_lines, patterns)
+    out_lines = remove_patterns(out_lines)
+    out_lines = comment_out_patterns(out_lines)
     out_lines = process_lines(out_lines)
     out_lines = compact_lists(out_lines)
     out_lines = convert_pull_columns(out_lines)
@@ -330,6 +412,7 @@ def convert_rmd_to_qmd(rmd_path, qmd_path):
     out_lines = remove_knitr_setup(out_lines)
     out_lines = fix_r_file_paths(out_lines)
     out_lines = fix_md_image_paths(out_lines)
+    out_lines = convert_footnotes(out_lines)
 
     with open(qmd_path, "w") as outfile:
         outfile.writelines(out_lines)

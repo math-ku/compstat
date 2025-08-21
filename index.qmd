@@ -2,20 +2,79 @@
 title: Computational Statistics
 ---
 
-This is the resources web site for the Computational Statistics
-course. This is where all the slides are hosted, as well as
-the assignments, and data.
+This is the resources web site for the Computational Statistics course. This is
+where all the slides are hosted, as well as the assignments, and data.
 
-This is not meant to be the main interface to the course, which is
-hosted on Absalon
+This is not meant to be the main interface to the course, which is hosted on
+Absalon
+
+## Schedule
+
+### Week 1
+
+| Lectures                                          | Reading                                                                                                              | Exercises                                                                                                                                    |
+| :------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Introduction](slides/lecture1.pdf)               | [Chapter 6 (AdvR)](https://adv-r.hadley.nz/functions.html)                                                           | [A1-A7 (CSWR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex), [`infrared.txt`](data/infrared.txt)                                       |
+| [OOP and Density Estimation](slides/lecture2.pdf) | [Chapter 13 (AdvR)](https://adv-r.hadley.nz/s3.html), [Sections 2-2.2 (CSwR)](https://cswr.nrhstat.org/density.html) | [A8-A10 (CSwR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex), [2.1-2.6 (CSwR, Chapter 2)](https://cswr.nrhstat.org/density#density:ex) |
+
+### Week 2
+
+| Lectures                                                   | Reading                                                                                                                    | Exercises                                                                            |
+| :--------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [Measuring and Improving Performance](slides/lecture3.pdf) | [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (AdvR) | [1-3 (AdvR, Section 24.4.3)](https://adv-r.hadley.nz/perf-improve.html#exercises-71) |
+| [Scatterplot Smoothing](slides/lecture4.pdf)               | [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)                                                                | [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex)             |
+
+### Week 3
+
+| Lectures                                                               | Reading | Exercises                                                                                                |
+| :--------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------- |
+| [Random Number Generation and Rejection Sampling](slides/lecture5.pdf) |         | [Exercises 5.1-5.2 in Chapter 5, CSwR ](https://cswr.nrhstat.org/random-number-generation#univariate:ex) |
+| [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf)     |         |                                                                                                          |
+
+### Week 4
+
+| Lectures                            | Reading | Exercises |
+| :---------------------------------- | ------- | --------- |
+| [Rcpp](slides/lecture7.pdf)         |         |           |
+| [Optimization](slides/lecture8.pdf) |         |           |
+
+### Week 5
+
+| Lectures                                                     | Reading | Exercises |
+| :----------------------------------------------------------- | ------- | --------- |
+| [Debugging and Likelihood Optimization](slides/lecture9.pdf) |         |           |
+| [The EM Algorithm](slides/lecture10.pdf)                     |         |           |
+
+### Week 6
+
+| Lectures                                                   | Reading | Exercises |
+| :--------------------------------------------------------- | ------- | --------- |
+| [Gaussian Mixtures and Mixed Models](slides/lecture11.pdf) |         |           |
+| [Stochastic Gradient Descent](slides/lecture12.pdf)        |         |           |
+
+### Week 7
+
+| Lectures                                                          | Reading | Exercises |
+| :---------------------------------------------------------------- | ------- | --------- |
+| [Variations on Stochastic Gradient Descent](slides/lecture13.pdf) |         |           |
+| [R Packages and Wrap-Up](slides/lecture14.pdf)                    |         |           |
 
 ## Slides
 
 - [Lecture 1](slides/lecture1.pdf)
-
-## Exercises
-
-Here is a list of all the exercises for the exercise sessions.
+- [Lecture 2](slides/lecture2.pdf)
+- [Lecture 3](slides/lecture3.pdf)
+- [Lecture 4](slides/lecture4.pdf)
+- [Lecture 5](slides/lecture5.pdf)
+- [Lecture 6](slides/lecture6.pdf)
+- [Lecture 7](slides/lecture7.pdf)
+- [Lecture 8](slides/lecture8.pdf)
+- [Lecture 9](slides/lecture9.pdf)
+- [Lecture 10](slides/lecture10.pdf)
+- [Lecture 11](slides/lecture11.pdf)
+- [Lecture 12](slides/lecture12.pdf)
+- [Lecture 13](slides/lecture13.pdf)
+- [Lecture 14](slides/lecture14.pdf)
 
 ## Assignments
 
