@@ -59,6 +59,7 @@
             languageserver
             devtools
             testthat
+            zeallot
             future
           ];
         };
