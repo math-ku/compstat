@@ -186,10 +186,10 @@ def convert_pull_columns(lines):
             if i < n and is_right_column(lines[i]):
                 right_content, next_i = collect_block(lines, i + 1)
                 out.append(":::: {.columns}\n\n")
-                out.append('::: {.column width="50%"}\n')
+                out.append('::: {.column width="47%"}\n\n')
                 out.extend(left_block)
                 out.append("\n:::\n")
-                out.append('\n::: {.column width="50%"}\n')
+                out.append('\n::: {.column width="47%"}\n\n')
                 out.extend(right_content)
                 out.append("\n:::\n")
                 out.append("\n::::\n\n")
@@ -198,19 +198,19 @@ def convert_pull_columns(lines):
             else:
                 # No right column follows, flush left as single column
                 out.append(":::: {.columns}\n\n")
-                out.append('::: {.column width="50%"}\n')
+                out.append('::: {.column width="47%"}\n\n')
                 out.extend(left_block)
                 out.append("\n:::\n")
-                out.append('\n::: {.column width="50%"}\n')
+                out.append('\n::: {.column width="47%"}\n\n')
                 out.append("\n:::\n")
                 out.append("\n::::\n\n")
                 left_block = None
         elif is_right_column(lines[i]):
             right_content, next_i = collect_block(lines, i + 1)
             out.append(":::: {.columns}\n\n")
-            out.append('::: {.column width="50%"}\n')
+            out.append('::: {.column width="47%"}\n\n')
             out.append("\n:::\n")
-            out.append('\n::: {.column width="50%"}\n')
+            out.append('\n::: {.column width="47%"}\n\n')
             out.extend(right_content)
             out.append("\n:::\n")
             out.append("\n::::\n\n")
@@ -221,10 +221,10 @@ def convert_pull_columns(lines):
     # Flush any remaining left block at the end
     if left_block:
         out.append(":::: {.columns}\n\n")
-        out.append('::: {.column width="50%"}\n')
+        out.append('::: {.column width="47%"}\n\n')
         out.extend(left_block)
         out.append("\n:::\n")
-        out.append('\n::: {.column width="50%"}\n')
+        out.append('\n::: {.column width="47%"}\n\n')
         out.append("\n:::\n")
         out.append("\n::::\n\n")
     return out
@@ -294,7 +294,7 @@ def convert_knitr_images(lines):
                     # Compose markdown image
                     # Prefer width if both present
                     size_str = width_str or height_str
-                    out.append(f"![]({img_path}){size_str}\n")
+                    out.append(f"\n![]({img_path}){size_str}\n")
                     # Skip to end of chunk
                     while j < n and not lines[j].strip().startswith("```"):
                         j += 1
