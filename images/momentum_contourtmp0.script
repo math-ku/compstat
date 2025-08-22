@@ -1,0 +1,1 @@
+unset surface; set cntrparam levels discrete 0.5,1,2,3,4,5,6,7,8,9,10; set contour; set table "momentum_contourtmp0.table"; splot "momentum_contourtmp0.dat";

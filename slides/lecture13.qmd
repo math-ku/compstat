@@ -1,0 +1,625 @@
+---
+title: "Variations on Stochastic Gradient Descent"
+
+format:
+  beamer:
+    include-in-header:
+      text: |
+        \setbeamertemplate{page number in head/foot}[appendixframenumber]
+        \setbeameroption{show notes}
+---
+
+## Last Time
+
+:::: {.columns}
+
+::: {.column width="39%"}
+
+### SGD
+
+Introduced stochastic gradient descent (SGD) and mini-batch version thereof.
+
+### Problems
+
+We indicated that there were problems with vanilla SGD: poor convergence,
+erratic behavior.
+
+:::
+
+::: {.column width="51%"}
+
+### Mini-Batch SGD
+
+\begin{algorithm}[H] \KwData{$\gamma_0 >0$} \For{$k \gets 1, 2, \dots$}{
+$A_k \gets$ random mini-batch of $m$ samples\;
+$x_k \gets x_{k-1} - \frac{\gamma_k }{|A_k|} \sum_{i \in A_k} \nabla f_i(x_{k-1})$\;
+} \caption{Mini-Batch SGD} \end{algorithm}
+
+:::
+
+::::
+
+---
+
+## Today
+
+How can we improve stochastic gradient descent?
+
+### Momentum
+
+Base update on combination of gradient step and previous point.
+
+Two versions: Polyak and Nesterov momentum
+
+### Adaptive Gradients
+
+Adapt learning rate to particular feature.
+
+---
+
+## Momentum
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+### Basic Idea
+
+Give the particle **momentum**: like a heavy ball
+
+Not specific to stochastic GD!
+
+### Polyak Momentum
+
+Classical version (Polyak, 1964)
+
+- $\mu \in [0, 1)$ decides strength of momentum; $\mu = 0$ gives standard
+  gradient descent
+- Guaranteed convergence for quadratic functions
+
+:::
+
+::: {.column width="45%"}
+
+### GD with Polyak Momentum
+
+\begin{algorithm}[H] \KwData{$\gamma >0$, $\mu \in [0,1)$, $x_{-1} = x_0$}
+\For{$k \gets 1, 2, \dots$}{ $x*k \gets x*{k-1} - \gamma \nabla f(x*{k-1}) + \mu
+(x*{k-1} - x\_{k-2}) $\; } \caption{GD with Polyak Momentum} \end{algorithm}
+
+:::
+
+::::
+
+## Polyak Momentum in Practice
+
+![Trajectories of GD for different momentum values for a least-squares problem](../images/momentum-surface.pdf)
+
+## Local Minima
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+For nonconvex $f$, gradient descent may get stuck at a local minimum.
+
+:::
+
+::: {.column width="45%"}
+
+![](../images/escape-minima-gd-0.pdf)
+
+$\mu = 0$
+
+:::
+
+::::
+
+---
+
+## Escaping Local Minima
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+With momentum, we can (sometimes) remedy this problem.
+
+:::
+
+::: {.column width="45%"}
+
+![](../images/escape-minima-mom-0.pdf)
+
+$\mu = 0.8$
+
+:::
+
+::::
+
+---
+
+## Convergence Failure
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+For some problems, the momentum method may fail to converge [Lessard et al.,
+2016].
+
+Consider
+
+$$
+f(x) =
+\begin{cases}
+  \frac{25x^2}{2}            & \text{if } x < 1,        \\
+  \frac{x^2}{2} +24x - 12    & \text{if } 1 \leq x < 2, \\
+  \frac{25x^2}{2} - 24x + 36 & \text{if } x \geq 2.
+\end{cases}
+$$
+
+For an "optimal" step size $1 = 1/L$ with $L = 25$, GD momentum steps converge
+to three limit points.
+
+:::
+
+::: {.column width="45%"}
+
+![](../images/momentum-failure.pdf)
+
+Initialized at $x_0 = 3.2$, the algorithm fails to converge.
+
+:::
+
+::::
+
+---
+
+## Nesterov Momentum
+
+\begin{algorithm}[H] \KwData{$\gamma >0$, $\mu \in [0,1)$}
+\For{$i \gets 1,2,\dots$}{ $v_k \gets x_{k-1} - \gamma \nabla f(x_{k-1})$\;
+$x_k \gets v_{k} + \mu (v_{k} - v_{k-1})$\; } \caption{GD with Nesterov
+Momentum} \end{algorithm}
+
+- Overcomes convergence problem of classical (Polyak) momentum.
+- First appeared in article by Nesterov (1983).
+
+---
+
+## Nesterov: Sutskever Perspective
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+Consider two iterations of Nesterov algorithm:
+
+$$
+\begin{aligned}
+  v_{k}               & = x_{k-1} - \gamma \nabla f\left(x_{k-1} \right)         \\
+  x_{k}   & = v_{k} + \mu\left(v_{k} - v_{{k-1}} \right) \\
+  v_{k+1} & = x_{k} - \gamma \nabla f\left(x_{k} \right) \\
+  x_{k+1}             & = v_{k+1} + \mu\left(v_{k+1} - v_{k} \right)
+\end{aligned}
+$$
+
+:::
+
+::: {.column width="45%"}
+
+Idea: focus on interim step:
+
+$$
+\begin{aligned}
+  x_{k}   & = v_{k} + \mu\left(v_{k} - v_{{k-1}} \right) \\
+  v_{k+1} & = x_{k} - \gamma \nabla f\left(x_{k} \right)
+\end{aligned}
+$$
+
+Reindex:
+
+$$
+\begin{aligned}
+  x_{k} & = v_{k-1} + \mu\left(v_{k-1} - v_{{k-2}} \right) \\
+  v_{k} & = x_{k} - \gamma \nabla f\left(x_{k} \right)
+\end{aligned}
+$$
+
+:::
+
+::::
+
+---
+
+But since $x_k = v_k$ for $k=1$ by construction, we can swap $x_k$ for $v_k$ and
+get the update
+
+$$
+x_k = x_{k-1} + \mu(x_{k-1} - x_{k-2}) - \gamma \nabla f(x_{k} + \mu(x_{k-1} - x_{k-2})).
+$$
+
+![Illustration of Nesterov and Polyak momentum](../images/momentum-illustration.pdf)
+
+---
+
+## Optimal Momentum
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+For gradient descent with $\gamma = 1/L$, the optimal choice of $\mu_k$ for
+general convex and smooth $f$ is
+
+$$
+\mu_k = \frac{a_{k-1} - 1}{a_{k}}
+$$
+
+for a series of
+
+$$
+a_k = \frac{1 + \sqrt{4a_{k-1}^2 + 1}}{2}
+$$
+
+with $a_0 = 1$ (and hence $\mu_1 = 0$).
+
+First step ($k = 1$) is just standard gradient descent.
+
+:::
+
+::: {.column width="45%"}
+
+![Optimal momentum for Nesterov acceleration (for GD).](../images/nesterov-weights.pdf)
+
+:::
+
+::::
+
+---
+
+## Convergence
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+- Convergence rate with Nesterov acceleration goes from $O(1/k)$ to $O(1/k^2)$
+- This is **optimal** for a first-order method.
+- Convergence improves further for quadratic and strongly convex!
+
+:::
+
+::: {.column width="45%"}
+
+![Suboptimality plot for a logistic regression problem with $n = 1,000$, $p = 100$.](../images/momentum-convergence.pdf)
+
+:::
+
+::::
+
+---
+
+## Exercise: Rosenbrock's Banana
+
+### Steps
+
+1. Minimize $f(x_1, x_2) = (a - x_1)^2 + b(x_2 - x_1^2)^2$ with $a = 1$ and
+   $b = 100$ using GD with Polyak momentum. Optimum is $(a, a^2)$.
+2. Implement gradient descent.
+3. Add Polyak momentum.
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+\begin{algorithm}[H] \KwData{$\gamma >0$, $\mu \in [0,1)$}
+\For{$k \gets 1, 2, \dots$}{ $x*k \gets x*{k-1} - \gamma \nabla f(x*{k-1}) + \mu
+(x*{k-1} - x\_{k-2}) $\; } \caption{GD with Polyak Momentum} \end{algorithm}
+
+:::
+
+::: {.column width="45%"}
+
+### Plot Contours
+
+```r
+x1 <- seq(-2, 2, length.out = 100)
+x2 <- seq(-1, 3, length.out = 100)
+z <- outer(x1, x2, f)
+contour(x1, x2, z, nlevels = 20)
+```
+
+:::
+
+::::
+
+---
+
+## What About SGD?
+
+- So far, we have mostly talked about standard GD, but we can use momentum
+  (Polyak or Nesterov) for SGD as well.
+- For standard GD, Nesterov is the dominating method for achieving acceleration;
+  for SGD, Polyak momentum is actually quite common.
+- In term of convergence, all bets are now off.
+- No optimal rates anymore, just heuristics.
+
+## Adaptive Gradients
+
+### General Idea
+
+Some directions may be important, but feature information is **sparse**.
+
+---
+
+### AdaGrad
+
+:::: {.columns}
+
+::: {.column width="45%"}
+
+Store matrix of gradient history,
+
+$$
+G_k = \sum_{i = 1}^k \nabla f(x_k) \nabla f(x_k)^\intercal,
+$$
+
+and update by multiplying gradient with $G_k^{-1/2}$.
+
+:::
+
+::: {.column width="45%"}
+
+\begin{algorithm}[H] \KwData{$\gamma >0$, $G = 0$} \For{$k \gets 1, 2, \dots$}{
+$G_k \gets G_{k-1} + \nabla f(x_{k-1}) \nabla f(x_{k-1})^\intercal$\;
+$x_k \gets x_{k-1} - \gamma G_k^{-1/2} \nabla f(x_{k-1})$\; } \caption{AdaGrad}
+\end{algorithm}
+
+:::
+
+::::
+
+---
+
+### Effects
+
+- Larger learning rates for sparse features
+- Step-sizes adapt to curvature.
+
+---
+
+## AdaGrad In Practice
+
+### Simplified Version
+
+Computing $\nabla f \nabla f^\intercal$ is $O(p^2)$; expensive!
+
+Replace $G^{-1/2}_k$ with $\mathrm{diag}(G_k)^{-1/2}$
+
+---
+
+### Avoid Singularities
+
+Add a small $\epsilon$ to diagonal.
+
+\begin{algorithm}[H] \KwData{$\gamma >0$, $\epsilon > 0$}
+\For{$k \gets 1, 2, \dots$}{
+$G_k \gets G_{k-1} + \mathrm{diag}\big(\nabla f(x_{k-1})^2\big)$\;
+$x_k \gets x_{k-1} - \gamma \mathrm{diag}\big(\epsilon I_p + G_k\big)^{-1/2} \nabla f(x_{k-1})$\;
+} \caption{Simplified AdaGrad} \end{algorithm}
+
+---
+
+## RMSProp
+
+Acronym for **R**oot **M**ean **S**quare **Prop**agation [Hinton, 2018]
+
+### Idea
+
+Divide learning rate by running average of magnitude of recent gradients:
+
+$$
+v(x,k) = \xi v(x, k -1) + (1 - \xi)\nabla f(x_k)^2
+$$
+
+where $\xi$ is the **forgetting factor**.
+
+Similar to AdaGrad, but uses **forgetting** to gradually decrease influence of
+old data.
+
+---
+
+\begin{algorithm}[H] \KwData{$\gamma >0$, $\xi > 0$} \For{$k \gets 1, 2, \dots$,
+$\xi \in [0, 1)$}{ $v_k = \xi v_{k-1} + (1 - \xi) \nabla f(x_{k-1})$\;
+$x_k \gets x_{k-1} - \frac{\gamma}{\sqrt{v_k}} \odot \nabla f(x_{k-1})$\; }
+\caption{RMSProp} \end{algorithm}
+
+---
+
+## Adam
+
+Acronym for **Ada**ptive **m**oment estimation [Kingma & Ba, 2015]
+
+Basically RMSProp + _momentum_ (for both gradients and second moments thereof)
+
+Popular and still in much use today.
+
+---
+
+## Implementation Aspects of SGD
+
+### Loops
+
+Any language (e.g. R) that imposes overhead for loops, will have a difficult
+time with SGD.
+
+---
+
+### Storage Order
+
+In a regression setting, when indexing a single observation at a time, slicing
+rows is not efficient when $n$ is large.
+
+We can either transpose first or use a row-major storage order (not possible in
+R).
+
+---
+
+## Example: Nonlinear Least Squares
+
+:::: {.columns}
+
+::: {.column width="42%"}
+
+Let's assume we're trying to solve a least-squares type of problem:
+
+$$
+f(\theta) = \frac{1}{2n} \sum_{i=1}^n  \left(y_i - g(\theta; x_i, y_i)\right)^2
+$$
+
+with $\theta = (\alpha, \beta)$ and
+
+$$
+g(\theta; x, y) = \alpha \cos(\beta x).
+$$
+
+Then
+
+$$
+\nabla_{\theta} f(\theta) =
+\begin{bmatrix}
+  \cos(\beta x) \\ - \alpha x \sin(\beta x)
+\end{bmatrix}.
+$$
+
+:::
+
+::: {.column width="50%"}
+
+![Simulation from problem](../images/nonlinear-data.pdf)
+
+:::
+
+::::
+
+---
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+![Perspective plot of function](../images/nonlinear-persp.pdf)
+
+:::
+
+::: {.column width="50%"}
+
+![Contour plot of $f$](../images/nonlinear-contour.png)
+
+:::
+
+::::
+
+---
+
+## Variants
+
+We will consider three variants:
+
+- Batch gradient descent
+- Batch gradient descent **with momentum**
+- Adam
+
+In each case, we'll use a batch of size $m=50$.
+
+We initialize at different starting values and see how well the algorithm
+converges.
+
+---
+
+![Convergence of different algorithms](../images/nonlinear-convergence-0.pdf)
+
+---
+
+![Updates of $\alpha$ parameter over time for the different algorithms over different starting values.](../images/nonlinear-alpha.pdf)
+
+---
+
+![Updates of $\beta$ parameter over time for the different algorithms over different starting values.](../images/nonlinear-beta.pdf)
+
+---
+
+## Rcpp
+
+Very attractive for stochastic methods due to all the loop constructs and
+slicing.
+
+However, Rcpp lacks linear algebra functions.
+
+### Approaches
+
+- Still use only Rcpp (but then you need to write your own linear algebra
+  functions[^not-recommended])
+- Use RcppEigen or RcppArmadillo.
+
+[^not-recommended]: Not recommended!
+
+---
+
+## Exercise: Rosenbrock Revisited
+
+### Steps
+
+1. Convert your gradient descent algorithm to C++ through Rcpp.
+2. Modify it to be a stochastic gradient descent algorithm instead.
+
+### Hints
+
+- Use the Rcpp function `Rcpp::sugar()` to sample indices.
+- Don't bother with a stopping criterion to begin with; just set a maximum
+  number of iterations.
+- You can return a list by calling
+  `Rcpp::List::create(Rcpp::named("name") = x)`.
+- Use a pure Rcpp implementation.
+
+---
+
+## Summary
+
+We introduced several new concepts:
+
+- Polyak momentum,
+- Nesterov acceleration (momentum), and
+- adaptive gradients (AdaGrad),
+
+We practically implemented versions of gradient descent and stochastic gradient
+descent with momentum.
+
+### Additional Resources
+
+- [@gohWhyMomentumReally2017] is an article on momentum in gradient descent with
+  lots of interactive visualizations.
+
+## Next Time
+
+### Reproducibility
+
+How to make your code reproducible
+
+We build an R package.
+
+### Summary
+
+We summarize the course.
+
+### Exam Advice
+
+We talk about the upcoming oral examinations.
+
+---
+
+Thank you!
+
+# References

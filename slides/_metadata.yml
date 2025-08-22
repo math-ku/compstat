@@ -24,14 +24,15 @@ format:
     linkcolor: black
     urlcolor: DodgerBlue3
     highlight-style: tango
+    cite-method: biblatex
     indent: true
     template-partials:
       - tightlist.tex
     include-in-header:
-      text: |
-        \usepackage[export]{adjustbox}
-        \setbeamertemplate{page number in head/foot}[appendixframenumber]
-        \setbeameroption{show notes}
+      - text: |
+          \setbeamertemplate{page number in head/foot}[appendixframenumber]
+          \setbeameroption{show notes}
+      - file: packages.tex
 
 knitr:
   opts_chunk:
