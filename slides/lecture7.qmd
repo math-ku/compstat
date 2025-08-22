@@ -789,7 +789,9 @@ Great book to get started; free and available online at <https://r-pkgs.org>.
 
 :::
 
-::: {.column width="50%"} ![](../images/r-pkgs.png)
+::: {.column width="50%"}
+
+![](../images/r-pkgs.png)
 
 :::
 
