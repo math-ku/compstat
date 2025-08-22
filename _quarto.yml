@@ -14,8 +14,8 @@ website:
   search: true
 
   navbar:
-    background: primary
     search: true
+    title: CompStat
     left:
       - text: "Home"
         href: index.qmd
