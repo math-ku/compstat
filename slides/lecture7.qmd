@@ -85,7 +85,11 @@ It is often slow due to being an **interpreted** language.
 
 ::::
 
+## Compiled vs Interpreted Languages
+
 ![](../images/chatgpt-compiled-interpreted.png){width=63%}
+
+## Compiled Code
 
 ### C++ Code
 
@@ -113,7 +117,7 @@ int main() {
   401166:       c3                      retq
 ```
 
-### Why C++?
+## Why C++?
 
 - C++ generates machine code: no longer have to be scared of loops!
 - Pass by reference: no need to copy large objects.
@@ -127,7 +131,7 @@ int main() {
 
 ::: {.column width="50%"}
 
-### Why _Not_ C++?
+## Why _Not_ C++?
 
 - Compiling adds overhead.
 - Debugging is more complicated.
@@ -749,16 +753,33 @@ bool is_odd_cpp(int num = 10) {
 
 ::: {.column width="50%"}
 
-````md
-```{Rcpp}`r ''` #include <Rcpp.h> using namespace Rcpp;
+<!-- prettier-ignore-start -->
 
-// [[Rcpp::export]] bool is_odd_cpp(int num = 10) { bool result = (num % 2 ==
-1); return result; }
+```{Rcpp}`r ''`
+#include <Rcpp.h>
+using namespace Rcpp;
 
-```
-
+// [[Rcpp::export]]
+bool is_odd_cpp(int num = 10) {
+   bool result = (num % 2 == 1);
+   return result;
+}
 ```
 ````
+]
+
+```{Rcpp rcpp-odd-ex, echo = FALSE, eval = FALSE}
+#include <Rcpp.h>
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+bool is_odd_cpp(int num = 10) {
+   bool result = (num % 2 == 1);
+   return result;
+}
+```
+
+<!-- prettier-ignore-end -->
 
 :::
 
