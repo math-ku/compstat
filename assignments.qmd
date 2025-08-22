@@ -1,0 +1,7 @@
+---
+title: Assignments
+listing:
+  type: grid
+  contents: assignments
+  fields: [title, subtitle, image, description]
+---
