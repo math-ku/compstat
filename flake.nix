@@ -56,6 +56,7 @@
             here
             dqrng
             usethis
+            languageserver
             devtools
             testthat
             future
