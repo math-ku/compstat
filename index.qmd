@@ -6,7 +6,7 @@ This is the resources web site for the Computational Statistics course. This is
 where all the slides are hosted, as well as the assignments, and data.
 
 This is not meant to be the main interface to the course, which is hosted on
-Absalon
+[Absalon](https://absalon.ku.dk/).
 
 ## Schedule
 
@@ -66,6 +66,10 @@ Absalon
 - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci)
 - **Exercises:** TODO!
 
+#### Presentation of Assignment 1
+
+- **Instructions:** [Assignment 1](assignments/assignment1.html)
+
 ### Week 4
 
 #### Lecture 7: Rcpp
@@ -90,6 +94,10 @@ to get started.
 - **Reading:**
   - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization)
   - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt)
+
+#### Presentation of Assignment 2
+
+- **Instructions:** [Assignment 2](assignments/assignment2.html)
 
 ### Week 5
 
@@ -118,6 +126,10 @@ to get started.
 - **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf)
 - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt)
 
+#### Presentation of Assignment 3
+
+- **Instructions:** [Assignment 3](assignments/assignment3.html)
+
 ### Week 7
 
 #### Lecture 13: Variations on Stochastic Gradient Descent
@@ -130,29 +142,9 @@ to get started.
 
 - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf)
 
-## Slides
+#### Presentation of Assignment 4
 
-- [Lecture 1](slides/lecture1.pdf)
-- [Lecture 2](slides/lecture2.pdf)
-- [Lecture 3](slides/lecture3.pdf)
-- [Lecture 4](slides/lecture4.pdf)
-- [Lecture 5](slides/lecture5.pdf)
-- [Lecture 6](slides/lecture6.pdf)
-- [Lecture 7](slides/lecture7.pdf)
-- [Lecture 8](slides/lecture8.pdf)
-- [Lecture 9](slides/lecture9.pdf)
-- [Lecture 10](slides/lecture10.pdf)
-- [Lecture 11](slides/lecture11.pdf)
-- [Lecture 12](slides/lecture12.pdf)
-- [Lecture 13](slides/lecture13.pdf)
-- [Lecture 14](slides/lecture14.pdf)
-
-## Assignments
-
-- [Assignment 1](assignments/assignment1.html)
-- [Assignment 2](assignments/assignment2.html)
-- [Assignment 3](assignments/assignment3.html)
-- [Assignment 4](assignments/assignment4.html)
+- **Instructions:** [Assignment 4](assignments/assignment4.html)
 
 ## Data
 
