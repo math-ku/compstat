@@ -13,6 +13,14 @@ website:
   repo-actions: [edit, issue]
   search: true
 
+  navbar:
+    background: primary
+    search: true
+    left:
+      - text: "Home"
+        href: index.qmd
+      - schedule.qmd
+
 format:
   html:
     toc: true

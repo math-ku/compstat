@@ -1,13 +1,3 @@
----
-title: Computational Statistics
----
-
-This is the resources web site for the Computational Statistics course. This is
-where all the slides are hosted, as well as the assignments, and data.
-
-This is not meant to be the main interface to the course, which is hosted on
-Absalon
-
 ## Schedule
 
 ### Week 1
@@ -129,33 +119,3 @@ to get started.
 #### Lecture 14: R Packages and Wrap-Up
 
 - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf)
-
-## Slides
-
-- [Lecture 1](slides/lecture1.pdf)
-- [Lecture 2](slides/lecture2.pdf)
-- [Lecture 3](slides/lecture3.pdf)
-- [Lecture 4](slides/lecture4.pdf)
-- [Lecture 5](slides/lecture5.pdf)
-- [Lecture 6](slides/lecture6.pdf)
-- [Lecture 7](slides/lecture7.pdf)
-- [Lecture 8](slides/lecture8.pdf)
-- [Lecture 9](slides/lecture9.pdf)
-- [Lecture 10](slides/lecture10.pdf)
-- [Lecture 11](slides/lecture11.pdf)
-- [Lecture 12](slides/lecture12.pdf)
-- [Lecture 13](slides/lecture13.pdf)
-- [Lecture 14](slides/lecture14.pdf)
-
-## Assignments
-
-- [Assignment 1](assignments/assignment1.html)
-- [Assignment 2](assignments/assignment2.html)
-- [Assignment 3](assignments/assignment3.html)
-- [Assignment 4](assignments/assignment4.html)
-
-## Data
-
-These are links to data files used in the course.
-
-- [Poisson Data](data/poisson.csv)
