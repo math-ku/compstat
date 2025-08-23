@@ -1,0 +1,10 @@
+format:
+  beamer:
+    incremental: false
+    include-in-header:
+      - text: |
+          \setbeamertemplate{page number in head/foot}[appendixframenumber]
+          \setbeameroption{show notes}
+
+filters:
+  - incremental-to-static-slides

@@ -26,6 +26,27 @@ format:
     toc: true
     theme: cosmo
     html-math-method: katex
+  beamer:
+    incremental: true
+    aspectratio: 1610
+    classoption: onlytextwidth
+    theme: moloch
+    colortheme: moloch-tomorrow
+    fig-width: 2.6
+    fig-height: 2
+    colorlinks: true
+    linkcolor: black
+    urlcolor: DodgerBlue3
+    highlight-style: tango
+    cite-method: biblatex
+    indent: true
+    template-partials:
+      - slides/tightlist.tex
+    include-in-header:
+      - text: |
+          \setbeamertemplate{page number in head/foot}[appendixframenumber]
+          \setbeameroption{show notes}
+      - file: slides/packages.tex
 
 date-format: long
 

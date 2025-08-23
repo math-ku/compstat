@@ -1,5 +1,6 @@
 ---
 title: Computational Statistics
+format: html
 ---
 
 This is the resources web site for the Computational Statistics course. This is

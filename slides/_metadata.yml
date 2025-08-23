@@ -11,28 +11,7 @@ pdf-engine: lualatex
 execute:
   echo: true
 
-format:
-  beamer:
-    aspectratio: 1610
-    classoption: onlytextwidth
-    incremental: true
-    theme: moloch
-    colortheme: moloch-tomorrow
-    fig-width: 2.6
-    fig-height: 2
-    colorlinks: true
-    linkcolor: black
-    urlcolor: DodgerBlue3
-    highlight-style: tango
-    cite-method: biblatex
-    indent: true
-    template-partials:
-      - tightlist.tex
-    include-in-header:
-      - text: |
-          \setbeamertemplate{page number in head/foot}[appendixframenumber]
-          \setbeameroption{show notes}
-      - file: packages.tex
+format: beamer
 
 knitr:
   opts_chunk:
