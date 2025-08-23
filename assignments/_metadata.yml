@@ -5,6 +5,8 @@ author:
 subtitle: Computational Statistics
 date: today
 
+format: html
+
 output:
   html_document:
     highlight: pygments
