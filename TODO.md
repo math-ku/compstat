@@ -1,4 +1,7 @@
-# Improvements for Course
+---
+title: Course Improvements
+format: html
+---
 
 ## General
 
