@@ -2,13 +2,12 @@
 title: "Optimization"
 ---
 
+{{< include _common.qmd >}}
+
 ```{r setup, include=FALSE}
-library(tidyverse)
 library(patchwork)
 
 old_options <- options(digits = 4)
-
-theme_set(theme_grey(base_size = 18))
 ```
 
 ```{r data, echo=FALSE, cache = TRUE}
@@ -336,7 +335,7 @@ but what happens under the hood?
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Zero-Order Methods
 
@@ -350,7 +349,7 @@ Use only the function value.
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### First-Order Methods
 
@@ -398,7 +397,7 @@ $$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize w.r.t $y$ to get
 $$x^+ = x - t\nabla f(x).$$
@@ -407,7 +406,7 @@ But how do we choose $t$?
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ![](../images/gd-approx.png){width=85%}
 
@@ -443,7 +442,7 @@ Convergence rate: $O(1/k)$.
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 #### Lipschitz Constant
 
@@ -452,7 +451,7 @@ $L$ is the Lipschitz constant of $\nabla f$.
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 <!-- ![](../images/lipschitz.gif){width=50%} -->
 
@@ -494,7 +493,7 @@ $t = t \beta.$
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 #### Common (ad-hoc) choices
 
@@ -506,7 +505,7 @@ $t = t \beta.$
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 #### Duality Gap
 
@@ -534,7 +533,7 @@ $$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Newton Update
 
@@ -544,7 +543,7 @@ $$x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).$$
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ![](../images/newton-approx.png){width=52%}
 
@@ -564,7 +563,7 @@ In practice, this is often just called Newton's method.
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 #### Backtracking Line Search
 
@@ -574,7 +573,7 @@ $v = -(\nabla^2 f(x)^{-1} \nabla f(x))$ set $$t \gets \beta t.$$
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 #### Phases
 
@@ -590,7 +589,7 @@ $v = -(\nabla^2 f(x)^{-1} \nabla f(x))$ set $$t \gets \beta t.$$
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 #### Pros
 
@@ -605,7 +604,7 @@ $v = -(\nabla^2 f(x)^{-1} \nabla f(x))$ set $$t \gets \beta t.$$
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ![](../images/newton-gd-comp.png){width=100%}
 
@@ -617,13 +616,13 @@ $v = -(\nabla^2 f(x)^{-1} \nabla f(x))$ set $$t \gets \beta t.$$
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ![](../images/newton-gd-convergence-iteration.png){width=100%}
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ![](../images/newton-gd-convergence-time.png){width=100%}
 

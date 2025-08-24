@@ -2,10 +2,9 @@
 title: "Object-Oriented Programming and Density Estimation"
 ---
 
-```{r init, echo=FALSE, message=FALSE, warning=FALSE}
-library(ggplot2)
-theme_set(theme_grey(base_size = 16))
+{{< include _common.qmd >}}
 
+```{r init, echo=FALSE, message=FALSE, warning=FALSE}
 load(here::here("data", "top100dih.RData"))
 
 phipsi2 <- na.omit(dataset)
@@ -44,7 +43,7 @@ How to create non-parametric density estimates using kernel density estimation
 
 ### This Course
 
-We will focus **entirely** on S3: a _very_ informal OOP system.
+In this course, we focus **entirely** on S3: a _very_ informal OOP system.
 
 ## Example: Integration
 
@@ -306,8 +305,6 @@ Let $f_0$ denote the unknown desnity we want to estimate.
 
 - If we fit a parameterize statistical model $(f_\theta)_\theta$ to data using
   the estimator $\hat{\theta}$, then $f_{\hat{\theta}}$ is an estimate of $f_0$.
-  --
-
 - The histogram is a nonparameteric density estimator, $\hat{f}$.
 - We are interested in nonparametric estimators because
   - we want to compare data with the parametric estimate,
@@ -317,13 +314,19 @@ Let $f_0$ denote the unknown desnity we want to estimate.
 ## Density Estimation
 
 Density estimation relies on the approximation
-$$P(X \in (x-h, x+h)) = \int_{x-h}^{x+h} f_0(z) \ dz \simeq f_0(x) 2h.$$ --
+$$P(X \in (x-h, x+h)) = \int_{x-h}^{x+h} f_0(z) \ dz \simeq f_0(x) 2h.$$
 
-Rearranging and using LLN gives
+. . .
 
-\begin{align*} f*0(x) & \simeq \frac{1}{2h}P(X \in (x-h, x+h)) \\ & \simeq
+Rearranging and using the LLN gives
+
+$$
+\begin{aligned}
+f*0(x) & \simeq \frac{1}{2h}P(X \in (x-h, x+h)) \\ & \simeq
 \frac{1}{2h} \frac{1}{n} \sum*{i=1}^n 1*{(x-h, x+h)}(x_i) \\ & = \frac{1}{2hn}
-\sum*{i=1}^n 1\_{(-h, h)}(x - x_i) = \hat{f}\_h(x) \end{align*}
+\sum*{i=1}^n 1\_{(-h, h)}(x - x_i) = \hat{f}\_h(x)
+\end{aligned}
+$$
 
 ## Kernels
 
@@ -359,7 +362,7 @@ kern_dens <- function(x, h, m = 512) {
 }
 ```
 
-### An Illustration
+## An Illustration
 
 ```{r, echo = FALSE}
 library(tidyverse)
@@ -395,7 +398,7 @@ p4 <- p3 +
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 Let's say we have a data set
 
@@ -405,7 +408,7 @@ $$
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
 p2
@@ -415,17 +418,17 @@ p2
 
 ::::
 
-### An Illustration: Gaussian Kernel
+## An Illustration: Gaussian Kernel
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 We add a Gaussian density kernel with bandwidth 1 for each point.
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
 p3
@@ -435,17 +438,17 @@ p3
 
 ::::
 
-### An Illustration: Gaussian Kernel
+## An Illustration: Gaussian Kernel
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 Finally, we average the kernels.
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
 p4
@@ -471,7 +474,7 @@ f_hat_dens <- density(phipsi$psi, 0.2)
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r test-dens, eval = FALSE}
 plot(
@@ -491,7 +494,7 @@ lines(
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r test-dens-output, ref.label="test-dens", echo=FALSE, fig.width = 6, fig.asp = 0.9}
 
@@ -678,7 +681,7 @@ $$h = 0.9 \min \left(\hat{\sigma},\frac{\text{IQR}}{1.34}\right) n^{-1/5}$$
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r dens3, eval = FALSE}
 density(phipsi$phi)
@@ -692,7 +695,7 @@ lines(density(phipsi$phi), col = "red", lwd = 2)
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r dens4, eval = FALSE}
 density(phipsi$psi)
@@ -712,7 +715,7 @@ lines(density(phipsi$psi), col = "red", lwd = 2)
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r dens5, eval = FALSE, fig.width = 5, fig.asp = 1}
 density(phipsi$phi, bw = "nrd")
@@ -726,7 +729,7 @@ lines(density(phipsi$phi, bw = "nrd"), col = "red", lwd = 2)
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r dens6, eval = FALSE}
 density(phipsi$psi, bw = "nrd")
@@ -746,7 +749,7 @@ lines(density(phipsi$psi, bw = "nrd"), col = "red", lwd = 2)
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r dens7, eval = FALSE}
 density(phipsi$phi, bw = "SJ")
@@ -760,7 +763,7 @@ lines(density(phipsi$phi, bw = "SJ"), col = "red", lwd = 2)
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r dens8, eval = FALSE}
 density(phipsi$psi, bw = "SJ")

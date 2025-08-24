@@ -2,16 +2,14 @@
 title: "The EM-Algorithm"
 ---
 
+{{< include _common.qmd >}}
+
 ```{r setup, include=FALSE}
 
 library(animate)
-library(tidyverse)
 library(patchwork)
 
 old_options <- options(digits = 4)
-
-
-theme_set(theme_grey(base_size = 18))
 ```
 
 ## Today
@@ -834,9 +832,12 @@ $$D_{\theta} \Phi(\hat{\theta})^T = \hat{i}_{Y\mid X} \left(\hat{i}_Y\right)^{-1
 . . .
 
 Hence
-$$\begin{aligned} \hat{i}_X & = \left(I - \hat{i}_{Y\mid X}
+
+$$
+\begin{aligned} \hat{i}_X & = \left(I - \hat{i}_{Y\mid X}
 \left(\hat{i}_Y\right)^{-1}\right) \hat{i}\_Y = \left(I - D_{\theta}
-\Phi(\hat{\theta})^T\right) \hat{i}\_Y. \end{aligned}$$
+\Phi(\hat{\theta})^T\right) \hat{i}\_Y. \end{aligned}
+$$
 
 . . .
 

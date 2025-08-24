@@ -2,24 +2,20 @@
 title: "Introduction"
 ---
 
-```{r init, echo=FALSE, message=FALSE, warning=FALSE}
-library(ggplot2)
+{{< include _common.qmd >}}
 
+```{r init, echo=FALSE, message=FALSE, warning=FALSE}
 load(here::here("data", "top100dih.RData"))
 phipsi2 <- na.omit(dataset)
 phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
-
-theme_set(theme_grey(base_size = 18))
-
-options(width = 80)
 ```
 
 ## What is Computational Statistics?
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 - Broad field that can mean different things depending on context.
 - One definitions is that it is the use of computational methods to solve
@@ -32,7 +28,7 @@ options(width = 80)
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ![Running examples: Amino Acid Angles](../images/PhiPsi_creative.jpg){width=70%}
 
@@ -44,7 +40,7 @@ options(width = 80)
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r hist1}
 hist(
@@ -58,7 +54,7 @@ rug(phipsi$phi)
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r hist2}
 hist(
@@ -78,7 +74,7 @@ rug(phipsi$psi)
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r dens1, eval = FALSE}
 lines(
@@ -94,7 +90,7 @@ lines(
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r dens2, eval = FALSE}
 lines(
@@ -161,7 +157,7 @@ lines(
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Instructor
 
@@ -176,7 +172,7 @@ matters.
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Teaching Assistant
 
@@ -223,7 +219,7 @@ Jinyang Liu, PhD student
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Lectures
 
@@ -240,7 +236,7 @@ Jinyang Liu, PhD student
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Examination
 
@@ -278,7 +274,7 @@ Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 - **Course Material**: Slides, videos, data, groups, and assignments.
 - Actually based on Canvas (but rebranded for UCPH).
@@ -287,7 +283,7 @@ Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ![Absalon](../images/absalon.jpg){width=50%}
 
@@ -367,7 +363,7 @@ f <- function(x, y) {
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Arguments
 
@@ -377,7 +373,7 @@ formals(f)
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Body
 
@@ -745,7 +741,10 @@ head(kern_benchmarks, 3)
 
 ## Plotting Results
 
-```{r kern-bench-fig, message=FALSE, warning=FALSE, fig.width=11, fig.height=4.5}
+```{r kern-bench-fig}
+#| message: false
+#| warning: false
+#| fig-width: 7
 library(tidyverse)
 mutate(kern_benchmarks, expression = as.character(expression)) |>
   ggplot(aes(m, median, color = expression)) +

@@ -2,17 +2,15 @@
 title: "Gaussian Mixtures and Mixed Models with the EM Algorithm"
 ---
 
+{{< include _common.qmd >}}
+
 ```{r setup, include=FALSE}
 
 library(animate)
-library(tidyverse)
 library(patchwork)
 library(Matrix)
 
-
 set.seed(1422)
-
-theme_set(theme_grey(base_size = 18))
 ```
 
 ## Today

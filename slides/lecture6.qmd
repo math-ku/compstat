@@ -2,12 +2,12 @@
 title: "Monte Carlo Methods"
 ---
 
+{{< include _common.qmd >}}
+
 ```{r setup, include=FALSE}
-library(tidyverse)
 library(patchwork)
 
 old_options <- options(digits = 4)
-theme_set(theme_grey(base_size = 9))
 ```
 
 ## Rejection Sampling Recap
@@ -103,7 +103,7 @@ $$\hat{\mu}_{\textrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\textrm{MC}}}{\sqrt{n}}.$
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r gamma-sim, echo=-1}
 set.seed(1234)
@@ -118,7 +118,7 @@ sigma_hat # Theoretical value: √8
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r gamma-fig, echo = FALSE, fig.width = 5, fig.height = 4}
 x <- seq(0, 20, length.out = 100)
@@ -228,7 +228,7 @@ It has mean $\mu$.
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r gamma-sim-IS, echo=-1}
 set.seed(1234)
@@ -243,7 +243,7 @@ mu_hat_IS[B] # Theoretical value 8
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r gammasim-fig, echo = FALSE, fig.height = 6, fig.width = 6}
 z <- seq(-12, 12, length.out = 100) + 10

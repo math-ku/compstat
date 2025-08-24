@@ -5,13 +5,11 @@ execute:
   cache: true
 ---
 
-```{r setup, include=FALSE}
-library(ggplot2)
+{{< include _common.qmd >}}
 
+```{r setup, include=FALSE}
 source(here::here("R/kernel.R"), keep.source = TRUE)
 source(here::here("R/gauss.R"), keep.source = TRUE)
-
-theme_set(theme_grey(base_size = 9))
 ```
 
 ## Today
@@ -537,7 +535,7 @@ matrix_vector_dot
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 - In R, matrices are stored in column-major order.
 - This is generally language-dependent.
@@ -548,7 +546,7 @@ matrix_vector_dot
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 :::
 
@@ -644,7 +642,7 @@ It would be embarassing to miss the opportuity to parallelize the task.
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r foreach-load, message = FALSE, echo = -1}
 options(width = 40)
@@ -660,7 +658,7 @@ foreach(i = seq_len(3)) %dopar%
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Notes
 
@@ -765,7 +763,7 @@ par_lapply(x, sum)
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### Without Futures
 
@@ -779,7 +777,7 @@ v
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ### With Futures
 

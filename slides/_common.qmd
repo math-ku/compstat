@@ -1,0 +1,9 @@
+```{r setup-common}
+#| echo: false
+#| message: false
+#| warning: false
+library(tidyverse)
+library(cowplot)
+theme_set(theme_cowplot())
+options(width = 80)
+```

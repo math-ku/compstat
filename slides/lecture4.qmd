@@ -2,11 +2,7 @@
 title: "Scatterplot Smoothing"
 ---
 
-```{r setup, include=FALSE}
-library(tidyverse)
-
-theme_set(theme_grey(base_size = 16))
-```
+{{< include _common.qmd >}}
 
 ## Today
 
@@ -536,7 +532,7 @@ pen_mat <- function(inner_knots) {
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r Omega-Simpson2, eval=FALSE}
 omega <- pen_mat(seq(0, 1, 0.1))
@@ -546,7 +542,7 @@ image(Matrix(omega))
 
 :::
 
-::: {.column width="50%"}
+::: {.column width="47%"}
 
 ```{r Omega-Simpson3, echo=FALSE, ref.label="Omega-Simpson2"}
 

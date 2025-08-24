@@ -2,16 +2,14 @@
 title: "Stochastic Gradient Descent"
 ---
 
+{{< include _common.qmd >}}
+
 ```{r setup, include=FALSE}
 
 library(animate)
-library(tidyverse)
 library(patchwork)
 
-
 set.seed(1422)
-
-theme_set(theme_bw(base_size = 18))
 ```
 
 ## Today

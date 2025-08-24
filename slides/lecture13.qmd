@@ -1,13 +1,8 @@
 ---
 title: "Variations on Stochastic Gradient Descent"
-
-format:
-  beamer:
-    include-in-header:
-      text: |
-        \setbeamertemplate{page number in head/foot}[appendixframenumber]
-        \setbeameroption{show notes}
 ---
+
+{{< include _common.qmd >}}
 
 ## Last Time
 

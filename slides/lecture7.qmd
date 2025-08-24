@@ -2,13 +2,12 @@
 title: "Rcpp"
 ---
 
+{{< include _common.qmd >}}
+
 ```{r setup, include=FALSE}
-library(tidyverse)
 library(patchwork)
 
 old_options <- options(digits = 4)
-
-theme_set(theme_grey(base_size = 9))
 ```
 
 ```{Rcpp source-rcpp, ref.label=knitr::all_rcpp_labels(), include=FALSE}

@@ -61,6 +61,7 @@
             testthat
             zeallot
             future
+            cowplot
           ];
         };
       in
