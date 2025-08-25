@@ -63,7 +63,11 @@ idea.
 # A: The EM-algorithm for the $t$-Distribution
 
 Let $Y = (X, W) \in \mathbb{R} \times (0, \infty)$ have joint density
-$$f(x, w) = \frac{1}{ \sqrt{ \pi \nu \sigma^2} 2^{(\nu + 1) /2} \Gamma(\nu/2)} w^{\frac{\nu - 1}{2}} e^{- \frac{w}{2}\left(1 + \frac{(x - \mu)^2}{\nu \sigma^2}\right)}.$$
+
+$$
+f(x, w) = \frac{1}{ \sqrt{ \pi \nu \sigma^2} 2^{(\nu + 1) /2} \Gamma(\nu/2)} w^{\frac{\nu - 1}{2}} e^{- \frac{w}{2}\left(1 + \frac{(x - \mu)^2}{\nu \sigma^2}\right)}.
+$$
+
 Then the marginal density of $X$ is the $t$-distribution (why?) with location
 parameter $\mu \in \mathbb{R}$, scale parameter $\sigma > 0$ and shape parameter
 $\nu > 0$. You can initially regard $\nu$ as fixed. Maximize the complete data
@@ -75,21 +79,32 @@ the Fisher information. You can consider generalizing to estimating the shape
 parameter $\nu$ as well, but then the M-step cannot be computed analytically and
 you need the digamma function.
 
-_Remark: We can think of the joint density of $Y$ as generating first $W$ from a
+::: {.callout-tip}
+
+We can think of the joint density of $Y$ as generating first $W$ from a
 $\chi^2_{\nu}$-distribution, and then generating $X$ conditionally on $W = w$
 from a $\mathcal{N}(\mu, \nu \sigma^2 / w)$-distribution. For the E-step observe
 that the density of $W \mid X = x$ is $\propto f(x, w)$ with $x$ fixed and
-recognize this as a $\Gamma$-distribution.\_
+recognize this as a $\Gamma$-distribution.
+
+:::
 
 # B: Mixtures of $t$-Distributions
 
 The $t$-distribution with location parameter $\mu \in \mathbb{R}$, scale
 parameter $\sigma > 0$ and shape parameter $\nu > 0$ has density
-$$f(x \mid \mu, \sigma^2, \nu) = \frac{\Gamma((\nu + 1)/2)}{\sqrt{ \pi \nu \sigma^2} \Gamma(\nu/2)} \left(1 + \frac{(x- \mu)^2}{\nu \sigma^2}\right)^{- (\nu + 1)/2}.$$
+
+$$
+f(x \mid \mu, \sigma^2, \nu) = \frac{\Gamma((\nu + 1)/2)}{\sqrt{ \pi \nu \sigma^2} \Gamma(\nu/2)} \left(1 + \frac{(x- \mu)^2}{\nu \sigma^2}\right)^{- (\nu + 1)/2}.
+$$
 
 In this assignment you will consider iid observations $x_1, \ldots, x_n$ from
 the two-component mixture of $t$-distributions, that is, the density is
-$$p f(x \mid \mu_1, \sigma_1^2, \nu_1) + (1 - p) f(x \mid \mu_2, \sigma_2^2, \nu_2)$$
+
+$$
+p f(x \mid \mu_1, \sigma_1^2, \nu_1) + (1 - p) f(x \mid \mu_2, \sigma_2^2, \nu_2)
+$$
+
 for the five parameters $p \in (0, 1)$, $\mu_1, \mu_2 \in \mathbb{R}$,
 $\sigma_1, \sigma_2 > 0$. The shape parameters $\nu_1, \nu_2 > 0$ can be fixed.
 
