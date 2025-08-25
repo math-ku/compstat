@@ -60,7 +60,7 @@ investigate. Robustness towards the initial choice of parameters is important,
 and testing of the implementation on several (simulated) data sets is a good
 idea.
 
-# A: The EM-algorithm for the $t$-Distribution
+# A: The EM-Algorithm for the $t$-Distribution
 
 Let $Y = (X, W) \in \mathbb{R} \times (0, \infty)$ have joint density
 
