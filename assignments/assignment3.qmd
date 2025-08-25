@@ -69,15 +69,15 @@ f(x, w) = \frac{1}{ \sqrt{ \pi \nu \sigma^2} 2^{(\nu + 1) /2} \Gamma(\nu/2)} w^{
 $$
 
 Then the marginal density of $X$ is the $t$-distribution (why?) with location
-parameter $\mu \in \mathbb{R}$, scale parameter $\sigma > 0$ and shape parameter
-$\nu > 0$. You can initially regard $\nu$ as fixed. Maximize the complete data
-log-likelihood $$\sum_{i=1}^n \log f(y_i, w_i)$$ for i.i.d. observations over
-$(\mu, \sigma^2)$ and implement this as a function. Then implement the EM
-algorithm for estimating $(\mu, \sigma^2)$, compare it to other optimization
-algorithms based on the marginal log-likelihood, and investigate how to compute
-the Fisher information. You can consider generalizing to estimating the shape
-parameter $\nu$ as well, but then the M-step cannot be computed analytically and
-you need the digamma function.
+parameter $\mu \in \mathbb{R}$, scale parameter $\sigma > 0$, and shape
+parameter $\nu > 0$. You can initially regard $\nu$ as fixed. Maximize the
+complete data log-likelihood $$\sum_{i=1}^n \log f(y_i, w_i)$$ for i.i.d.
+observations over $(\mu, \sigma^2)$ and implement this as a function. Then
+implement the EM algorithm for estimating $(\mu, \sigma^2)$, compare it to other
+optimization algorithms based on the marginal log-likelihood, and investigate
+how to compute the Fisher information. You can consider generalizing to
+estimating the shape parameter $\nu$ as well, but then the M-step cannot be
+computed analytically and you need the digamma function.
 
 ::: {.callout-tip}
 
