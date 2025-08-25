@@ -15,7 +15,7 @@ where all the material, including slides, assignments, and data, are collected.
 - **Slides:** [Introduction](slides/lecture1.pdf)
 - **Reading:** [Chapter 6 (AdvR)](https://adv-r.hadley.nz/functions.html)
 - **Exercises:**
-  [A1-A7 (CSWR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex),
+  [A1-A7 (CSWR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex)
   - **Data:** [`infrared.txt`](data/infrared.txt)
 
 #### Lecture 2: OOP and Density Estimation
@@ -25,8 +25,8 @@ where all the material, including slides, assignments, and data, are collected.
   - [Chapter 13](https://adv-r.hadley.nz/s3.html) (AdvR)
   - [Sections 2-2.2](https://cswr.nrhstat.org/density.html) (CSwR)
 - **Exercises:**
-  - [A8-A10 (CSwR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex)
-  - [2.1-2.6 (CSwR, Chapter 2)](https://cswr.nrhstat.org/density#density:ex)
+  - [A8-A10](https://cswr.nrhstat.org/app-r#app-ex) (CSwR, Appendix A)
+  - [2.1-2.6](https://cswr.nrhstat.org/density#density:ex) (CSwR, Chapter 2)
 
 <!-- ### Week 2 -->
 <!---->
