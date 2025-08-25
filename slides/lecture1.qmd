@@ -353,6 +353,12 @@ loop variable is odd, and exits if is larger than 10.
 
 ## Components of a Function
 
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Arguments
+
 ```{r}
 f <- function(x, y) {
   x + y
@@ -361,17 +367,13 @@ f <- function(x, y) {
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-### Arguments
-
 ```{r}
 formals(f)
 ```
 
 :::
+
+. . .
 
 ::: {.column width="47%"}
 
@@ -380,6 +382,8 @@ formals(f)
 ```{r}
 body(f)
 ```
+
+. . .
 
 ### Environment
 
@@ -458,16 +462,12 @@ count_zeros(c(0, 0, 0))
 
 ## Testing
 
-- Tests that a given input to a function returns what you expect. --
-
+- Tests that a given input to a function returns what you expect.
 - Thumb of rule: when you find a bug in your function, write a test that fails
-  on it; _then_ fix the function. --
-
+  on it; _then_ fix the function.
 - As you refactor your code (or dependent code changes), your tests will catch
-  these **regressions** for you. --
-
-- Some people even say that writing tests is the first thing you should do. --
-
+  these **regressions** for you.
+- Some people even say that writing tests is the first thing you should do.
 - In R, most common solution is to use the **testthat** package.
 - Works best in packages, but is fine for projects too.
 
@@ -492,7 +492,6 @@ test_that("count_zeros work on various input", {
 count_zeros <- function(x) {
   n_zeros <- 0
   for (i in seq_along(x)) {
-    #<<
     if (x[i] == 0) {
       n_zeros <- n_zeros + 1
     }
@@ -500,6 +499,8 @@ count_zeros <- function(x) {
   n_zeros
 }
 ```
+
+1. Take penguins and then bla.
 
 ```{r}
 # testthat::test_dir("tests")
