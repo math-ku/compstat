@@ -108,11 +108,11 @@ $$
 for the five parameters $p \in (0, 1)$, $\mu_1, \mu_2 \in \mathbb{R}$,
 $\sigma_1, \sigma_2 > 0$. The shape parameters $\nu_1, \nu_2 > 0$ can be fixed.
 
-Implement the $Q$-function and its gradient, and implement a generalized EM
-algorithm for estimating the parameters of the two-component mixture of
-$t$-distributions. Compare the EM algorithm with e.g. gradient descent or
-another optimization algorithm. Investigate also how to implement a computation
-of the Fisher information.
+Implement the $Q$-function and its gradient, and implement a **generalized EM
+algorithm** for estimating the parameters of the two-component mixture of
+$t$-distributions. Compare the algorithm with e.g. gradient descent or another
+optimization algorithm. Finally, implement a computation of the Fisher
+information.
 
 Use simulated data to test your implementations. It may be of interest to
 compare estimates of location and scale parameters with estimates from a
