@@ -167,14 +167,14 @@ $$\hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)
 ```{r run_mean_def}
 run_mean <- function(y, k) {
   n <- length(y)
-  m <- floor((k - 1) / 2) #<<
-  k <- 2 * m + 1 # Ensures k is odd and m = (k - 1) / 2 #<<
+  m <- floor((k - 1) / 2)
+  k <- 2 * m + 1 # Ensures k is odd and m = (k - 1) / 2
   y <- y / k
   s <- rep(NA, n)
-  s[m + 1] <- sum(y[1:k]) #<<
+  s[m + 1] <- sum(y[1:k])
 
   for (i in (m + 1):(n - m - 1)) {
-    s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m] #<<
+    s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m]
   }
 
   s
@@ -567,7 +567,7 @@ inner_knots <- nuuk_year$Year
 # Note that order does not matter
 knots <- c(rep(range(inner_knots), 3), inner_knots)
 
-phi <- splineDesign(knots, inner_knots) #<<
+phi <- splineDesign(knots, inner_knots)
 ```
 
 . . .
@@ -864,10 +864,10 @@ running_mean <- function(..., data, k = 5, boundary = NULL) {
   m <- floor((k - 1) / 2)
   if (m > 0 && !is.null(boundary)) {
     if (boundary == "pad") {
-      y <- c(rep(y[1], m), y, rep(y[n], m)) #<<
+      y <- c(rep(y[1], m), y, rep(y[n], m))
     }
     if (boundary == "rev") {
-      y <- c(y[m:1], y, y[n:(n - m + 1)]) #<<
+      y <- c(y[m:1], y, y[n:(n - m + 1)])
     }
   }
   s <- run_mean(y, k = k)

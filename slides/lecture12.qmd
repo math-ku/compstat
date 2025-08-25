@@ -423,7 +423,7 @@ sgd <- function(
   n, # Sample size
   gamma, # Decay schedule or a fixed learning rate
   maxiter = 100, # Max epoch iterations
-  sampler = sample, # How data is resampled. Default is a random permutation #<<
+  sampler = sample, # How data is resampled. Default is a random permutation
   cb = NULL,
   ...
 ) {
@@ -446,7 +446,7 @@ sgd <- function(
 
 ```{r pois-gradient, dependson="SG", echo=-1, cache = TRUE}
 set.seed(17102020)
-n <- 50 # Small sample size #<<
+n <- 50 # Small sample size
 z <- runif(n, -1, 1)
 y <- rpois(n, mu(z, beta_true))
 grad_pois <- function(par, i) (mu(z[i], par) - y[i]) * c(1, z[i])
@@ -474,7 +474,7 @@ cat("beta_hat:", beta_hat)
 
 ```{r batch-poisson-SG-2, dependson="pois-gradient", echo=-1, cache = TRUE}
 set.seed(17102020)
-n <- 500 # Larger sample size #<<
+n <- 500 # Larger sample size
 z <- runif(n, -1, 1)
 y <- rpois(n, mu(z, beta_true))
 pois_SG_tracer_2 <- tracer("par", Delta = 0)

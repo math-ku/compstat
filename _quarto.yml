@@ -38,7 +38,7 @@ format:
     linkcolor: black
     urlcolor: DodgerBlue3
     highlight-style: tango
-    cite-method: biblatex
+    # cite-method: biblatex
     indent: true
     template-partials:
       - slides/tightlist.tex
@@ -52,6 +52,7 @@ format:
 date-format: long
 
 execute:
+  cache: true
   freeze: auto
 
 bibliography: assets/bibliography.bib

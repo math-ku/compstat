@@ -4,6 +4,6 @@
 #| warning: false
 library(tidyverse)
 library(cowplot)
-theme_set(theme_cowplot())
-options(width = 80)
+theme_set(theme_cowplot(font_size = 10))
+options(width = 70)
 ```

@@ -11,26 +11,41 @@ phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 ```
 
-## What is Computational Statistics?
+## Computational Statistics?
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-- Broad field that can mean different things depending on context.
-- One definitions is that it is the use of computational methods to solve
-  statistical problems, for instance
-  - simulation,
-  - optimization,
-  - numerical integration,
-  - data analysis, and
-  - visualization.
+### What Is Computational Statistics?
+
+It is a broad field, where meaning depends on context.
+
+. . .
+
+\bipskip
+
+One _broad_ definition is that it is **the use of computational methods to solve
+statistical problems**, for instance
+
+- simulation,
+- optimization,
+- numerical integration,
+- data analysis, and
+- visualization.
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-![Running examples: Amino Acid Angles](../images/PhiPsi_creative.jpg){width=70%}
+### A Running Example
+
+Throughout the course we will use a data set of amino acid angles, $\Phi$ and
+$\Psi$, from protein structures.
+
+![Amino Acid Angles](../images/PhiPsi_creative.jpg){width=70%}
 
 :::
 
@@ -38,32 +53,34 @@ phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 
 ## Histograms
 
+A simple way to analyze the distributions of the angles $\Phi$ and $\Psi$ is the
+**histogram**.
+
+. . .
+
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-```{r hist1}
-hist(
-  phipsi$phi,
-  prob = TRUE,
-  xlab = expression(phi),
-  main = NULL
-)
-rug(phipsi$phi)
+```{r hist1-src}
+#| eval: false
+ggplot(phipsi, aes(x = phi)) +
+  geom_histogram() +
+  geom_rug(alpha = 0.5) +
+  labs(
+    x = expression(Phi),
+    y = "Density"
+  )
 ```
 
 :::
 
 ::: {.column width="47%"}
 
-```{r hist2}
-hist(
-  phipsi$psi,
-  prob = TRUE,
-  xlab = expression(psi),
-  main = NULL
-)
-rug(phipsi$psi)
+```{r hist1-show}
+#| ref-label: hist1-src
+#| fig-height: 2.3
+#| echo: false
 ```
 
 :::
@@ -72,35 +89,35 @@ rug(phipsi$psi)
 
 ## Density Estimation
 
+Histograms are not very smooth. If we allow ourselves to make stronger
+assumptions, we can get a smoother estimate of the distribution, using **kernel
+density estimation** (KDE).
+
+. . .
+
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-```{r dens1, eval = FALSE}
-lines(
-  density(phipsi$phi),
-  col = "red",
-  lwd = 2
-)
-```
-
-```{r, echo = FALSE, ref.label=c('hist1','dens1')}
-
+```{r dens}
+#| eval: false
+ggplot(phipsi, aes(x = phi)) +
+  geom_density() +
+  geom_rug(alpha = 0.5) +
+  labs(
+    x = expression(Phi),
+    y = "Density"
+  )
 ```
 
 :::
 
 ::: {.column width="47%"}
 
-```{r dens2, eval = FALSE}
-lines(
-  density(phipsi$psi),
-  col = "red",
-  lwd = 2
-)
-```
-
-```{r, echo = FALSE, ref.label=c('hist2','dens2')}
+```{r dens-src}
+#| echo: false
+#| ref-label: dens
+#| fig-height: 2.3
 
 ```
 
@@ -108,7 +125,14 @@ lines(
 
 ::::
 
+. . .
+
+But how is this KDE actually computed? Doing this efficiently is a
+**computational statistics** problem.
+
 ## Statistical Topics of the Course
+
+There are three main statistical topics of the course.
 
 ### Smoothing
 
@@ -172,6 +196,8 @@ matters.
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
 ### Teaching Assistant
@@ -206,7 +232,7 @@ Jinyang Liu, PhD student
 - [Register in Absalon](https://absalon.ku.dk/courses/76985/groups#tab-25490)
   (limited slots assignment)
 - Compulsory but not graded
-- Work-in-progress solutions are fine
+- Work-in-progress solutions are fine.
 
 . . .
 
@@ -225,6 +251,8 @@ Jinyang Liu, PhD student
 
 - Tuesdays and Thursdays, 10:15–12:00 (Johan)
 
+. . .
+
 ### Exercise Sessions
 
 - Thursdays, 08:15–10:00 (Jinyang)
@@ -236,12 +264,14 @@ Jinyang Liu, PhD student
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
 ### Examination
 
-- November 6 and 7 (8.15-17.30, tentative)
-- Room to be announced
+- November 6-8 (8.15-17.30, tentative)
+- Rooms to be announced
 
 :::
 
@@ -310,33 +340,14 @@ We expect knowledge of
 - function calling,
 - interactive and script usage (`source`) of R.
 
+. . .
+
 All of this is covered in chapters 1–5 of
 [Advanced R](https://adv-r.hadley.nz/).
 
+\medskip
+
 But you **do not** need to be an experienced programmer.
-
-## Warm-Up Exercises
-
-### Exercise 1
-
-Can you list three ways to access element `a` in this list?
-
-```{r}
-l <- list(a = 1, b = 2)
-```
-
-```{r, include=FALSE}
-l[[1]]
-l$a
-l[["a"]]
-```
-
-. . .
-
-### Exercise 2
-
-Write a for loop that prints "even" if the loop variable is even, "odd" if the
-loop variable is odd, and exits if is larger than 10.
 
 # Functions
 
@@ -450,13 +461,12 @@ count_zeros <- function(x) {
   }
   n_zeros
 }
-
-count_zeros(c(3, 2, 0))
 ```
 
 . . .
 
 ```{r}
+count_zeros(c(3, 2, 0))
 count_zeros(c(0, 0, 0))
 ```
 
@@ -500,8 +510,6 @@ count_zeros <- function(x) {
 }
 ```
 
-1. Take penguins and then bla.
-
 ```{r}
 # testthat::test_dir("tests")
 ```
@@ -515,13 +523,10 @@ count_zeros <- function(x) {
 
 ## Functional Programming
 
-`sapply()` is what's typically called a _map_, with a function as its second
-argument.
-
-. . .
-
-It is a feature of R as a functional programming language that it can operate
-with functions as with any other data structure.
+- `sapply()` is what's typically called a _map_, with a function as its second
+  argument.
+- It is a feature of R as a functional programming language that it can operate
+  with functions as with any other data structure.
 
 . . .
 
@@ -541,6 +546,9 @@ our_apply <- function(x, fun) {
 
 ```{r}
 sapply(1:10, exp)
+```
+
+```{r}
 our_apply(1:10, exp)
 ```
 
@@ -564,7 +572,7 @@ our_apply(1:10, rpois)
 ```{r}
 our_apply(
   1:10,
-  function(lambda) rpois(1, lambda = 0.9) #<<
+  function(lambda) rpois(1, lambda = 0.9)
 )
 ```
 
@@ -607,8 +615,7 @@ our_apply(1:10, rpois, n = 1)
 
 ```{r}
 x <- rnorm(1e4)
-
-bench::mark(
+bench_res <- bench::mark(
   {
     y <- numeric(length(x))
     for (i in seq_along(x)) {
@@ -620,18 +627,27 @@ bench::mark(
 )
 ```
 
-## Loops in Disguise
+## Plot Benchmark Results
 
-```{r}
-bench::mark(
-  sapply(x, function(x_i) 10 * x_i),
-  10 * x
-)
+```{r bench-plot}
+#| fig-width: 7
+autoplot(bench_res)
 ```
+
+## Beware of Loops in Disguise
+
+Just because you ran a function, it does not mean that it is vectorized.
 
 . . .
 
-`apply()` and co. are basically just loops in disguise.
+```{r}
+#| fig-width: 7
+bench::mark(
+  sapply(x, function(x_i) 10 * x_i),
+  10 * x
+) |>
+  plot()
+```
 
 ## Vectorization
 
@@ -656,11 +672,15 @@ count_zeros_vec <- function(x) {
 - Is there a good-enough existing implemention for your problem? If yes, then
   you are done.
 - If not, implement a solution and test it. Does it solve your problem
-  sufficiently well? If yes, then you're done. --
+  sufficiently well? If yes, then you're done.
 - If not, then profile (next week!), benchmark, and debug (week 5). Then
   refactor and optimize.
 
+. . .
+
 ### The Root of All Evil
+
+\medskip
 
 > We _should_ forget about small efficiencies, say about 97% of the time:
 > premature optimization is the root of all evil. Yet we should not pass up our
@@ -678,9 +698,8 @@ kern_dens <- function(x, h, m = 512) {
 
   for (i in seq_along(xx)) {
     for (j in seq_along(x)) {
-      #<<
-      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2)) #<<
-    } #<<
+      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
+    }
   }
 
   y <- y / (sqrt(2 * pi) * h * length(x))
@@ -699,7 +718,7 @@ kern_dens_vec <- function(x, h, m = 512) {
   const <- (sqrt(2 * pi) * h * length(x))
 
   for (i in seq_along(xx)) {
-    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) / const #<<
+    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) / const
   }
 
   list(x = xx, y = y)
@@ -736,8 +755,6 @@ kern_benchmarks <- bench::press(
     )
   }
 )
-
-head(kern_benchmarks, 3)
 ```
 
 ## Plotting Results
@@ -764,10 +781,9 @@ Especially good for error messages.
 
 ### Generative AI
 
-Also great for error messages and debugging
-
-**Caution**: You need to understand the results, especially when you ask it to
-create something for you.
+- Also great for error messages and debugging
+- _Caution_: You need to understand the results, especially when you ask it to
+  create something for you.
 
 . . .
 
@@ -775,3 +791,26 @@ create something for you.
 
 Use the fact that there are twenty other people in the course with exactly the
 same problem.
+
+# Exercises
+
+### Exercise 1
+
+Can you list three ways to access element `a` in this list?
+
+```{r}
+l <- list(a = 1, b = 2)
+```
+
+```{r, include=FALSE}
+l[[1]]
+l$a
+l[["a"]]
+```
+
+. . .
+
+### Exercise 2
+
+Write a for loop that prints "even" if the loop variable is even, "odd" if the
+loop variable is odd, and exits if is larger than 10.

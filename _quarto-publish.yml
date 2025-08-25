@@ -6,5 +6,8 @@ format:
           \setbeamertemplate{page number in head/foot}[appendixframenumber]
           \usepackage{fontsetup}
 
+execute:
+  cache: false
+
 filters:
   - incremental-to-static-slides

@@ -235,7 +235,7 @@ set.seed(1234)
 B <- 1000
 x <- rnorm(B, 10, 3)
 w_star <-
-  dgamma(x, 8) / dnorm(x, 10, 3) #<<
+  dgamma(x, 8) / dnorm(x, 10, 3)
 mu_hat_IS <-
   cumsum(x * w_star) / (1:B)
 mu_hat_IS[B] # Theoretical value 8
@@ -742,7 +742,7 @@ lines(1:n, mu_hat - 1.96 * sigma_hat / sqrt(1:n))
 ## Different Target
 
 ```{r MC4, cache = TRUE}
-alpha <- 0.4 #<<
+alpha <- 0.4
 evaluations <- numeric(n)
 set.seed(123)
 

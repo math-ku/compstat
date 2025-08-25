@@ -265,8 +265,8 @@ library(tidyverse)
 
 mutate(
   dens_bench,
-  expr = as.character(expression), #<<
-  median = as.numeric(median) #<<
+  expr = as.character(expression),
+  median = as.numeric(median)
 ) |>
   ggplot(aes(n, median, color = expr)) +
   geom_point() +
@@ -722,7 +722,7 @@ it's first argument and a cluster object as the second argument.
 ```{r par-mean-intro, eval = FALSE}
 par_mean <- function(x) {
   n <- length(x)
-  # Your code here #<<
+  # Your code here
 }
 ```
 
@@ -785,7 +785,6 @@ v
 library(future)
 v %<-%
   {
-    #<<
     cat("Hello world!\n")
     3.14
   }
@@ -806,7 +805,7 @@ v
 
 ```{r}
 #| eval: false
-plan(multisession) #<<
+plan(multisession)
 
 # plan(multicore) # Not on Windows or RStudio!
 

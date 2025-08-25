@@ -478,7 +478,7 @@ Some thought has to go into the initial parameter choice.
 
 ```{r moth-error, error = TRUE, linewidth = 38}
 optim(
-  c(0, 0), #<<
+  c(0, 0),
   neg_loglik_pep,
   x = x
 )
@@ -506,9 +506,9 @@ mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
   force(group)
   force(prob)
 
-  function(par) {
-    pr <- prob(par)
-    if (!constraint(par) || any(pr > 1) || any(pr < 0)) {
+  function(params) {
+    pr <- prob(params)
+    if (!constraint(params) || any(pr > 1) || any(pr < 0)) {
       return(Inf)
     }
     -sum(x * log(M(pr, group)))
