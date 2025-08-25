@@ -14,7 +14,7 @@ phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 
 ## Today's Agenda
 
-### Object-Oriented Programming in R
+### Object-Oriented Programming
 
 How to create and work with S3 classes
 
@@ -24,9 +24,51 @@ How to create and work with S3 classes
 
 How to create non-parametric density estimates using kernel density estimation
 
-# Object-Oriented Programming in R
+# Object-Oriented Programming
 
-## Many Systems
+## What Is Object-Oriented Programming (OOP)?
+
+A programming paradigm based on the concept of "objects", which contain data and
+methods.
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Data
+
+Contains attributes and properties (e.g. name, type, size, color, etc.)
+
+. . .
+
+### Methods
+
+Functions that operate on the data (e.g. print, plot, summarize, etc.).
+
+:::
+
+::: {.column width="47%"}
+
+### Key Concepts
+
+- **Encapsulation**: Bundling data and methods together.
+- **Inheritance**: Creating new classes based on existing ones.
+- **Polymorphism**: Methods can operate differently based on the object's class.
+
+. . .
+
+### Benefits
+
+- Code organization and modularity
+- Reusability and maintainability
+
+:::
+
+::::
+
+## OOP in R
 
 ### In Base R
 
@@ -41,6 +83,8 @@ How to create non-parametric density estimates using kernel density estimation
 - [R6](https://cran.r-project.org/package=R6)
 - [S7](https://cran.r-project.org/package=S7)
 
+. . .
+
 ### This Course
 
 In this course, we focus **entirely** on S3: a _very_ informal OOP system.
@@ -48,14 +92,16 @@ In this course, we focus **entirely** on S3: a _very_ informal OOP system.
 ## Example: Integration
 
 The function `integrate()` takes a function as argument and returns the value of
-numerically integrating the function. --
+numerically integrating the function. It is an example of a _functional_.
 
-## It is an example of a _functional_.
+. . .
 
 ```{r}
 integral <- integrate(sin, 0, 1)
 integral
 ```
+
+. . .
 
 The numerical value of the integral $$\int_0^1 \sin(x) \mathrm{d}x$$ is printed
 nicely above—including an indication of the numerical error.
@@ -84,16 +130,18 @@ The class label can be extracted directly.
 class(integral)
 ```
 
---
+. . .
 
-- The printed result of `integrate()` is not the same as the object itself.
-- What you see is the result of the **method** `print.integrate()`.
+The printed result of `integrate()` is not the same as the object itself. What
+you see is the result of the **method** `print.integrate()`.
 
 ## Printing Objects of Class Integrate
 
 ```{r}
 stats:::print.integrate
 ```
+
+. . .
 
 (The `print.integrate()` function is not exported from the stats package. It is
 in the namespace of the **stats** package, and to access it directly we use
@@ -147,6 +195,8 @@ histogram.
 - It is an informal system. No checks of object content.
 - One implements a _generic_ function via `UseMethod()`. E.g.
 
+. . .
+
 ```{r, eval=FALSE}
 plot
 ```
@@ -159,8 +209,7 @@ cat(deparse(plot))
 
 - **Methods** for specific classes are implemented as standard R functions with
   the naming convention `f.classname()` for a method for class `classname` of
-  the function `f()`. --
-
+  the function `f()`.
 - The system is widely used to write methods for the generic functions
   `print()`, `plot()` and `summary()`.
 
@@ -172,10 +221,17 @@ count_zeros_vec <- function(x) {
 }
 ```
 
-## Recall the function `count_zeros_vec()` that counts the number of zeros in a vector.
+Recall the function `count_zeros_vec()` that counts the number of zeros in a
+vector.
+
+\bigskip
+
+. . .
 
 If we need this number many times it is beneficial to compute it once and then
 extract it whenever needed.
+
+\bigskip
 
 . . .
 
@@ -213,7 +269,7 @@ count_zeros <- function(x) {
 }
 ```
 
---
+. . .
 
 We can let the default method be the vectorized version.
 
@@ -253,48 +309,6 @@ count_data # Invokes print.count_object()
 
 ```{r}
 count_zeros(count_data) # Invokes count_zeros.count_object()
-```
-
-## Exercise 1
-
-### Exercise 1
-
-Create a constructor function called `summarize_vector()` that that takes a
-numeric vector as input and returns an object of class `vector_summary`
-containing the mean, median, and standard deviation of the input vector.
-
-```{r include = FALSE}
-summarize_vector <- function(x) {
-  structure(
-    list(
-      mean = mean(x),
-      median = median(x),
-      sd = sd(x)
-    ),
-    class = "vector_summary"
-  )
-}
-```
-
-. . .
-
-### Exercise 2
-
-Write a `print()` method for the class `vector_summary` that prints the mean,
-median, and standard deviation in a neatly formatted way.
-
-```{r, include = FALSE}
-print.vector_summary <- function(x) {
-  cat(
-    "Mean:",
-    x$mean,
-    "\nMedian:",
-    x$median,
-    "\nStandard deviation:",
-    x$sd,
-    "\n"
-  )
-}
 ```
 
 # Density Estimation
@@ -365,7 +379,6 @@ kern_dens <- function(x, h, m = 512) {
 ## An Illustration
 
 ```{r, echo = FALSE}
-library(tidyverse)
 x <- c(-1, 3, 5, 6, 9)
 n <- length(x)
 
@@ -779,7 +792,51 @@ lines(density(phipsi$psi, bw = "SJ"), col = "red", lwd = 2)
 
 ::::
 
-## Exercises
+# Exercises
+
+## Exercise 1
+
+### Exercise 1
+
+Create a constructor function called `summarize_vector()` that that takes a
+numeric vector as input and returns an object of class `vector_summary`
+containing the mean, median, and standard deviation of the input vector.
+
+```{r include = FALSE}
+summarize_vector <- function(x) {
+  structure(
+    list(
+      mean = mean(x),
+      median = median(x),
+      sd = sd(x)
+    ),
+    class = "vector_summary"
+  )
+}
+```
+
+. . .
+
+### Exercise 2
+
+Write a `print()` method for the class `vector_summary` that prints the mean,
+median, and standard deviation in a neatly formatted way.
+
+```{r, include = FALSE}
+print.vector_summary <- function(x) {
+  cat(
+    "Mean:",
+    x$mean,
+    "\nMedian:",
+    x$median,
+    "\nStandard deviation:",
+    x$sd,
+    "\n"
+  )
+}
+```
+
+## Exercise 2
 
 Take the `kern_dens()` function we started out with and implement Silverman's
 rule of thumb for choosing the bandwidth. Test against the default behavior of
@@ -834,7 +891,7 @@ plot(density(x))
 lines(kern_dens_silverman(x))
 ```
 
-## Exercises
+## Exercise 2
 
 ### Multiple Kernels
 
