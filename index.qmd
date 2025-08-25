@@ -3,11 +3,8 @@ title: Computational Statistics
 format: html
 ---
 
-This is the resources web site for the Computational Statistics course. This is
-where all the slides are hosted, as well as the assignments, and data.
-
-This is not meant to be the main interface to the course, which is hosted on
-[Absalon](https://absalon.ku.dk/).
+This is main resources site for the Computational Statistics course. This is
+where all the material, including slides, assignments, and data, are collected.
 
 ## Schedule
 
