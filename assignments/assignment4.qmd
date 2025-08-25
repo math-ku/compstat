@@ -1,7 +1,44 @@
 ---
 title: Assignment 4
 subtitle: Stochastic Optimization
+image: ../assets/images/assignment4.svg
+description:
+  Implement and compare stochastic optimization algorithms for logistic
+  regression smoothing or log-logistic dose-response curves.
 ---
+
+```{r}
+#| include: false
+library(ggplot2)
+
+set.seed(1)
+n <- 100
+x <- seq(32, 46, length.out = n)
+beta0 <- -20
+beta1 <- 0.5
+p <- 1 / (1 + exp(-(beta0 + beta1 * x)))
+y <- rbinom(n, 1, p)
+df <- data.frame(x = x, y = y)
+
+# Plot: points and fitted logistic curve
+ggplot(df, aes(x = x, y = y)) +
+  geom_jitter(
+    height = 0.08,
+    width = 0,
+    size = 2,
+    alpha = 0.6,
+    color = "#3182bd"
+  ) +
+  stat_smooth(
+    method = "glm",
+    method.args = list(family = "binomial"),
+    se = FALSE,
+    color = "dark orange",
+    size = 2
+  ) +
+  theme_void()
+ggsave(here::here("assets", "images", "assignment4.svg"))
+```
 
 The last assignment topic is on stochastic optimization. If you draw the topic
 "Stochastic optimization" at the oral exam, you will have to present a solution

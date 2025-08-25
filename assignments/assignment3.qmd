@@ -1,7 +1,40 @@
 ---
 title: Assignment 3
 subtitle: The EM Algorithm
+image: ../assets/images/assignment3.svg
+description:
+  Implement and compare EM algorithms for the $t$-distribution and its mixtures.
 ---
+
+```{r}
+#| include: false
+library(ggplot2)
+
+set.seed(42)
+n <- 400
+p <- 0.6
+mu1 <- 0
+sigma1 <- 1
+nu1 <- 5
+mu2 <- 3
+sigma2 <- 0.7
+nu2 <- 10
+
+comp <- rbinom(n, 1, p)
+x <- ifelse(
+  comp == 1,
+  mu1 + sigma1 * rt(n, df = nu1),
+  mu2 + sigma2 * rt(n, df = nu2)
+)
+df <- data.frame(x = x)
+
+ggplot(df, aes(x = x)) +
+  geom_density(fill = "#3182bd", alpha = 0.3, linewidth = 1, color = "white") +
+  lims(x = c(-5, 7)) +
+  theme_void()
+
+ggsave(here::here("assets", "images", "assignment3.svg"))
+```
 
 The third assignment topic is optimization via the EM algorithm. If you draw the
 topic "EM algorithm" at the oral exam, you will have to present a solution of
@@ -46,7 +79,7 @@ _Remark: We can think of the joint density of $Y$ as generating first $W$ from a
 $\chi^2_{\nu}$-distribution, and then generating $X$ conditionally on $W = w$
 from a $\mathcal{N}(\mu, \nu \sigma^2 / w)$-distribution. For the E-step observe
 that the density of $W \mid X = x$ is $\propto f(x, w)$ with $x$ fixed and
-recognize this as a $\Gamma$-distribution._
+recognize this as a $\Gamma$-distribution.\_
 
 # B: Mixtures of $t$-Distributions
 

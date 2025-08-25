@@ -1,7 +1,37 @@
 ---
 title: Assignment 1
 subtitle: Smoothing
+image: ../assets/images/assignment1.svg
+description:
+  Implement and test kernel density estimation and bivariate smoothing spline
+  with bandwidth selection, comparing results to R's built-in functions.
 ---
+
+```{r}
+#| include: false
+library(ggplot2)
+
+set.seed(42)
+x <- rnorm(200)
+df <- data.frame(x = x)
+
+ggplot(df, aes(x)) +
+  geom_histogram(
+    aes(y = ..density..),
+    bins = 20,
+    fill = "grey80",
+    color = "white"
+  ) +
+  geom_density(color = "#1f78b4", size = 2) +
+  stat_function(
+    fun = dnorm,
+    args = list(mean = 0, sd = 1),
+    color = "dark orange",
+    size = 2
+  ) +
+  theme_void()
+ggsave(here::here("assets", "images", "assignment1.svg"))
+```
 
 The first assignment topic is smoothing. If you draw the topic "smoothing" at
 the oral exam, you will have to present a solution of one of the two assignments
@@ -56,3 +86,7 @@ In addition to testing your implementation on real data it is a good idea to
 consider simulated data as well. In particular for benchmarking and profiling.
 Note that the teaching material covers some matrix decomposition techniques that
 can be particularly relevant in combination with LOOCV.
+
+```
+
+```

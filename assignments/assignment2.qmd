@@ -1,7 +1,63 @@
 ---
 title: Assignment 2
 subtitle: Univariate Simulation
+image: ../assets/images/assignment2.svg
+description:
+  Implement and compare rejection sampling and importance sampling algorithms
+  for specific probability distributions.
 ---
+
+```{r}
+#| include: false
+library(ggplot2)
+dat <- read.csv(here::here("data", "poisson.csv"))
+z <- dat$z
+x <- dat$x
+
+# Grid of y values
+y_grid <- seq(0, 2, length.out = 200)
+
+# Target log-density and density
+log_f <- sapply(y_grid, function(y) sum(y * z * x - exp(y * x)))
+log_f <- log_f - max(log_f)
+f <- exp(log_f)
+
+# Fit a Gaussian envelope to the target density
+mu_hat <- y_grid[which.max(f)]
+sigma_hat <- 0.25
+gauss_env <- dnorm(y_grid, mean = mu_hat, sd = sigma_hat)
+gauss_env <- gauss_env / max(gauss_env) * max(f) * 1.2 # scale for visibility
+
+# Simulate a few samples from the envelope
+set.seed(123)
+samples <- rnorm(10, mean = mu_hat, sd = sigma_hat)
+samples <- samples[samples >= 0 & samples <= 2] # keep in range
+df_samples <- data.frame(
+  y = samples,
+  density = approx(y_grid, gauss_env, samples)$y
+)
+
+# Data frame for plotting
+df <- data.frame(y = y_grid, density = f, envelope = gauss_env)
+
+ggplot(df, aes(x = y)) +
+  geom_area(aes(y = density), fill = "#6baed6", alpha = 0.7) +
+  geom_line(
+    aes(y = envelope),
+    color = "grey40",
+    size = 1.5,
+    linetype = "dashed"
+  ) +
+  geom_point(
+    data = df_samples,
+    aes(y = 0),
+    color = "black",
+    size = 4,
+    alpha = 0.5
+  ) +
+  theme_void()
+ggsave(here::here("assets", "images", "assignment2.svg"))
+```
 
 The second assignment topic is univariate simulation. If you draw the topic
 "Univariate Simulation" at the oral exam, you will have to present a solution of
