@@ -1,0 +1,105 @@
+---
+title: The Examination
+---
+
+## The Exam Process
+
+1. After entering the room you will connect the computer and check that it works
+   with the projector.
+2. When all technical issues are settled, you will draw the assignment and find
+   the presentation on the computer.
+3. Time starts and you have 15 min for the presentation. The examiners may ask
+   questions if something needs to be clarified.
+4. After 15 min your presentation will be stopped, and the examiners will ask
+   questions related to the assignment as well as to the general content of the
+   course.
+5. After at most 25 min the exam ends, and after assessment you will be given a
+   grade.
+
+If technical problems occur in the beginning of the exam that cannot be solved
+immediately, it will be possible to swap place with another student to solve the
+problem.
+
+## Advice
+
+The assignments are generally too big for you to be able to cover everything in
+a 15 min talk. The preparation is just as much an exercise in prioritizing and
+selecting some appropriate topics/problems and their solutions for the exam, as
+it is an exercise in making the solutions. 
+
+Think about presenting the best of the work you made by yourself on the
+assignment, and the thinking you made, when you made the solution. Don't just
+present the final "optimal" solution that you arrived at after a lot of work. 
+
+Remember that 15 minutes is not a lot of time. The classical rule of thumb is to
+allot 1-2 minutes for each slide, and while that can only ever serve as a rough
+guideline, you should think twice if you find yourself with something that
+directly flouts this rule. The examiners need to understand what you have done,
+so explain it well. Making fewer slides will force you to prioritize and focus
+on the most important stuff.
+
+The best recommendation we can give you is to do a dry run of all of your
+presentations. Not only will this give you an estimate of how you're doing time
+wise, it will also help you catch problems with your presentation and make you
+think twice about what you're presenting.  
+
+Figures should be clear and readable. Ideally, they should be understandable to
+the audience without explanation in the context of the presentation. But you
+should still talk about them; it takes time to absorb what is on a figure, and
+the audience (examiners) needs that time.
+
+You should spend some time making your slide decks clear, readable and
+to-the-point. Althoug HTML slides (for instance from Rmarkdown) have attractive
+features such as interaction and animated imges, PDF slides are more robust
+since they don't rely on internet access and aren't affect by caching. But it's
+of course up to you what you want to do. A good idea is to test how your
+presentations work in the room where the examination takes place prior to the
+exam.
+
+Remember that it is an individual exam. You cannot prepare and share slide decks
+for the presentation with other students. You are welcome to discuss solutions,
+code etc. with other students, but the presentations have to be produced by
+yourself only. 
+
+## Evaluation Criteria
+
+The evaluation is based on the
+[the learning outcomes](/overview.html#learning-outcomes), so do keep them in
+mind when preparing your presentation.
+
+The exam performance is evaluated based on whether you have acquired
+these abilities in the course and are able to demonstrate that in the exam. That
+is, if you focus only on presenting a solution, you have only touched on
+"algorithms", "implementation" and "selection" in the list of bullet points
+above. If this is well done you will pass, but you will not get a top grade. To
+get a higher grade you need to present reflections about and evaluations of your
+implementation.
+
+Here are a couple of clarifications related to the content and the learning
+outcome:
+
+- Memory efficiency was not covered in any detail in the course, and you are not
+  expected to be able to optimize code w.r.t. memory usage or to do memory
+  profiling. It is good to know about, though.
+- Correctness was treated in relation to a number of implementations.
+  Correctness refers to whether the implementation computes the intended result
+  for a given input. In this course, we test correctness by evaluating the code
+  and comparing the result with the expected result (in a exact or approximate
+  way depending upon how precisely we can specify the expected result). It can
+  also be useful to compare the results from several implementations. Though
+  that does not prove correctness, it does at least prove concordance between
+  different implementations.
+- Accuracy (as in numerical accuracy) was treated in relation to several
+  examples e.g. in the comparison of density estimates with and without binning,
+  and accuracy was also discussed in relation to stopping criteria for
+  optimization algorithms. Finally, the fact that numerical computations are not
+  exact and the consequences of that were also touched upon.
+- Robustness refers to code and functions that behave well (are robust) no
+  matter the user input. Issues such as testing if arguments have the right
+  type, length or other properties can be used. An object oriented programming
+  style can be adapted to control argument classes (and thus to some extent
+  their content). The functions try and try.catch were introduced for condition
+  handling.
+- Bad figures, tiny fonts, no legends, poor choices of linewidth, colors etc.
+  will not directly enter in the evaluation unless they completely obscure your
+  results, but they will drag down the overall impression.

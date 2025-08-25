@@ -21,6 +21,7 @@ website:
         href: index.qmd
       - overview.qmd
       - assignments.qmd
+      - exam.qmd
       - text: "FAQ"
         href: faq.qmd
 

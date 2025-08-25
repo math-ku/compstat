@@ -102,7 +102,7 @@ assignment that you have chosen). The presentation is followed by a discussion
 with the examinator regarding the topics of the course. The grade is based on
 both the presentation itself and the discussion.
 
-## Learning Outcomes
+## Learning Outcomes {#learning-outcomes}
 
 ### Knowledge
 
