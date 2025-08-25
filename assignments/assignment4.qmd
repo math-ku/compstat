@@ -66,17 +66,23 @@ the different algorithms such as size of minibatch and learning rate for SGD.
 
 Consider the logistic regression model with $y_i \in \{0, 1\}$ and
 $x_i \in \mathbb{R}$ such that with $p_i(\beta) = P(Y_i = 1 \mid X_i = x_i)$
-$$\log \frac{p_i(\beta)}{1 - p_i(\beta)} = f(x_i \mid \beta) = (\varphi_1(x_i), \ldots, \varphi_p(x_i))^T \beta$$
+
+$$
+\log \frac{p_i(\beta)}{1 - p_i(\beta)} = f(x_i \mid \beta) = (\varphi_1(x_i), \ldots, \varphi_p(x_i))^T \beta
+$$
+
 for some $\beta \in \mathbb{R}^p$ and fixed basis functions
 $\varphi_1, \ldots, \varphi_p : \mathbb{R} \to \mathbb{R}$. The assignment is on
 minimizing the _penalized_ negative log-likelihood
 
-$$H(\beta) = - \frac{1}{N} \sum_{i=1}^N \Big(y_i \log p_i(\beta) + (1 - y_i) \log (1 - p_i(\beta)) \Big)+ \lambda \| f_{\beta}'' \|_2^2$$
+$$
+H(\beta) = - \frac{1}{N} \sum_{i=1}^N \Big(y_i \log p_i(\beta) + (1 - y_i) \log (1 - p_i(\beta)) \Big)+ \lambda \| f_{\beta}'' \|_2^2
+$$
 
 over the basis coefficients $\beta \in \mathbb{R}^p$. Implement stochastic
 optimization algorithms for estimating $\beta$ for fixed $\lambda$. Use e.g.
 polynomial or B-spline basis functions, and test the regression model using the
-[`horses.csv`](data/horses.csv) as well as simulated data. For the former, the
+[`horses.csv`](/data/horses.csv) as well as simulated data. For the former, the
 binary variable indicates if the horse dies after hospital admission, and $x$ is
 the temperature of the horse when admitted.
 

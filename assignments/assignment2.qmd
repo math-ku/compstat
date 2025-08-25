@@ -82,13 +82,17 @@ started. But you should (re)write the final solution to be more generic.
 
 # A: Rejection Sampling
 
-This assignment uses the Poisson data available from [here](data/poisson.csv).
-It is a table with 100 rows and two variables, $z$ and $x$, where $z$ takes
-integer values and $x$ takes positive real values.
+This assignment uses the Poisson data available [here](/data/poisson.csv). It is
+a table with 100 rows and two variables, $z$ and $x$, where $z$ takes integer
+values and $x$ takes positive real values.
 
 The purpose of this assignment is to sample from the probability distribution on
 $[0, \infty)$ with density
-$$f(y) \propto \prod_{i=1}^{100}  \exp\left(yz_ix_i - e^{yx_i}\right), \quad y \geq 0.$$
+
+$$
+f(y) \propto \prod_{i=1}^{100}  \exp\left(yz_ix_i - e^{yx_i}\right), \quad y \geq 0.
+$$
+
 Find a Gaussian envelope of $f$ and implement rejection sampling from the
 distribution with density $f$ using this envelope.
 
@@ -105,19 +109,40 @@ of a Bayesian posterior distribution in a Poisson regression model._
 # B: Importance Sampling
 
 Let $X_1, X_2, \ldots$ be i.i.d. uniformly distributed on $(-1.9, 2)$ and define
-$$S_n = 30 + \sum_{k=1}^n X_k.$$ Think of $X_k$ as the capital that a company or
-a gambler earns or loses at time $n$. Starting with a total capital of 30, $S_n$
-is the total capital at time $n$. We are interested in computing the _ruin
-probabilities_ before time $n$: $$p(n) = P(\exists k \leq n: S_k \leq 0).$$
+
+$$
+S_n = 30 + \sum_{k=1}^n X_k.
+$$
+
+Think of $X_k$ as the capital that a company or a gambler earns or loses at time
+$n$. Starting with a total capital of 30, $S_n$ is the total capital at time
+$n$. We are interested in computing the _ruin probabilities_ before time $n$:
+
+$$
+p(n) = P(\exists k \leq n: S_k \leq 0).
+$$
 
 Implement Monte Carlo integration to compute $p(100)$.
 
 Define
-$$g_{\theta, n}(x) = \frac{1}{\varphi(\theta)^n} \exp\left(\theta \sum_{k=1}^n x_k\right)$$
-for $x \in (-1.9, 2)^n$ where
-$$\varphi(\theta) = \int_{-1.9}^2 e^{\theta z} \mathrm{d}z.$$ Implement
-importance sampling to compute $p(100)$ by sampling from $g_{\theta, 100}$ for
-suitable $\theta$. Is there an optimal choice of $\theta$?
 
-_Note that you should consider number of samples as well as run time to discuss
-what "optimal" means._
+$$
+g*{\theta, n}(x) = \frac{1}{\varphi(\theta)^n} \exp\left(\theta \sum*{k=1}^n
+x_k\right)
+$$
+
+for $x \in (-1.9, 2)^n$, where
+
+$$
+\varphi(\theta) = \int\_{-1.9}^2 e^{\theta z} \mathrm{d}z.
+$$
+
+Implement importance sampling to compute $p(100)$ by sampling from
+$g_{\theta, 100}$ for suitable $\theta$. Is there an optimal choice of $\theta$?
+
+::: {.callout-note}
+
+You should consider number of samples as well as run time to discuss what
+"optimal" means.
+
+:::
