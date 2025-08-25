@@ -23,7 +23,7 @@ It is a broad field, where meaning depends on context.
 
 . . .
 
-\bipskip
+\bigskip
 
 One _broad_ definition is that it is **the use of computational methods to solve
 statistical problems**, for instance
@@ -56,6 +56,8 @@ $\Psi$, from protein structures.
 A simple way to analyze the distributions of the angles $\Phi$ and $\Psi$ is the
 **histogram**.
 
+\bigskip
+
 . . .
 
 :::: {.columns}
@@ -79,7 +81,7 @@ ggplot(phipsi, aes(x = phi)) +
 
 ```{r hist1-show}
 #| ref-label: hist1-src
-#| fig-height: 2.3
+#| fig-height: 2.1
 #| echo: false
 ```
 
