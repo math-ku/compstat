@@ -41,11 +41,11 @@ old_options <- options(digits = 4)
 - Debugging is the process of finding and fixing bugs.
 - Complemetary to **testing**, which is about identifying existence of bugs.
 
-</br>
+![Down the rabbit hole.](../images/xkcd-debugging.png){width=80%}
 
-![](../images/xkcd-debugging.png)
+---
 
-![](../images/first-bug-reduced.jpg){width=80%}
+![The "first" bug.](../images/first-bug-reduced.jpg){width=80%}
 
 ## Poisson Regression
 
@@ -56,7 +56,7 @@ y <- rpois(n, exp(x))
 X <- model.matrix(y ~ x)
 ```
 
---
+. . .
 
 ```{r poisson-implementations}
 Xty <- drop(crossprod(X, y))
