@@ -1,0 +1,126 @@
+---
+title: Course Overview
+format: html
+---
+
+## Topics
+
+This is a master-level course in computational statistics, which roughly
+speaking means implementing statistical theory as computer code (and all of the
+different issues that arise in doing so). The course revolves around three
+overarching topics: smoothing, Monte-Carlo simulation, and optimization.
+Contents include the following:
+
+- Maximum-likelihood and numerical optimization
+- The EM-algorithm
+- Stochastic optimization algorithms
+- Simulation algorithms and Monte Carlo methods
+- Nonparametric density estimation
+- Bivariate smoothing
+- Numerical linear algebra in statistics. Sparse and structured matrices
+- Practical implementation of statistical computations and algorithms
+- R/C++ and RStudio statistical software development
+
+## Structure
+
+The backbone of the course is made up of four topics in computational
+statistics:
+
+- Smoothing
+- Univariate Simulation
+- The EM Algorithm
+- Stochastic Optimization
+
+For the oral exam you will draw a topic at random and present one of the two
+assignments of your own choice from the topic. This presentation will be
+individual. **You will therefore need to prepare a total of four
+presentations.** All eight assignments will, however, be covered by group
+presentations during the course, which are planned for weeks 3, 4, 6 and 7 of
+the course. Each group will consist of 2-3 students, and you need to register
+your group and which topic and assignment you will cover on Absalon.
+
+### Lectures
+
+Every Tuesday and Thursday there will be a lecture on the course material. We
+recommend that you bring a laptop to these sessions since each lecture will end
+with a short exercise session.
+
+### Exercise Sessions
+
+Each Thursday morning there will be an exercise session in which you can work on
+the exercises or assignments in the course. There will be a teaching assistant
+there to help you out. You need to bring your laptop to these sessions.
+
+### Assignment Presentations
+
+On four Thursday afternoons (weeks 3, 4, 6, and 7 of the course) there will be
+group presentation sessions for the assignments. It is **compulsory** to hold
+one presentation of an assignment. After forming a group, you need to register
+for one of the presentation groups in the People section. The first four groups
+will present an assignment from the first topic in the first session, and so on.
+
+## Literature
+
+The primary course literature for this course is Computational Statistics with R
+by professor Niels Richard Hansen. It is provided for free online at
+<https://cswr.nrhstat.org>. We will also use parts of the book Advanced R
+(second edition) by Hadley Wickham, which is also available for free online at
+<https://adv-r.hadley.nz>
+
+## R
+
+The course will use R as a programming language. We expect you to have a basic
+grasp of R, but in case you feel the need to refresh your knowledge of the R
+basics, please take a look at
+[Hands-On Programming with R](https://rstudio-education.github.io/hopr/) by
+Garrett Grolemund, which is a short and beginner-friendly introduction to the
+basics of R. We also assume that you have a good grasp of the content of
+chapters 1-5 in Advanced R on data structures, subsetting and control flows. If
+not, please consider going over these sections before the course starts or
+during the first week.
+
+If you haven't already, you need to install R and RStudio on your computer.
+Instructions on how to do so can be found at
+[here](https://rstudio-education.github.io/hopr/starting.html).
+
+We will not enforce (nor teach) a specific coding style, but recommend that you
+take a look at the [Tidyverse style guide](https://style.tidyverse.org/), which
+is used widely throughout the R community. Using these simple rules consistently
+(this holds for the spacing rules for infix operators in particular) makes life
+a lot easier for everybody.
+
+## Examination
+
+The course is graded on a 7-point scale. During the course a total of eight
+assignments will be given within four different topics. You need to select one
+assignment from each topic and prepare a solution for that assignment for the
+exam. That is, you need to prepare solutions of four assignments in total.
+
+At the oral examination, we will randomly select one of the four topics and you
+will give the presentation that you have prepared for that topic (based on the
+assignment that you have chosen). The presentation is followed by a discussion
+with the examinator regarding the topics of the course. The grade is based on
+both the presentation itself and the discussion.
+
+## Learning Outcomes
+
+### Knowledge
+
+Knowledge of
+
+- fundamental algorithms for statistical computations and
+- R packages that implement some of these algorithms or are useful for
+  developing novel implementations.
+
+### Skills
+
+Ability to implement, test, debug, benchmark, profile and optimize statistical
+software.
+
+### Competence
+
+Ability to
+
+- select appropriate numerical algorithms for statistical computations and
+- evaluate implementations in terms of correctness, robustness, accuracy and
+  memory and speed efficiency.

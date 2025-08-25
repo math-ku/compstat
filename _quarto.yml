@@ -19,7 +19,10 @@ website:
     left:
       - text: "Home"
         href: index.qmd
+      - overview.qmd
       - assignments.qmd
+      - text: "FAQ"
+        href: faq.qmd
 
 format:
   html:
