@@ -62,6 +62,8 @@
             zeallot
             future
             cowplot
+            cyclocomp
+            svglite
           ];
         };
       in
