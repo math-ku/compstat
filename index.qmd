@@ -31,124 +31,124 @@ This is not meant to be the main interface to the course, which is hosted on
   - [A8-A10 (CSwR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex)
   - [2.1-2.6 (CSwR, Chapter 2)](https://cswr.nrhstat.org/density#density:ex)
 
-### Week 2
-
-#### Lecture 3: Performance
-
-- **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf)
-- **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and
-  [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (AdvR)
-- **Exercises:**
-  [1-3 (AdvR, Section 24.4.3)](https://adv-r.hadley.nz/perf-improve.html#exercises-71)
-
-#### Lecture 4: Scatterplot Smoothing
-
-- **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf)
-- **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)
-- **Exercises:**
-  [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
-
-### Week 3
-
-#### Lecture 5: RNG Generation and Rejection Sampling
-
-- **Slides:**
-  [Random Number Generation and Rejection Sampling](slides/lecture5.pdf)
-- **Reading:**
-  - [Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation), but
-    skip 5.1
-  - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp)
-- **Exercises:**
-  - [Exercises 5.1-5.2 in Chapter 5, CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex)
-
-#### Lecture 6: Monte Carlo Methods and Importance Sampling
-
-- **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf)
-- **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci)
-- **Exercises:** TODO!
-
-#### Presentation of Assignment 1
-
-- **Instructions:** [Assignment 1](assignments/assignment1.html)
-
-### Week 4
-
-#### Lecture 7: Rcpp
-
-Prior to this lecture, you should have Rcpp installed. You can follow the
-instructions in
-[Rcpp for Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html#install-rcpp)
-to get started.
-
-- **Slides:** [Rcpp](slides/lecture7.pdf)
-- **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp)
-- **Exercises:**
-  - [1 and 2 from 25.2.6 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started)
-  - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73)
-  - If you have time over, try the
-    [exercises in 25.5.7 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74)
-    too
-
-#### Lecture 8: Optimization
-
-- **Slides:** [Optimization](slides/lecture8.pdf)
-- **Reading:**
-  - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization)
-  - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt)
-
-#### Presentation of Assignment 2
-
-- **Instructions:** [Assignment 2](assignments/assignment2.html)
-
-### Week 5
-
-#### Lecture 9: Debugging and Likelihood Optimization
-
-- **Slides:** [Debugging and Likelihood Optimization](slides/lecture9.pdf)
-- **Reading:**
-  [Chapter 22 (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging)
-
-#### Lecture 10: The EM Algorithm
-
-- **Slides:** [The EM Algorithm](slides/lecture10.pdf)
-- **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em)
-
-### Week 6
-
-#### Lecture 11: Gaussian Mixtures and Mixed Models
-
-- **Slides:** [Gaussian Mixtures and Mixed Models](slides/lecture11.pdf)
-- **Reading:**
-  - [Section 10.4](https://cswr.nrhstat.org/em#revisiting-gaussian-mixtures)
-  - [Section 8.5](https://cswr.nrhstat.org/likelihood-and-optimization#mixed-models)
-
-#### Lecture 12: Stochastic Gradient Descent
-
-- **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf)
-- **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt)
-
-#### Presentation of Assignment 3
-
-- **Instructions:** [Assignment 3](assignments/assignment3.html)
-
-### Week 7
-
-#### Lecture 13: Variations on Stochastic Gradient Descent
-
-- **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf)
-- **Reading:**
-  [Sections 11.2-11.3 (CSwR)](https://cswr.nrhstat.org/stochopt#beyond-basic-stochastic-gradient-algorithms)
-
-#### Lecture 14: R Packages and Wrap-Up
-
-- **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf)
-
-#### Presentation of Assignment 4
-
-- **Instructions:** [Assignment 4](assignments/assignment4.html)
-
-## Data
-
-These are links to data files used in the course.
-
-- [Poisson Data](data/poisson.csv)
+<!-- ### Week 2 -->
+<!---->
+<!-- #### Lecture 3: Performance -->
+<!---->
+<!-- - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf) -->
+<!-- - **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and -->
+<!--   [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (AdvR) -->
+<!-- - **Exercises:** -->
+<!--   [1-3 (AdvR, Section 24.4.3)](https://adv-r.hadley.nz/perf-improve.html#exercises-71) -->
+<!---->
+<!-- #### Lecture 4: Scatterplot Smoothing -->
+<!---->
+<!-- - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf) -->
+<!-- - **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html) -->
+<!-- - **Exercises:** -->
+<!--   [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex) -->
+<!---->
+<!-- ### Week 3 -->
+<!---->
+<!-- #### Lecture 5: RNG Generation and Rejection Sampling -->
+<!---->
+<!-- - **Slides:** -->
+<!--   [Random Number Generation and Rejection Sampling](slides/lecture5.pdf) -->
+<!-- - **Reading:** -->
+<!--   - [Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation), but -->
+<!--     skip 5.1 -->
+<!--   - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp) -->
+<!-- - **Exercises:** -->
+<!--   - [Exercises 5.1-5.2 in Chapter 5, CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex) -->
+<!---->
+<!-- #### Lecture 6: Monte Carlo Methods and Importance Sampling -->
+<!---->
+<!-- - **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf) -->
+<!-- - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci) -->
+<!-- - **Exercises:** TODO! -->
+<!---->
+<!-- #### Presentation of Assignment 1 -->
+<!---->
+<!-- - **Instructions:** [Assignment 1](assignments/assignment1.html) -->
+<!---->
+<!-- ### Week 4 -->
+<!---->
+<!-- #### Lecture 7: Rcpp -->
+<!---->
+<!-- Prior to this lecture, you should have Rcpp installed. You can follow the -->
+<!-- instructions in -->
+<!-- [Rcpp for Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html#install-rcpp) -->
+<!-- to get started. -->
+<!---->
+<!-- - **Slides:** [Rcpp](slides/lecture7.pdf) -->
+<!-- - **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp) -->
+<!-- - **Exercises:** -->
+<!--   - [1 and 2 from 25.2.6 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started) -->
+<!--   - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73) -->
+<!--   - If you have time over, try the -->
+<!--     [exercises in 25.5.7 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74) -->
+<!--     too -->
+<!---->
+<!-- #### Lecture 8: Optimization -->
+<!---->
+<!-- - **Slides:** [Optimization](slides/lecture8.pdf) -->
+<!-- - **Reading:** -->
+<!--   - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization) -->
+<!--   - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt) -->
+<!---->
+<!-- #### Presentation of Assignment 2 -->
+<!---->
+<!-- - **Instructions:** [Assignment 2](assignments/assignment2.html) -->
+<!---->
+<!-- ### Week 5 -->
+<!---->
+<!-- #### Lecture 9: Debugging and Likelihood Optimization -->
+<!---->
+<!-- - **Slides:** [Debugging and Likelihood Optimization](slides/lecture9.pdf) -->
+<!-- - **Reading:** -->
+<!--   [Chapter 22 (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging) -->
+<!---->
+<!-- #### Lecture 10: The EM Algorithm -->
+<!---->
+<!-- - **Slides:** [The EM Algorithm](slides/lecture10.pdf) -->
+<!-- - **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em) -->
+<!---->
+<!-- ### Week 6 -->
+<!---->
+<!-- #### Lecture 11: Gaussian Mixtures and Mixed Models -->
+<!---->
+<!-- - **Slides:** [Gaussian Mixtures and Mixed Models](slides/lecture11.pdf) -->
+<!-- - **Reading:** -->
+<!--   - [Section 10.4](https://cswr.nrhstat.org/em#revisiting-gaussian-mixtures) -->
+<!--   - [Section 8.5](https://cswr.nrhstat.org/likelihood-and-optimization#mixed-models) -->
+<!---->
+<!-- #### Lecture 12: Stochastic Gradient Descent -->
+<!---->
+<!-- - **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf) -->
+<!-- - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt) -->
+<!---->
+<!-- #### Presentation of Assignment 3 -->
+<!---->
+<!-- - **Instructions:** [Assignment 3](assignments/assignment3.html) -->
+<!---->
+<!-- ### Week 7 -->
+<!---->
+<!-- #### Lecture 13: Variations on Stochastic Gradient Descent -->
+<!---->
+<!-- - **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf) -->
+<!-- - **Reading:** -->
+<!--   [Sections 11.2-11.3 (CSwR)](https://cswr.nrhstat.org/stochopt#beyond-basic-stochastic-gradient-algorithms) -->
+<!---->
+<!-- #### Lecture 14: R Packages and Wrap-Up -->
+<!---->
+<!-- - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf) -->
+<!---->
+<!-- #### Presentation of Assignment 4 -->
+<!---->
+<!-- - **Instructions:** [Assignment 4](assignments/assignment4.html) -->
+<!---->
+<!-- ## Data -->
+<!---->
+<!-- These are links to data files used in the course. -->
+<!---->
+<!-- - [Poisson Data](data/poisson.csv) -->
