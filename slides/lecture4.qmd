@@ -22,7 +22,7 @@ We develop a S3 smoother for ggplot2.
 
 ```{r looad-nuuk-data, echo=FALSE, message=FALSE}
 nuuk <- read_table(
-  here::here("data", "nuuk.dat.txt"),
+  here::here("data", "nuuk.txt"),
   col_names = c("Year", 1:12),
   na = "-999",
   skip = 1

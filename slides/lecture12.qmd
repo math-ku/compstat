@@ -546,7 +546,7 @@ ls_model <- function(X, y) {
 ### Data Example
 
 ```{r news-data, message=FALSE, cache = TRUE}
-news <- readr::read_csv(here::here("data", "OnlineNewsPopularity.csv"))
+news <- readr::read_csv(here::here("data", "online_news_popularity.csv"))
 dim(news)
 ```
 
