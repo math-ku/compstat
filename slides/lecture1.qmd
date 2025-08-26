@@ -9,24 +9,20 @@ load(here::here("data", "top100dih.RData"))
 phipsi2 <- na.omit(dataset)
 phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
+
+options(width = 50)
 ```
 
-## Computational Statistics?
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-### What Is Computational Statistics?
+## What is Computational Statistics?
 
 It is a broad field, where meaning depends on context.
 
 . . .
 
-\bigskip
-
-One _broad_ definition is that it is **the use of computational methods to solve
+One definition is that it is **the use of computational methods to solve
 statistical problems**, for instance
+
+. . .
 
 - simulation,
 - optimization,
@@ -34,18 +30,26 @@ statistical problems**, for instance
 - data analysis, and
 - visualization.
 
-:::
+## A Running Example
 
-. . .
+:::: {.columns}
 
 ::: {.column width="47%"}
 
-### A Running Example
+Let's try to get a bit of flavor of what we will be doing in the course.
+
+\bigskip
+
+. . .
 
 Throughout the course we will use a data set of amino acid angles, $\Phi$ and
 $\Psi$, from protein structures.
 
-![Amino Acid Angles](../images/PhiPsi_creative.jpg){width=70%}
+:::
+
+::: {.column width="47%"}
+
+![Amino Acid Angles](../images/PhiPsi_creative.jpg){width=100%}
 
 :::
 
@@ -66,6 +70,7 @@ A simple way to analyze the distributions of the angles $\Phi$ and $\Psi$ is the
 
 ```{r hist1-src}
 #| eval: false
+#| fig-cap: A histogram of the $\Psi$ variable in the amino acid data
 ggplot(phipsi, aes(x = phi)) +
   geom_histogram() +
   geom_rug(alpha = 0.5) +
@@ -95,13 +100,15 @@ Histograms are not very smooth. If we allow ourselves to make stronger
 assumptions, we can get a smoother estimate of the distribution, using **kernel
 density estimation** (KDE).
 
+\bigskip
+
 . . .
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-```{r dens}
+```{r dens-src}
 #| eval: false
 ggplot(phipsi, aes(x = phi)) +
   geom_density() +
@@ -116,10 +123,10 @@ ggplot(phipsi, aes(x = phi)) +
 
 ::: {.column width="47%"}
 
-```{r dens-src}
+```{r dens-fig}
 #| echo: false
 #| ref-label: dens
-#| fig-height: 2.3
+#| fig-height: 2
 
 ```
 
@@ -134,50 +141,55 @@ But how is this KDE actually computed? Doing this efficiently is a
 
 ## Statistical Topics of the Course
 
-There are three main statistical topics of the course.
+The course can be broken down into a number of **statistical** and **computational**
+topics.
+
+. . .
+
+There are three statistical topics in the course:
+
+\pause 
 
 ### Smoothing
 
-- What does `density()` do?
-- Nonparametric estimators
-- Choosing tuning parameters
+We will learn how to compute efficient kernel density estimates and
+scatterplot smoothers.
 
 . . .
 
 ### Simulation
 
-- How do we efficiently simulate from a target distribution?
-- Assessing results from Monte Carlo methods
-- What if we cannot compute the density?
+We will learn to efficiently simulate from probability distributions 
+using inversion, rejection, and importance sampling.
 
 . . .
 
 ### Optimization
 
-- How do we compute the MLE?
-- How to we deal with large data sets?
+We will learn to solve optimization problems that arise in statistics, for
+instance in maximum likelihood estimation (MLE), using the EM algorithm and
+gradient-based optimization.
 
 ## Computational Topics of the Course
 
 ### Implementation
 
-- Writing functions
-- Object-oriented programming
+We will learn how to implement statistical methods in R, using
+object-oriented programming and functional programming.
 
 . . .
 
 ### Correctness
 
-- Testing
-- Debugging
+We will learn how to ensure that our code is correct, using
+testing and debugging.
 
 . . .
 
 ### Efficiency
 
-- Profiling
-- Optimizing
-- Benchmarking
+We will learn how measure performance and find bottlenecks in our code using
+profiling and benchmarking, and how to optimize it.
 
 ## Teaching Staff
 
@@ -204,7 +216,7 @@ matters.
 
 ### Teaching Assistant
 
-Jinyang Liu, PhD student
+Jinyang Liu, PhD student in machine learning
 
 ![Jin](../images/jinyang.jpg){width=50%}
 
@@ -214,34 +226,68 @@ Jinyang Liu, PhD student
 
 ## Assignments
 
-- Main course work of the course
-- Eight assignments, two for each topic
-- Four topics
-  - Smoothing
-  - Univariate simulation
-  - The EM algorithm
-  - Stochastic optimization
-- Pick one assignment per topic.
-
-## Examination
-
-### Presentations
-
-- Present solution to one of the assignments.
-- On weeks 3, 4, 6, and 7 (Thursday afternoon sessions).
-- Groups of 2-3 students
-- Presentation, discussion, and feedback
-- [Register in Absalon](https://absalon.ku.dk/courses/76985/groups#tab-25490)
-  (limited slots assignment)
-- Compulsory but not graded
-- Work-in-progress solutions are fine.
+Four assignments make up the bulk of the course work.
 
 . . .
 
-### Oral Examination
+\bigskip
 
-- Oral exam, presented indivudally.
-- Prepare four presentations, one for each assignment you picked.
+For each assignment, there are two alternatives (A and B). You will pick one.
+
+. . .
+
+\bigskip
+
+Each assignment is tied to a particular **topic**:
+
+1. Smoothing
+2. Univariate simulation
+3. The EM algorithm
+4. Stochastic optimization
+
+## Presentations
+
+There will be four presentation sessions (week 3, 4, 6, 7)^[Not counting the
+potato harvesting week when you are off.]
+
+. . .
+
+\bigskip
+
+You will divide into groups of 2-3 students and present 
+your solution to one of the assignments during one of the sessions.
+
+. . .
+
+\bigskip
+
+You will register for groups and assignments in [Absalon](https://absalon.ku/dk).
+
+. . .
+
+\bigskip
+
+Presentation is compulsory but not graded. We expect solutions to be
+work in progress.
+
+
+. . .
+
+## Oral Examination
+
+The main examination is an oral exam based on your assignments.
+
+\bigskip 
+
+. . .
+
+You will prepare four presentations, one for each assignment you picked.
+
+\bigskip
+
+. . .
+
+At the exam, you will present one of these at random.
 
 ## Schedule
 
@@ -258,6 +304,8 @@ Jinyang Liu, PhD student
 ### Exercise Sessions
 
 - Thursdays, 08:15–10:00 (Jinyang)
+
+. . .
 
 ### Presentations
 
@@ -300,36 +348,74 @@ Auxiliary textbook, written by Hadley Wickham.
 - Covers more advanced R programming topics.
 - We will use selected chapters.
 
-## Absalon
-
-Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
+## Online Resources
 
 :::: {.columns}
 
-::: {.column width="47%"}
+::: {.column width="70%"}
 
-- **Course Material**: Slides, videos, data, groups, and assignments.
-- Actually based on Canvas (but rebranded for UCPH).
-- Download Canvas Student app for your phone.
-- Updated as we go along.
+### Absalon
+
+Main source for information and communication about the course.
+Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
+
+. . .
+
+### CompStat Web Page
+
+Course content will be uploaded to [github.io/math-ku/compstat](https://math-ku.github.io/compstat/).
+
+\medskip
+
+This is where you will a detailed schedule of the course, slides, and
+the assignments.
 
 :::
 
-::: {.column width="47%"}
+::: {.column width="25%"}
 
-![Absalon](../images/absalon.jpg){width=50%}
+![Absalon](../images/absalon.jpg){width=100%}
 
 :::
 
 ::::
 
+
 ## Generative AI
 
-- You can use generative AI to help you with your assignments.
-- But you must understand the results.
-- Can help your learning if used correctly.
-- But also hamper your learning if used inappropriately (too much)
-- Beware of hallucinations!
+Generative AI (e.g. ChatGPT, Copilot, Bard, etc.) are powerful tools.
+
+\bigskip
+
+. . .
+
+You are allowed to use them in this course, but with some caveats:
+
+- You must understand the results.
+- You must acknowledge their use in your assignments and how you used them.
+
+. . .
+
+\bigskip
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Copilot
+Access to GitHub Copilot is available for free to students, via 
+[GitHub Education](https://education.github.com).
+
+:::
+
+::: {.column width="47%"}
+
+![](../assets/images/github-education.png){width=100%}
+
+:::
+
+::::
+
 
 # Programming in R
 
@@ -344,7 +430,7 @@ We expect knowledge of
 
 . . .
 
-All of this is covered in chapters 1–5 of
+All of this is covered in chapters 1-5 of
 [Advanced R](https://adv-r.hadley.nz/).
 
 \medskip
@@ -410,27 +496,52 @@ environment(f)
 
 ## Naming Functions
 
-### Use Descriptive Names
-
-- Verbs are great.
-- Better long and descriptive than short and cryptic.
+> There are only two hard things in Computer Science: cache invalidation and
+> naming things.
+>
+> \medskip
+> 
+> \hfill_--Phil Karlton_
 
 . . .
 
-### Naming Convetions
+:::: {.columns}
 
-- Avoid `.` in names; it is used for **methods** (upcoming).
-- Use consistent style:
-  - `lowercase`
-  - `snake_case` (tidyverse)
-  - `camelCase`
-  - `UpperCamelCase`
+::: {.column width="47%"}
+
+### Favor Descriptive Names
+
+Begin to see if you can use a _verb_. Better long and descriptive than short and
+cryptic.
+
+. . .
+
+### Honor Common Conventions
+
+Avoid `.` in names; it is used for **methods** (upcoming).
+
+. . .
+
+:::
+
+::: {.column width="47%"}
+
+### Use a Consistent Style
+
+- `lowercase`
+- `snake_case` (tidyverse)
+- `camelCase`
+- `UpperCamelCase`
 
 . . .
 
 ### Namespace Clashes
 
 - Avoid names of existing functions.
+
+:::
+
+::::
 
 ## Example: Counting Zeros
 
@@ -469,21 +580,44 @@ count_zeros <- function(x) {
 
 ```{r}
 count_zeros(c(3, 2, 0))
+```
+
+. . .
+
+```{r}
 count_zeros(c(0, 0, 0))
 ```
 
 ## Testing
 
-- Tests that a given input to a function returns what you expect.
-- Thumb of rule: when you find a bug in your function, write a test that fails
-  on it; _then_ fix the function.
-- As you refactor your code (or dependent code changes), your tests will catch
-  these **regressions** for you.
-- Some people even say that writing tests is the first thing you should do.
-- In R, most common solution is to use the **testthat** package.
-- Works best in packages, but is fine for projects too.
+It is critical to ensure that your code does what you think it does,
+and that it continues to do so as you modify it.
 
-## Testing with **testthat**
+. . .
+
+\bigskip
+
+Testing is the process of writing code that checks that your code is
+correct.
+
+. . .
+
+\bigskip
+
+Some people even think that the **first thing** you should do is
+to write a test.
+
+. . .
+
+\bigskip
+
+As you modify your code, your tests will catch these **regressions** for you.
+
+## testthat
+
+[testthat](https://testthat.r-lib.org/) is the most popular testing framework for R.
+
+. . .
 
 ```{r unit-testing, eval = FALSE, error = TRUE}
 # In file tests/test_count_zeros.R
@@ -495,7 +629,7 @@ test_that("count_zeros work on various input", {
 ```
 
 ```{r testthat, error = TRUE}
-# testthat::test_dir("tests")
+testthat::test_dir("tests")
 ```
 
 ## A Second Attempt
@@ -513,7 +647,7 @@ count_zeros <- function(x) {
 ```
 
 ```{r}
-# testthat::test_dir("tests")
+testthat::test_dir("tests")
 ```
 
 ## Debugging
@@ -525,18 +659,26 @@ count_zeros <- function(x) {
 
 ## Functional Programming
 
-- `sapply()` is what's typically called a _map_, with a function as its second
-  argument.
-- It is a feature of R as a functional programming language that it can operate
-  with functions as with any other data structure.
+In functional programming, functions are **first-class citizens**: they can be passed as
+arguments to other functions, returned as values from functions, and assigned to
+variables.
+
+\bigskip
+
+. . .
+
+This allows for a high degree of abstraction and code reuse, for instance
+through the use of the `apply` family of functions.
 
 . . .
 
 Let's write our own apply function.
 
+\bigskip
+
 ```{r own-apply}
 our_apply <- function(x, fun) {
-  val <- numeric(length(x)) # initialize vector of return values
+  val <- numeric(length(x))
   for (i in seq_along(x)) {
     val[i] <- fun(x[[i]])
   }
@@ -550,6 +692,8 @@ our_apply <- function(x, fun) {
 sapply(1:10, exp)
 ```
 
+. . .
+
 ```{r}
 our_apply(1:10, exp)
 ```
@@ -560,7 +704,11 @@ our_apply(1:10, exp)
 
 `x` is a list, `fun()` takes a single argument, and `fun()` returns a numeric.
 
+. . .
+
 ## What if `fun()` Needs Additional Arguments?
+
+Then we get an error:
 
 ```{r, error=TRUE, echo=-1}
 set.seed(1)
@@ -571,6 +719,8 @@ our_apply(1:10, rpois)
 
 ### Anonymous Functions
 
+We can use an anonymous function to pass additional arguments to `fun()`.
+
 ```{r}
 our_apply(
   1:10,
@@ -580,17 +730,23 @@ our_apply(
 
 ## `...`
 
-The `...` (ellipsis) argument passes arguments forward.
+More general functionality can be achieved wit the  `...` (ellipsis) argument,
+which passes arguments forward.
+
+. . .
 
 ```{r own-apply-2}
-our_apply <- function(x, fun, ...) {
+our_apply <- function(x, fun, ...) { # <1>
   val <- numeric(length(x))
   for (i in seq_along(x)) {
-    val[i] <- fun(x[[i]], ...)
+    val[i] <- fun(x[[i]], ...) # <2>
   }
   val
 }
 ```
+
+1. `...` in the argument list of `our_apply()` collects additional arguments.
+2. `...` in the call to `fun()` passes these additional arguments to `fun()`.
 
 . . .
 
@@ -618,40 +774,39 @@ our_apply(1:10, rpois, n = 1)
 ```{r}
 x <- rnorm(1e4)
 bench_res <- bench::mark(
-  {
+  loop = {
     y <- numeric(length(x))
     for (i in seq_along(x)) {
       y[i] <- 10 * x[i]
     }
     y
   },
-  10 * x
+  vectorized = 10 * x
 )
 ```
 
 ## Plot Benchmark Results
 
 ```{r bench-plot}
-#| fig-width: 7
+#| fig-width: 5
+#| fig-cap: Benchmark results for a loop vs. a vectorized computation
 autoplot(bench_res)
 ```
 
-## Beware of Loops in Disguise
+## Vectorization
 
-Just because you ran a function, it does not mean that it is vectorized.
+Vectorization is the process of rewriting code to use vectorized operations,
+which operate on entire vectors at once, instead of using loops to operate on
+individual elements.
 
 . . .
 
-```{r}
-#| fig-width: 7
-bench::mark(
-  sapply(x, function(x_i) 10 * x_i),
-  10 * x
-) |>
-  plot()
-```
+The term is somewhat misleading, since it does not necessarily involve
+vector processors.
 
-## Vectorization
+. . .
+
+### Example: Counting Zeros, Vectorized
 
 ```{r}
 count_zeros_vec <- function(x) {
@@ -668,6 +823,22 @@ count_zeros_vec <- function(x) {
 - The vectorized computations are performed by compiled code (C/C++/Fortran),
   which run faster than pure R code.
 - Writing vectorized code requires a larger knowledge of R functions.
+
+## Beware of Loops in Disguise
+
+Just because you ran a function, it does not mean that it is vectorized.
+
+. . .
+
+```{r}
+#| fig-width: 5
+#| fig-height: 2
+bench::mark(
+  sapply(x, function(x_i) 10 * x_i),
+  10 * x
+) |>
+  plot()
+```
 
 ## Development Cycle Sketch
 
@@ -729,19 +900,20 @@ kern_dens_vec <- function(x, h, m = 512) {
 
 ## Benchmarking
 
-```{r kern-bench, cache = TRUE}
+```{r kern-bench}
 kern_bench <- bench::mark(
   kern_dens(phipsi$psi, 0.2),
   kern_dens_vec(phipsi$psi, 0.2)
 )
-
-summary(kern_bench)
 ```
 
 ## Plot Benchmark Results
 
-```{r kern-bench-autoplot, message=FALSE, fig.height=4.5, fig.width = 9}
-plot(kern_bench, type = "violin")
+```{r kern-bench-autoplot}
+#| message: false
+#| fig-height: 2.5
+#| fig-width: 5
+plot(kern_bench)
 ```
 
 ## Parameterized Benchmarking

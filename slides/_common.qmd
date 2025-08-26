@@ -5,5 +5,5 @@
 library(tidyverse)
 library(cowplot)
 theme_set(theme_cowplot(font_size = 10))
-options(width = 70)
+options(width = 50)
 ```
