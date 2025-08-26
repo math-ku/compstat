@@ -31,7 +31,6 @@ format:
     theme: cosmo
     html-math-method: katex
   beamer:
-    incremental: true
     aspectratio: 1610
     classoption: onlytextwidth
     theme: moloch
