@@ -90,7 +90,3 @@ In addition to testing your implementation on real data it is a good idea to
 consider simulated data as well. In particular for benchmarking and profiling.
 Note that the teaching material covers some matrix decomposition techniques that
 can be particularly relevant in combination with LOOCV.
-
-```
-
-```
