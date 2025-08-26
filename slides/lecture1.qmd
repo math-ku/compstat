@@ -17,6 +17,8 @@ options(width = 50)
 
 It is a broad field, where meaning depends on context.
 
+\bigskip
+
 . . .
 
 One definition is that it is **the use of computational methods to solve
@@ -100,8 +102,6 @@ Histograms are not very smooth. If we allow ourselves to make stronger
 assumptions, we can get a smoother estimate of the distribution, using **kernel
 density estimation** (KDE).
 
-\bigskip
-
 . . .
 
 :::: {.columns}
@@ -125,7 +125,7 @@ ggplot(phipsi, aes(x = phi)) +
 
 ```{r dens-fig}
 #| echo: false
-#| ref-label: dens
+#| ref-label: dens-src
 #| fig-height: 2
 
 ```
@@ -136,6 +136,8 @@ ggplot(phipsi, aes(x = phi)) +
 
 . . .
 
+\bigskip
+
 But how is this KDE actually computed? Doing this efficiently is a
 **computational statistics** problem.
 
@@ -143,6 +145,8 @@ But how is this KDE actually computed? Doing this efficiently is a
 
 The course can be broken down into a number of **statistical** and **computational**
 topics.
+
+\bigskip
 
 . . .
 
@@ -419,6 +423,41 @@ Access to GitHub Copilot is available for free to students, via
 
 # Programming in R
 
+## What is R?
+
+R is a programming language and application (command-line interface) for
+statistical computing and graphics.
+
+. . .
+
+\bigskip 
+
+It is widely used among statisticians and data miners for developing statistical
+software and data analysis.
+
+. . .
+
+### Why R?
+
+It is free, open source, and cross-platform.
+
+. . .
+
+### Why not Python/Julia?
+
+R has a large number of packages for statistical computing and graphics.
+
+. . .
+
+\bigskip
+
+My personal opinion is that:
+
+- R is better suited for visualization and exploratory data analysis, while 
+- Python is better suited for general-purpose
+  programming and machine learning, and
+- Julia is a best for numerical computing.
+
 ## Prerequisite R Knowledge
 
 We expect knowledge of
@@ -437,28 +476,89 @@ All of this is covered in chapters 1-5 of
 
 \bigskip
 
-But you **do not** need to be an experienced programmer.
+We do not expect that you are an expert in R.
+
+## Getting Help with R
+
+### Google It
+
+Especially good for error messages.
+
+. . .
+
+### Generative AI
+
+- Also great for error messages and debugging
+- _Caution_: You need to understand the results, especially when you ask it to
+  create something for you.
+
+. . .
+
+### Absalon Discussion Forum
+
+Use the fact that there are twenty other people in the course with exactly the
+same problem.
 
 # Functions
 
 ## Functions in R
 
-- Everything that happens in R is the result of a function call. Even `+`, `[`
-  and `<-` are functions.
-- An R function takes a number of _arguments_, and when a function call is
-  evaluated it computes a _return value_.
-- Functions can return any R object, including functions!
-- Implementations of R functions are collected into source files, which can be
-  organized into packages.
-- The order of your functions in the script does not matter.
+Everything that happens in R is the result of a function call. Even `+`, `[`
+and `<-` are functions.
 
-## Components of a Function
+. . .
+
+\medskip
+
+An R function takes a number of _arguments_, and when a function call is
+evaluated it computes a _return value_.
+
+. . .
+
+\medskip
+
+Functions can return any R object, including functions!
+
+. . .
+
+\medskip
+
+Implementations of R functions are collected into source files, which can be
+organized into packages.
+
+## Why Functions?
+
+Technically, you could write all your code in a single script. So why use
+functions?
+
+. . .
+
+\bigskip
+
+Functions help you structure your code, make it reusable, and make it easier to
+test and debug.
+
+. . .
+
+\bigskip
+
+A well-designed function has a single purpose, which makes it easier to
+understand and reason about.
+
+. . .
+
+### Rule of Thumb
+
+If you find yourself writing the same piece of code more than, say,
+twice, then it is probably a good idea to turn it into a function.
+
+## Function Syntax
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-### Arguments
+Here is a simple function that takes two arguments and returns their sum.
 
 ```{r}
 f <- function(x, y) {
@@ -468,9 +568,15 @@ f <- function(x, y) {
 
 . . .
 
-```{r}
-formals(f)
-```
+A function has three components: **arguments**, **body**, and **environment**.
+
+\bigskip
+
+. . .
+
+### Arguments
+
+In this case, `x` and `y` are the arguments.
 
 :::
 
@@ -480,13 +586,15 @@ formals(f)
 
 ### Body
 
-```{r}
-body(f)
-```
+The body of the function is everything inside the curly braces `{}`,
+that is, `x + y`.
 
 . . .
 
 ### Environment
+
+The environment is where the function was created. It is used to look up
+variables that are not defined inside the function.
 
 ```{r}
 environment(f)
@@ -495,6 +603,311 @@ environment(f)
 :::
 
 ::::
+
+## Arguments
+
+Arguments are specified in the parentheses after the function name.
+
+. . .
+
+### Arguments can have default values
+
+```{r}
+g <- function(x, y = 2) {
+  x + y
+}
+
+g(3) # y takes the default value 2
+```
+
+. . .
+
+### Named arguments can be passed in any order.
+
+```{r}
+g(y = 3, x = 2)
+```
+
+## Copy-on-Write
+
+
+R uses **copy-on-write** semantics for function arguments, which means that
+arguments are only copied if they are modified inside the function.
+
+. . .
+
+\bigskip
+
+This makes function calls efficient, and also means that you can modify
+arguments without shooting yourself in the foot.
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r}
+h <- function(x) {
+  x[1] <- 100
+  x
+}
+
+a <- 1:5
+
+h(a) # a is not modified
+```
+
+. . .
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+a # a is still 1:5
+```
+
+. . .
+
+### `<<-` Operator
+
+You can use the `<<-` operator to modify variables in the parent environment,
+but please don't.
+
+:::
+
+::::
+
+
+## Environment and Scoping
+
+When a function is called, a new environment is created for the function.
+
+\medskip
+
+. . .
+
+This environment is used to look up variables that are not defined inside the
+function.
+
+\medskip
+
+. . .
+
+The new environment has as its parent the environment where the function was
+created.
+
+\medskip
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+This is called **lexical scoping**.
+
+```{r}
+x <- 10
+f <- function(y) {
+  x + y
+}
+f(5)
+```
+
+:::
+
+::: {.column width="47%"}
+
+Assuming that `x` is not defined inside `f()`, R looks for `x` in the
+environment where `f()` was created, which is the global environment in this case.
+
+. . .
+
+As a rule of thumb, avoid using variables from the parent environment inside
+functions.
+
+:::
+
+::::
+
+
+## Return Values
+
+The return value of a function is the value of the last expression in the body.
+
+. . .
+
+\bigskip
+
+Unless you explicitly use the `return()` function, which immediately exits the
+function and returns the specified value.
+
+```{r}
+f <- function(x, y) {
+  return(x + y)
+  x * y # This line is never reached
+}
+```
+
+. . .
+
+Whether or not to use `return()` is a matter of style. Personally, I prefer to
+not use it unless returning early.
+
+## Functional Programming
+
+Functions are **first-class citizens**: they can be passed as
+arguments to other functions, returned as values from functions, and assigned to
+variables. R is a **functional programming** language.
+
+\bigskip
+
+. . .
+
+This allows for a high degree of abstraction and code reuse, for instance
+through the use of the `apply` family of functions.
+
+. . .
+
+Let's write our own apply function.
+
+\bigskip
+
+```{r own-apply}
+our_apply <- function(x, fun) {
+  val <- numeric(length(x))
+  for (i in seq_along(x)) {
+    val[i] <- fun(x[[i]])
+  }
+  val
+}
+```
+
+## Testing Our Apply Function
+
+```{r}
+sapply(1:10, exp)
+```
+
+. . .
+
+```{r}
+our_apply(1:10, exp)
+```
+
+. . .
+
+### Assumptions of `our_apply()`
+
+`x` is a "list-like" structure, `fun` takes a single argument, and `fun` returns a numeric.
+
+## What if `fun` Needs Additional Arguments?
+
+Then we get an error:
+
+```{r, error=TRUE, echo=-1}
+set.seed(1)
+our_apply(1:10, rpois)
+```
+
+. . .
+
+### Anonymous Functions
+
+We can use an anonymous function to pass additional arguments to `fun()`.
+
+```{r}
+our_apply(
+  1:10,
+  function(lambda) rpois(1, lambda = 0.9)
+)
+```
+
+## Ellipsis (`...`)
+
+An arbitrary number of arguments can be forwarded via the  `...` (ellipsis) argument,
+which allows us to pass additional arguments to `fun()`.
+
+. . .
+
+```{r own-apply-2}
+our_apply <- function(x, fun, ...) { # <1>
+  val <- numeric(length(x))
+  for (i in seq_along(x)) {
+    val[i] <- fun(x[[i]], ...) # <2>
+  }
+  val
+}
+```
+
+1. `...` in the argument list of `our_apply()` collects additional arguments.
+2. `...` in the call to `fun()` passes these additional arguments to `fun()`.
+
+. . .
+
+```{r}
+our_apply(1:10, rpois, n = 1)
+```
+
+## Assertions
+
+It is a good idea to assert that the arguments to a function are valid,
+and stop early if they are not.
+
+. . .
+
+\bigskip
+
+The simplest way to do this is to use the `stopifnot()` function.
+
+```{r}
+#| error: true
+my_mean <- function(x) {
+  stopifnot(is.numeric(x))
+  sum(x) / length(x)
+}
+
+my_mean(c("asdf", "qwer"))
+```
+
+. . .
+
+If `x` is not numeric, we would otherwise get an error deep inside `sum()`.
+
+. . .
+
+## Custom Error Messages
+
+For more control over the error message, use `if` and `stop()`.
+
+```{r}
+my_mean <- function(x) {
+  if (!is.numeric(x)) {
+    stop("x must be numeric")   
+  }
+  sum(x) / length(x)
+}
+```
+
+## Document Your Functions
+
+Document your functions, including their arguments, return values, and any side effects.
+
+. . .
+
+\medskip
+
+Documentation can be either ad-hoc comments or using a documentation system like
+[roxygen2](https://roxygen2.r-lib.org/).
+
+. . .
+
+\medskip
+
+Aim to document **why** something is done, not just **what** is done. The latter
+is often obvious from the code itself.
 
 ## Naming Functions
 
@@ -539,454 +952,258 @@ Avoid `.` in names; it is used for **methods** (upcoming).
 
 ### Namespace Clashes
 
-- Avoid names of existing functions.
+Avoid names of existing functions.
 
 :::
 
 ::::
 
-## Example: Counting Zeros
 
-Count data is often modeled using a Poisson distribution. R can simulate count
-data using the function `rpois()`.
+## Best Practices
 
-```{r, echo=2}
-set.seed(1234)
-rpois(10, 2) # n = 10 variables from a Poisson(2) distribution
-```
 
-. . .
+### Keep Functions Short and Focused
 
-There are two zeros in this sequence.
+Functions should do one thing and do it well. If a function is too long or
+complex, consider breaking it up into smaller functions.
 
 . . .
 
-Let's write a function that counts the number of zeros: checks for zero
-inflation.
+### Testing
 
-## A First Attempt
-
-```{r}
-count_zeros <- function(x) {
-  n_zeros <- 0
-  for (i in 1:length(x)) {
-    if (x[i] == 0) {
-      n_zeros <- n_zeros + 1
-    }
-  }
-  n_zeros
-}
-```
+Write tests for your functions to ensure that they work as expected. (More
+on this later in the course.)
 
 . . .
 
-```{r}
-count_zeros(c(3, 2, 0))
-```
+### Debugging
+
+Use `browser()`, `traceback()`, and `debug()` to debug your functions. (More on
+this later in the course.)
+
+## Summary
+
+- Functions are the building blocks of R code.
+- Functions help you structure your code, make it reusable, and make it easier to
+  test and debug.
+- Functions have arguments, a body, and an environment.
+- Functions can be passed as arguments to other functions, returned as values
+  from functions, and assigned to variables.
+- Use `...` to pass additional arguments to functions.
+- Document your functions and use descriptive names.
+- Write tests for your functions and use debugging tools.
 
-. . .
-
-```{r}
-count_zeros(c(0, 0, 0))
-```
-
-## Testing
-
-It is critical to ensure that your code does what you think it does,
-and that it continues to do so as you modify it.
-
-. . .
-
-\bigskip
-
-Testing is the process of writing code that checks that your code is
-correct.
-
-. . .
-
-\bigskip
-
-Some people even think that the **first thing** you should do is
-to write a test.
-
-. . .
-
-\bigskip
-
-As you modify your code, your tests will catch these **regressions** for you.
-
-## testthat
-
-[testthat](https://testthat.r-lib.org/) is the most popular testing framework for R.
-
-. . .
-
-```{r unit-testing, eval = FALSE, error = TRUE}
-# In file tests/test_count_zeros.R
-test_that("count_zeros work on various input", {
-  expect_equal(count_zeros(c(0, 0, 1e-9, 25)), 2)
-  expect_equal(count_zeros(c(-0, 1.1, -2)), 1)
-  expect_equal(count_zeros(c()), 0)
-})
-```
-
-```{r testthat, error = TRUE}
-testthat::test_dir("tests")
-```
-
-## A Second Attempt
-
-```{r}
-count_zeros <- function(x) {
-  n_zeros <- 0
-  for (i in seq_along(x)) {
-    if (x[i] == 0) {
-      n_zeros <- n_zeros + 1
-    }
-  }
-  n_zeros
-}
-```
-
-```{r}
-testthat::test_dir("tests")
-```
-
-## Debugging
-
-- Sometimes hard to identify the offending piece of code.
-- Helpful to use a debugging tool. R studio comes with a helpful interface for
-  this.
-- We will talk more about debugging in week 5.
-
-## Functional Programming
-
-In functional programming, functions are **first-class citizens**: they can be passed as
-arguments to other functions, returned as values from functions, and assigned to
-variables.
-
-\bigskip
-
-. . .
-
-This allows for a high degree of abstraction and code reuse, for instance
-through the use of the `apply` family of functions.
-
-. . .
-
-Let's write our own apply function.
-
-\bigskip
-
-```{r own-apply}
-our_apply <- function(x, fun) {
-  val <- numeric(length(x))
-  for (i in seq_along(x)) {
-    val[i] <- fun(x[[i]])
-  }
-  val
-}
-```
-
-## Testing Our Apply Function
-
-```{r}
-sapply(1:10, exp)
-```
-
-. . .
-
-```{r}
-our_apply(1:10, exp)
-```
-
-. . .
-
-### Assumptions
-
-`x` is a list, `fun()` takes a single argument, and `fun()` returns a numeric.
-
-. . .
-
-## What if `fun()` Needs Additional Arguments?
-
-Then we get an error:
-
-```{r, error=TRUE, echo=-1}
-set.seed(1)
-our_apply(1:10, rpois)
-```
-
-. . .
-
-### Anonymous Functions
-
-We can use an anonymous function to pass additional arguments to `fun()`.
-
-```{r}
-our_apply(
-  1:10,
-  function(lambda) rpois(1, lambda = 0.9)
-)
-```
-
-## `...`
-
-More general functionality can be achieved wit the  `...` (ellipsis) argument,
-which passes arguments forward.
-
-. . .
-
-```{r own-apply-2}
-our_apply <- function(x, fun, ...) { # <1>
-  val <- numeric(length(x))
-  for (i in seq_along(x)) {
-    val[i] <- fun(x[[i]], ...) # <2>
-  }
-  val
-}
-```
-
-1. `...` in the argument list of `our_apply()` collects additional arguments.
-2. `...` in the call to `fun()` passes these additional arguments to `fun()`.
-
-. . .
-
-```{r}
-our_apply(1:10, rpois, n = 1)
-```
-
-# Benchmarking
-
-## R Is Slow ...
-
-... when used like a low-level language.
-
-- R is an **interpreted** (as opposed to _compiled_) language.
-- It was written mainly for specifying statistical models (not for developing
-  new numerical methods).
-- It is suitable for high-level programming where most low-level computations
-  are implemented in a compiled language (e.g. `lm()` and `qr()`.)
-- It is also quite old.
-
-## R Is Fast ...
-
-... when most computations are carried out by calls to compiled code.
-
-```{r}
-x <- rnorm(1e4)
-bench_res <- bench::mark(
-  loop = {
-    y <- numeric(length(x))
-    for (i in seq_along(x)) {
-      y[i] <- 10 * x[i]
-    }
-    y
-  },
-  vectorized = 10 * x
-)
-```
-
-## Plot Benchmark Results
-
-```{r bench-plot}
-#| fig-width: 5
-#| fig-cap: Benchmark results for a loop vs. a vectorized computation
-autoplot(bench_res)
-```
-
-## Vectorization
-
-Vectorization is the process of rewriting code to use vectorized operations,
-which operate on entire vectors at once, instead of using loops to operate on
-individual elements.
-
-. . .
-
-The term is somewhat misleading, since it does not necessarily involve
-vector processors.
-
-. . .
-
-### Example: Counting Zeros, Vectorized
-
-```{r}
-count_zeros_vec <- function(x) {
-  sum(x == 0)
-}
-```
-
-. . .
-
-- `x == 0` checks if each entry of `x` is 0 and returns a vector of logicals.
-- `sum()` computes and returns the sum of all elements in a vector. Logicals are
-  coerced to integers.
-- In this case the vectorized implementation is cohesive and clear.
-- The vectorized computations are performed by compiled code (C/C++/Fortran),
-  which run faster than pure R code.
-- Writing vectorized code requires a larger knowledge of R functions.
-
-## Beware of Loops in Disguise
-
-Just because you ran a function, it does not mean that it is vectorized.
-
-. . .
-
-```{r}
-#| fig-width: 5
-#| fig-height: 2
-bench::mark(
-  sapply(x, function(x_i) 10 * x_i),
-  10 * x
-) |>
-  plot()
-```
-
-## Development Cycle Sketch
-
-- Is there a good-enough existing implemention for your problem? If yes, then
-  you are done.
-- If not, implement a solution and test it. Does it solve your problem
-  sufficiently well? If yes, then you're done.
-- If not, then profile (next week!), benchmark, and debug (week 5). Then
-  refactor and optimize.
-
-. . .
-
-### The Root of All Evil
-
-\medskip
-
-> We _should_ forget about small efficiencies, say about 97% of the time:
-> premature optimization is the root of all evil. Yet we should not pass up our
-> opportunities in that critical 3%.
->
-> _—Donald Knuth_
-
-## Example: Density Estimation
-
-```{r kernDens}
-kern_dens <- function(x, h, m = 512) {
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- numeric(m)
-
-  for (i in seq_along(xx)) {
-    for (j in seq_along(x)) {
-      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
-    }
-  }
-
-  y <- y / (sqrt(2 * pi) * h * length(x))
-
-  list(x = xx, y = y)
-}
-```
-
-## Vectorizing Our Density Estimator
-
-```{r kernDens-vec}
-kern_dens_vec <- function(x, h, m = 512) {
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- numeric(m)
-  const <- (sqrt(2 * pi) * h * length(x))
-
-  for (i in seq_along(xx)) {
-    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) / const
-  }
-
-  list(x = xx, y = y)
-}
-```
-
-## Benchmarking
-
-```{r kern-bench}
-kern_bench <- bench::mark(
-  kern_dens(phipsi$psi, 0.2),
-  kern_dens_vec(phipsi$psi, 0.2)
-)
-```
-
-## Plot Benchmark Results
-
-```{r kern-bench-autoplot}
-#| message: false
-#| fig-height: 2.5
-#| fig-width: 5
-plot(kern_bench)
-```
-
-## Parameterized Benchmarking
-
-```{r kern-bench-grid, cache = TRUE, message = FALSE}
-kern_benchmarks <- bench::press(
-  n = 2^(6:9),
-  m = 2^(5:11),
-  {
-    bench::mark(
-      loop = kern_dens(x[1:n], h = 0.2, m = m),
-      vec = kern_dens_vec(x[1:n], h = 0.2, m = m)
-    )
-  }
-)
-```
-
-## Plotting Results
-
-```{r kern-bench-fig}
-#| message: false
-#| warning: false
-#| fig-width: 7
-library(tidyverse)
-mutate(kern_benchmarks, expression = as.character(expression)) |>
-  ggplot(aes(m, median, color = expression)) +
-  geom_point() +
-  geom_line() +
-  facet_grid(cols = vars(n))
-```
-
-## Getting Help with R
-
-### Google It
-
-Especially good for error messages.
-
-. . .
-
-### Generative AI
-
-- Also great for error messages and debugging
-- _Caution_: You need to understand the results, especially when you ask it to
-  create something for you.
-
-. . .
-
-### Absalon Discussion Forum
-
-Use the fact that there are twenty other people in the course with exactly the
-same problem.
 
 # Exercises
 
-### Exercise 1
+### Exercise 1: Write a Function with a Default Argument  
 
-Can you list three ways to access element `a` in this list?
-
-```{r}
-l <- list(a = 1, b = 2)
-```
-
-```{r, include=FALSE}
-l[[1]]
-l$a
-l[["a"]]
-```
+Write a function `greet` that takes a name as an argument and prints “Hello,
+<name>!”. If no name is given, it should print “Hello, world!”.
 
 . . .
 
-### Exercise 2
+### Exercise 2: Count Missing Values  
 
-Write a for loop that prints "even" if the loop variable is even, "odd" if the
-loop variable is odd, and exits if is larger than 10.
+Write a function `count_na` that takes a vector and returns the number of
+missing (`NA`) values in it.
+
+. . .
+
+### Exercise 3: Check if a Number is Even
+
+Write a function `is_even()` that returns `TRUE` if its argument is even, `FALSE`
+otherwise.
+
+
+
+<!-- # Benchmarking -->
+<!---->
+<!-- ## R Is Slow ... -->
+<!---->
+<!-- ... when used like a low-level language. -->
+<!---->
+<!-- - R is an **interpreted** (as opposed to _compiled_) language. -->
+<!-- - It was written mainly for specifying statistical models (not for developing -->
+<!--   new numerical methods). -->
+<!-- - It is suitable for high-level programming where most low-level computations -->
+<!--   are implemented in a compiled language (e.g. `lm()` and `qr()`.) -->
+<!-- - It is also quite old. -->
+<!---->
+<!-- ## R Is Fast ... -->
+<!---->
+<!-- ... when most computations are carried out by calls to compiled code. -->
+<!---->
+<!-- ```{r} -->
+<!-- x <- rnorm(1e4) -->
+<!-- bench_res <- bench::mark( -->
+<!--   loop = { -->
+<!--     y <- numeric(length(x)) -->
+<!--     for (i in seq_along(x)) { -->
+<!--       y[i] <- 10 * x[i] -->
+<!--     } -->
+<!--     y -->
+<!--   }, -->
+<!--   vectorized = 10 * x -->
+<!-- ) -->
+<!-- ``` -->
+<!---->
+<!-- ## Plot Benchmark Results -->
+<!---->
+<!-- ```{r bench-plot} -->
+<!-- #| fig-width: 5 -->
+<!-- #| fig-cap: Benchmark results for a loop vs. a vectorized computation -->
+<!-- autoplot(bench_res) -->
+<!-- ``` -->
+<!---->
+<!-- ## Vectorization -->
+<!---->
+<!-- Vectorization is the process of rewriting code to use vectorized operations, -->
+<!-- which operate on entire vectors at once, instead of using loops to operate on -->
+<!-- individual elements. -->
+<!---->
+<!-- . . . -->
+<!---->
+<!-- The term is somewhat misleading, since it does not necessarily involve -->
+<!-- vector processors. -->
+<!---->
+<!-- . . . -->
+<!---->
+<!-- ### Example: Counting Zeros, Vectorized -->
+<!---->
+<!-- ```{r} -->
+<!-- count_zeros_vec <- function(x) { -->
+<!--   sum(x == 0) -->
+<!-- } -->
+<!-- ``` -->
+<!---->
+<!-- . . . -->
+<!---->
+<!-- - `x == 0` checks if each entry of `x` is 0 and returns a vector of logicals. -->
+<!-- - `sum()` computes and returns the sum of all elements in a vector. Logicals are -->
+<!--   coerced to integers. -->
+<!-- - In this case the vectorized implementation is cohesive and clear. -->
+<!-- - The vectorized computations are performed by compiled code (C/C++/Fortran), -->
+<!--   which run faster than pure R code. -->
+<!-- - Writing vectorized code requires a larger knowledge of R functions. -->
+<!---->
+<!-- ## Beware of Loops in Disguise -->
+<!---->
+<!-- Just because you ran a function, it does not mean that it is vectorized. -->
+<!---->
+<!-- . . . -->
+<!---->
+<!-- ```{r} -->
+<!-- #| fig-width: 5 -->
+<!-- #| fig-height: 2 -->
+<!-- bench::mark( -->
+<!--   sapply(x, function(x_i) 10 * x_i), -->
+<!--   10 * x -->
+<!-- ) |> -->
+<!--   plot() -->
+<!-- ``` -->
+<!---->
+<!-- ## Development Cycle Sketch -->
+<!---->
+<!-- - Is there a good-enough existing implemention for your problem? If yes, then -->
+<!--   you are done. -->
+<!-- - If not, implement a solution and test it. Does it solve your problem -->
+<!--   sufficiently well? If yes, then you're done. -->
+<!-- - If not, then profile (next week!), benchmark, and debug (week 5). Then -->
+<!--   refactor and optimize. -->
+<!---->
+<!-- . . . -->
+<!---->
+<!-- ### The Root of All Evil -->
+<!---->
+<!-- \medskip -->
+<!---->
+<!-- > We _should_ forget about small efficiencies, say about 97% of the time: -->
+<!-- > premature optimization is the root of all evil. Yet we should not pass up our -->
+<!-- > opportunities in that critical 3%. -->
+<!-- > -->
+<!-- > _—Donald Knuth_ -->
+<!---->
+<!-- ## Example: Density Estimation -->
+<!---->
+<!-- ```{r kernDens} -->
+<!-- kern_dens <- function(x, h, m = 512) { -->
+<!--   rg <- range(x) -->
+<!--   xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m) -->
+<!--   y <- numeric(m) -->
+<!---->
+<!--   for (i in seq_along(xx)) { -->
+<!--     for (j in seq_along(x)) { -->
+<!--       y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2)) -->
+<!--     } -->
+<!--   } -->
+<!---->
+<!--   y <- y / (sqrt(2 * pi) * h * length(x)) -->
+<!---->
+<!--   list(x = xx, y = y) -->
+<!-- } -->
+<!-- ``` -->
+<!---->
+<!-- ## Vectorizing Our Density Estimator -->
+<!---->
+<!-- ```{r kernDens-vec} -->
+<!-- kern_dens_vec <- function(x, h, m = 512) { -->
+<!--   rg <- range(x) -->
+<!--   xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m) -->
+<!--   y <- numeric(m) -->
+<!--   const <- (sqrt(2 * pi) * h * length(x)) -->
+<!---->
+<!--   for (i in seq_along(xx)) { -->
+<!--     y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) / const -->
+<!--   } -->
+<!---->
+<!--   list(x = xx, y = y) -->
+<!-- } -->
+<!-- ``` -->
+<!---->
+<!-- ## Benchmarking -->
+<!---->
+<!-- ```{r kern-bench} -->
+<!-- kern_bench <- bench::mark( -->
+<!--   kern_dens(phipsi$psi, 0.2), -->
+<!--   kern_dens_vec(phipsi$psi, 0.2) -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ## Plot Benchmark Results -->
+<!---->
+<!-- ```{r kern-bench-autoplot} -->
+<!-- #| message: false -->
+<!-- #| fig-height: 2.5 -->
+<!-- #| fig-width: 5 -->
+<!-- plot(kern_bench) -->
+<!-- ``` -->
+<!---->
+<!-- ## Parameterized Benchmarking -->
+<!---->
+<!-- ```{r kern-bench-grid, cache = TRUE, message = FALSE} -->
+<!-- kern_benchmarks <- bench::press( -->
+<!--   n = 2^(6:9), -->
+<!--   m = 2^(5:11), -->
+<!--   { -->
+<!--     bench::mark( -->
+<!--       loop = kern_dens(x[1:n], h = 0.2, m = m), -->
+<!--       vec = kern_dens_vec(x[1:n], h = 0.2, m = m) -->
+<!--     ) -->
+<!--   } -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ## Plotting Results -->
+<!---->
+<!-- ```{r kern-bench-fig} -->
+<!-- #| message: false -->
+<!-- #| warning: false -->
+<!-- #| fig-width: 7 -->
+<!-- library(tidyverse) -->
+<!-- mutate(kern_benchmarks, expression = as.character(expression)) |> -->
+<!--   ggplot(aes(m, median, color = expression)) + -->
+<!--   geom_point() + -->
+<!--   geom_line() + -->
+<!--   facet_grid(cols = vars(n)) -->
+<!-- ``` -->
