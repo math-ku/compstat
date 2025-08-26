@@ -10,8 +10,9 @@ where all the material, including slides, assignments, and data, are collected.
 
 **Note on the exercises:**
 
-Each Thursday, our exercise session will center around a key topic. Together, we’ll work through selected exercises on this topic. The remaining exercises are for you to solve independently at your own pace.
-
+Each Thursday, our exercise session will center around a key topic. Together,
+we’ll work through selected exercises on this topic. The remaining exercises are
+for you to solve independently at your own pace.
 
 ### Week 1
 
@@ -23,6 +24,12 @@ Each Thursday, our exercise session will center around a key topic. Together, we
   [A1-A7 (CSWR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex)
   - **Data:** [`infrared.txt`](data/infrared.txt)
 
+#### Exercise Session 1
+
+- **Main topic**: Functional Programming vs OOP (+ Currying/Function Factories)
+- In class walkthrough: A.8-A.12 (CSwR, Appendix A) and exercises 2.1-2.6 (CSwR,
+  Chapter 2)
+
 #### Lecture 2: OOP and Density Estimation
 
 - **Slides:** [OOP and Density Estimation](slides/lecture2.pdf)
@@ -32,11 +39,6 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 - **Exercises:**
   - [A8-A10](https://cswr.nrhstat.org/app-r#app-ex) (CSwR, Appendix A)
   - [2.1-2.6](https://cswr.nrhstat.org/density#density:ex) (CSwR, Chapter 2)
-
-##### Exercises
-
-- **Main topic**: Functional Programming vs OOP (+ Currying/Function Factories)
-- In class walkthrough: A.8-A.12 (CSwR, Appendix A) and exercises 2.1-2.6 (CSwR, Chapter 2)
 
 <!-- ### Week 2 -->
 <!---->
@@ -55,13 +57,12 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 <!-- - **Exercises:** -->
 <!--   [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex) -->
 <!---->
-<!-- #### Exercises
-
-- **Main topic**: How to use AI 
-- Mini-slides: TBA
-- In class walkthrough: Student-voted exercises -->
-
-
+<!-- #### Exercise Session 2 -->
+<!---->
+<!-- - **Main topic**: How to use AI -->
+<!-- - Mini-slides: TBA -->
+<!-- - In class walkthrough: Student-voted exercises -->
+<!---->
 <!-- ### Week 3 -->
 <!---->
 <!-- #### Lecture 5: Random Number Generation and Rejection Sampling -->
