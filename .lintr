@@ -1,7 +1,7 @@
 linters: all_linters(
     cyclocomp_linter = NULL,
     implicit_integer_linter = NULL,
-    undesired_function_linter = NULL,
+    undesirable_function_linter = NULL,
     object_length_linter = NULL,
     object_name_linter = NULL
   )
