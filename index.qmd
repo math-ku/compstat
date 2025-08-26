@@ -17,7 +17,7 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 
 #### Lecture 1: Introduction
 
-- **Slides:** [Introduction](slides/lecture1.pdf)
+- **Slides:** [Introduction and Functions in R](slides/lecture1.pdf)
 - **Reading:** [Chapter 6 (AdvR)](https://adv-r.hadley.nz/functions.html)
 - **Exercises:**
   [A1-A7 (CSWR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex)
@@ -40,7 +40,7 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 
 <!-- ### Week 2 -->
 <!---->
-<!-- #### Lecture 3: Performance -->
+<!-- #### Lecture 3: Measuring and Improving Performance -->
 <!---->
 <!-- - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf) -->
 <!-- - **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and -->
@@ -50,7 +50,7 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 <!---->
 <!-- #### Lecture 4: Scatterplot Smoothing -->
 <!---->
-<!-- - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf) -->
+<!-- - **Slides:** [Scatterplot Smoothing](slides/lecture4.pdf) -->
 <!-- - **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html) -->
 <!-- - **Exercises:** -->
 <!--   [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex) -->
@@ -64,7 +64,7 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 
 <!-- ### Week 3 -->
 <!---->
-<!-- #### Lecture 5: RNG Generation and Rejection Sampling -->
+<!-- #### Lecture 5: Random Number Generation and Rejection Sampling -->
 <!---->
 <!-- - **Slides:** -->
 <!--   [Random Number Generation and Rejection Sampling](slides/lecture5.pdf) -->
@@ -73,13 +73,12 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 <!--     skip 5.1 -->
 <!--   - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp) -->
 <!-- - **Exercises:** -->
-<!--   - [Exercises 5.1-5.2 in Chapter 5, CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex) -->
+<!--   - [Exercises 5.1-5.2 in Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation#univariate:ex) -->
 <!---->
 <!-- #### Lecture 6: Monte Carlo Methods and Importance Sampling -->
 <!---->
 <!-- - **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf) -->
 <!-- - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci) -->
-<!-- - **Exercises:** TODO! -->
 <!---->
 <!-- #### Presentation of Assignment 1 -->
 <!---->
@@ -87,28 +86,18 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 <!---->
 <!-- ### Week 4 -->
 <!---->
-<!-- #### Lecture 7: Rcpp -->
+<!-- #### Lecture 7: Optimization -->
 <!---->
-<!-- Prior to this lecture, you should have Rcpp installed. You can follow the -->
-<!-- instructions in -->
-<!-- [Rcpp for Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html#install-rcpp) -->
-<!-- to get started. -->
-<!---->
-<!-- - **Slides:** [Rcpp](slides/lecture7.pdf) -->
-<!-- - **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp) -->
-<!-- - **Exercises:** -->
-<!--   - [1 and 2 from 25.2.6 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started) -->
-<!--   - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73) -->
-<!--   - If you have time over, try the -->
-<!--     [exercises in 25.5.7 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74) -->
-<!--     too -->
-<!---->
-<!-- #### Lecture 8: Optimization -->
-<!---->
-<!-- - **Slides:** [Optimization](slides/lecture8.pdf) -->
+<!-- - **Slides:** [Optimization](slides/lecture7.pdf) -->
 <!-- - **Reading:** -->
 <!--   - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization) -->
 <!--   - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt) -->
+<!---->
+<!-- #### Lecture 8: Testing and Debugging -->
+<!---->
+<!-- - **Slides:** [Testing and Debugging](slides/lecture8.pdf) -->
+<!-- - **Reading:** -->
+<!--   [Chapter 22 (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging) -->
 <!---->
 <!-- #### Presentation of Assignment 2 -->
 <!---->
@@ -116,11 +105,10 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 <!---->
 <!-- ### Week 5 -->
 <!---->
-<!-- #### Lecture 9: Debugging and Likelihood Optimization -->
+<!-- #### Lecture 9: Likelihood Optimization -->
 <!---->
-<!-- - **Slides:** [Debugging and Likelihood Optimization](slides/lecture9.pdf) -->
+<!-- - **Slides:** [Likelihood Optimization](slides/lecture9.pdf) -->
 <!-- - **Reading:** -->
-<!--   [Chapter 22 (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging) -->
 <!---->
 <!-- #### Lecture 10: The EM Algorithm -->
 <!---->
@@ -129,13 +117,29 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 <!---->
 <!-- ### Week 6 -->
 <!---->
+<!-- #### Lecture 11: Rcpp -->
+<!---->
+<!-- Prior to this lecture, you should have Rcpp installed. You can follow the -->
+<!-- instructions in -->
+<!-- [Rcpp for Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html#install-rcpp) -->
+<!-- to get started. -->
+<!---->
+<!-- - **Slides:** [Rcpp](slides/lecture11.pdf) -->
+<!-- - **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp) -->
+<!-- - **Exercises:** -->
+<!--   - [1 and 2 from 25.2.6 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started) -->
+<!--   - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73) -->
+<!--   - If you have time over, try the -->
+<!--     [exercises in 25.5.7 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74) -->
+<!--     too -->
+
 <!-- #### Lecture 11: Gaussian Mixtures and Mixed Models -->
 <!---->
 <!-- - **Slides:** [Gaussian Mixtures and Mixed Models](slides/lecture11.pdf) -->
 <!-- - **Reading:** -->
 <!--   - [Section 10.4](https://cswr.nrhstat.org/em#revisiting-gaussian-mixtures) -->
 <!--   - [Section 8.5](https://cswr.nrhstat.org/likelihood-and-optimization#mixed-models) -->
-<!---->
+
 <!-- #### Lecture 12: Stochastic Gradient Descent -->
 <!---->
 <!-- - **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf) -->
@@ -160,9 +164,3 @@ Each Thursday, our exercise session will center around a key topic. Together, we
 <!-- #### Presentation of Assignment 4 -->
 <!---->
 <!-- - **Instructions:** [Assignment 4](assignments/assignment4.html) -->
-<!---->
-<!-- ## Data -->
-<!---->
-<!-- These are links to data files used in the course. -->
-<!---->
-<!-- - [Poisson Data](data/poisson.csv) -->

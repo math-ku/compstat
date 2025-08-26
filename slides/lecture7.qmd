@@ -1,5 +1,5 @@
 ---
-title: "Rcpp"
+title: "Optimization"
 ---
 
 {{< include _common.qmd >}}
@@ -10,875 +10,1136 @@ library(patchwork)
 old_options <- options(digits = 4)
 ```
 
-```{Rcpp source-rcpp, ref.label=knitr::all_rcpp_labels(), include=FALSE}
-
-```
-
-```{Rcpp namespace, include = FALSE}
-#include <Rcpp.h>
-using namespace Rcpp;
+```{r data, echo=FALSE, cache = TRUE}
+vegetables <- read.table(
+  here::here("data", "vegetables.txt"),
+  header = TRUE,
+  colClasses = c(
+    "numeric",
+    "numeric",
+    "factor",
+    "factor",
+    "numeric",
+    "numeric",
+    "numeric"
+  )
+)[, c(1, 2, 3)]
 ```
 
 ## Today
 
-### C++ and Rcpp
+### Optimization
 
-- Why do we want to use C++?
-- What is **compiled** code?
-- How do we use Rcpp to connect R to C++?
-- What are the pitfalls and benefits of using Rcpp?
+- What is an optimization problem?
+- Types of optimization problems
+- Zero, first, and second order methods
+- Line search and backtracking
+- Poisson regression example
 
-## Why R?
+# Optimization
 
-Why are we even using R?
+## Optimization
+
+- ## Optimization is the process of trying to optimize an objective function $f$.
+
+- Typically, we are interested in either **minimizing** or **maximizing** the
+  function. --
+
+- Since minimizing $f$ is equivalent to maximizing $-f$, we will focus on
+  minimization.
 
 . . .
 
-:::: {.columns}
+### Examples
 
-::: {.column width="47%"}
+- Fitting a generalized linear model by minimizing the negative log-likelihood
+- Finding the shortest path in a network
+- Minimizing variance in a portfolio
+- Finding the best hyperparameters for a model
 
-Because R lets us
+## Standard Form
 
-- work interactively,
-- explore and visualize data via a rich toolset,
-- easily retrieve or generate data,
-- summarize and report (via RMarkdown/Quarto), and
-- make use of a comprehensive ecosystem of packages.
+An optimization problem is typically written in the form
 
-:::
+$$
+\begin{aligned}
+  &\operatorname*{minimize}_x     && f(x) \\
+  &\operatorname{subject to}      && g_i(x) \leq 0, \quad i = 1, \ldots, m \\
+  &                               && h_j(x) = 0, \quad j = 1, \ldots, k.
+  \end{aligned}
+$$
 
-::: {.column width="47%"}
+where
 
-![](../images/r-logo.svg)
+- $f$ is the objective function,
+- $g_i$ are inequality constraints, and
+- $h_j$ are equality constraints.
 
-:::
+. . .
 
-::::
+### Solution
 
-## Why _Not_ R?
+$$x^* = \operatorname{argmin}_x f(x)$$
 
-It is often slow due to being an **interpreted** language.
+### Example: OLS
 
-:::: {.columns}
+Ordinary least squares is an optimization problem.
 
-::: {.column width="47%"}
+In standard form, it is
 
-### Interpreted Languages
+$$
+  \begin{aligned}
+  &\operatorname*{minimize}_{\beta \in \mathbb{R}^p}     &&f(\beta) = \frac{1}{2} \lVert y - X\beta\rVert_2^2.
+  \end{aligned}
+$$
 
-- Execution of code happens line by line.
-- Many functions are written in C, but you still have to call them from R.
-- **Examples:** R, Python, Matlab, Javascript.
+. . .
 
-:::
+### Solution
 
-::: {.column width="47%"}
+$$\beta^* = \operatorname{argmin}_{\beta \in \mathbb{R}^p} f(\beta).$$
 
-### Compiled Languages
+# Types of Problems
 
-- Code is translated into machine code before execution.
-- This makes it faster.
-- **Examples:** C, C++, Fortran, Java
+## Taxonomy
 
-:::
+### Convexity
 
-::::
+- **Convex**
+- Quasiconvex
+- Nonconvex
 
-## Compiled vs Interpreted Languages
+. . .
 
-![](../images/chatgpt-compiled-interpreted.png){width=63%}
+### Smoothness
 
-## Compiled Code
+- **Smooth**
+- Nonsmooth
 
-### C++ Code
+. . .
 
-```cpp
-int add(int a, int b) { return a + b; }
+### Constraints
 
-int main() {
-  std::cout << add(2, 3) << std::endl;
-  return 0;
+- **Unconstrained**
+- Constrained
+
+## Convex Optimization Problems
+
+Standard form:
+
+$$
+\begin{aligned}
+  &\operatorname*{minimize}_x     && f(x) \\
+  &\operatorname{subject to}      && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
+  &                               && a_i^T x = b_i, \quad j = 1, \ldots, k,
+  \end{aligned}
+$$
+
+where $f$ and $g_i$ are convex.
+
+### Convex Functions
+
+A function $f$ is convex iff for all $x, y \in \operatorname{dom} f$ and
+$\lambda \in [0, 1]$
+$$f(\lambda x + (1 - \lambda) y) \leq \lambda f(x) + (1 - \lambda) f(y).$$
+
+. . .
+
+#### First-Order Conditions
+
+If $f$ is **differentiable**, then the condition is equivalent to
+$$f(y) \geq f(x) + \nabla f(x)^T(y - x).$$
+
+### Optimality
+
+Any (local) minimum is **global** (but not neccessarily unique).
+
+#### First-Order Conditions
+
+For differentiable $f$, $x$ is optimal iff
+$$\nabla f(x)^T(y - x) \geq 0\quad\text{for all}\quad y \in C,$$ where $C$ is
+the feasible set.
+
+. . .
+
+#### Second-Order Conditions
+
+If $f$ is twice-differentiable, then $x$ is optimal iff
+$$\nabla^2f(x) \succeq 0.$$
+
+### Quasiconvex Optimization Problems
+
+Standard form:
+
+$$
+\begin{aligned}
+  &\operatorname*{minimize}_x     && f(x) \\
+  &\operatorname{subject to}      && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
+  &                               && A^T x = b,
+  \end{aligned}
+$$
+
+where $g_i$ are convex but $f$ is **quasiconvex**.
+
+#### Examples
+
+- Utility functions (economics)
+- The floor function $f(x) = \lfloor x \rfloor$
+
+. . .
+
+#### Algorithms
+
+Won't cover here, but for instance the **bisection** method.
+
+## Nonconvex Optimization Problems
+
+- Generally hard to solve.
+- No standard form (can be anything).
+- Local minima are not necessarily global.
+
+. . .
+
+### Examples
+
+- Deep learning
+- Hyperparameter tuning (cross-validation)
+- Combinatorial problems
+
+. . .
+
+### Algorithms
+
+Won't cover here, but typically **stochastic algorithms** (next week) or
+**global optimization methods** (not in this course).
+
+$x^2$ (convex), $\sin(x + \pi)$ (non-convex), and $\sqrt{|x|}$ (quasi-convex).
+
+```{r convexity-types, echo = FALSE, fig.width = 11, fig.height = 7, warning = FALSE }
+library(patchwork)
+
+convex_function <- function(x) x^2
+non_convex_function <- function(x) sin(x + pi)
+quasi_convex_function <- function(x) sqrt(abs(x))
+
+# Define the gradients
+convex_gradient <- function(x) 2 * x
+non_convex_gradient <- function(x) cos(x + pi)
+quasi_convex_gradient <- function(x) sign(x) * 0.5 * abs(x)^(-0.5)
+
+# Create a sequence of x values
+x_vals <- seq(-2, 2, length.out = 100)
+
+# Create data frames for plotting
+convex_df <- data.frame(
+  x = x_vals,
+  y = convex_function(x_vals),
+  gradient = convex_gradient(x_vals),
+  type = "Convex"
+)
+non_convex_df <- data.frame(
+  x = x_vals,
+  y = non_convex_function(x_vals),
+  gradient = non_convex_gradient(x_vals),
+  type = "Non-Convex"
+)
+quasi_convex_df <- data.frame(
+  x = x_vals,
+  y = quasi_convex_function(x_vals),
+  gradient = quasi_convex_gradient(x_vals),
+  type = "Quasi-Convex"
+)
+
+# Combine data frames
+df <- bind_rows(convex_df, non_convex_df, quasi_convex_df)
+
+# Function to add Jensen's inequality line segment
+add_jensens_line <- function(df, func) {
+  x1 <- -1.5
+  x2 <- 0.1
+  y1 <- func(x1)
+  y2 <- func(x2)
+  df %>%
+    mutate(
+      jensens_y = ifelse(
+        x >= x1 & x <= x2,
+        y1 + (y2 - y1) * (x - x1) / (x2 - x1),
+        NA
+      )
+    )
 }
+
+# Add Jensen's inequality line segments
+convex_df <- add_jensens_line(convex_df, convex_function)
+non_convex_df <- add_jensens_line(non_convex_df, non_convex_function)
+quasi_convex_df <- add_jensens_line(quasi_convex_df, quasi_convex_function)
+
+# Combine data frames with Jensen's line
+df_with_jensens <- bind_rows(convex_df, non_convex_df, quasi_convex_df)
+
+# Plot the objective functions with Jensen's inequality line segments using facets
+p1 <- ggplot(df_with_jensens, aes(x = x)) +
+  geom_line(aes(y = y)) +
+  geom_line(aes(y = jensens_y), linetype = "dashed", color = "steelblue4") +
+  labs(y = expression(objective(x))) +
+  facet_wrap(~type, scales = "free_y")
+
+# Plot the gradients using facets
+p2 <- ggplot(df, aes(x = x, y = gradient)) +
+  geom_line() +
+  labs(y = expression(nabla * objective(x))) +
+  facet_wrap(~type, scales = "free_y")
+
+# Print the plots
+p1 /
+  p2 +
+  plot_layout(axis_title = "collect", guides = "collect", axes = "collect")
 ```
+
+# Solving Optimization Problems
+
+## Types of Optimization Methods
+
+### Direct Methods
+
+- Solve a system of equations
+- Get solution up to machine precision
+- **Examples:** solving a linear system of equations
 
 . . .
 
-### Assembly Representation
+### Iterative Optimization
 
-```assembly
-0000000000401130 <main>:
-  401130:       55                      push   %rbp
-  401131:       48 89 e5                mov    %rsp,%rbp
-  401134:       48 83 ec 10             sub    $0x10,%rsp
-  ···           ···                     ···    ···
-  401149:       8b 45 f8                mov    -0x8(%rbp),%eax
-  401165:       c9                      leaveq
-  401166:       c3                      retq
-```
+- Incrementally update optimization variable
+- Stop after some number of iterations based on convergence criterion. --
 
-## Why C++?
+- **Examples:** gradient descent, hill-climbing
 
-- C++ generates machine code: no longer have to be scared of loops!
-- Pass by reference: no need to copy large objects.
-- Access to external C++ libraries
-- Wrap and reuse C++ code with other languages
-- Compilation catches bugs early.
+### Direct Methods
 
-. . .
+Analytical solution, up to machine precision.
 
-:::: {.columns}
+#### Example: OLS
 
-::: {.column width="47%"}
+Solve $$X^TX \beta = X^Ty$$ for $\beta \in \mathbb{R}^p$.
 
-## Why _Not_ C++?
-
-- Compiling adds overhead.
-- Debugging is more complicated.
-- Distributing code is more involved.
-
-:::
-
-::: {.column width="47%"}
-
-![](../images/compiling.png){width=80%}
-
-:::
-
-::::
-
-## R Can Be Extended
-
-But we can extend R by coupling it to a compiled language, like
-
-- C,
-- C++,
-- Fortran, and
-- Java.
-
-. . .
-
-### Problem
-
-Doing so has historically been **tedious** and **error-prone**.
-
-### Basic C++ Version of `sum()`
-
-```{c sum-c, eval=FALSE}
-// foo.c
-#include <R.h>
-#include <Rinternals.h>
-
-extern "C++"
-{
-  SEXP sum_c(SEXP x)
-  {
-    x = PROTECT(coerceVector(x, REALSXP));
-    SEXP s = PROTECT(allocVector(REALSXP, 1));
-    double* x_ref = REAL(x);
-    double* s_ref = REAL(s);
-
-    for (int i = 0; i < length(x); i++)
-      s_ref[0] += x_ref[i];
-
-    UNPROTECT(2);
-
-    return s;
-  }
-}
-```
-
-### C++ Example (Continued)
-
-Next, we need to compile this into a binary file by calling:
-
-```{sh shlib, eval = FALSE}
-R CMD SHLIB foo.c
-```
-
-. . .
-
-Then, in R, we would call this:
-
-```{r foo-so, eval = FALSE}
-dyn.load("foo.so") # or `foo.dll` if on Windows
-```
-
-. . .
-
-Finally, access function by calling this:
-
-```{r foo-r, eval = FALSE}
-x <- c(1.0, 1.5, -0.2, 0.1, 0.0)
-.Call("sum_c", x = x)
-```
-
-```{r, echo = FALSE}
-sum(c(1.0, 1.5, -0.2, 0.1, 0.0))
-```
-
-## Rcpp
-
-Rcpp simplifies this process **considerably**.
-
-```{Rcpp rcpp-sum, eval = FALSE}
-// [[Rcpp::export]]
-double sum_cpp(Rcpp::NumericVector x) {
-  double total = 0;
-  const int n = x.size();
-
-  for (int i = 0; i < n; ++i) {
-    total += x[i];
-  }
-
-  return total;
-}
-```
-
-### Exporting C++ Functions
-
-Automizes the process of compiling, linking, and exporting.
-
-. . .
-
-### R Interface
-
-- Provides collection of classes to represent R objects
-  - `Rcpp::NumericalVector`
-  - `Rcpp::DataFrame`
-- Adds a number of functions, often vectorized, to manipulate these objects
-  - `Rcpp::sum()`
-  - `Rcpp::runif()`
-- Seamless transformation between R and C++ objects.
-
-## Installing Rcpp
-
-### Linux
-
-Depends on distro, but on Ubuntu call this:
+How do you solve this in practice? In R you simply call
 
 ```r
-sudo
-apt
-install
-r - base - dev
+solve(crossprod(X), crossprod(X, y))
 ```
 
-### OSX
+but what happens under the hood?
 
-You need Xcode. Open up a terminal and call this:
-
-```sh
-xcode-select --install
-```
-
-### Windows
-
-Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
-
-## Side-By-Side Comparison
+. . .
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-### R
+### Zero-Order Methods
 
-```{r}
-library(Rcpp)
+Use only the function value.
 
-sum_r <- function(x) {
-  total <- 0
-  for (i in seq_along(x)) {
-    total <- total + x[i]
-  }
-  total
-}
-```
+#### Examples
+
+- Grid search (cross validation)
+- Genetic algorithms
+- Bisection
 
 :::
 
 ::: {.column width="47%"}
 
-### C++
+### First-Order Methods
 
-```cpp
-#include <Rcpp.h>
-using namespace Rcpp;
+Use the gradient of the function (**first** derivative).
 
-// [[Rcpp::export]]
-double sum_cpp(NumericVector x) {
-  double total = 0;
-  const int n = x.size();
-  for (int i = 0; i < n; ++i) {
-    total += x[i];
-  }
-  return total;
-}
-```
+#### Examples
+
+- **Gradient descent**
+- Conjugate gradient
 
 :::
 
 ::::
 
-## Writing Code in R and Rcpp
+### Second-Order Methods
 
-### Notable Differences
+Use the gradient of the function (**first** derivative).
 
-- **Vectors are indexed from 0**
-- Statements end with a semicolon (**`;`**)
-- The assignment operator is **`=`**
-- Input and output types need to be declared
-- Class methods have a different syntax (e.g. `x.size()` not `size(x)`)
-- An explicit `return` statement is required to return a value
-- For loops have a different syntax: `for (<init>; <check>; <increment>)`
-- You don't assign to create functions.
+#### Examples
+
+- **Newton's Method**
+- Trust-region methods ]
+
+## Gradient Descent
+
+The quintessential first-order method
+
+Repeat until convergence: $$x^{(k+1)} = x^{(k)} - t \nabla f(x^{(k)}).$$ with
+$t > 0$ being the step size.
 
 . . .
 
-### Similarities
+### Properties
 
-- Rcpp classes, like `NumericVector` and `List`, unify data structures in R and
-  C++
-- Rcpp implements vectorized arithmetic (as in R)
-- Rcpp implements a long list of vectorized R-like functions
+- Converges to a local minimum if $f$ is convex and differentiable and $t$ small
+  enough.
+- Requires $f$ to be differentiable and the gradient to be continuous.
 
-## Including C++ Code in R
+### Derivation of Update
+
+Take the second-order Taylor expansion of $f$ around $x$:
+$$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).$$
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize w.r.t $y$ to get
+$$x^+ = x - t\nabla f(x).$$
+
+But how do we choose $t$?
+
+:::
+
+::: {.column width="47%"}
+
+![](../images/gd-approx.png){width=85%}
+
+:::
+
+::::
+
+### Too Small Step Size
+
+![](../images/gd-stepsize-small.png){width=50%}
+
+### Too Large Step Size
+
+![](../images/gd-stepsize-large.png){width=50%}
+
+### Perfect!
+
+![](../images/gd-stepsize-good.png){width=50%}
+
+### Analytical Step Size
+
+#### Theorem
+
+For gradient descent with step size $t \leq 1/L$ and Lipschitz constant of
+$\nabla f$ being $L$, we have
+$$f(x^{(k)}) - f(x^*) \leq \frac{1}{2tk} \lVert x^{(0)} - x^*\rVert_2^2.$$
+
+. . .
+
+Convergence rate: $O(1/k)$.
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+#### Lipschitz Constant
+
+If $$\lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2$$ then
+$L$ is the Lipschitz constant of $\nabla f$.
+
+:::
+
+::: {.column width="47%"}
+
+<!-- ![](../images/lipschitz.gif){width=50%} -->
+
+:::
+
+::::
+
+### Example: OLS
+
+$$L = \lVert X^TX \rVert_2$$
+
+. . .
+
+### Line Searching
+
+In practice, we may not know $L$ or it may be difficult to compute.
+
+. . .
+
+#### Exact Line Search
+
+It may be tempting to try to solve $$t^* = \arg_t\min f(x - t\nabla f(x))$$ but
+this is typically too expensive.
+
+### Backtracking Line Search
+
+Set $\beta \in (0, 1)$ and $\alpha \in (0, 1/2]$. At each iteration, start with
+$t \gets t_0$, and while
+$$f(x - t \nabla f(x)) > f(x) - \alpha t \lVert \nabla f(x)\rVert_2^2$$ set
+$t = t \beta.$
+
+![](../images/backtrack-line-search.png){width=65%}
+
+### Backtracking Line Search Step Size
+
+![](../images/gd-stepsize-linesearch.png){width=50%}
+
+### Stopping Criteria
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+#### Common (ad-hoc) choices
+
+- Small gradient: $$\lVert \nabla f(x) \rVert_r \leq \epsilon$$
+- Small relative change in $x$:
+  $$\frac{\lVert x^{(k+1)} - x^{(k)} \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2} \leq \epsilon$$
+- Small relative change in $f$:
+  $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})} \leq \epsilon$$
+
+:::
+
+::: {.column width="47%"}
+
+#### Duality Gap
+
+If $f$ is **strongly** convex and $x$ optimal, then the duality gap is zero at
+the optimum.
+
+Most principled stopping criterion, but not always available.
+
+:::
+
+::::
+
+### Problems with Gradient Descent
+
+Sensitive to conditioning.
+
+![](../images/gd-conditioning.png){width=70%}
+
+## Newton's Method
+
+Recall second-order expansion of $f$ around $x$:
+$$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).$$
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Newton Update
+
+Instead of replacing $\nabla^2 f(x)$ with $\frac{1}{t} I$ (gradient descent
+update), minimize $\hat{f}(y)$ directly:
+$$x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).$$
+
+:::
+
+::: {.column width="47%"}
+
+![](../images/newton-approx.png){width=52%}
+
+:::
+
+::::
+
+### Damped Newton
+
+In practice this might not converge, so we use **damped** Newton:
+$$x^+ = x - t\nabla^2 f(x)^{-1} \nabla f(x),$$ with $t > 0$ chosen by
+backtracking line search.
+
+. . .
+
+In practice, this is often just called Newton's method.
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+#### Backtracking Line Search
+
+At each iteration $t \gets 1$ and while
+$$f(x + t v) > f(x) + \alpha t \nabla f(x)^T v$$ with
+$v = -(\nabla^2 f(x)^{-1} \nabla f(x))$ set $$t \gets \beta t.$$
+
+:::
+
+::: {.column width="47%"}
+
+#### Phases
+
+- As long as $t < 1$, we are in the **damped** phase.
+- When $t = 1$, we enter the **pure** phase and $t$ will remain $1$.
+- In pure phase, we have quadratic convergence.
+
+:::
+
+::::
+
+### Gradient Descent vs Newton
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+#### Pros
+
+- Faster convergence: quadratic (eventually)
+- Independent of conditioning
+
+#### Cons
+
+- Higher memory cost
+- Higher computational cost $O(p^3)$ vs $O(p)$ for GD
+- Needs twice differentiable $f$.
+
+:::
+
+::: {.column width="47%"}
+
+![](../images/newton-gd-comp.png){width=100%}
+
+:::
+
+::::
+
+### Convergence
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+![](../images/newton-gd-convergence-iteration.png){width=100%}
+
+:::
+
+::: {.column width="47%"}
+
+![](../images/newton-gd-convergence-time.png){width=100%}
+
+:::
+
+::::
+
+In practice, results depend on the problem.
+
+## Quasi-Newton Methods
+
+Replace $\nabla^2 f(x)$ with an approximation $B_k$.
+
+. . .
+
+#### BFGS
+
+Complexity: $O(p^2)$, still same memory cost.
+
+. . .
+
+### L-BFGS
+
+Same complexity but lower memory cost.
+
+## Example: Poisson Regression
+
+## Poisson Regression
+
+Consider observations $y_i \in \mathbb{N}_0$, $x_i \in \mathbb{R}^p$ for
+$i = 1, \ldots, n$, and Poisson point probabilities
+$$f_i(y_i) = e^{-\mu(x_i)} \frac{\mu(x_i)^{y_i}}{y_i!}.$$
+
+. . .
+
+If $\log(\mu(x_i)) = x_i^T \beta$ we rewrite
+
+$$f_i(y_i) = e^{\beta^T x_i y_i - \exp( x_i^T \beta)} \frac{1}{y_i!}.$$
+
+This is a _Poisson regression model_.
+
+### Example
+
+```{r vegetables-summary}
+summary(vegetables)
+dim(vegetables)
+```
+
+### Model
+
+$$\log(E(\text{sale})) = \beta_0 + \beta_1 \log(\text{normalSale}) + \beta_{\text{store}}.$$
+
+. . .
+
+```{r pois-model, dependson="data", cache = TRUE}
+## Note, variable store is a factor with 352 levels!
+pois_model <- glm(
+  sale ~ log(normalSale) + store,
+  data = vegetables,
+  family = poisson()
+)
+```
+
+. . .
+
+```{r pois-sum, echo=2, dependson="pois-model"}
+old_options <- options(digits = 2)
+summary(pois_model) |>
+  coefficients() |>
+  head()
+options(digits = old_options$digits)
+```
+
+### Exponential Families
+
+Joint density:
+$$f(\mathbf{y} \mid \theta) = \prod_{i=1}^n \frac{1}{\varphi_i(\theta)} e^{\theta^T t_i(y_i)} = e^{\theta^T \sum_{i=1}^n t_i(y_i) - \sum_{i=1}^n \kappa_i(\theta)}$$
+where $\varphi_i(\theta) = \int e^{\theta^T t_i(u)} \mu_i(\mathrm{d}u)$ and
+$\kappa_i(\theta) = \log(\varphi_i(\theta)).$ The log-likelihood is
+$$\ell(\theta) = \theta^T t(\mathbf{y}) - \kappa(\theta)$$ where
+
+$$
+t(\mathbf{y}) = \sum_{i=1}^m t_i(y_i) \quad \text{and} \quad
+\kappa(\theta) = \sum_{i=1}^m \log \varphi_i(\theta).
+$$
+
+The gradient is $$\nabla \ell(\theta) = t(\mathbf{y}) - \nabla \kappa(\theta).$$
+
+### The Poisson Regression model
+
+For the Poisson regression model we find that
+
+$$
+t(\mathbf{y}) = \sum_{i=1}^n x_i y_i = \mathbf{X}^T \mathbf{y} \quad \text{and} \quad
+\kappa(\beta) = \sum_{i=1}^n e^{x_i^T \beta}.
+$$
+
+Moreover,
+$$\nabla \kappa(\beta) = \sum_{i=1}^n x_i e^{x_i^T \beta} = \mathbf{X}^T \mathbf{w}(\beta)$$
+where $$ \mathbf{w}(\beta) = \exp(\mathbf{X}^T \beta)$$
+with $\exp$ applied
+coordinatewisely.
+
+### Model Matrix and `glm.fit()`
+
+```{r implement, dependson="data", cache = TRUE}
+X <- model.matrix(
+  sale ~ log(normalSale) + store,
+  data = vegetables
+)
+y <- vegetables$sale
+
+dim(X)
+```
+
+. . .
+
+```{r glm.fit}
+bench::bench_time(
+  pois_fit <- glm.fit(X, y, family = poisson())
+)
+```
+
+### `glm.fit()`
 
 ```{r}
-library(Rcpp)
+pois_fit$iter
+pois_fit$converged
+```
+
+. . .
+
+#### Deviance
+
+Two times (log-likelihood of null (intercept-only) model minus log-likelihood of
+the full model)
+
+```{r}
+pois_fit0 <- glm.fit(X[, 1], y, family = poisson())
+pois_fit0$deviance - pois_fit$deviance
+```
+
+### `glm.fit()`
+
+```{r glm.fit-trace}
+pois_fit <- glm.fit(X, y, family = poisson(), control = list(trace = TRUE))
 ```
 
 --
 
-The C++ code can be passed directly to the `cppFunction()` as a text string for
-compilation and setting up an R interface.
+### Stopping criterion
 
-```{r}
-cppFunction(
-  "int one() {return 1;}"
+$$|\mathrm{deviance}_{n-1} - \mathrm{deviance}_n| < \varepsilon (\mathrm{deviance}_n + 0.1)$$
+with the default tolerance parameter $\varepsilon = 10^{-8}$ and with a maximal
+number of iterations set to 25.
+
+### Implementation of Objective Function
+
+```{r implement_H, dependson="implement", cache = TRUE}
+t_map <- drop(crossprod(X, y))
+
+objective <- function(beta) {
+  drop(sum(exp(X %*% beta)) - beta %*% t_map) / nrow(X)
+}
+
+gradient <- function(beta) {
+  (drop(crossprod(X, exp(X %*% beta))) - t_map) / nrow(X)
+}
+```
+
+. . .
+
+Recomputing the deviance difference,
+
+```{r objective-value-deviance}
+2 *
+  nrow(X) *
+  (objective(c(pois_fit0$coefficients, rep(0, 352))) -
+    objective(pois_fit$coefficients))
+```
+
+. . .
+
+and the value of the negative log-likelihood:
+
+```{r objective-value}
+objective(pois_fit$coefficients)
+```
+
+### Using `optim()` with Conjugate Gradient
+
+```{r CG, dependson="implement_H", cache = TRUE}
+bench::bench_time(
+  pois_CG <- optim(
+    rep(0, length = ncol(X)),
+    objective,
+    gradient,
+    method = "CG",
+    control = list(maxit = 10000)
+  )
 )
 ```
 
 . . .
 
-And then the function can be called from R.
-
-```{r}
-one()
+```{r CG-results, dependson="CG"}
+pois_CG$value
+pois_CG$counts
 ```
 
-## Source Files
+### Using `optim()` with BFGS
 
-Better to put C++ code in an `.cpp` file (for instance in `src/` folder) and use
-`sourceCpp()` (or RStudio's UI tool) to compile the code and set up the R
-interface.
-
-. . .
-
-In `R/my_r_experiment.R` (or similar), call
-
-```r
-sourceCpp(here::here("src/my_cpp_functions.cpp"))
-```
-
-```
-my_project/
-├── scripts/
-│   └── my_r_experiment.R    # R script
-├── src/
-│   └── my_cpp_functions.cpp # Source for C++ functions
-└── my_rproject.Rproj        # RStudio project file
-```
-
-. . .
-
-Each file should start with
-
-```cpp
-#include <Rcpp.h>
-using namespace Rcpp; // Optional
-```
-
-## Sum Functions
-
-Let's see if we can beat R's own `sum()` (See
-[here](https://github.com/wch/r-source/blob/3b69aff4083ee81d6c4fe7177eb2b2a2ca41a240/src/main/summary.c#L152)
-for the implementation.)
-
-```{r bench-sum, cache = TRUE, fig.width = 10, fig.height = 4}
-x <- runif(1e5)
-bench::mark(sum(x), sum_cpp(x), sum_r(x)) |>
-  plot()
-```
-
-## Exercise
-
-Write a C++ function `cpp_mean()` that computes the arithmetic mean of a numeric
-input vector.
-
-Benchmark your function against `mean()`.
-
-## Constants
-
-- In C++, we can use `const` to declare constants.
-- After declaration, the value cannot be changed.
-- Can lead to _marginal_ performance improvements.
-
-```cpp
-const double pi = 3.14159;
-pi = 3.14; // Error!
-```
-
-### `Const` Correctness
-
-- Enforce immutability wherever appropriate.
-- Can help avoid bugs.
-- Up to you
-
-## Passing by Reference
-
-- Useful to avoid copying large objects or when we want to modify the input.
-- Post-fix `&` to the type.
-
-```{Rcpp rcpp-sum-ref, eval = FALSE}
-// [[Rcpp::export]]
-double sum_cpp_ref(Rcpp::NumericVector& x) {
-  double total = 0.0;
-  const int n = x.size();
-
-  for (int i = 0; i < n; ++i) {
-    total += x[i];
-  }
-
-  return total;
-}
-```
-
-. . .
-
-### Rcpp Objects Reference R Objects
-
-- Modifing the Rcpp object modifies the original object.
-- Little point in using `&` in **exported** functions.
-
-## Const Reference
-
-- If you don't want to modify the input, you can pass by const reference.
-- Pre-fix `const` to the type.
-
-```{Rcpp rcpp-sum-constref, eval = FALSE}
-// [[Rcpp::export]]
-double sum_cpp_const_ref(const Rcpp::NumericVector& x) {
-  double total = 0.0;
-  const int n = x.size();
-
-  for (int i = 0; i < n; ++i) {
-    total += x[i];
-  }
-
-  return total;
-}
-```
-
-- In C++, this can make a big difference.
-- But with Rcpp, it makes little difference.
-- Sometimes no difference with standard C++ too.
-
-### Value of Constant References
-
-```{Rcpp constref-ex, eval = FALSE}
-NumericVector f_copy(NumericVector x) {
-  return pow(x, 2);
-}
-
-NumericVector f_constref(const NumericVector& x) {
-  return pow(x, 2);
-}
-
-// [[Rcpp::export]]
-NumericVector f_copyref(const bool copy) {
-  NumericVector x = runif(100000);
-  if (copy) {
-    return f_copy(x);
-  } else {
-    return f_constref(x);
-  }
-}
-```
-
-### Benchmark
-
-```{r constref-bench, cache = TRUE}
-bench::mark(
-  f_copyref(TRUE),
-  f_copyref(FALSE),
-  check = FALSE
+```{r BFGS, dependson="implement_H", cache = TRUE}
+bench::bench_time(
+  pois_BFGS <- optim(
+    rep(0, length = ncol(X)),
+    objective,
+    gradient,
+    method = "BFGS",
+    control = list(maxit = 10000)
+  )
 )
 ```
 
-## Sugar
+. . .
 
-- Rcpp contains a wealth of syntactic **sugar**
-- Often versions of R's vectorized functions
-
-```{Rcpp rcpp-sum-sugar, eval = FALSE}
-// [[Rcpp::export]]
-double sum_cpp_sugar(const Rcpp::NumericVector& x) {
-  return Rcpp::sum(x);
-}
+```{r BFGS-results, dependson="BFGS"}
+pois_BFGS$value
+pois_BFGS$counts
 ```
 
-## Premature Optimization
+### Using Sparse Matrices
 
-- Most C++ compilers will optimize the code for you.
-- What you see in the source code is **not** what you get.
-- Temporary variables are often optimized away.
-- Copy elisions
+```{r Matrix, message=FALSE, cache=FALSE}
+library(Matrix)
+```
 
-## Exercise
-
-- Implement `cpp_sd()` using Rcpp that computes the standard deviation of a
-  (numeric) vector. Benchmark against `sd()`.
-- Remember to test your functions.
-- Don't use `Rcpp:sd()`, please ☺
-- If you have time over, try a different algorithm for computing the standard
-  deviation.
-
-```{Rcpp rcpp-sd, eval = FALSE, echo = FALSE}
-// [[Rcpp::export]]
-double cpp_sd(NumericVector x) {
-  double out = 0.0;
-  double x_mean = 0.0;
-
-  int n = x.size();
-
-  for (int i = 0; i < n; ++i) {
-    out += x[i] / n;
-  }
-
-  for (int i = 0; i < n; ++i) {
-     out += std::pow(x[i] - x_mean, 2);
-  }
-
-  return std::sqrt(out / (n - 1));
-}
+```{r sparse, dependson="implement", cache = TRUE}
+X <- Matrix(X)
 ```
 
 . . .
 
-```{r sd-bench, echo = FALSE, cache = TRUE}
-x <- rnorm(1e5)
-bench::mark(cpp_sd(x), sd(x), check = FALSE) |> plot()
-```
-
-## Von Mises Rejection Sampling
-
-### For-Loop Version
-
-```{r vM-rejection, cache = TRUE}
-rvonmises <- function(n, kappa) {
-  y <- numeric(n)
-  for (i in 1:n) {
-    reject <- TRUE
-    while (reject) {
-      y0 <- runif(1, -pi, pi)
-      u <- runif(1)
-      reject <- u > exp(kappa * (cos(y0) - 1))
-    }
-    y[i] <- y0
-  }
-  y
-}
-```
-
-### Vectorized Version
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r vM-rejection-fast, cache = TRUE}
-new_sampler <- function(generator) {
-  alpha <- 1
-  function(n, ...) {
-    y <- list()
-    j <- 1
-    l <- 0
-    while (l < n) {
-      m <- ceiling((n - l) / alpha)
-      y[[j]] <- generator(m, ...)
-      l <- l + length(y[[j]])
-      if (j == 1) {
-        alpha <<- (l + 1) / (m + 1)
-      }
-      j <- j + 1
-    }
-    unlist(y)[1:n]
-  }
-}
-```
-
-:::
-
-::: {.column width="47%"}
-
-```{r vM-rejection-vec-ran, cache = TRUE}
-vonmises_generator <- function(m, kappa) {
-  y <- runif(m, -pi, pi)
-  u <- runif(m)
-  accept <- u <= exp(kappa * (cos(y) - 1))
-  y[accept]
-}
-```
-
-```{r vM-rejection-vec, cache = TRUE}
-rvonmises_vec <-
-  new_sampler(vonmises_generator)
-```
-
-:::
-
-::::
-
-### Rcpp Implementation
-
-```{Rcpp vMsim-cpp, eval = FALSE}
-// [[Rcpp::export]]
-NumericVector rvonmises_cpp(const int n, const double kappa) {
-  NumericVector y(n);
-  int i = 0;
-
-  while (i < n) {
-    double y0 = R::runif(-M_PI, M_PI);
-    bool accept = R::runif(0, 1) <= exp(kappa * (cos(y0) - 1));
-    if (accept) {
-      y[i] = y0;
-      i++;
-    }
-  }
-
-  return y;
-}
-```
-
-```{r vMsim3, dependson="vMsim-cpp", fig.width = 12, echo = FALSE}
-par(mfrow = c(1, 2))
-f <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
-x <- rvonmises_cpp(100000, 0.5)
-hist(x, breaks = seq(-pi, pi, length.out = 20), prob = TRUE)
-curve(f(x, 0.5), -pi, pi, col = "blue", lwd = 2, add = TRUE)
-x <- rvonmises_cpp(100000, 2)
-hist(x, breaks = seq(-pi, pi, length.out = 20), prob = TRUE)
-curve(f(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
-par(mfrow = c(1, 1))
-```
-
-```{r vMsim-cpp-runtime, dependson=c("vMsim-cpp", "vM-rejection-vec", "vM-rejection"), echo = FALSE, fig.width = 11}
-bench::mark(
-  rvonmises(1000, kappa = 5),
-  rvonmises_vec(1000, kappa = 5),
-  rvonmises_cpp(1000, kappa = 5),
-  check = FALSE
-) |>
-  plot()
-```
-
-## The Standard Template Library (STL)
-
-- A library of generic algorithms, data structures, and iterators for C++. --
-
-- Accessed via the `std` namespace.
-- Provides a number of useful functions for working with vectors and other
-  containers.
-
-. . .
-
-### Efficiently Growing Vectors
-
-Unlike R and Rcpp vector, `std::vector()` grows efficiently.
-
-```cpp
-std::vector<int> x;
-
-for (int i = 0; i < 10; ++i) {
-  x.emplace_back(i)
-}
-```
-
-## Linear Algebra
-
-### RcppArmadillo
-
-```cpp
-#include <RcppArmadillo.h>
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
-arma::mat armaMatrixMultiply(const arma::mat &A, const arma::mat &B) {
-  return A * B;
-}
-```
-
-. . .
-
-### RppEigen
-
-```cpp
-#include <RcppEigen.h>
-// [[Rcpp::depends(RcppEigen)]]
-// [[Rcpp::export]]
-Eigen::MatrixXd eigenMatrixMultiply(const Eigen::MatrixXd &A,
-                                    const Eigen::MatrixXd &B) {
-  return A * B;
-}
-```
-
-## R Markdown
-
-Can put the code in Rcpp chunks, which will be automatically compiled and
-exported.
-
-```{Rcpp rcpp-odd-ex, echo = FALSE}
-#include <Rcpp.h>
-using namespace Rcpp;
-
-// [[Rcpp::export]]
-bool is_odd_cpp(int num = 10) {
-   bool result = (num % 2 == 1);
-   return result;
-}
-```
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-<!-- prettier-ignore-start -->
-
-```{Rcpp}`r ''`
-#include <Rcpp.h>
-using namespace Rcpp;
-
-// [[Rcpp::export]]
-bool is_odd_cpp(int num = 10) {
-   bool result = (num % 2 == 1);
-   return result;
-}
-```
-````
-
-<!-- prettier-ignore-end -->
-
-:::
-
-::: {.column width="47%"}
-
-```{r}
-is_odd_cpp(7)
-```
-
-:::
-
-::::
-
-## Packages
-
-- Best practice for Rcpp code is actually to write a package.
-- Not as complicated as you might think!
-- Facilitates reproducibility
-- If we have time, we might cover in course.
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-### R Packages
-
-Great book to get started; free and available online at <https://r-pkgs.org>.
-
-:::
-
-::: {.column width="47%"}
-
-![](../images/r-pkgs.png)
-
-:::
-
-::::
-
-## Exercise
-
-Recall the running mean implementation:
-
-```{r run-mean}
-run_mean <- function(y, k) {
-  n <- length(y)
-  m <- floor((k - 1) / 2)
-  k <- 2 * m + 1
-  y <- y / k
-  s <- rep(NA, n)
-  s[m + 1] <- sum(y[1:k])
-  for (i in (m + 1):(n - m - 1)) {
-    s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m]
-  }
-  s
-}
-```
-
-- Rewrite this in Rcpp and compare the performance.
-- Test your implementation
-- Benchmark it against `run_mean()`
-
-```{Rcpp rcpp-runmean, echo = FALSE, eval=FALSE}
-// [[Rcpp::export]]
-NumericVector run_mean_cpp(NumericVector y, int k) {
-  int n = y.size();
-  int m = floor((k - 1) / 2);
-  int kk = 2 * m + 1;
-  NumericVector s = rep(NA_REAL, n);
-  s[m] = 0;
-  for(int i = 0; i < kk; ++i)
-    s[m] += y[i] / kk;
-  for(int i = m; i < (n - m - 1); ++i)
-    s[i + 1] = s[i] - y[i - m] / kk + y[i + 1 + m] / kk;
-  return s;
-}
-```
-
-### Testing
-
-```{r runmean-test}
-library(testthat)
-
-test_that("R and C++ running mean functions are equivalent", {
-  y <- rnorm(7)
-  expect_equal(run_mean(y, k = 3), run_mean_cpp(y, k = 3))
-})
-```
-
-### Benchmarking
-
-```{r runmean-bench, message = FALSE, cache = TRUE}
-y <- rnorm(4096)
-run_bench <- bench::press(
-  n = c(512, 1024, 2048, 4096),
-  {
-    y <- rnorm(n)
-    bench::mark(
-      run_mean(y, k = 11),
-      run_mean_cpp(y, k = 11),
-      check = FALSE
-    )
-  }
+```{r BFGS-sparse, dependson=c("implement_H", "sparse"), cache = TRUE}
+bench::bench_time(
+  pois_BFGS_sparse <- optim(
+    rep(0, length = ncol(X)),
+    objective,
+    gradient,
+    method = "BFGS",
+    control = list(maxit = 10000)
+  )
 )
 ```
 
-```{r plot-bench, fig.width = 12, fig.height = 6, echo = FALSE}
-plot(run_bench)
+. . .
+
+```{r BFGS-sparse-results, dependson="BFGS-sparse"}
+range(pois_BFGS$par - pois_BFGS_sparse$par)
 ```
 
-## Getting Help
+### Implementation
 
-- [The unofficial Rcpp API documentation](https://thecoatlessprofessor.com/programming/cpp/unofficial-rcpp-api-documentation/)
-- [The many official vignettes](https://cran.r-project.org/web/packages/Rcpp/index.html)
-- [Rcpp For Everyone](https://teuder.github.io/rcpp4everyone_en/) by Masaki E.
-  Tsuda
+```{r GD, cache = TRUE}
+source(here::here("R/optim_alg.R"))
+```
+
+[Source code](R/optim_alg.R)
+
+### Poisson Regression Problem
+
+```{r poisson-def}
+poisson_model <- function(form, data, response) {
+  X <- model.matrix(form, data)
+  y <- data[[response]]
+  t_map <- drop(crossprod(X, y))
+  n <- nrow(X)
+  p <- ncol(X)
+
+  objective <- function(beta) {
+    drop(sum(exp(X %*% beta)) - beta %*% t_map) / n
+  }
+
+  gradient <- function(beta) {
+    (drop(crossprod(X, exp(X %*% beta))) - t_map) / n
+  }
+
+  hessian <- function(beta) {
+    crossprod(X, drop(exp(X %*% beta)) * X) / n
+  }
+
+  list(par = rep(0, p), H = objective, grad_H = gradient, Hessian_H = hessian)
+}
+```
+
+### Test
+
+Gradient descent is very slow for the full Poisson model, so we consider a much
+smaller problem.
+
+```{r GD-test, dependson=c("Implement", "GD"), cache = TRUE}
+veg_pois <- poisson_model(~ log(normalSale), vegetables, response = "sale")
+pois_gd <- gradient_descent(veg_pois$par, veg_pois$H, veg_pois$grad_H)
+```
+
+. . .
+
+```{r GD-comp, dependson="GD-test", echo=2:3, cache = TRUE}
+old_options <- options(digits = 5)
+pois_glm <- glm(sale ~ log(normalSale), data = vegetables, family = poisson())
+rbind(pois_glm = coefficients(pois_glm), pois_gd)
+options(digits = old_options$digits)
+```
+
+### Test
+
+```{r GD-object, dependson=c("Implement", "GD-test"), echo=2:3}
+old_options <- options(digits = 15)
+veg_pois$H(coefficients(pois_glm))
+veg_pois$H(pois_gd)
+options(digits = old_options$digits)
+```
+
+### Tracer
+
+```{r GD-trace, dependson=c("GD-test", "vegetables-data"), results='hide', echo=-3, cache = TRUE, message = FALSE, warning = FALSE}
+library(CSwR)
+gd_tracer <- tracer(c("value", "h_prime", "gamma"), N = 50)
+gc() # Garbage collection
+```
+
+. . .
+
+```{r pois-trace, dependson=c("GD-trace", "GD-test", "vegetables-data"), cache = TRUE}
+pois_gd <- gradient_descent(
+  veg_pois$par,
+  veg_pois$H,
+  veg_pois$grad_H,
+  cb = gd_tracer$tracer
+)
+```
+
+### Trace Information
+
+```{r trace-sum, dependson=c("GD-trace", "pois-trace"), cache = TRUE}
+trace_sum_gd <- summary(gd_tracer)
+head(trace_sum_gd, 3)
+```
+
+. . .
+
+```{r trace-sum2, dependson="trace-sum"}
+tail(trace_sum_gd, 3)
+val_min <- veg_pois$H(coefficients(pois_glm))
+```
+
+### Trace Information
+
+```{r trace-info, warning=FALSE}
+ggplot(trace_sum_gd, aes(.time, value - val_min)) +
+  geom_line() +
+  scale_y_log10()
+```
+
+### Trace Information
+
+```{r trace-sum3}
+ggplot(trace_sum_gd, aes(.time, h_prime)) +
+  geom_line() +
+  scale_y_log10()
+```
+
+```{r prof1, eval=FALSE, echo=FALSE}
+library(profvis)
+profvis(
+  replicate(40, {
+    gradient_descent(veg_pois$par, veg_pois$H, veg_pois$grad_H, epsilon = 1e-10)
+    NULL
+  })
+)
+```
+
+### Newton Method
+
+```{r pois2, cache = TRUE}
+veg_pois <- poisson_model(
+  ~ store + log(normalSale) - 1,
+  vegetables,
+  response = "sale"
+)
+```
+
+```{r Newton-test, dependson=c("Implement", "GD-test", "pois2"), cache = TRUE}
+system.time(
+  pois_newton <- newton(
+    veg_pois$par,
+    veg_pois$H,
+    veg_pois$grad_H,
+    veg_pois$Hessian_H
+  )
+)
+```
+
+### Test
+
+```{r Newton-comp, dependson="Newton-test", cache = TRUE}
+pois_glm <- glm(
+  sale ~ store + log(normalSale) - 1,
+  data = vegetables,
+  family = poisson()
+)
+range(pois_newton - pois_glm$coefficients)
+```
+
+--
+
+```{r Newton-object, dependson=c("Implement", "Newton-test"), echo=2:3, results='hold'}
+old_options <- options(digits = 20)
+veg_pois$H(pois_newton)
+veg_pois$H(pois_glm$coefficients)
+options(digits = old_options$digits)
+```
+
+. . .
+
+`glm()` (and the workhorse `glm.fit()`) uses a Newton-type algorithm.
+
+### Tracing
+
+```{r Newton-trace, cache = TRUE}
+newton_tracer <- tracer(
+  c("value", "grad_norm_sq"),
+  N = 0,
+  expr = expression(grad_norm_sq <- sum(grad^2))
+)
+pois_newton <- newton(
+  veg_pois$par,
+  veg_pois$H,
+  veg_pois$grad_H,
+  veg_pois$Hessian_H,
+  epsilon = 8e-28,
+  cb = newton_tracer$tracer
+)
+
+gd_tracer <- tracer(c("value"), N = 0)
+pois_gd <- gradient_descent(
+  veg_pois$par,
+  veg_pois$H,
+  veg_pois$grad_H
+)
+```
+
+### Tracing
+
+```{r Newton-summary-trace, dependson="Newton-trace", cache = TRUE}
+trace_sum_newton <- summary(newton_tracer)
+val_min <- veg_pois$H(pois_newton)
+trace_sum_newton
+```
+
+### Newton Convergence
+
+```{r trace-sum-Newton, warning=FALSE, dependson="Newton-summary-trace", fig.width = 11, echo = FALSE}
+pl1 <- ggplot(trace_sum_newton, aes(.time, value - val_min)) +
+  geom_point() +
+  geom_line() +
+  scale_y_log10()
+
+pl2 <- ggplot(trace_sum_newton, aes(.time, grad_norm_sq)) +
+  geom_point() +
+  geom_line() +
+  scale_y_log10()
+
+pl1 + pl2
+```
+
+```{r prof2, eval=FALSE, echo=FALSE}
+library(profvis)
+profvis(
+  newton(
+    veg_pois$par,
+    veg_pois$H,
+    veg_pois$grad_H,
+    veg_pois$Hessian_H
+  )
+)
+```
+
+## Exercise
+
+### Step 1
+
+Implement the gradient descent algorithm to solve ridge regression:
+$$\operatorname{minmize}_{\beta \in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lambda \lVert \beta \rVert_2^2}{2} \right)$$
+
+. . .
+
+### Step 2
+
+Implement a method for solving ridge regression directly.
+
+Explicitly factorize (i.e. don't use `solve()`)
+
+## Summary
+
+### Today
+
+- Optimization problems
+- Algorithms to solve optimization problems
+  - Gradient descent
+  - The Newton method
+
+. . .
+
+### Things We Did Not Cover
+
+- Accelerated gradient methods
+- Conjugate gradient
+- Constrained optimization
+- Nonsmooth objectives

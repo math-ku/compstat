@@ -1,5 +1,5 @@
 ---
-title: "Debugging and Likelihood Optimization"
+title: "Likelihood Optimization"
 ---
 
 {{< include _common.qmd >}}
@@ -25,148 +25,10 @@ old_options <- options(digits = 4)
 
 ## Today
 
-### Debugging
-
-- How to detect and fix bugs in your R code
-
 ### Optimization for Multinomial Models
 
 - Likelihood optimization
 - Intro to constrained optimization
-
-## Debugging
-
-- Bugs are common (inevitable)
-- The more complex the code, the more bugs (and the harder to find them)
-- Debugging is the process of finding and fixing bugs.
-- Complemetary to **testing**, which is about identifying existence of bugs.
-
-![Down the rabbit hole.](../images/xkcd-debugging.png){width=80%}
-
----
-
-![The "first" bug.](../images/first-bug-reduced.jpg){width=80%}
-
-## Poisson Regression
-
-```{r poisson-regression}
-n <- 1000
-x <- rnorm(n)
-y <- rpois(n, exp(x))
-X <- model.matrix(y ~ x)
-```
-
-. . .
-
-```{r poisson-implementations}
-Xty <- drop(crossprod(X, y))
-
-objective <- function(beta) {
-  (sum(exp(X %*% beta)) - beta %*% Xty) / nrow(X)
-}
-
-gradient <- function(beta) {
-  (colSums(drop(exp(X %*% beta)) * X) - Xty) / nrow(X)
-}
-```
-
-. . .
-
-Gradient descent and Newton method implementations can be found in
-[`debugging.R`](R/debugging.R).
-
-```{r source-debugging-file, cache=FALSE}
-source(here::here("R/debugging.R"))
-```
-
-## Testing
-
-```{r run-gd}
-gradient_descent(c(0, 0), objective, gradient, t0 = 1, epsilon = 1e-8)
-```
-
-. . .
-
-```{r run-glm}
-glm(y ~ x, family = "poisson")
-```
-
-### Traceback
-
-- Sometimes enough to simply look at the call stack
-
-### Entering Debug Mode
-
-Two common ways to enter debug mode:
-
-- `browser()`: Stops execution and enters debug mode
-- Set a breakpoint in RStudio.
-
-. . .
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-#### `browser()`
-
-- Can be placed anywhere in the code
-- Stops execution and enters debug mode
-
-:::
-
-::: {.column width="47%"}
-
-#### RStudio Breakpoints
-
-- Visual breakpoints
-- Easy to set and remove (click in the margin)
-- No need to modify the code
-- But cannot be conditionally set
-- Sometimes won't work
-
-:::
-
-::::
-
-## Buggy Newton Method
-
-```{r def-hessian}
-hessian <- function(beta) {
-  (crossprod(X, drop(exp(X %*% beta)) * X)) / nrow(X)
-}
-```
-
-```{r run-newton, error=TRUE, linewidth = 80}
-newton_method(c(0, 0), objective, gradient, hessian)
-```
-
-### Exercise: Debugging `newton_method()`
-
-- Download and open [`debugging.R`](R/debugging.R) in RStudio.
-- Create another script and define `objective()`, `gradient()`, and `hessian()`
-  by copying from these slides. --
-
-- Source `debugging.R` and test that `gradient_descent()` works. Now try
-  `newton_method()`. Oh no, there's an error!
-- Insert a breakpoint before the `while` loop and inspect the values of
-  `objective(x_new)`, `values`, `alpha`, `beta` and `grad_d_prod` from within
-  the browser. --
-
-- Explain and fix the bug. Remove the breakpoint.
-- Source the fixed code and try calling `newton_method()`. What happens?
-- Debug the code again, using breakpoints or `browser()`. Finally verify that
-  `newton_method()` works.
-
-## Debugging C++ Code (Rcpp)
-
-- Unfortunately **not** easy.
-- General problem is that C++ code is compiled, so what you see in C++ is not
-  necessarily what is executed. --
-
-- We won't cover it here, but it **is** possible: see
-  [these notes](https://github.com/wch/r-debug/blob/master/debugging-r.md) for
-  instance.
 
 # Multinomial Models
 
@@ -698,9 +560,9 @@ constrOptim(x0, neg_loglik_pep, NULL, ui = A, ci = b, x = x)$par
 constrOptim(c(0.0, 0.3), neg_loglik_pep, NULL, ui = A, ci = b, x = x)
 ```
 
-### Interior-Point Method
+## Interior-Point Method
 
-#### Phase I: Initialization
+### Phase I: Initialization
 
 Find a feasible point $x^{(0)}$ by solving the optimization problem
 
@@ -719,11 +581,11 @@ Easy in the peppered moths case! But this is not always the case.
 
 . . .
 
-#### Phase II: Barrier Method
+### Phase II: Barrier Method
 
 Use a barrier method to solve the constrained problem, starting at $x^{(0)}$.
 
-### Multinomial Conditional Distributions
+## Multinomial Conditional Distributions
 
 Distribution of $Y_{A_j} = (Y_i)_{i \in A_j}$ conditional on $X$ can be found
 too:
@@ -731,7 +593,7 @@ $$Y_{A_j} \mid X = x \sim \textrm{Mult}\left( \frac{p_{A_j}}{M(p)_j}, x_j \right
 
 . . .
 
-#### Expected Genotype Frequencies
+### Expected Genotype Frequencies
 
 Hence for $k \in A_j$,
 $$\operatorname{E} (Y_k \mid X = x) = \frac{x_j p_k}{M(p)_j}.$$
@@ -748,19 +610,8 @@ options(digits = old_options$digits)
 
 ## Summary
 
-### Debugging
-
-- First check traceback and see if error is obvious.
-- Use `browser()` or breakpoints to enter debug mode.
-- Typically painful, but necessary.
-
-. . .
-
-### Multinomial Models and Optimization
-
 - Peppered moths example is simple and the log-likelihood for the observed data
-  can easily be computed. --
-
+  can easily be computed.
 - Constrained optmimization can be solved using the barrier method.
 - `optim()` in R is general interface to optimization methods.
 - `constOptim()` is used for linearly constrained optimization.
@@ -770,8 +621,10 @@ options(digits = old_options$digits)
 Solve the following optimization problem:
 
 $$
-\begin{aligned} &\operatorname*{minimize}_{x} && \frac{1}{2}(x - 2)^2 \\
-                  &\operatorname{subject to} && |x| \leq 1.\end{aligned}
+\begin{aligned}
+  &\operatorname*{minimize}_{x}              && \frac{1}{2}(x - 2)^2 \\
+  &\operatorname{subject to} && |x| \leq 1.
+\end{aligned}
 $$
 
 ### Steps

@@ -14,15 +14,16 @@ phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 
 ## Today's Agenda
 
-### Object-Oriented Programming
+### Object-Oriented Programming (OOP)
 
-How to create and work with S3 classes
+We learn what OOP is and how the S3 OOP system in R works.
 
 . . .
 
 ### Kernel Density Estimation
 
-How to create non-parametric density estimates using kernel density estimation
+We learn how to create non-parametric density estimates using kernel density
+estimation
 
 # Object-Oriented Programming
 
@@ -51,18 +52,25 @@ Functions that operate on the data (e.g. print, plot, summarize, etc.).
 
 ::: {.column width="47%"}
 
-### Key Concepts
+. . .
 
-- **Encapsulation**: Bundling data and methods together.
-- **Inheritance**: Creating new classes based on existing ones.
-- **Polymorphism**: Methods can operate differently based on the object's class.
+### Benefits of OOP
+
+OOP allows us to bundle data and methods together.
 
 . . .
 
-### Benefits
+\medskip
 
-- Code organization and modularity
-- Reusability and maintainability
+It enables **inheritance**, which means that different classes can share
+functionality.
+
+\medskip
+
+. . .
+
+It also facilitates **polymorphism**, which means that the same method can
+behave differently for different classes.
 
 :::
 
@@ -71,6 +79,8 @@ Functions that operate on the data (e.g. print, plot, summarize, etc.).
 ## OOP in R
 
 ### In Base R
+
+There are three OOP systems in base R:
 
 - S3
 - S4
@@ -103,8 +113,13 @@ integral
 
 . . .
 
-The numerical value of the integral $$\int_0^1 \sin(x) \mathrm{d}x$$ is printed
-nicely above—including an indication of the numerical error.
+The numerical value of the integral
+
+$$
+\int_0^1 \sin(x) \mathrm{d}x
+$$
+
+is helpfully printed---including an indication of the numerical error.
 
 ## Return Values
 
@@ -114,17 +129,23 @@ In fact, `integrate()` returns a class object: a list with a _class label_.
 str(integral)
 ```
 
+. . .
+
 ### What is the Point of This Class Label?
 
 It allows us to write functions that work differently depending on the class of
 the argument.
+
+. . .
+
+\medskip
 
 If `x` is an object of class `numeric`, then do A. If `x` is an object of class
 `integrate`, then do B.
 
 ## The Return Value of `integrate()`
 
-The class label can be extracted directly.
+We can extract the class label with `class()`.
 
 ```{r}
 class(integral)
@@ -133,7 +154,7 @@ class(integral)
 . . .
 
 The printed result of `integrate()` is not the same as the object itself. What
-you see is the result of the **method** `print.integrate()`.
+you see is the result a **method**, `print.integrate()`.
 
 ## Printing Objects of Class Integrate
 
@@ -149,26 +170,28 @@ in the namespace of the **stats** package, and to access it directly we use
 
 ## Histogram Objects
 
+`hist()` also returns an object (of class `histogram`)
+
 ```{r temp-hist}
 phi_hist <- hist(phipsi$phi, main = NULL)
-```
-
-## Histogram Objects
-
-```{r}
-class(phi_hist)
 ```
 
 . . .
 
 ```{r}
+class(phi_hist)
+```
+
+## Histogram Object Structure
+
+```{r}
 str(phi_hist)
 ```
 
-## Histogram Objects
+## We Can Extract Elements
 
 ```{r}
-phi_hist[1:4]
+phi_hist[1:3]
 ```
 
 ## Getting Help for Objects
@@ -191,11 +214,20 @@ histogram.
 
 ## S3 Overview
 
-- S3 classes are standard data structures (typically lists) with _class labels_.
-- It is an informal system. No checks of object content.
-- One implements a _generic_ function via `UseMethod()`. E.g.
+S3 classes are standard data structures (typically lists) with _class labels_.
 
 . . .
+
+\bigskip
+
+It is an informal system. Objects are not formally defined, and there is no type
+checking.
+
+. . .
+
+\bigskip
+
+To use S3, we implement a _generic_ function via `UseMethod()`. E.g.
 
 ```{r, eval=FALSE}
 plot
@@ -207,11 +239,16 @@ cat(deparse(plot))
 
 . . .
 
-- **Methods** for specific classes are implemented as standard R functions with
-  the naming convention `f.classname()` for a method for class `classname` of
-  the function `f()`.
-- The system is widely used to write methods for the generic functions
-  `print()`, `plot()` and `summary()`.
+**Methods** for specific classes are implemented as standard R functions with
+the naming convention `f.classname()` for a method for class `classname` of the
+function `f()`.
+
+. . .
+
+\bigskip
+
+The system is widely used to write methods for the generic functions `print()`,
+`plot()` and `summary()`.
 
 ## Constructing a New Class
 
@@ -252,8 +289,11 @@ count_object <- function(x) {
 ## A Data Example
 
 ```{r}
+#| echo: false
 set.seed(1234)
+```
 
+```{r}
 count_data <- count_object(rpois(10, 2))
 count_data
 ```
@@ -328,7 +368,10 @@ Let $f_0$ denote the unknown desnity we want to estimate.
 ## Density Estimation
 
 Density estimation relies on the approximation
-$$P(X \in (x-h, x+h)) = \int_{x-h}^{x+h} f_0(z) \ dz \simeq f_0(x) 2h.$$
+
+$$
+P(X \in (x-h, x+h)) = \int_{x-h}^{x+h} f_0(z) \ dz \simeq f_0(x) 2h.
+$$
 
 . . .
 
@@ -345,16 +388,28 @@ $$
 ## Kernels
 
 We will consider _kernel estimators_
-$$\hat{f}_h(x) = \frac{1}{hn} \sum_{i=1}^n K\left(\frac{x - x_i}{h}\right).$$
+
+$$
+\hat{f}_h(x) = \frac{1}{hn} \sum_{i=1}^n K\left(\frac{x - x_i}{h}\right).
+$$
 
 . . .
 
-The _uniform_ or _rectangular kernel_ is $$K(x) = \frac{1}{2} 1_{(-1,1)}(x),$$
+The _uniform_ or _rectangular kernel_ is
+
+$$
+K(x) = \frac{1}{2} 1_{(-1,1)}(x),
+$$
+
 which leads to the expression on the last slide.
 
 . . .
 
-The _Gaussian kernel_ is $$K(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}.$$
+The _Gaussian kernel_ is
+
+$$
+K(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}.
+$$
 
 ## Implementation with the Gaussian Kernel
 

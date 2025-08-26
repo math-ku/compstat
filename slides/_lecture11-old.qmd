@@ -1,0 +1,602 @@
+---
+title: "Gaussian Mixtures and Mixed Models with the EM Algorithm"
+---
+
+{{< include _common.qmd >}}
+
+```{r setup, include=FALSE}
+
+library(animate)
+library(patchwork)
+library(Matrix)
+
+set.seed(1422)
+```
+
+## Today
+
+Continue with the EM algorithm. Two examples.
+
+### Gaussian Mixtures
+
+Hands-on example with Gaussian mixtures, computing the empirical Fisher
+information in multiple ways.
+
+### Mixed Models
+
+Fitting mixed models using the EM algorithm
+
+# Gaussian Mixtures
+
+## Gaussian Mixtures
+
+The marginal density is
+
+$$
+f(x) = p \frac{1}{\sqrt{2 \pi \sigma_1^2}} e^{-\frac{(x - \mu_1)^2}{2 \sigma_1^2}} +
+(1 - p)\frac{1}{\sqrt{2 \pi \sigma_2^2}}e^{-\frac{(x - \mu_2)^2}{2 \sigma_2^2}}.
+$$
+
+and we will regard $\theta = (p, \mu_1, \mu_2)$ as the unknown parameters, while
+$\sigma_1$ and $\sigma_2$ are fixed.
+
+. . .
+
+$$Q(\theta \mid \theta')  = \sum_{i=1}^n \hat{p}_{i} \left(\log(p) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + (1 - \hat{p}_{i})\left( \log(1-p) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)$$
+
+where $\hat{p}_i = P_{\theta'}(Z_i = 1 \mid X_i = x_i)$,
+
+-- which attains its maximum in
+
+$$
+\theta = \left(\frac{1}{n} \sum_{i} \hat{p}_i,\quad \frac{1}{\sum_{i} \hat{p}_i} \sum_{i} \hat{p}_i x_i,\quad
+\frac{1}{\sum_{i} (1 - \hat{p}_i)} \sum_{i} (1 - \hat{p}_i) x_i \right).
+$$
+
+### Simulation
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r}
+sigma1 <- 1.5
+sigma2 <- 1.5 # Same variances
+
+p <- 0.5
+mu1 <- -0.5
+mu2 <- 4
+
+n <- 5000
+set.seed(321)
+z <- sample(
+  c(TRUE, FALSE),
+  n,
+  replace = TRUE,
+  prob = c(p, 1 - p)
+)
+
+x <- numeric(n)
+n1 <- sum(z)
+x[z] <- rnorm(n1, mu1, sigma1)
+x[!z] <- rnorm(n - n1, mu2, sigma2)
+```
+
+:::
+
+::: {.column width="47%"}
+
+```{r, echo=FALSE, fig.height=5, fig.width = 6}
+gausdens <- function(x) {
+  (p *
+    exp(-(x - mu1)^2 / (2 * sigma1^2)) /
+    sigma1 +
+    (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) /
+    sqrt(2 * pi)
+}
+xx <- seq(-5, 9, 0.1)
+hist(x, freq = FALSE, ylim = c(0, 0.25), main = "", border = "transparent")
+curve(gausdens(x), add = TRUE, col = "dark orange", lwd = 2)
+```
+
+:::
+
+::::
+
+### The E-Step
+
+$$
+\hat{p}_i = P_{\theta'} (Z_i = 1 \mid X = x_i) =
+\frac{ p'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}}}{
+\left( p'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}} +
+\frac{\sigma_1 (1 - p'_1)}{\sigma_2} e^{-\frac{(x_i - \mu_2')^2}{2 \sigma_2^2}}\right) }
+$$
+
+### EM Algorithm
+
+```{r}
+source(here::here("R/em_gauss_mix_exercise.R"))
+EM <- EM_gauss_mix(x)
+```
+
+. . .
+
+```{r}
+EM(c(0.4, -0.2, 4.5))
+EM(c(0.9, 1, 2))
+```
+
+. . .
+
+What happens when evaluating the following, and why?
+
+```{r, eval = FALSE}
+EM(c(0.6, 3, 1))
+```
+
+## Gradients and numDeriv
+
+Recall that
+$$\nabla_{\theta} \ell(\hat{\theta}) = \nabla_{\theta} Q(\hat{\theta}, \hat{\theta}).$$
+
+. . .
+
+```{r q-def}
+Q <- function(par, par_prime, EStep) {
+  phat <- EStep(par_prime)
+  p <- par[1]
+  mu1 <- par[2]
+  mu2 <- par[3]
+  sum(
+    phat *
+      (log(p) - (x - mu1)^2 / (2 * sigma1^2)) +
+      (1 - phat) * (log(1 - p) - (x - mu2)^2 / (2 * sigma2^2))
+  )
+}
+```
+
+. . .
+
+```{r numderiv-load}
+library(numDeriv)
+grad1 <- function(par) grad(function(par) -neg_loglik(par, x), par)
+grad2 <- function(par) {
+  grad(Q, par, par_prime = par, EStep = environment(EM)$EStep)
+}
+```
+
+## Checking the Gradient Identity
+
+```{r grad-identities-1}
+grad1(c(0.5, 0, 4))
+grad2(c(0.5, 0, 4))
+```
+
+--
+
+```{r grad-identities-2}
+par_hat <- EM(c(0.5, 0, 4))
+grad1(par_hat)
+grad2(par_hat)
+```
+
+## Fisher Information
+
+Let $\hat{i}_X = - D^2_{\theta} \ell(\hat{\theta})$ denote the observed Fisher
+information.
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+Then \begin{align} \hat{i}_X &= - D_{\overline{\theta}} \left( \nabla*{\theta}
+Q(\overline{\theta} \mid \overline{\theta})\right) |*{\overline{\theta} =
+\hat{\theta}} \\ & = - D^2*{\theta} Q(\hat{\theta} \mid \hat{\theta}) -
+D*{\theta'} \nabla*{\theta} Q(\hat{\theta} \mid \hat{\theta})\\ & = - \left(I -
+D*{\theta} \Phi(\hat{\theta})^T\right) D^2*{\theta} Q(\hat{\theta} \mid
+\hat{\theta}) \end{align} where $$\Phi(\theta') = \textrm{arg max}*{\theta} \
+Q(\theta \mid \theta')$$ is the EM-map.
+
+:::
+
+::: {.column width="47%"}
+
+### Exercise
+
+- Download the [source code here](R/em_gauss_mix_exercise.R)
+- Implement these three methods for computing the Fisher information in the
+  Gaussian mixture problem.
+- Test that they work.
+- Benchmark them against one another.
+
+:::
+
+::::
+
+# Mixed Models
+
+## Mixed Model (General Form)
+
+General form is $$y = X\beta + Zu + \varepsilon$$ where
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+- $y$ is the length $n$ response vector,
+- $X$ is the $n \times p$ fixed effects design matrix,
+- $\beta$ is the length $p$ fixed effects parameter vector,
+- $Z$ is the $n \times m$ random effects design matrix, and
+- $u$ is the length $m$ random effects vector.
+
+:::
+
+::: {.column width="47%"}
+
+### Example
+
+$$Z = \begin{bmatrix} 1 & 0 & 0 & x_{1j} \\ 0 & 1 & 0 & x_{2j} \\ 0 & 0 & 1 & x_{3j} \\ \vdots & \vdots & \vdots & \vdots \\ 0 & 1 & 0 & x_{nj} \end{bmatrix}$$
+
+:::
+
+::::
+
+![](../images/mixed-model-effects.jpg){width=85%}
+
+### Hierarchical Data
+
+![](../images/hierarchical-data.png){width=90%}
+
+### Simpson's Paradox
+
+![](../images/simpsons-paradox.png){width=90%}
+
+## Estimation
+
+Typical assumptions are
+
+- $u \sim \mathcal{N}(0, \Sigma_u)$
+- $\varepsilon \sim \mathcal{N}(0, \sigma^2 I)$
+- $\operatorname{cov}(u, \varepsilon) = 0$
+
+. . .
+
+### Fits the EM Framework
+
+- $u, \varepsilon$ are latent (unobserved)
+- $y$ is observed
+
+. . .
+
+### Distribution of $(u, \varepsilon)$
+
+$$\begin{bmatrix}u \\ \varepsilon\end{bmatrix} \sim \mathcal{N}\left(0,\begin{bmatrix}\Sigma_u & 0 \\ 0 & I\sigma^2\end{bmatrix}\right)$$
+
+## Marginal Likelihood
+
+$$y = X\beta + Zu + \varepsilon = \begin{bmatrix}Z & I_n\end{bmatrix}\begin{bmatrix}u \\ \varepsilon\end{bmatrix} + X\beta$$
+is a linear combination, so we have
+$$y \sim \mathcal{N}(\mu_y = X\beta,\Sigma_y =  Z\Sigma_u Z^T + \sigma^2 I_n).$$
+
+. . .
+
+So, we can write the log-likelihood as
+$$\ell(\theta) = -\frac{1}{2} \left( (y - X\beta)^T \Sigma_y^{-1} (y - X\beta) + \log\lvert \Sigma_y \rvert \right).$$
+
+. . .
+
+Can actually solve this problem directly!
+
+. . .
+
+**But** requires solving a large linear system and computing the log-determinant
+of the $n \times n$ matrix $Z \Sigma_u Z^T + \sigma^2 I_n$.
+
+## Joint Distribution
+
+The conditional distribution of $y$ given $u$ is
+$$(y \mid u) \sim \mathcal{N}(X\beta + Zu, \sigma^2 I).$$
+
+. . .
+
+And since $f(y, u) = f(y \mid u) f(u)$, we have
+$$f(y, u) \propto \frac{1}{\sqrt{\lvert\Sigma_u\rvert \sigma^{2n}}}  \exp\left( -\frac{1}{2\sigma^2} \lVert y - X\beta - Zu \rVert_2^2 - \frac{1}{2} u^T \Sigma_u^{-1} u\right).$$
+
+. . .
+
+The log-likelihood is then
+$$\ell(\theta) = -\frac{1}{2\sigma^2} \lVert y - X\beta - Zu\rVert^2_2  - \frac{1}{2}u^T \Sigma_u^{-1} u  - \frac{n}{2}\log(\sigma^2) - \frac{1}{2}\log\lvert\Sigma_u\rvert.$$
+
+## Distribution of $(u \mid y)$
+
+We want the $Q$-function, but first need the distribution of $(u \mid y$).
+
+. . .
+
+By Bayes' theorem, we have
+
+$$
+\begin{aligned}f(u \mid y) = \frac{f(y \mid u) f(u)}{f(y)} &\propto \exp\left(-\frac{1}{2\sigma^2} \lVert y - X\beta - Z u\rVert_2^2 - \frac{1}{2} u^T \Sigma_u u\right) \\
+&\propto \exp\left(-\frac{1}{2}(u - \eta)^T G^{-1} (u - \eta)\right)\end{aligned}
+$$
+
+with
+$$G = \left(\frac{Z^T Z}{\sigma^2} + \Sigma_u^{-1}\right)^{-1}\qquad \text{and} \qquad \eta = \frac{G Z^T (y - X \beta)}{\sigma^2}.$$
+
+. . .
+
+So $(u \mid y) \sim \mathcal{N}(\eta,  G)$.
+
+### The $Q$ Function
+
+Now we can compute the $Q$ function:
+
+$$
+\begin{aligned}\operatorname{E}_{u \sim p(\cdot \mid y, \theta')} \ell(\theta) &= \frac{1}{2\sigma^2}\left(r^Tr - 2r^T Z \eta + \operatorname{tr}(Z^T Z G) + \eta^T Z^T Z \eta \right) \\
+&\phantom{={}}- \frac{1}{2}\left(\operatorname{tr}(\Sigma_u^{-1} G) + \eta^T \Sigma_u^{-1} \eta\right) \\
+&\phantom{={}} - \frac{n}{2} \log \sigma^2 - \frac{1}{2} \log | \Sigma_u |.\end{aligned}
+$$
+
+. . .
+
+Minimizing this with respect to $\theta$, we find
+
+$$
+\begin{aligned}\beta^* &= (X^T X)^{-1} X^T (y - Z \eta) \\
+                  (\sigma^2)^* &= \frac{1}{n}\left( \lVert y - X\beta\rVert_2^2 - 2 (y - X\beta)^T Z \eta + \operatorname{tr}(Z^T Z G)\right)\\
+                \Sigma_u^* &= \frac{1}{m}\left(G + \eta \eta^T\right)\end{aligned}
+$$
+
+### Simplification
+
+To test out how this works, we introduce two simplifications:
+
+- $\Sigma_u(\nu) = \nu I_m$
+- $X = \mathbf{1}$ (intercept-only fixed effects)
+- $z_{ij} \in \{0, 1\}$ (random intercept, fixed slope)
+
+. . .
+
+#### Easier Update
+
+$$\nu^* = \operatorname{tr}(G + \eta \eta^T) / m$$
+
+## Simple Example
+
+```{r setup-experiment}
+beta0 <- 1
+beta <- cbind(beta0)
+nu <- 2
+sigma <- 3
+
+m <- 20
+N <- 10
+ni <- rep(N, m)
+n <- sum(ni)
+
+X <- cbind(rep(1, n))
+Z <- Matrix::bdiag(lapply(ni, function(d) matrix(1, nrow = d, ncol = 1)))
+
+u <- rnorm(m, 0, sqrt(nu))
+mu <- X %*% beta + Z %*% u
+y <- rnorm(n, as.vector(mu), sigma)
+```
+
+### Visualizing $Z$
+
+```{r, fig.width = 7, fig.height = 6, echo = FALSE, cache = TRUE}
+Matrix::image(Z, aspect = 1)
+```
+
+### Define the Log-Likelihood
+
+```{r loglik-def}
+loglik <- function(y, X, Z, beta, sigma, nu) {
+  n <- length(y)
+  m <- ncol(Z)
+
+  r <- y - X %*% beta
+  U <- Z %*% tcrossprod(nu * diag(m), Z) + sigma^2 * diag(n)
+  inv_U_r <- solve(U, r)
+  log_det_U <- log(det(U))
+
+  -0.5 * (crossprod(r, inv_U_r) + log_det_U + n * log(2 * pi))
+}
+```
+
+```{r em-algorithm, echo = FALSE}
+library(Matrix)
+mixed_model_em <- function(
+  y,
+  X,
+  Z,
+  beta = 0,
+  sigma2 = 1,
+  nu = 0.5,
+  maxit = 100,
+  tol = 1e-6
+) {
+  n <- length(y)
+  m <- ncol(Z)
+  loss <- double(maxit)
+
+  XtX <- crossprod(X)
+  ZtZ <- crossprod(Z)
+
+  for (i in seq_len(maxit)) {
+    loss[i] <- -loglik(y, X, Z, beta, sqrt(sigma2), nu)
+
+    r <- y - X %*% beta
+    Gamma <- solve(ZtZ / drop(sigma2) + diag(m) / nu)
+    eta <- Gamma %*% crossprod(Z, r) / drop(sigma2)
+    Z_eta <- Z %*% eta
+    G <- tcrossprod(eta) + Gamma
+
+    beta <- solve(XtX, crossprod(X, y - Z_eta))
+    nu <- sum(diag(G)) / m
+    sigma2 <- (norm(r, "2")^2 +
+      sum(diag((ZtZ %*% G))) -
+      2 * crossprod(r, Z_eta)) /
+      n
+
+    if (i > 1) {
+      if (loss[i - 1] - loss[i] <= loss[i] * tol) {
+        break
+      }
+    }
+  }
+
+  list(
+    par = c("beta" = drop(beta), "nu" = nu, "sigma2" = drop(sigma2)),
+    loss = loss[seq_len(i)]
+  )
+}
+```
+
+## Testing
+
+```{r A-ez}
+par0 <- c(0.2, 2.1, 0.9)
+res_em <- mixed_model_em(y, X, Z, par0[1], par0[2], par0[3])
+res_em$par
+```
+
+. . .
+
+```{r lmer, message=FALSE}
+library(lme4)
+
+mixed_data <- data.frame(y = y, Subject = factor(rep(1:m, times = ni)))
+mixed_lmer <- lmer(y ~ (1 | Subject), data = mixed_data, REML = FALSE)
+```
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r lmer-effects}
+fixef(mixed_lmer)
+```
+
+:::
+
+::: {.column width="47%"}
+
+```{r var-corr}
+as.data.frame(VarCorr(mixed_lmer))[, c(1, 4)]
+```
+
+:::
+
+::::
+
+### Convergence
+
+```{r plot-convergence, echo = FALSE, warning = FALSE, fig.height = 7}
+tibble(it = seq_along(res_em$loss), loss = res_em$loss - min(res_em$loss)) |>
+  ggplot(aes(x = it, y = loss)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Iteration", y = "Suboptimality") +
+  scale_y_log10()
+```
+
+## Exercise: The Marginal Model
+
+Recall that
+$$y \sim \mathcal{N}(\mu_y = X\beta,\Sigma_y =  Z\Sigma_u Z^T + \sigma^2 I_n).$$
+
+. . .
+
+So, we can write the log-likelihood (of the simplified model) as
+$$\ell(\theta) = -\frac{1}{2} \left( (y - \beta_0)^T (\nu ZZ^T + \sigma^2 I_n)^{-1} (y - \beta_0) + \log\big\lvert \nu Z Z^T + \sigma^2 I_n \big\rvert \right).$$
+
+Optimize this log-likelihood directly using `optim()`. Use a numerical gradient.
+
+#### Hints
+
+- Make sure to load the `Matrix` package or use the namespace directly when
+  working with sparse matrices. --
+
+- How should you deal with the inverse?
+- How should you parameterize the problem?
+
+```{r marginal-loglik-optim, include = FALSE, cache = TRUE}
+marginal_loglik <- function(theta, y, X, ZZt) {
+  beta <- cbind(theta[1])
+  nu <- theta[2]
+  sigma2 <- theta[3]^2
+
+  r <- X %*% beta - y
+  U <- nu * ZZt + sigma2 * Matrix::diag(n)
+
+  out <- 0.5 *
+    (crossprod(r, solve(U, r)) + log(Matrix::det(U)) + n * log(2 * pi))
+  drop(out)
+}
+
+theta0 <- c(2, 6, 0.2)
+res_optim <- optim(
+  theta0,
+  marginal_loglik,
+  method = "BFGS",
+  y = y,
+  X = X,
+  ZZt = tcrossprod(Z)
+)
+c(res_optim$par[1:2], res_optim$par[3]^2)
+
+res_em$par
+```
+
+### Benchmark
+
+```{r benchmark, cache = TRUE, warning = FALSE, echo = FALSE}
+par0 <- c(0.2, 2.1, 0.9)
+
+bench::mark(
+  optim = {
+    optim(
+      par0,
+      marginal_loglik,
+      method = "BFGS",
+      y = y,
+      X = X,
+      ZZt = tcrossprod(Z)
+    )
+  },
+  em = {
+    mixed_model_em(y, X, Z, par0[1], par0[2], par0[3]^2)
+  },
+  check = FALSE
+) |>
+  plot()
+```
+
+. . .
+
+But this is admittedly a flawed comparison. Why?
+
+- No standard convergence criterion
+- Numerical gradients (and Hessian) used in `optim()`
+
+## Summary
+
+### Gaussian Mixtures
+
+- We profiled implementations of our EM algorithm for Gaussian mixtures
+- We experimented with various implementations of the empirical Fisher
+  information.
+
+. . .
+
+### Mixed Models
+
+- We fit mixed models using the EM algoroithm.
+- We compared this approach to directly optimizing the marginal likelihood.
+
+. . .
+
+## Next Time
+
+Stochastic gradient descent
