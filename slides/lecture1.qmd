@@ -49,7 +49,7 @@ $\Psi$, from protein structures.
 
 ::: {.column width="47%"}
 
-![Amino Acid Angles](../images/PhiPsi_creative.jpg){width=100%}
+![Amino Acid Angles](../images/PhiPsi_creative.jpg){width=90%}
 
 :::
 
@@ -433,7 +433,9 @@ We expect knowledge of
 All of this is covered in chapters 1-5 of
 [Advanced R](https://adv-r.hadley.nz/).
 
-\medskip
+. . .
+
+\bigskip
 
 But you **do not** need to be an experienced programmer.
 
