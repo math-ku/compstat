@@ -318,8 +318,8 @@ par(mfrow = c(1, 1))
 ```
 
 ```{r profile-vsim}
-source(here::here("R/vMSim.R"), keep.source = TRUE)
-profvis(sample_vonmises_slow(10000, 5))
+# source(here::here("R/vMSim.R"), keep.source = TRUE)
+# profvis(sample_vonmises_slow(10000, 5))
 ```
 
 ## Summary
