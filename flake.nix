@@ -70,12 +70,12 @@
       {
         devShells.default = pkgs.mkShell {
           packages = [
-            pkgs.bashInteractive
             R
-            pkgs.quartoMinimal
+            pkgs.bashInteractive
             pkgs.go-task
-            pkgs.ungoogled-chromium
             pkgs.librsvg
+            pkgs.quartoMinimal
+            pkgs.texliveFull
           ];
         };
       }

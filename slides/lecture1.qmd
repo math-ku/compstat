@@ -334,6 +334,25 @@ At the exam, you will present one of these at random.
 
 ::::
 
+## Exercise Sessions
+
+Exercise sessions will revolve around a central topic, for instance
+
+. . .
+
+- How to organize your code
+- How to use generative AI effectively
+
+. . .
+
+They are also an opportunity to get help with the exercises. To make best use of
+your time, make sure you have at least _tried_ each of them.
+
+. . .
+
+Later on, the exercise sessions is where you will get assistance with your
+projects.
+
 ## Course Literature
 
 ### Computational Statistics with R
@@ -419,6 +438,8 @@ Generative AI (e.g. ChatGPT, Copilot, Bard, etc.) are powerful tools.
 . . .
 
 You are allowed to use them in this course, but with some caveats:
+
+. . .
 
 - You must understand the results.
 - You must acknowledge their use in your assignments and how you used them.
@@ -520,6 +541,34 @@ A newer alternative, that has support for other programming languages as well.
 \bigskip
 
 If you haven't tried any of these before, we recommend you use Positron.
+
+## Tidyverse
+
+:::: {.columns}
+
+::: {.column width="54%"}
+
+The [tidyverse](https://www.tidyverse.org/) is a suite of packages for wrangling
+with, exploring, and visualizing data.
+
+:::
+
+::: {.column width="40%"}
+
+![The Tidyverse](../assets/images/tidyverse.png)
+
+:::
+
+::::
+
+. . .
+
+Throughout the slides, I assume that you have it installed and loaded.
+
+```{r}
+install.packages("tidyverse")
+library(tidyverse)
+```
 
 ## Best Practices
 
@@ -1068,21 +1117,21 @@ Write short functions and name them descriptively.
 
 # Exercises
 
-### Exercise 1: Write a Function with a Default Argument
+### Exercise 1: Write a function with a default argument
 
 Write a function `greet` that takes a name as an argument and prints “Hello,
 <name>!”. If no name is given, it should print “Hello, world!”.
 
 . . .
 
-### Exercise 2: Count Missing Values
+### Exercise 2: Count missing values
 
 Write a function `count_na` that takes a vector and returns the number of
 missing (`NA`) values in it.
 
 . . .
 
-### Exercise 3: Check if a Number is Even
+### Exercise 3: Check if a number is even
 
 Write a function `is_even()` that returns `TRUE` if its argument is even,
 `FALSE` otherwise.

@@ -56,6 +56,5 @@ date-format: long
 
 execute:
   cache: true
-  freeze: auto
 
 bibliography: assets/bibliography.bib

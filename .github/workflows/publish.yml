@@ -21,28 +21,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y librsvg2-bin
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          tinytex: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Restore timestamps
         uses: chetan/git-restore-mtime-action@v2
 
-      - name: Render Quarto Project
-        uses: quarto-dev/quarto-actions/render@v2
-        env:
-          QUARTO_PROFILE: publish
+      - run: nix develop --command quarto render --profile publish
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
