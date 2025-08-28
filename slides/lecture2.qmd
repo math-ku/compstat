@@ -358,13 +358,26 @@ count_zeros(count_data) # Invokes count_zeros.count_object()
 
 Let $f_0$ denote the unknown density we want to estimate.
 
-- If we fit a parameterized statistical model $(f_\theta)_\theta$ to data using
-  the estimator $\hat{\theta}$, then $f_{\hat{\theta}}$ is an estimate of $f_0$.
-- The histogram is a nonparametric density estimator, $\hat{f}$.
-- We are interested in nonparametric estimators because
-  - we want to compare data with the parametric estimate,
-  - we don't know a suitable parametric model, and
-  - we want aid in visualization.
+If we fit a parameterized statistical model $(f_\theta)_\theta$ to data using
+the estimator $\hat{\theta}$, then $f_{\hat{\theta}}$ is an estimate of $f_0$.
+
+. . .
+
+\medskip
+
+. . .
+
+The histogram is a nonparametric density estimator, $\hat{f}$.
+
+\medskip
+
+We are interested in nonparametric estimators because
+
+. . .
+
+- we want to compare data with the parametric estimate,
+- we don't know a suitable parametric model, and
+- we want aid in visualization.
 
 ## Density Estimation
 
