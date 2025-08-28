@@ -133,8 +133,8 @@ str(integral)
 
 ### What is the Point of This Class Label?
 
-It allows us to write functions that work differently depending on the class of
-the argument.
+It allows us to write functions (methods) that behave differently based on the
+class of the argument.
 
 . . .
 
@@ -170,7 +170,8 @@ in the namespace of the **stats** package, and to access it directly we use
 
 ## Histogram Objects
 
-`hist()` also returns an object (of class `histogram`)
+`hist()` also returns an object (of class `histogram`), which has methods
+defined.
 
 ```{r temp-hist}
 phi_hist <- hist(phipsi$phi, main = NULL)
@@ -196,14 +197,14 @@ phi_hist[1:3]
 
 ## Getting Help for Objects
 
-You can find documentation for `plot()` using e.g.
+You can find documentation for `plot()` using for instance
 
 ```{r help-plot, eval = FALSE}
 ?plot
 ```
 
-However, this will be uninformative on how an object of class histogram is
-plotted. Try instead
+But this will be uninformative about how an object of class histogram is
+plotted. Instead, try
 
 ```{r help-plot-histogram, eval = FALSE}
 ?plot.histogram
@@ -220,8 +221,8 @@ S3 classes are standard data structures (typically lists) with _class labels_.
 
 \bigskip
 
-It is an informal system. Objects are not formally defined, and there is no type
-checking.
+It is a simple but informal system. Objects are not formally defined, and there
+is no type checking.
 
 . . .
 
@@ -301,7 +302,7 @@ count_data
 ## The Generic Function
 
 To activate looking up a method for a specific class, one needs to tell R that
-the function `count_zeros()` is a _generic function_.
+the function `count_zeros()` is a **generic** function.
 
 ```{r}
 count_zeros <- function(x) {
@@ -355,11 +356,11 @@ count_zeros(count_data) # Invokes count_zeros.count_object()
 
 ## Density Estimation
 
-Let $f_0$ denote the unknown desnity we want to estimate.
+Let $f_0$ denote the unknown density we want to estimate.
 
-- If we fit a parameterize statistical model $(f_\theta)_\theta$ to data using
+- If we fit a parameterized statistical model $(f_\theta)_\theta$ to data using
   the estimator $\hat{\theta}$, then $f_{\hat{\theta}}$ is an estimate of $f_0$.
-- The histogram is a nonparameteric density estimator, $\hat{f}$.
+- The histogram is a nonparametric density estimator, $\hat{f}$.
 - We are interested in nonparametric estimators because
   - we want to compare data with the parametric estimate,
   - we don't know a suitable parametric model, and

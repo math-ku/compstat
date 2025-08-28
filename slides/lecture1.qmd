@@ -44,8 +44,8 @@ Let's try to get a bit of flavor of what we will be doing in the course.
 
 . . .
 
-Throughout the course we will use a data set of amino acid angles, $\Phi$ and
-$\Psi$, from protein structures.
+Throughout the course (and book) we will use a data set on angles, $\Phi$ and
+$\Psi$, formed between two planes in protein structures.
 
 :::
 
@@ -104,6 +104,8 @@ density estimation** (KDE).
 
 . . .
 
+\medskip
+
 :::: {.columns}
 
 ::: {.column width="47%"}
@@ -143,8 +145,8 @@ But how is this KDE actually computed? Doing this efficiently is a
 
 ## Statistical Topics of the Course
 
-The course can be broken down into a number of **statistical** and **computational**
-topics.
+The course can be broken down into a number of **statistical** and
+**computational** topics.
 
 \bigskip
 
@@ -152,41 +154,40 @@ topics.
 
 There are three statistical topics in the course:
 
-\pause 
+\pause
 
 ### Smoothing
 
-We will learn how to compute efficient kernel density estimates and
-scatterplot smoothers.
+Descriptive tool for summarizing and visualizing data, as well as a
+nonparametric estimation method.
 
 . . .
 
-### Simulation
+### Monte Carlo Methods
 
-We will learn to efficiently simulate from probability distributions 
-using inversion, rejection, and importance sampling.
+Broad class of methods for using random input for computations, such as sampling
+from a distribution.
 
 . . .
 
 ### Optimization
 
-We will learn to solve optimization problems that arise in statistics, for
-instance in maximum likelihood estimation (MLE), using the EM algorithm and
-gradient-based optimization.
+Methods for optimizing (minimizing or maximizing) functions, such as likelihood
+functions.
 
 ## Computational Topics of the Course
 
 ### Implementation
 
-We will learn how to implement statistical methods in R, using
-object-oriented programming and functional programming.
+We will learn how to implement statistical methods in R, using object-oriented
+programming and functional programming.
 
 . . .
 
 ### Correctness
 
-We will learn how to ensure that our code is correct, using
-testing and debugging.
+We will learn how to ensure that our code is correct, using testing and
+debugging.
 
 . . .
 
@@ -206,6 +207,8 @@ profiling and benchmarking, and how to optimize it.
 Johan Larsson, postdoctoral researcher
 
 ![Johan](../images/johan.jpg){width=50%}
+
+. . .
 
 #### Contact
 
@@ -258,22 +261,22 @@ potato harvesting week when you are off.]
 
 \bigskip
 
-You will divide into groups of 2-3 students and present 
-your solution to one of the assignments during one of the sessions.
+You will divide into groups of 2-3 students and present your solution to one of
+the assignments during one of the sessions.
 
 . . .
 
 \bigskip
 
-You will register for groups and assignments in [Absalon](https://absalon.ku/dk).
+You will register for groups and assignments in
+[Absalon](https://absalon.ku/dk).
 
 . . .
 
 \bigskip
 
-Presentation is compulsory but not graded. We expect solutions to be
-work in progress.
-
+Presentation is compulsory but not graded. We expect solutions to be work in
+progress.
 
 . . .
 
@@ -281,7 +284,7 @@ work in progress.
 
 The main examination is an oral exam based on your assignments.
 
-\bigskip 
+\bigskip
 
 . . .
 
@@ -337,10 +340,24 @@ At the exam, you will present one of these at random.
 
 Main textbook for the course, written by Niels Richard Hansen.
 
-- Available online at <https://cswr.nrhstat.org/>
-- Not yet complete, but we only use parts that are.
-- [Companion package](https://github.com/nielsrhansen/CSwR/tree/master/CSwR_package):
-  install with `pak::pak("github::nielsrhansen/CSwR/CSwR_package")`.
+\medskip
+
+. . .
+
+It is available online at [cswr.nrhstat.org/](https://cswr.nrhstat.org). Not yet
+complete, but we only use parts that are.
+
+. . .
+
+\medskip
+
+There is a
+[companion package](https://github.com/nielsrhansen/CSwR/tree/master/CSwR_package):
+
+```{r}
+#| eval: false
+pak::pak("github::nielsrhansen/CSwR/CSwR_package")
+```
 
 . . .
 
@@ -348,9 +365,17 @@ Main textbook for the course, written by Niels Richard Hansen.
 
 Auxiliary textbook, written by Hadley Wickham.
 
-- Available online at <https://adv-r.hadley.nz/>
-- Covers more advanced R programming topics.
-- We will use selected chapters.
+\medskip
+
+. . .
+
+Available online at [adv-r.hadley.nz](https://adv-r.hadley.nz/).
+
+. . .
+
+\medskip
+
+Covers more advanced R programming topics, among which we use a few
 
 ## Online Resources
 
@@ -360,19 +385,20 @@ Auxiliary textbook, written by Hadley Wickham.
 
 ### Absalon
 
-Main source for information and communication about the course.
-Accessed at [absalon.ku.dk](https://absalon.ku.dk/).
+Main source for information and communication about the course. Accessed at
+[absalon.ku.dk](https://absalon.ku.dk/).
 
 . . .
 
-### CompStat Web Page
+### Resources Page
 
-Course content will be uploaded to [github.io/math-ku/compstat](https://math-ku.github.io/compstat/).
+Course content will be uploaded to
+[github.io/math-ku/compstat](https://math-ku.github.io/compstat/).
 
-\medskip
+. . .
 
-This is where you will a detailed schedule of the course, slides, and
-the assignments.
+This is where you will a detailed schedule of the course, slides, and the
+assignments.
 
 :::
 
@@ -383,7 +409,6 @@ the assignments.
 :::
 
 ::::
-
 
 ## Generative AI
 
@@ -407,7 +432,8 @@ You are allowed to use them in this course, but with some caveats:
 ::: {.column width="47%"}
 
 ### Copilot
-Access to GitHub Copilot is available for free to students, via 
+
+Access to GitHub Copilot is available for free to students, via
 [GitHub Education](https://education.github.com).
 
 :::
@@ -420,7 +446,6 @@ Access to GitHub Copilot is available for free to students, via
 
 ::::
 
-
 # Programming in R
 
 ## What is R?
@@ -430,7 +455,7 @@ statistical computing and graphics.
 
 . . .
 
-\bigskip 
+\bigskip
 
 It is widely used among statisticians and data miners for developing statistical
 software and data analysis.
@@ -453,9 +478,9 @@ R has a large number of packages for statistical computing and graphics.
 
 My personal opinion is that:
 
-- R is better suited for visualization and exploratory data analysis, while 
-- Python is better suited for general-purpose
-  programming and machine learning, and
+- R is better suited for visualization and exploratory data analysis, while
+- Python is better suited for general-purpose programming and machine learning,
+  and
 - Julia is a best for numerical computing.
 
 ## Prerequisite R Knowledge
@@ -477,6 +502,34 @@ All of this is covered in chapters 1-5 of
 \bigskip
 
 We do not expect that you are an expert in R.
+
+## RStudio and Positron
+
+### RStudio
+
+An integrated developed environment (IDE) for R. Stable and full-featured.
+
+. . .
+
+### Positron
+
+A newer alternative, that has support for other programming languages as well.
+
+. . .
+
+\bigskip
+
+If you haven't tried any of these before, we recommend you use Positron.
+
+## Best Practices
+
+Always write your code in scripts (`.R` files).
+
+\bigskip
+
+. . .
+
+Manage your files in project directories, one for each project.
 
 ## Getting Help with R
 
@@ -503,8 +556,8 @@ same problem.
 
 ## Functions in R
 
-Everything that happens in R is the result of a function call. Even `+`, `[`
-and `<-` are functions.
+Everything that happens in R is the result of a function call. Even `+`, `[` and
+`<-` are functions.
 
 . . .
 
@@ -549,8 +602,8 @@ understand and reason about.
 
 ### Rule of Thumb
 
-If you find yourself writing the same piece of code more than, say,
-twice, then it is probably a good idea to turn it into a function.
+If you find yourself writing the same piece of code more than twice, then it is
+probably a good idea to turn it into a function.
 
 ## Function Syntax
 
@@ -586,8 +639,8 @@ In this case, `x` and `y` are the arguments.
 
 ### Body
 
-The body of the function is everything inside the curly braces `{}`,
-that is, `x + y`.
+The body of the function is everything inside the curly braces `{}`, that is,
+`x + y`.
 
 . . .
 
@@ -629,7 +682,6 @@ g(y = 3, x = 2)
 ```
 
 ## Copy-on-Write
-
 
 R uses **copy-on-write** semantics for function arguments, which means that
 arguments are only copied if they are modified inside the function.
@@ -679,7 +731,6 @@ but please don't.
 
 ::::
 
-
 ## Environment and Scoping
 
 When a function is called, a new environment is created for the function.
@@ -721,7 +772,8 @@ f(5)
 ::: {.column width="47%"}
 
 Assuming that `x` is not defined inside `f()`, R looks for `x` in the
-environment where `f()` was created, which is the global environment in this case.
+environment where `f()` was created, which is the global environment in this
+case.
 
 . . .
 
@@ -731,7 +783,6 @@ functions.
 :::
 
 ::::
-
 
 ## Return Values
 
@@ -758,9 +809,9 @@ not use it unless returning early.
 
 ## Functional Programming
 
-Functions are **first-class citizens**: they can be passed as
-arguments to other functions, returned as values from functions, and assigned to
-variables. R is a **functional programming** language.
+Functions are **first-class citizens**: they can be passed as arguments to other
+functions, returned as values from functions, and assigned to variables. R is a
+**functional programming** language.
 
 \bigskip
 
@@ -801,7 +852,8 @@ our_apply(1:10, exp)
 
 ### Assumptions of `our_apply()`
 
-`x` is a "list-like" structure, `fun` takes a single argument, and `fun` returns a numeric.
+`x` is a "list-like" structure, `fun` takes a single argument, and `fun` returns
+a numeric.
 
 ## What if `fun` Needs Additional Arguments?
 
@@ -827,13 +879,14 @@ our_apply(
 
 ## Ellipsis (`...`)
 
-An arbitrary number of arguments can be forwarded via the  `...` (ellipsis) argument,
-which allows us to pass additional arguments to `fun()`.
+Arguments can be forwarded via `...` (ellipsis), which allows us to pass
+additional arguments to `fun()`.
 
 . . .
 
 ```{r own-apply-2}
-our_apply <- function(x, fun, ...) { # <1>
+our_apply <- function(x, fun, ...) {
+  # <1>
   val <- numeric(length(x))
   for (i in seq_along(x)) {
     val[i] <- fun(x[[i]], ...) # <2>
@@ -848,19 +901,18 @@ our_apply <- function(x, fun, ...) { # <1>
 . . .
 
 ```{r}
-our_apply(1:10, rpois, n = 1)
+our_apply(1:10, rpois, n = 1) # n is passed to fun
 ```
 
 ## Assertions
 
-It is a good idea to assert that the arguments to a function are valid,
-and stop early if they are not.
+Assert that arguments to a function are valid and stop early if they are not.
 
 . . .
 
 \bigskip
 
-The simplest way to do this is to use the `stopifnot()` function.
+Simplest way to do this is to use `stopifnot()`:
 
 ```{r}
 #| error: true
@@ -885,7 +937,7 @@ For more control over the error message, use `if` and `stop()`.
 ```{r}
 my_mean <- function(x) {
   if (!is.numeric(x)) {
-    stop("x must be numeric")   
+    stop("x must be numeric")
   }
   sum(x) / length(x)
 }
@@ -893,21 +945,35 @@ my_mean <- function(x) {
 
 ## Document Your Functions
 
-Document your functions, including their arguments, return values, and any side effects.
+Document your functions, including their arguments, return values, and any side
+effects.
 
 . . .
 
 \medskip
 
-Documentation can be either ad-hoc comments or using a documentation system like
-[roxygen2](https://roxygen2.r-lib.org/).
+Documentation can be written using simple comments or a documentation system
+like [roxygen2](https://roxygen2.r-lib.org/).
 
 . . .
 
 \medskip
 
-Aim to document **why** something is done, not just **what** is done. The latter
-is often obvious from the code itself.
+### Why, not What
+
+Prefer to document **why** something is done, not just **what** is done.
+
+. . .
+
+\medskip
+
+In good code, the **what** is often clear from the code itself.
+
+. . .
+
+\medskip
+
+Functions, if named properly, often serve as documentation by themselves.
 
 ## Naming Functions
 
@@ -915,8 +981,8 @@ is often obvious from the code itself.
 > naming things.
 >
 > \medskip
-> 
-> \hfill_--Phil Karlton_
+>
+> \hfill _--Phil Karlton_
 
 . . .
 
@@ -926,8 +992,13 @@ is often obvious from the code itself.
 
 ### Favor Descriptive Names
 
-Begin to see if you can use a _verb_. Better long and descriptive than short and
-cryptic.
+First check if you can use a _verb_, which signals **intent**.
+
+\medskip
+
+. . .
+
+Better descriptive but long, than short but cryptic.
 
 . . .
 
@@ -958,9 +1029,7 @@ Avoid names of existing functions.
 
 ::::
 
-
 ## Best Practices
-
 
 ### Keep Functions Short and Focused
 
@@ -971,8 +1040,8 @@ complex, consider breaking it up into smaller functions.
 
 ### Testing
 
-Write tests for your functions to ensure that they work as expected. (More
-on this later in the course.)
+Write tests for your functions to ensure that they work as expected. (More on
+this later in the course.)
 
 . . .
 
@@ -983,27 +1052,30 @@ this later in the course.)
 
 ## Summary
 
-- Functions are the building blocks of R code.
-- Functions help you structure your code, make it reusable, and make it easier to
-  test and debug.
-- Functions have arguments, a body, and an environment.
-- Functions can be passed as arguments to other functions, returned as values
-  from functions, and assigned to variables.
-- Use `...` to pass additional arguments to functions.
-- Document your functions and use descriptive names.
-- Write tests for your functions and use debugging tools.
+Functions are the buildings block of R code, and first-class citizens.
 
+\medskip
+
+. . .
+
+They help make your code organized, reusable, testable, and easy to debug.
+
+\medskip
+
+. . .
+
+Write short functions and name them descriptively.
 
 # Exercises
 
-### Exercise 1: Write a Function with a Default Argument  
+### Exercise 1: Write a Function with a Default Argument
 
 Write a function `greet` that takes a name as an argument and prints “Hello,
 <name>!”. If no name is given, it should print “Hello, world!”.
 
 . . .
 
-### Exercise 2: Count Missing Values  
+### Exercise 2: Count Missing Values
 
 Write a function `count_na` that takes a vector and returns the number of
 missing (`NA`) values in it.
@@ -1012,10 +1084,8 @@ missing (`NA`) values in it.
 
 ### Exercise 3: Check if a Number is Even
 
-Write a function `is_even()` that returns `TRUE` if its argument is even, `FALSE`
-otherwise.
-
-
+Write a function `is_even()` that returns `TRUE` if its argument is even,
+`FALSE` otherwise.
 
 <!-- # Benchmarking -->
 <!---->
