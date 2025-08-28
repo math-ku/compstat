@@ -566,6 +566,7 @@ with, exploring, and visualizing data.
 Throughout the slides, I assume that you have it installed and loaded.
 
 ```{r}
+#| eval: false
 install.packages("tidyverse")
 library(tidyverse)
 ```
