@@ -20,6 +20,11 @@ format: html
 - Stan?
 - Iteratively reweighted least-squares
 
+## Lecture 1: Introduction
+
+- Maybe add one example for each topic covered in the course, aligned with the
+  book.
+
 ## Lecture 8: Optimization
 
 - Too much material! Consider making Poisson example simpler.
