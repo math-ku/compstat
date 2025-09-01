@@ -43,7 +43,7 @@ mind:
 - How can you test that your implementation is correct?
 - Can you implement alternative solutions?
 - Can the code be restructured e.g. by modularization, abstraction or object
-  oriented programming to improve generality, extendability and readability?
+  oriented programming to improve generality, extensibility, and readability?
 - How does the implementation perform (benchmarking)?
 - Where are the bottlenecks (profiling), and what can you do about them?
 
@@ -57,7 +57,6 @@ readability. And so on.
 # A: Density Estimation
 
 Implement a kernel density estimator using the Epanechnikov kernel,
-
 $$
 K(x) = \frac{3}{4}(1 - x^2) 1_{[-1, 1]}(x),
 $$
@@ -87,6 +86,6 @@ knots, the numerical integral becomes exact. Alternatively, the function
 can be used.
 
 In addition to testing your implementation on real data it is a good idea to
-consider simulated data as well. In particular for benchmarking and profiling.
+consider simulated data as well---in particular with respect benchmarking and profiling.
 Note that the teaching material covers some matrix decomposition techniques that
 can be particularly relevant in combination with LOOCV.
