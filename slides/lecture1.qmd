@@ -578,7 +578,7 @@ library(tidyverse)
 
 Always write your code in scripts (`.R` files).
 
-\bigskip
+\medskip
 
 . . .
 
@@ -1027,7 +1027,7 @@ like [roxygen2](https://roxygen2.r-lib.org/).
 
 ### Why, not What
 
-Prefer to document **why** something is done, not just **what** is done.
+Sometimes document **why** something is done, not just **what** is done.
 
 . . .
 
