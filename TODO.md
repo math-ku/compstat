@@ -17,8 +17,6 @@ format: html
 - Gibbs sampling
 - Autodifferentiation
 - Two-dimensional kernel density estimation
-- Stan?
-- Iteratively reweighted least-squares
 
 ## Lecture 1: Introduction
 
