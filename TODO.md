@@ -5,10 +5,7 @@ format: html
 
 ## General
 
-- Turn all slides into quarto presentations instead
-- Put exercises at the end of each lecture instead.
 - Harmonize notation with book
-- Maybe introduce R packages?
 - Tone down emphasis on object oriented programming.
 - Reconsider reading instructions; maybe not aligned properly.
 
