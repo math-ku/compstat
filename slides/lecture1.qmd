@@ -15,22 +15,22 @@ options(width = 50)
 
 ## What is Computational Statistics?
 
-It is a broad field, where meaning depends on context.
+It is not a coherent field, but rather an umbrella term for a number of
+techniques and methods.
 
 \bigskip
 
 . . .
 
-One definition is that it is **the use of computational methods to solve
+Largely speaking, it is **the use of computational methods to solve
 statistical problems**, for instance
 
 . . .
 
 - simulation,
 - optimization,
-- numerical integration,
-- data analysis, and
-- visualization.
+- numerical integration, and 
+- data visualization.
 
 ## A Running Example
 
@@ -38,13 +38,8 @@ statistical problems**, for instance
 
 ::: {.column width="47%"}
 
-Let's try to get a bit of flavor of what we will be doing in the course.
-
-\bigskip
-
-. . .
-
-Throughout the course (and book) we will use a data set on angles, $\Phi$ and
+To get a bit of flavor about what we will be doing in the course,
+we will start with a running example on a data set of angles, $\Phi$ and
 $\Psi$, formed between two planes in protein structures.
 
 :::
@@ -66,6 +61,13 @@ A simple way to analyze the distributions of the angles $\Phi$ and $\Psi$ is the
 
 . . .
 
+A histogram divides the range of the data into bins and counts how many
+observations fall into each bin.
+
+\bigskip
+
+. . .
+
 :::: {.columns}
 
 ::: {.column width="47%"}
@@ -73,13 +75,12 @@ A simple way to analyze the distributions of the angles $\Phi$ and $\Psi$ is the
 ```{r hist1-src}
 #| eval: false
 #| fig-cap: A histogram of the $\Psi$ variable in the amino acid data
+library(ggplot2)
+
 ggplot(phipsi, aes(x = phi)) +
   geom_histogram() +
   geom_rug(alpha = 0.5) +
-  labs(
-    x = expression(Phi),
-    y = "Density"
-  )
+  labs(x = expression(Phi))
 ```
 
 :::
@@ -115,10 +116,7 @@ density estimation** (KDE).
 ggplot(phipsi, aes(x = phi)) +
   geom_density() +
   geom_rug(alpha = 0.5) +
-  labs(
-    x = expression(Phi),
-    y = "Density"
-  )
+  labs(x = expression(Phi))
 ```
 
 :::
@@ -141,14 +139,15 @@ ggplot(phipsi, aes(x = phi)) +
 \bigskip
 
 But how is this KDE actually computed? Doing this efficiently is a
-**computational statistics** problem.
+**computational statistics** problem, and part of the first topic of the course:
+**smoothing**.
 
 ## Statistical Topics of the Course
 
-The course can be broken down into a number of **statistical** and
+The course can be broken down into a number of **statistical** topics, as well as
 **computational** topics.
 
-\bigskip
+\medskip
 
 . . .
 
@@ -212,8 +211,8 @@ Johan Larsson, postdoctoral researcher
 
 #### Contact
 
-Use Absalon for course-related questions and email (see Absalon) for personal
-matters.
+Use Absalon discussions for course-related questions and email
+([jola@math.ku.dk](mailto:jola@math.ku.dk)) for personal matters.
 
 :::
 
@@ -249,7 +248,7 @@ Each assignment is tied to a particular **topic**:
 
 1. Smoothing
 2. Univariate simulation
-3. The EM algorithm
+3. The expectation-maximization (EM) algorithm
 4. Stochastic optimization
 
 ## Presentations
@@ -259,26 +258,24 @@ potato harvesting week when you are off.]
 
 . . .
 
-\bigskip
+\medskip
 
 You will divide into groups of 2-3 students and present your solution to one of
 the assignments during one of the sessions.
 
 . . .
 
-\bigskip
+\medskip
 
 You will register for groups and assignments in
 [Absalon](https://absalon.ku/dk).
 
 . . .
 
-\bigskip
+\medskip
 
 Presentation is compulsory but not graded. We expect solutions to be work in
 progress.
-
-. . .
 
 ## Oral Examination
 
@@ -327,14 +324,27 @@ At the exam, you will present one of these at random.
 
 ### Examination
 
-- November 6-8 (8.15-17.30, tentative)
-- Rooms to be announced
+- November 5-7 (9.15-16.30, tentative)
 
 :::
 
 ::::
 
 ## Exercise Sessions
+
+An opportunity to get help with the exercises. To make best use of your time,
+make sure you have _tried_ each of them.
+
+\medskip
+
+. . .
+
+Later on, the exercise sessions is where you will get assistance with your
+projects.
+
+. . .
+
+\medskip
 
 Exercise sessions will revolve around a central topic, for instance
 
@@ -343,19 +353,6 @@ Exercise sessions will revolve around a central topic, for instance
 - How to organize your code
 - How to use generative AI effectively
 
-. . .
-
-\medskip
-
-They are also an opportunity to get help with the exercises. To make best use of
-your time, make sure you have at least _tried_ each of them.
-
-\medskip
-
-. . .
-
-Later on, the exercise sessions is where you will get assistance with your
-projects.
 
 ## Course Literature
 
@@ -419,6 +416,8 @@ Course content will be uploaded to
 [github.io/math-ku/compstat](https://math-ku.github.io/compstat/).
 
 . . .
+
+\medskip
 
 This is where you will a detailed schedule of the course, slides, and the
 assignments.
@@ -585,6 +584,13 @@ Always write your code in scripts (`.R` files).
 
 Manage your files in project directories, one for each project.
 
+. . .
+
+\medskip
+
+For presentations, use [quarto](https://quarto.org) or
+[R Markdown](https://rmarkdown.rstudio.com).
+
 ## Getting Help with R
 
 ### Google It
@@ -605,6 +611,10 @@ Especially good for error messages.
 
 Use the fact that there are twenty other people in the course with exactly the
 same problem.
+
+## Questions
+
+Any questons so far?
 
 # Functions
 
@@ -830,6 +840,8 @@ environment where `f()` was created, which is the global environment in this
 case.
 
 . . .
+
+\medskip
 
 As a rule of thumb, avoid using variables from the parent environment inside
 functions.
