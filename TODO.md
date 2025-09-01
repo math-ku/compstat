@@ -30,7 +30,6 @@ format: html
 
 ## Lecture 9: Debugging and Likelihood Optimization
 
-- Move debugging to an earlier lecture.
 - Make it easier for them to debug: put required functions and initialization of
   data in a script.
 
