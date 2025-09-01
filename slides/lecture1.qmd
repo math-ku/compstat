@@ -153,7 +153,7 @@ The course can be broken down into a number of **statistical** topics, as well a
 
 There are three statistical topics in the course:
 
-\pause
+. . .
 
 ### Smoothing
 
@@ -547,49 +547,46 @@ If you haven't tried any of these before, we recommend you use Positron.
 
 ## Tidyverse
 
-:::: {.columns}
-
-::: {.column width="54%"}
-
 The [tidyverse](https://www.tidyverse.org/) is a suite of packages for wrangling
 with, exploring, and visualizing data.
 
-:::
-
-::: {.column width="40%"}
-
-![The Tidyverse](../assets/images/tidyverse.png)
-
-:::
-
-::::
-
 . . .
 
-Throughout the slides, I assume that you have it installed and loaded.
+\medskip
+
+Throughout the lectures, I assume that you have it installed and loaded.
 
 ```{r}
 #| eval: false
-install.packages("tidyverse")
+pak::pak("tidyverse")
 library(tidyverse)
 ```
 
+\medskip
+
+![](../assets/images/tidyverse.png){fig-align="right" width="40%"}
+
+
 ## Best Practices
 
-Always write your code in scripts (`.R` files).
+### Code Organization
 
-\medskip
-
-. . .
-
-Manage your files in project directories, one for each project.
+Write your code in scripts (`.R` files), not in the console. Organize
+your files in project directories, one for each project.
 
 . . .
 
-\medskip
 
-For presentations, use [quarto](https://quarto.org) or
-[R Markdown](https://rmarkdown.rstudio.com).
+### Presentations
+
+Use [quarto](https://quarto.org) or
+[R Markdown](https://rmarkdown.rstudio.com) for easily interleaving code and text.
+
+. . .
+
+### Write Functions
+
+Write functions for repeated tasks! (Up next)
 
 ## Getting Help with R
 
@@ -612,9 +609,20 @@ Especially good for error messages.
 Use the fact that there are twenty other people in the course with exactly the
 same problem.
 
+. . .
+
+### Reproducible Examples
+
+Use [reprex](https://reprex.tidyverse.org/) to create minimal, reproducible
+examples of your problem.
+
+::: {.standout}
+
 ## Questions
 
-Any questons so far?
+Any questions so far?
+
+:::
 
 # Functions
 
