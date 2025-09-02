@@ -731,9 +731,9 @@ environment(f)
 
 ## Arguments
 
-Arguments are specified in the parentheses after the function name.
+:::: {.columns}
 
-. . .
+::: {.column width="47%"}
 
 ### Arguments can have default values
 
@@ -742,16 +742,42 @@ g <- function(x, y = 2) {
   x + y
 }
 
-g(3) # y takes the default value 2
+g(3) # y = 2
 ```
 
 . . .
 
-### Named arguments can be passed in any order.
+### Named arguments can be passed in any order
 
 ```{r}
 g(y = 3, x = 2)
 ```
+
+:::
+
+::: {.column width="47%"}
+
+. . .
+
+### Use `NULL` for optional arguments
+
+```{r}
+g <- function(x, y = NULL) {
+  if (!is.null(y)) {
+    return(x * y)
+  }
+  x
+}
+
+g(5)
+
+g(5, 2)
+```
+
+:::
+
+::::
+
 
 ## Copy-on-Write
 
@@ -1142,21 +1168,28 @@ Write short functions and name them descriptively.
 
 # Exercises
 
-### Exercise 1: Write a function with a default argument
+### Exercise 1: Hello, world!
 
 Write a function `greet` that takes a name as an argument and prints “Hello,
 <name>!”. If no name is given, it should print “Hello, world!”.
 
-. . .
-
-### Exercise 2: Count missing values
-
-Write a function `count_na` that takes a vector and returns the number of
-missing (`NA`) values in it.
+*Hint: use `is.null()` to check if an argument was provided.*
 
 . . .
 
-### Exercise 3: Check if a number is even
+### Exercise 2: Check if a number is even
 
 Write a function `is_even()` that returns `TRUE` if its argument is even,
-`FALSE` otherwise.
+`FALSE` otherwise. Stop early if the argument is not numeric.
+
+. . .
+
+### Exercise 3: Weighted mean
+
+Write a function that computes the weighted mean of a numeric vector, $x$, given a vector of weights, $w$:
+$$
+  \frac{\sum_{i=1}^n w_i x_i}{\sum_{i=1}^n w_i}
+$$
+
+Pass arguments to `sum()` via `...`. Use it to handle the case where `x` contains `NA`s.
+
