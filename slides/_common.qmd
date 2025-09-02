@@ -3,7 +3,6 @@
 #| message: false
 #| warning: false
 library(tidyverse)
-library(cowplot)
-theme_set(theme_cowplot(font_size = 10))
+theme_set(theme_minimal())
 options(width = 50)
 ```

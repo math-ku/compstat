@@ -64,6 +64,7 @@
             cowplot
             cyclocomp
             svglite
+            animation
           ];
         };
       in

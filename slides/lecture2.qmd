@@ -1,5 +1,12 @@
 ---
 title: "Object-Oriented Programming and Density Estimation"
+
+format:
+  beamer:
+    keep-tex: true
+
+execute:
+  cache: false
 ---
 
 {{< include _common.qmd >}}
@@ -23,13 +30,13 @@ We learn what OOP is and how the S3 OOP system in R works.
 ### Kernel Density Estimation
 
 We learn how to create non-parametric density estimates using kernel density
-estimation
+estimation.
 
 # Object-Oriented Programming
 
 ## What Is Object-Oriented Programming (OOP)?
 
-A programming paradigm based on the concept of "objects", which contain data and
+A paradigm based on the concept of "objects", which contain data and
 methods.
 
 . . .
@@ -152,34 +159,71 @@ class(integral)
 . . .
 
 The printed result of `integrate()` is not the same as the object itself. What
-you see is the result a **method**, `print.integrate()`.
+you see is the result of a **method**, `print.integrate()`.
 
 ## Printing Objects of Class Integrate
 
 ```{r}
+#| eval: false
 stats:::print.integrate
 ```
 
-. . .
+```{r}
+#| eval: false
+function(x, digits = getOption("digits"), ...) {
+  if (x$message == "OK") {
+    cat(
+      format(x$value, digits = digits),
+      " with absolute error < ",
+      format(x$abs.error, digits = 2L),
+      "\n",
+      sep = ""
+    )
+  } else {
+    cat("failed with message ", sQuote(x$message), "\n", sep = "")
+  }
+  invisible(x)
+}
+```
 
-(The `print.integrate()` function is not exported from the stats package. It is
-in the namespace of the **stats** package, and to access it directly we use
-`stats:::`.)
+::: {.notes}
+
+- Tell the students about `:::` and that it is not something they should use
+  themselves.
+
+:::
 
 ## Histogram Objects
+
+:::: {.columns}
+
+::: {.column width="47%"}
 
 `hist()` also returns an object (of class `histogram`), which has methods
 defined.
 
+. . .
+
 ```{r temp-hist-src}
 #| eval: false
-phi_hist <- hist(phipsi$phi, main = NULL)
+phi_hist <- hist(
+  phipsi$ph
+)
 ```
+
+:::
+
+::: {.column width="47%"}
 
 ```{r temp-hist-plot}
 #| ref-label: temp-hist-src
+#| fig-height: 2.5
 #| echo: false
 ```
+
+:::
+
+::::
 
 . . .
 
@@ -193,13 +237,7 @@ class(phi_hist)
 str(phi_hist)
 ```
 
-## We Can Extract Elements
-
-```{r}
-phi_hist[1:3]
-```
-
-## Getting Help for Objects
+## Getting Help for Methods
 
 You can find documentation for `plot()` using for instance
 
@@ -207,12 +245,16 @@ You can find documentation for `plot()` using for instance
 ?plot
 ```
 
+. . .
+
 But this will be uninformative about how an object of class histogram is
 plotted. Instead, try
 
 ```{r help-plot-histogram, eval = FALSE}
 ?plot.histogram
 ```
+
+. . .
 
 This will give the documentation for the plot method for objects of class
 histogram.
@@ -225,21 +267,19 @@ S3 classes are standard data structures (typically lists) with _class labels_.
 
 \bigskip
 
-It is a simple but informal system. Objects are not formally defined, and there
-is no type checking.
+It is a simple but informal system: no formal object defintion and no type checking.
 
 . . .
 
 \bigskip
 
-To use S3, we implement a _generic_ function via `UseMethod()`. E.g.
+To use S3, we implement a \alert{generic} function via `UseMethod()`. E.g. `plot()`:
 
-```{r, eval=FALSE}
-plot
-```
-
-```{r, echo=FALSE}
-cat(deparse(plot))
+```{r}
+#| eval: false
+plot <- function(x, y, ...) {
+  UseMethod("plot")
+}
 ```
 
 . . .
@@ -255,129 +295,383 @@ function `f()`.
 The system is widely used to write methods for the generic functions `print()`,
 `plot()` and `summary()`.
 
+## Use Cases for OOP
+
+### Handle function output
+
+One common use of OOP is to make it easier to handle object that your
+functions create, especially if they are complex (e.g. `lm()`).
+
+. . .
+
+\medskip
+
+Instead of having to write specialized functions, e.g. `print_lm()`, `plot_lm()`,
+you can write methods for the generic functions `print()`, `plot()`, etc.
+
+. . .
+
+### Dispatch based on input type
+
+
+. . .
+
+\medskip
+
+For instance, you may want a function that behaves differently
+depending on whether the input is a vector or a matrix.
+
 ## Constructing a New Class
 
-```{r, echo=FALSE}
-count_zeros_vec <- function(x) {
-  sum(x == 0)
-}
-```
+:::: {.columns}
 
-Recall the function `count_zeros_vec()` that counts the number of zeros in a
-vector.
+::: {.column width="47%"}
 
-\bigskip
-
-. . .
-
-If we need this number many times it is beneficial to compute it once and then
-extract it whenever needed.
-
-\bigskip
-
-. . .
-
-We first write a _constructor function_ that returns a list with a class label.
+Here's a function that computes summary statistics of a numeric
+vector. 
 
 ```{r}
-count_object <- function(x) {
+summarize_data <- function(x) {
   structure(
     list(
-      x = x,
-      n = count_zeros_vec(x)
+      mean = mean(x),
+      median = median(x),
+      sd = sd(x)
     ),
-    class = "count_object"
+    class = "data_summary"
   )
 }
 ```
 
-## A Data Example
-
-```{r}
-#| echo: false
-set.seed(1234)
-```
-
-```{r}
-count_data <- count_object(rpois(10, 2))
-count_data
-```
-
-## The Generic Function
-
-To activate looking up a method for a specific class, one needs to tell R that
-the function `count_zeros()` is a **generic** function.
-
-```{r}
-count_zeros <- function(x) {
-  UseMethod("count_zeros")
-}
-```
+:::
 
 . . .
 
-We can let the default method be the vectorized version.
+::: {.column width="47%"}
 
-```{r}
-count_zeros.default <- function(x) {
-  count_zeros_vec(x)
-}
-```
+`structure()` is a common way to create an object with a class label.
+
+\medskip
 
 . . .
 
-Then we can implement a class-specific version for the class `count_object`.
+Returns a list with three components: the mean, median, and
+standard deviation of the input vector.
+
+. . .
+
+### Constructor Functions
+
+Sometimes it's worth writing a constructor function to
+encapsulate the creation of an object.
+
+:::
+
+::::
+
+## Print Method
+
+:::: {.columns align=center}
+
+::: {.column width="47%"}
 
 ```{r}
-count_zeros.count_object <- function(x) {
-  x[["n"]]
-}
+vec <- rnorm(100)
+summary <- summarize_data(vec)
+summary # calls print.default()
 ```
+
+:::
+
+
+::: {.column width="47%"}
+
+. . .
+
+This is fine, but we may want a more compact display.
+
+. . .
+
+\medskip
+
+To achieve this, we can write a new \alert{method} for
+`print()` that acts on our class.
+
+. . .
+
+\medskip
+
+The reason we can do this is that `print()` is
+a generic.
+
+:::
+
+::::
 
 ## A Print Method
 
-And we can also implement a print method.
+:::: {.columns}
+
+::: {.column width="47%"}
+
+The print method is written by just
+suffixing the class name with a dot
+after the generic name.
 
 ```{r}
-print.count_object <- function(x) {
-  cat("Values:", x$x, "\nNumber of zeros:", x$n, "\n")
+print.data_summary <-
+  function(x) {
+    cat(
+      "Mean:",
+      x$mean,
+      "\nMedian:",
+      x$median,
+      "\nStandard deviation:",
+      x$sd,
+      "\n"
+    )
+  }
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+Let's test our new method.
+
+```{r}
+summary
+```
+
+. . .
+
+Same call as before, but now there's a method
+available, so `print.data_summary()` is called.
+
+:::
+
+::::
+
+## Generics
+
+:::: {.columns align=center}
+
+::: {.column width="47%"}
+
+Let's say that we want to specialize `summarize_data()`{.r}. We could write our own 
+generic:
+
+```{r}
+summarize_data <- function(x) {
+  UseMethod("summarize_data")
+}
+```
+
+. . .
+
+We use our previous implementation as the \alert{default}
+method.
+
+:::
+
+::: {.column width="47%"}
+
+. . .
+
+```{r}
+summarize_data.default <-
+  function(x) {
+    structure(
+      list(
+        mean = mean(x),
+        median = median(x),
+        sd = sd(x)
+      ),
+      class = "data_summary"
+    )
+  }
+```
+
+:::
+
+::::
+
+## Adding Methods
+
+What if we want our function to have specific behavior for,
+say, **matrices**?
+
+\medskip
+
+. . .
+
+```{r}
+summarize_data.matrix <- function(x) {
+  stats <- apply(x, 2, summarize_data)
+  class(stats) <- "matrix_summary"
+
+  stats
 }
 ```
 
 . . .
 
 ```{r}
-count_data # Invokes print.count_object()
+mat <- matrix(rnorm(200), ncol = 2)
+
+matrix_stats <- summarize_data(mat)
+```
+
+## Recursive Printing
+
+:::: {.columns align=center}
+
+::: {.column width="47%"}
+
+Printing the matrix summary calls the print method recursively through the list.
+
+. . .
+
+:::
+
+::: {.column width="47%"}
+
+
+```{r}
+matrix_stats
+```
+
+:::
+
+::::
+
+## Common Pitfalls in S3
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Naming conflicts
+
+Accidentally overwriting existing generics or methods (e.g., redefining
+`print()`).
+
+```{r}
+#| include: false
+old_print <- print
+```
+
+
+```{r}
+print <- function(x) {
+  cat("Oops!\n")
+}
 ```
 
 . . .
 
+Now `print()` no longer works as expected.
+
 ```{r}
-count_zeros(count_data) # Invokes count_zeros.count_object()
+print("Hello")
 ```
+
+```{r}
+#| include: false
+print <- old_print
+```
+
+:::
+
+::: {.column width="47%"}
+
+. . .
+
+### Forgetting the default method
+
+Forgetting the default method (`myfun.default`), can cause confusing
+errors.
+
+```{r}
+#| eval: false
+myfun <- function(x, ...) {
+  UseMethod("myfun")
+}
+
+myfun.numeric <-
+  function(x, ...) {
+    "It's numeric!"
+  }
+
+myfun("a") # error!
+```
+
+:::
+
+::::
+
+## Best Practices for S3
+
+Use clear, descriptive class and method names to avoid conflicts.
+
+. . .
+
+\medskip
+
+Document your classes and methods so users know how to extend or interact with them.
+
+. . .
+
+\medskip
+
+Keep objects simple---prefer lists with named elements for S3 objects.
+
+## Criticisms of OOP
+
+### Portability
+
+OOP code is often less portable than functional code.
+
+. . .
+
+\bigskip
+
+> ... the problem with object-oriented languages is they’ve got all this
+> implicit environment that they carry around with them. You wanted a banana
+> but what you got was a gorilla holding the banana and the entire jungle.
+>
+> \medskip
+> \hfill---Joe Armstrong
+
+. . .
+
+### Complexity
+
+OOP can introduce unnecessary complexity. You have to understand the class system and
+how methods are dispatched.
 
 # Density Estimation
 
 ## Density Estimation
 
-Let $f_0$ denote the unknown density we want to estimate.
+**Basic idea:** we have $f_0$, an unknown density that we want to estimate.
 
 \medskip
 
 . . .
 
-If we fit a parameterized statistical model $(f_\theta)_\theta$ to data using
-the estimator $\hat{\theta}$, then $f_{\hat{\theta}}$ is an estimate of $f_0$.
+We could use a \alert{parametric} approach, where we assume that $f_0$ is in a
+family of densities $(f_\theta)_\theta$ indexed by a parameter $\theta$.
 
 . . .
 
 \medskip
 
-. . .
-
-The histogram is a nonparametric density estimator, $\hat{f}$.
-
-\medskip
+Alternatively, we can use a \alert{nonparametric} approach, where we do not
+assume a specific parametric form for $f_0$, e.g. the **histogram**, which
+we can write as $\hat{f}$.
 
 . . .
 
@@ -389,71 +683,92 @@ Because
 
 - we want to compare data with the parametric estimate,
 - we don't know a suitable parametric model, and
-- we want aid in visualization.
+- we want to explore the data (through visualization).
 
 ## Density Estimation
 
 Density estimation relies on the approximation
 $$
-P(X \in (x-h, x+h)) = \int_{x-h}^{x+h} f_0(z) \ dz \simeq f_0(x) 2h.
+  P(X \in (x-h, x+h)) = \int_{x-h}^{x+h} f_0(z) \ dz \pause \simeq f_0(x) 2h.
 $$
 
 . . .
 
-Rearranging and using the LLN gives
+Rearranging and using the law of large numbers gives
+$$
+  \begin{aligned}
+    f_0(x) & \simeq \frac{1}{2h} P(X \in (x-h, x+h)) \\ \pause
+           & \simeq \frac{1}{2hn} \sum_{i=1}^n 1_{(x-h, x+h)}(x_i) \\ \pause
+           & = \frac{1}{2hn} \sum_{i=1}^n 1_{(-h, h)}(x - x_i) \\ \pause
+           & = \hat{f}_h(x).
+  \end{aligned}
+$$
 
-$$
-\begin{aligned}
-f*0(x) & \simeq \frac{1}{2h}P(X \in (x-h, x+h)) \\ & \simeq
-\frac{1}{2h} \frac{1}{n} \sum*{i=1}^n 1*{(x-h, x+h)}(x_i) \\ & = \frac{1}{2hn}
-\sum*{i=1}^n 1\_{(-h, h)}(x - x_i) = \hat{f}\_h(x)
-\end{aligned}
-$$
+::: {.notes}
+
+- For a continuous random variable, the probability of \( X \) falling in a very small interval around \( x \) is very small.
+- The probability density function \( f_0(x) \) tells us how likely \( X \) is to be near \( x \).
+- For a small interval \((x-h, x+h)\), the probability is approximately the height of the density at \( x \) times the width of the interval.
+- Mathematically:  
+  \( P(X \in (x-h, x+h)) \approx f_0(x) \times (2h) \)
+- This approximation gets better as \( h \) gets smaller, because the density doesn’t change much over a tiny interval.
+
+:::
 
 ## Kernels
 
 We will consider _kernel estimators_
 $$
-\hat{f}_h(x) = \frac{1}{hn} \sum_{i=1}^n K\left(\frac{x - x_i}{h}\right).
+  \hat{f}_h(x) = \frac{1}{hn} \sum_{i=1}^n K\left(\frac{x - x_i}{h}\right).
 $$
 
 . . .
 
-The _uniform_ or _rectangular kernel_ is
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### The Uniform Kernel
+
 $$
-K(x) = \frac{1}{2} 1_{(-1,1)}(x),
-$$
-
-which leads to the expression on the last slide.
-
-. . .
-
-\medskip
-
-The _Gaussian kernel_ is
-$$
-K(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}.
+  K(x) = \frac{1}{2} 1_{(-1,1)}(x)
 $$
 
-## Implementation with the Gaussian Kernel
-
-```{r kern-dens-impl}
-kern_dens <- function(x, h, m = 512) {
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- numeric(m)
-
-  for (i in seq_along(xx)) {
-    for (j in seq_along(x)) {
-      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
-    }
-  }
-
-  y <- y / (sqrt(2 * pi) * h * length(x))
-
-  list(x = xx, y = y)
-}
+```{r}
+#| echo: false
+#| fig-height: 1.5
+ggplot(tibble(x = seq(-2, 2, length.out = 100)), aes(x)) +
+  geom_line(aes(y = dunif(x, -1, 1) / 2)) +
+  labs(x = "x", y = "K(x)") +
+  theme_minimal()
 ```
+
+Leads to expression on last slide.
+
+. . .
+
+:::
+
+::: {.column width="47%"}
+
+### The Gaussian Kernel
+
+$$
+  K(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}
+$$
+
+```{r}
+#| echo: false
+#| fig-height: 1.5
+ggplot(tibble(x = seq(-4, 4, length.out = 100)), aes(x)) +
+  geom_line(aes(y = dnorm(x))) +
+  labs(x = "x", y = "K(x)") +
+  theme_minimal()
+```
+
+:::
+
+::::
 
 ## An Illustration
 
@@ -560,7 +875,7 @@ Now we add a Gaussian density kernel with bandwidth 1 for each point.
 
 \bigskip
 
-Finally, we average the kernels to get the density estimate.
+Finally, we average (sum) the kernels to get the density estimate.
 
 :::
 
@@ -577,20 +892,43 @@ p4
 
 ::::
 
+## Implementation with the Gaussian Kernel
+
+```{r kern-dens-impl}
+kern_dens <- function(x, h, m = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  y <- numeric(m)
+
+  for (i in seq_along(xx)) {
+    for (j in seq_along(x)) {
+      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
+    }
+  }
+
+  y <- y / (sqrt(2 * pi) * h * length(x))
+
+  list(x = xx, y = y)
+}
+```
+
 ## Angle Data
 
-Recall the angle data between planes in amino acids.
+Let's see if we can use our implementation to estimate the density of the
+$\Psi$ angle in the amino acid data.
 
-\smallskip
+. . .
+
+\bigskip
 
 ```{r}
-#| fig-width: 5
-#| fig-height: 3
+#| fig-width: 4
+#| fig-height: 2
 #| fig-cap: Histogram of the $\Psi$ angle in the amino acid data.
 #| echo: false
 ggplot(phipsi, aes(psi)) +
   geom_histogram() +
-  geom_rug() +
+  geom_rug(alpha = 0.3) +
   labs(x = expression(psi), y = "Density")
 ```
 
@@ -601,173 +939,209 @@ f_hat <- kern_dens(phipsi$psi, 0.2)
 f_hat_dens <- density(phipsi$psi, 0.2)
 ```
 
-:::: {.columns}
+. . .
+
+```{r test-dens}
+#| echo: false
+#| fig-width: 5.5
+df <- bind_rows(
+  as.data.frame(f_hat) |> mutate(method = "ours"),
+  tibble(x = f_hat_dens$x, y = f_hat_dens$y, method = "density()")
+)
+
+ggplot(df, aes(x, y)) +
+  geom_line() +
+  facet_wrap(~method) +
+  labs(x = "x", y = "density")
+```
+
+## Plotting Differences
+
+:::: {.columns align=center}
 
 ::: {.column width="47%"}
 
-```{r test-dens, eval = FALSE}
-plot(
-  f_hat,
-  type = "l",
-  lwd = 4,
-  xlab = "x",
-  ylab = "Density"
+Plotting the difference between the two estimates,
+we see that they are very close.
+
+```{r plot-diff}
+#| eval: false
+df_diff <- tibble(
+  x = f_hat$x,
+  y = f_hat$y - f_hat_dens$y
 )
 
-lines(
-  f_hat_dens,
-  col = "red",
-  lwd = 2
-)
+ggplot(df_diff, aes(x, y)) +
+  geom_line() +
+  labs(
+    x = "x",
+    y = "difference"
+  )
 ```
 
 :::
 
 ::: {.column width="47%"}
 
-```{r test-dens-output, ref.label="test-dens", echo=FALSE, fig.width = 6, fig.asp = 0.9}
-
+```{r}
+#| echo: false
+#| ref-label: plot-diff
+#| fig-cap: Difference between our density estimate and that of `density()`.
 ```
 
 :::
 
 ::::
 
-## A First Test
+## Testing
 
-```{r, fig.width = 7, fig.asp = 0.7}
-plot(
-  f_hat$x,
-  f_hat$y - f_hat_dens$y,
-  type = "l",
-  lwd = 2,
-  xlab = "x",
-  ylab = "Difference"
-)
-```
+\alert{Correctness} is one of the major computational topics in the course.
 
-## Testing with **testthat**
+. . .
 
-```{r, fig.width = 7, fig.asp = 0.7, error = TRUE}
-#| fig-width: 7
-#| fig-asp: 0.7
-library(testthat)
+\medskip
 
-test_that("Our density implementation corresponds to density()", {
-  expect_equal(kern_dens(phipsi$psi, 0.2)$y, density(phipsi$psi, 0.2)$y)
-})
-```
+These tests are ad-hoc, but they illustrate the idea of testing.
+Later in the course we will learn about formal testing using the
+`testthat` package.
 
-## Tolerance
+. . .
 
-It is often necessary to allow for small differences in floating point numbers.
+\medskip
 
-```{r, fig.width = 7, fig.asp = 0.7}
-library(testthat)
-test_that("Our density implementation corresponds to density()", {
-  expect_equal(
-    kern_dens(phipsi$psi, 0.2)$y,
-    density(phipsi$psi, 0.2)$y,
-    tolerance = 1e-3
-  )
-})
+Here's a rough idea:
+
+```{r}
+test <- all.equal(f_hat$y, f_hat_dens$y)
+
+isTRUE(test)
 ```
 
 . . .
 
-### Setting Tolerance Level
+```{r}
+test
+```
 
-- You need to decide on the tolerance level on a case-by-case basis.
-- Uses `all.equal()` internally (but depends on testthat edition!). Usually
-  tests **relative** difference (but not always!)
+. . .
+
+### Numerical Tolerance
+
+You need to decide on the tolerance level on a case-by-case basis.
 
 ## Density Estimation
 
 For a parametric family we can use the MLE
 $$\hat{\theta} = \text{arg max}_{\theta} \sum_{j=1}^n \log f_{\theta}(x_j).$$
 
-For nonparametric estimation we can still introduce the log-likelihood:
+. . .
 
+For nonparametric estimation we can still introduce the log-likelihood:
 $$
 \ell(f) = \sum_{j=1}^n \log f(x_j)
 $$
 
-Let's see what happens for the Gaussian kernel density estimate
+. . .
 
+Let's see what happens for the Gaussian kernel density estimate
 $$
 f(x) = f_h(x) = \frac{1}{nh \sqrt{2 \pi}} \sum_{j=1}^n e^{- \frac{(x - x_j)^2}{2 h^2} }.
 $$
 
-## Bandwidth Selection
+---
 
-```{r, fig.align='center'}
+```{r}
+#| echo: false
+#| fig-cap: $h = 1$.
+#| fig-width: 3.5
+#| fig-height: 2.5
 f_h <- function(x, h) mean(dnorm(x, phipsi$psi, h))
 f_h <- Vectorize(f_h)
-hist(phipsi$psi, prob = TRUE)
-rug(phipsi$psi)
-curve(f_h(x, 1), add = TRUE, col = "red")
+
+psi_df <- data.frame(psi = phipsi$psi)
+
+plot_psi_density <- function(h, n = 1001) {
+  x_seq <- seq(min(phipsi$psi), max(phipsi$psi), length.out = n)
+  dens_df <- data.frame(x = x_seq, y = f_h(x_seq, h))
+  ggplot(psi_df, aes(x = psi)) +
+    geom_histogram(aes(y = ..density..), fill = "grey60") +
+    geom_rug(alpha = 0.3) +
+    geom_line(data = dens_df, aes(x = x, y = y), color = "blue", linewidth = 1) +
+    labs(x = expression(psi), y = "density") +
+    lims(y = c(0, 0.5)) +
+    theme_minimal()
+}
+
+# Example plot for h = 1
+plot_psi_density(1)
 ```
 
-## $h = 1$
+---
 
-```{r, echo = FALSE}
-hist(phipsi$psi, prob = TRUE)
-rug(phipsi$psi)
-curve(f_h(x, 1), add = TRUE, col = "red")
+
+```{r}
+#| echo: false
+#| fig-cap: $h = 0.25$.
+#| fig-width: 3.5
+#| fig-height: 2.5
+plot_psi_density(0.25)
 ```
 
-## $h = 0.25$
+---
 
-```{r, echo = FALSE}
-hist(phipsi$psi, prob = TRUE)
-rug(phipsi$psi)
-curve(f_h(x, 0.25), add = TRUE, col = "red", n = 1001)
+
+```{r}
+#| echo: false
+#| fig-cap: $h = 0.1$.
+#| fig-width: 3.5
+#| fig-height: 2.5
+plot_psi_density(0.1)
 ```
 
-## $h = 0.01$
+---
 
-```{r, echo = FALSE}
-hist(phipsi$psi, prob = TRUE)
-rug(phipsi$psi)
-curve(f_h(x, 0.1), add = TRUE, col = "red", n = 1001)
+```{r}
+#| echo: false
+#| fig-cap: $h = 0.025$.
+#| fig-width: 3.5
+#| fig-height: 2.5
+plot_psi_density(0.025, n = 10001)
 ```
 
-## $h = 0.025$
+---
 
-```{r, echo = FALSE}
-hist(phipsi$psi, prob = TRUE)
-rug(phipsi$psi)
-curve(f_h(x, 0.025), add = TRUE, col = "red", n = 10001)
+```{r}
+#| echo: false
+#| fig-cap: $h = 0.01$.
+#| fig-width: 3.5
+#| fig-height: 2.5
+plot_psi_density(0.01, n = 10001)
 ```
 
-## $h = 0.01$
+---
 
-```{r, echo = FALSE}
-hist(phipsi$psi, prob = TRUE)
-rug(phipsi$psi)
-curve(f_h(x, 0.01), add = TRUE, col = "red", n = 10001)
+```{r}
+#| echo: false
+#| fig-cap: $h = 0.0001$.
+#| fig-width: 3.5
+#| fig-height: 2.5
+plot_psi_density(0.0001, n = 10001)
 ```
 
-## $h \to 0$
-
-```{r, echo = FALSE}
-hist(phipsi$psi, prob = TRUE)
-rug(phipsi$psi)
-curve(f_h(x, 0.0001), add = TRUE, col = "red", n = 10001)
-```
 
 ## Log-Likelihood
 
-If $x_i \neq x_j$ when $i \neq j$
-
+If $x_i \neq x_j$ when $i \neq j$, then
 $$
 \begin{aligned}
-  \ell(f*h) & = \sum*{i} \log\left(1 + \sum\_{j \neq i} e^{-(x_i - x_j)^2 / (2 h^2)} \right) - n \log(nh\sqrt{2 \pi}) \\
+  \ell(f-h) & = \sum_{i} \log\left(1 + \sum_{j \neq i} e^{-(x_i - x_j)^2 / (2 h^2)} \right) - n \log(nh\sqrt{2 \pi}) \\ \pause
             & \sim - n \log(nh\sqrt{2 \pi})
 \end{aligned}
 $$
 
-## for $h \to 0$.
+. . .
+
+\bigskip
 
 Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is **no MLE** in the set
 of distributions with densities.
@@ -780,27 +1154,40 @@ $$\operatorname{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ dx = ||\hat{f
 . . .
 
 Quality of the estimation procedure can be quantified by the mean ISE,
-$$\operatorname{MISE}(h) = \operatorname{E}(\mathrm{ISE}(\hat{f}_h)),$$ where
+$$
+  \operatorname{MISE}(h) = \operatorname{E}(\mathrm{ISE}(\hat{f}_h)),
+$$
+where
 the expectation integral is over the data.
 
 . . .
 
-$$\operatorname{MISE}(h) = \int \operatorname{MSE}_h(x) \ dx$$ where
+$$
+  \operatorname{MISE}(h) = \int \operatorname{MSE}_h(x) \ dx
+$$ where
 $\operatorname{MSE}_h(x) = \operatorname{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
 . . .
+
+\medskip
 
 Let's derive the case of the uniform kernel!
 
 ## AMISE
 
 If $K$ is a square-integrable probability density with mean 0,
-$$\mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((nh)^{-1} + h^4)$$ where the
-_asymptotic mean integrated squared error_ is
-$$\mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}$$
+$$
+  \mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((nh)^{-1} + h^4)
+$$
+where the _asymptotic mean integrated squared error_ is
+$$
+  \mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}
+$$
 with $\sigma_K^2 = \int t^2 K(t) \ dt.$
 
 . . .
+
+\medskip
 
 Using various plug-in estimates of $\|f_0''\|_2^2$, AMISE can be used to
 estimate the _asymptotically optimal bandwidth_ in a mean integrated squared
@@ -808,226 +1195,107 @@ error sense.
 
 ## Amino Acid Angles (Silverman, the default)
 
-$$h = 0.9 \min \left(\hat{\sigma},\frac{\text{IQR}}{1.34}\right) n^{-1/5}$$
+```{r}
+#| echo: false
+library(patchwork)
 
-:::: {.columns}
+phipsi_plot <- function(bw) {
+  phi <-  ggplot(phipsi, aes(x = phi)) +
+    geom_histogram(aes(y = ..density..)) +
+    geom_rug(alpha = 0.3) +
+    geom_density(bw = bw, color = "dark orange", linewidth = 1) +
+    labs(x = expression(Phi), y = "density")
 
-::: {.column width="47%"}
+  psi <- ggplot(phipsi, aes(x = psi)) +
+    geom_histogram(aes(y = ..density..)) +
+    geom_rug(alpha = 0.3) +
+    geom_density(bw = bw, color = "dark orange", linewidth = 1) +
+    labs(x = expression(Psi), y = "density")
 
-```{r dens3, eval = FALSE}
-density(phipsi$phi)
+  phi + psi + plot_layout(axes = "collect")
+}
 ```
 
-```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
-hist(phipsi$phi, prob = TRUE, main = NULL)
-rug(phipsi$phi)
-lines(density(phipsi$phi), col = "red", lwd = 2)
+$$
+  h = 0.9 \min \left(\hat{\sigma},\frac{\text{IQR}}{1.34}\right) n^{-1/5}
+$$
+
+\medskip
+
+```{r}
+#| echo: false
+#| fig-width: 5.5
+#| fig-cap: Silverman's rule of thumb bandwidth.
+phipsi_plot("nrd0")
 ```
-
-:::
-
-::: {.column width="47%"}
-
-```{r dens4, eval = FALSE}
-density(phipsi$psi)
-```
-
-```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
-hist(phipsi$psi, prob = TRUE, main = NULL)
-rug(phipsi$psi)
-lines(density(phipsi$psi), col = "red", lwd = 2)
-```
-
-:::
-
-::::
 
 ## Amino Acid Angles (Scott, using 1.06)
 
-:::: {.columns}
+$$
+  h = 1.06 \hat{\sigma} n^{-1/5}
+$$
 
-::: {.column width="47%"}
+\medskip
 
-```{r dens5, eval = FALSE, fig.width = 5, fig.asp = 1}
-density(phipsi$phi, bw = "nrd")
+```{r}
+#| echo: false
+#| fig-width: 5.5
+#| fig-cap: Scott's rule of thumb bandwidth.
+phipsi_plot("nrd")
 ```
-
-```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
-hist(phipsi$phi, prob = TRUE, main = NULL)
-rug(phipsi$phi)
-lines(density(phipsi$phi, bw = "nrd"), col = "red", lwd = 2)
-```
-
-:::
-
-::: {.column width="47%"}
-
-```{r dens6, eval = FALSE}
-density(phipsi$psi, bw = "nrd")
-```
-
-```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
-hist(phipsi$psi, prob = TRUE, main = NULL)
-rug(phipsi$psi)
-lines(density(phipsi$psi, bw = "nrd"), col = "red", lwd = 2)
-```
-
-:::
-
-::::
 
 ## Amino Acid Angles (Sheather & Jones)
 
-:::: {.columns}
+More elaborate method!
 
-::: {.column width="47%"}
+\medskip
 
-```{r dens7, eval = FALSE}
-density(phipsi$phi, bw = "SJ")
+```{r}
+#| echo: false
+#| fig-width: 5.5
+#| fig-cap: Sheather & Jones' bandwidth.
+phipsi_plot("sj")
 ```
 
-```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
-hist(phipsi$phi, prob = TRUE, main = NULL)
-rug(phipsi$phi)
-lines(density(phipsi$phi, bw = "SJ"), col = "red", lwd = 2)
-```
+::: {.standout}
+
+---
+
+Questions?
 
 :::
-
-::: {.column width="47%"}
-
-```{r dens8, eval = FALSE}
-density(phipsi$psi, bw = "SJ")
-```
-
-```{r, echo = FALSE, fig.width = 5, fig.asp = 1}
-hist(phipsi$psi, prob = TRUE, main = NULL)
-rug(phipsi$psi)
-lines(density(phipsi$psi, bw = "SJ"), col = "red", lwd = 2)
-```
-
-:::
-
-::::
 
 # Exercises
 
-## Exercise 1
+## Exercises
 
-### Exercise 1
+### Exercise 1: Create a Simple S3 Class
 
-Create a constructor function called `summarize_vector()` that that takes a
-numeric vector as input and returns an object of class `vector_summary`
-containing the mean, median, and standard deviation of the input vector.
-
-```{r include = FALSE}
-summarize_vector <- function(x) {
-  structure(
-    list(
-      mean = mean(x),
-      median = median(x),
-      sd = sd(x)
-    ),
-    class = "vector_summary"
-  )
-}
-```
+Write a function `make_point(x, y)` that returns an object of class `"point"`
+with elements `x` and `y`.
 
 . . .
 
-### Exercise 2
+\medskip
 
-Write a `print()` method for the class `vector_summary` that prints the mean,
-median, and standard deviation in a neatly formatted way.
-
-```{r, include = FALSE}
-print.vector_summary <- function(x) {
-  cat(
-    "Mean:",
-    x$mean,
-    "\nMedian:",
-    x$median,
-    "\nStandard deviation:",
-    x$sd,
-    "\n"
-  )
-}
-```
-
-## Exercise 2
-
-Take the `kern_dens()` function we started out with and implement Silverman's
-rule of thumb for choosing the bandwidth. Test against the default behavior of
-`density()`.
-
-```{r}
-kern_dens_silverman <- function(x, h = NULL, m = 512) {
-  # If h is NULL, compute h using Silverman's rule
-
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- numeric(m)
-
-  for (i in seq_along(xx)) {
-    for (j in seq_along(x)) {
-      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
-    }
-  }
-
-  y <- y / (sqrt(2 * pi) * h * length(x))
-
-  list(x = xx, y = y)
-}
-```
-
-```{r, include = FALSE}
-kern_dens_silverman <- function(x, h = NULL, m = 512) {
-  if (is.null(h)) {
-    sigma_hat <- sd(x)
-    n <- length(x)
-    qs <- quantile(x, probs = c(0.25, 0.75))
-    iqr <- qs[2] - qs[1]
-    h <- 0.9 * min(sigma_hat, iqr / 1.34) * n^(-1 / 5)
-  }
-
-  rg <- range(x)
-  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- numeric(m)
-
-  for (i in seq_along(xx)) {
-    for (j in seq_along(x)) {
-      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
-    }
-  }
-
-  y <- y / (sqrt(2 * pi) * h * length(x))
-
-  list(x = xx, y = y)
-}
-
-plot(density(x))
-lines(kern_dens_silverman(x))
-```
-
-## Exercise 2
-
-### Multiple Kernels
-
-Let the user choose between the Gaussian and the uniform kernel.
+Write a print method `print.point()` that prints the point as `(x, y)`.
 
 . . .
 
-### Object
+### Exercise 2: Extend the Point Class
 
-Return an S3 object from your density function and write a plot method for it,
-using either ggplot2 or base graphics.
+Write a function `distance_from_origin(point)` that computes the Euclidean
+distance from the origin for a `"point"` object.
 
 . . .
 
-### Generic
+Add a default method `distance_from_origin.default()` that works for numeric
+vectors of length 2.
 
-Write a new generic called `my_density()` and provide different methods
-depending on whether you provide a vector or a matrix, storing density estimates
-for each column if it is a matrix.
+. . .
 
-Modify the `plot()` method to handle the new object.
+### Exercise 3: Manually Insert Bandwidth Selection
+
+Sample a data set from a Gaussial mixture model, varying the
+standard deviation of the components. How does the different bandwidth
+selection methods in `density()` perform?
