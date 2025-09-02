@@ -1170,8 +1170,8 @@ Write short functions and name them descriptively.
 
 ### Exercise 1: Hello, world!
 
-Write a function `greet` that takes a name as an argument and prints “Hello,
-<name>!”. If no name is given, it should print “Hello, world!”.
+Write a function `greet` that takes a name as an argument and prints "Hello,
+Name!". If no name is given, it should print “Hello, World!”.
 
 *Hint: use `is.null()` to check if an argument was provided.*
 
