@@ -3,9 +3,7 @@ format:
     incremental: false
     include-in-header:
       - text: |
-          \setbeamertemplate{page number in head/foot}[appendixframenumber]
-          \usepackage{fontsetup}
-          \usepackage[hidenotes]{pdfpc}
+          \pdfpcsetup{hidenotes}
 
 filters:
   - incremental-to-static-slides
