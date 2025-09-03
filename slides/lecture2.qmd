@@ -1178,8 +1178,8 @@ plot_psi_density(0.0001, n = 10001)
 If $x_i \neq x_j$ when $i \neq j$, then
 $$
 \begin{aligned}
-  \ell(f-h) & = \sum_{i} \log\left(1 + \sum_{j \neq i} e^{-(x_i - x_j)^2 / (2 h^2)} \right) - n \log(nh\sqrt{2 \pi}) \\ \pause
-            & \sim - n \log(nh\sqrt{2 \pi})
+  \ell(\bar{f}_h) & = \sum_{i} \log\left(1 + \sum_{j \neq i} e^{-(x_i - x_j)^2 / (2 h^2)} \right) - n \log(nh\sqrt{2 \pi}) \\ \pause
+                  & \sim - n \log(nh\sqrt{2 \pi})
 \end{aligned}
 $$
 
