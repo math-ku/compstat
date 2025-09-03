@@ -179,12 +179,10 @@ function(x, digits = getOption("digits"), ...) {
 }
 ```
 
-::: {.notes}
-
-- Tell the students about `:::` and that it is not something they should use
+\pdfpcnote{
+  Tell the students about `:::` and that it is not something they should use
   themselves.
-
-:::
+}
 
 ## Histogram Objects
 
@@ -703,16 +701,11 @@ $$
   \end{aligned}
 $$
 
-::: {.notes}
-
-- For a continuous random variable, the probability of \( X \) falling in a very small interval around \( x \) is very small.
-- The probability density function \( f_0(x) \) tells us how likely \( X \) is to be near \( x \).
-- For a small interval \((x-h, x+h)\), the probability is approximately the height of the density at \( x \) times the width of the interval.
-- Mathematically:  
-  \( P(X \in (x-h, x+h)) \approx f_0(x) \times (2h) \)
-- This approximation gets better as \( h \) gets smaller, because the density doesn’t change much over a tiny interval.
-
-:::
+\pdfpcnote{
+  - Probability of X in (x-h, x+h) is small for small h
+  - Density at x times width of interval
+  - Approximation gets better as h gets smaller
+}
 
 ## Kernels
 
@@ -1089,11 +1082,9 @@ $$
 \bar{f}_h(x) = \frac{1}{nh \sqrt{2 \pi}} \sum_{j=1}^n e^{- \frac{(x - x_j)^2}{2 h^2} }.
 $$
 
-::: {.notes}
-
-$\bar{f}_h(x)$ is just a KDE with Gaussian kernel and bandwidth $h$.
-
-:::
+\pdfpcnote{
+  $\bar{f}_h(x)$ is just a KDE with Gaussian kernel and bandwidth $h$.
+}
 
 ---
 
@@ -1212,11 +1203,9 @@ $$ where
 $\operatorname{MSE}_h(x) = \operatorname{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
 
-::: {.notes}
-
-Derive this for the uniform kernel (if you have time.)
-
-:::
+\pdfpcnote{
+  Derive this for the uniform kernel (if you have time.)
+}
 
 ## AMISE
 
