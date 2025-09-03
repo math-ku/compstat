@@ -702,8 +702,8 @@ $$
 $$
 
 \pdfpcnote{
-  - Probability of X in (x-h, x+h) is small for small h
-  - Density at x times width of interval
+  - Probability of X in (x-h, x+h) is small for small h\\
+  - Density at x times width of interval\\
   - Approximation gets better as h gets smaller
 }
 
