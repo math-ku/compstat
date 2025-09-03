@@ -195,7 +195,7 @@ function(x, digits = getOption("digits"), ...) {
 
 ## Histogram Objects
 
-:::: {.columns}
+:::: {.columns align=center}
 
 ::: {.column width="47%"}
 
@@ -681,8 +681,8 @@ Because
 
 . . .
 
-- we want to compare data with the parametric estimate,
-- we don't know a suitable parametric model, and
+- we want to compare data with the parametric estimate,\pause
+- we don't know a suitable parametric model, and\pause
 - we want to explore the data (through visualization).
 
 ## Density Estimation
@@ -739,8 +739,7 @@ $$
 #| fig-height: 1.5
 ggplot(tibble(x = seq(-2, 2, length.out = 100)), aes(x)) +
   geom_line(aes(y = dunif(x, -1, 1) / 2)) +
-  labs(x = "x", y = "K(x)") +
-  theme_minimal()
+  labs(x = "x", y = "K(x)")
 ```
 
 Leads to expression on last slide.
@@ -762,8 +761,7 @@ $$
 #| fig-height: 1.5
 ggplot(tibble(x = seq(-4, 4, length.out = 100)), aes(x)) +
   geom_line(aes(y = dnorm(x))) +
-  labs(x = "x", y = "K(x)") +
-  theme_minimal()
+  labs(x = "x", y = "K(x)")
 ```
 
 :::
@@ -1001,15 +999,8 @@ ggplot(df_diff, aes(x, y)) +
 
 \medskip
 
-These tests are ad-hoc, but they illustrate the idea of testing.
-Later in the course we will learn about formal testing using the
-`testthat` package.
-
-. . .
-
-\medskip
-
-Here's a rough idea:
+These tests are ad-hoc. Later in the course we will learn about formal testing
+using the `testthat` package.\pause Here's a rough idea:
 
 ```{r}
 test <- all.equal(f_hat$y, f_hat_dens$y)
@@ -1029,10 +1020,61 @@ test
 
 You need to decide on the tolerance level on a case-by-case basis.
 
-## Density Estimation
+## Maximum Likelihood Estimation
 
-For a parametric family we can use the MLE
-$$\hat{\theta} = \text{arg max}_{\theta} \sum_{j=1}^n \log f_{\theta}(x_j).$$
+One might wonder if we can use maximum likelihood estimation (MLE) to
+estimate the density. I.e., solve
+$$
+  \hat{\theta} = \text{arg max}_{\theta} \sum_{j=1}^n \log f_{\theta}(x_j).
+$$
+
+. . . 
+
+:::: {.columns align=center}
+
+::: {.column width="47%"}
+
+### First Try
+
+Use the empirical mean and standard deviation to estimate
+the parameters of a Gaussian density.
+
+. . .
+
+\medskip
+
+How does this work?
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+#| fig-cap: "Answer: rather poorly."
+psi_mean <- mean(phipsi$psi)
+psi_sd <- sd(phipsi$psi)
+
+ggplot(phipsi, aes(psi)) +
+  geom_histogram(aes(y = ..density..), fill = "grey60") +
+  geom_rug(alpha = 0.3) +
+  stat_function(
+    fun = dnorm,
+    args = list(mean = psi_mean, sd = psi_sd),
+    color = "blue"
+  ) +
+  labs(x = expression(psi), y = "density")
+```
+
+:::
+
+::::
+
+## A Second Try
+
+How about maximizing over \alert{all possible} densities?
+
+\medskip
 
 . . .
 
@@ -1045,8 +1087,14 @@ $$
 
 Let's see what happens for the Gaussian kernel density estimate
 $$
-f(x) = f_h(x) = \frac{1}{nh \sqrt{2 \pi}} \sum_{j=1}^n e^{- \frac{(x - x_j)^2}{2 h^2} }.
+\bar{f}_h(x) = \frac{1}{nh \sqrt{2 \pi}} \sum_{j=1}^n e^{- \frac{(x - x_j)^2}{2 h^2} }.
 $$
+
+::: {.notes}
+
+$\bar{f}_h(x)$ is just a KDE with Gaussian kernel and bandwidth $h$.
+
+:::
 
 ---
 
@@ -1066,10 +1114,9 @@ plot_psi_density <- function(h, n = 1001) {
   ggplot(psi_df, aes(x = psi)) +
     geom_histogram(aes(y = ..density..), fill = "grey60") +
     geom_rug(alpha = 0.3) +
-    geom_line(data = dens_df, aes(x = x, y = y), color = "blue", linewidth = 1) +
+    geom_line(data = dens_df, aes(x = x, y = y), color = "blue") +
     labs(x = expression(psi), y = "density") +
-    lims(y = c(0, 0.5)) +
-    theme_minimal()
+    lims(y = c(0, 0.5))
 }
 
 # Example plot for h = 1
@@ -1128,8 +1175,7 @@ plot_psi_density(0.01, n = 10001)
 plot_psi_density(0.0001, n = 10001)
 ```
 
-
-## Log-Likelihood
+## The MLE Does Not Exist
 
 If $x_i \neq x_j$ when $i \neq j$, then
 $$
@@ -1143,8 +1189,7 @@ $$
 
 \bigskip
 
-Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is **no MLE** in the set
-of distributions with densities.
+Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is **no MLE**.
 
 ## ISE, MISE, and MSE
 
@@ -1167,18 +1212,19 @@ $$
 $$ where
 $\operatorname{MSE}_h(x) = \operatorname{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
-. . .
 
-\medskip
+::: {.notes}
 
-Let's derive the case of the uniform kernel!
+Derive this for the uniform kernel (if you have time.)
+
+:::
 
 ## AMISE
 
 If $K$ is a square-integrable probability density with mean 0,
 $$
   \mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((nh)^{-1} + h^4)
-$$
+$$ \pause
 where the _asymptotic mean integrated squared error_ is
 $$
   \mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}
@@ -1189,9 +1235,10 @@ with $\sigma_K^2 = \int t^2 K(t) \ dt.$
 
 \medskip
 
-Using various plug-in estimates of $\|f_0''\|_2^2$, AMISE can be used to
-estimate the _asymptotically optimal bandwidth_ in a mean integrated squared
-error sense.
+### Asymptotically Optimal Bandwidth
+
+Using plug-in estimates of $\|f_0''\|_2^2$, AMISE can be used to
+estimate the _asymptotically optimal bandwidth_ (with respect to MISE).
 
 ## Amino Acid Angles (Silverman, the default)
 
@@ -1201,15 +1248,15 @@ library(patchwork)
 
 phipsi_plot <- function(bw) {
   phi <-  ggplot(phipsi, aes(x = phi)) +
-    geom_histogram(aes(y = ..density..)) +
+    geom_histogram(aes(y = ..density..), fill = "grey60") +
     geom_rug(alpha = 0.3) +
-    geom_density(bw = bw, color = "dark orange", linewidth = 1) +
+    geom_density(bw = bw, color = "blue") +
     labs(x = expression(Phi), y = "density")
 
   psi <- ggplot(phipsi, aes(x = psi)) +
-    geom_histogram(aes(y = ..density..)) +
+    geom_histogram(aes(y = ..density..), fill = "grey60") +
     geom_rug(alpha = 0.3) +
-    geom_density(bw = bw, color = "dark orange", linewidth = 1) +
+    geom_density(bw = bw, color = "blue") +
     labs(x = expression(Psi), y = "density")
 
   phi + psi + plot_layout(axes = "collect")
@@ -1259,7 +1306,7 @@ phipsi_plot("sj")
 
 ::: {.standout}
 
----
+##
 
 Questions?
 
