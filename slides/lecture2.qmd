@@ -649,6 +649,12 @@ OOP code is often less portable than functional code.
 OOP can introduce unnecessary complexity. You have to understand the class system and
 how methods are dispatched.
 
+\pdfpcnote{
+  - Joe Armstrong is one of the creators of Erlang.\\
+  - Mention that people in course have different opinions
+    about OOP.
+}
+
 # Density Estimation
 
 ## Density Estimation
@@ -1020,9 +1026,11 @@ $$
   \hat{\theta} = \text{arg max}_{\theta} \sum_{j=1}^n \log f_{\theta}(x_j).
 $$
 
+\bigskip
+
 . . . 
 
-:::: {.columns align=center}
+:::: {.columns}
 
 ::: {.column width="47%"}
 
@@ -1043,7 +1051,7 @@ How does this work?
 
 ```{r}
 #| echo: false
-#| fig-cap: "Answer: rather poorly."
+#| fig-height: 1.5
 psi_mean <- mean(phipsi$psi)
 psi_sd <- sd(phipsi$psi)
 
@@ -1083,7 +1091,7 @@ $$
 $$
 
 \pdfpcnote{
-  $\bar{f}_h(x)$ is just a KDE with Gaussian kernel and bandwidth $h$.
+  f_h is just a KDE with Gaussian kernel and bandwidth h.
 }
 
 ---
