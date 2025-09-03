@@ -50,8 +50,6 @@ format:
           \setbeamertemplate{page number in head/foot}[appendixframenumber]
           \setbeameroption{show notes}
           \usepackage{fontsetup}
-          \usepackage{animate}
-          \usepackage{media9}
       - file: slides/packages.tex
 
 date-format: long
