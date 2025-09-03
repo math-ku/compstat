@@ -49,7 +49,6 @@ format:
       - text: |
           \setbeamertemplate{page number in head/foot}[appendixframenumber]
           \usepackage{fontsetup}
-          \usepackage{pdfpc}
       - file: slides/packages.tex
 
 date-format: long
