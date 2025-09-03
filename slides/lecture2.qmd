@@ -1,12 +1,5 @@
 ---
 title: "Object-Oriented Programming and Density Estimation"
-
-format:
-  beamer:
-    keep-tex: true
-
-execute:
-  cache: false
 ---
 
 {{< include _common.qmd >}}
@@ -532,6 +525,11 @@ matrix_stats <- summarize_data(mat)
 
 Printing the matrix summary calls the print method recursively through the list.
 
+```{r}
+#| eval: false
+matrix_stats
+```
+
 . . .
 
 :::
@@ -540,6 +538,7 @@ Printing the matrix summary calls the print method recursively through the list.
 
 
 ```{r}
+#| echo: false
 matrix_stats
 ```
 
