@@ -998,7 +998,12 @@ ggplot(df_diff, aes(x, y)) +
 \medskip
 
 These tests are ad-hoc. Later in the course we will learn about formal testing
-using the `testthat` package.\pause 
+using the `testthat` package.
+
+. . .
+
+\medskip
+
 Here's a rough idea:
 
 ```{r}
@@ -1014,8 +1019,6 @@ test
 ```
 
 . . .
-
-### Numerical Tolerance
 
 You need to decide on the tolerance level on a case-by-case basis.
 
