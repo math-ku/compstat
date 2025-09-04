@@ -200,7 +200,7 @@ defined.
 ```{r temp-hist-src}
 #| eval: false
 phi_hist <- hist(
-  phipsi$ph
+  phipsi$phi
 )
 ```
 
