@@ -40,18 +40,17 @@ for you to solve independently at your own pace.
   - [A8-A10](https://cswr.nrhstat.org/app-r#app-ex) (CSwR, Appendix A)
   - [2.1-2.6](https://cswr.nrhstat.org/density#density:ex) (CSwR, Chapter 2)
 
-<!-- ### Week 2 -->
-<!---->
-<!-- #### Lecture 3: Measuring and Improving Performance -->
-<!---->
-<!-- - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf) -->
-<!-- - **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and -->
-<!--   [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (AdvR) -->
-<!-- - **Exercises:** -->
-<!--   [1-3 (AdvR, Section 24.4.3)](https://adv-r.hadley.nz/perf-improve.html#exercises-71) -->
-<!---->
-<!-- #### Exercise Session 2
+### Week 2
 
+#### Lecture 3: Measuring and Improving Performance
+
+<!-- - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf) -->
+- **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and
+  [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (Advanced R)
+- **Exercises:**
+  [1-3 (Section 24.4.3, AdvR)](https://adv-r.hadley.nz/perf-improve.html#exercises-71)
+
+<!-- #### Exercise Session 2
 - **Main topic**: Functional Programming vs OOP (+ Currying/Function Factories)
 - In class walkthrough: A.8-A.12 (CSwR, Appendix A) and exercises 2.1-2.6 (CSwR,
   Chapter 2) -->
