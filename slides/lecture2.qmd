@@ -309,8 +309,6 @@ you can write methods for the generic functions `print()`, `plot()`, etc.
 
 . . .
 
-\medskip
-
 For instance, you may want a function that behaves differently
 depending on whether the input is a vector or a matrix.
 
