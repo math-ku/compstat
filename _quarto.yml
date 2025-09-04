@@ -33,6 +33,7 @@ website:
         href: index.qmd
       - overview.qmd
       - assignments.qmd
+      - exercises.qmd
       - exam.qmd
       - text: "FAQ"
         href: faq.qmd

@@ -1,0 +1,8 @@
+---
+title: Exercises
+listing:
+  type: grid
+  contents: exercises
+  fields: [title, subtitle, image, description]
+format: html
+---

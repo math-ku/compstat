@@ -28,6 +28,7 @@ for you to solve independently at your own pace.
 
 - **Main topic**: Setting up a proper development environment for R/Rcpp
 - **In class walkthrough**: A1-A7 (CSwR, Appendix A)
+- **Solutions**: [Exercise 1 Solutions](exercises/U1.qmd)
 
 #### Lecture 2: OOP and Density Estimation
 
