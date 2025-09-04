@@ -3,6 +3,18 @@ project:
   render:
     - "*.qmd"
     - "*.md"
+    - "!slides/lecture3.qmd"
+    - "!slides/lecture4.qmd"
+    - "!slides/lecture5.qmd"
+    - "!slides/lecture6.qmd"
+    - "!slides/lecture7.qmd"
+    - "!slides/lecture8.qmd"
+    - "!slides/lecture9.qmd"
+    - "!slides/lecture10.qmd"
+    - "!slides/lecture11.qmd"
+    - "!slides/lecture12.qmd"
+    - "!slides/lecture13.qmd"
+    - "!slides/lecture14.qmd"
 
 website:
   title: "Computational Statistics"
