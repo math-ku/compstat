@@ -21,6 +21,8 @@ phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 
 Identifying bottlenecks in code
 
+. . .
+
 ### Benchmarking
 
 Comparing performance of implementations
@@ -31,7 +33,70 @@ Comparing performance of implementations
 
 Writing efficient code
 
+## Two Types of Performance
+
+### Speed
+
+How long does it take to run?
+
+. . .
+
+### Memory
+
+How much memory space does it use?
+
+. . .
+
+### At Odds
+
+Often, improving one worsens the other.
+
+. . .
+
+### In this Course
+
+We will focus on **speed**, not **memory**.
+
+## Do You Even Need to Optimize?
+
+Before starting to think about improving performance---do you
+even need to do so?
+
+. . .
+
+### The Root of All Evil
+
+\medskip
+
+> We _should_ forget about small efficiencies, say about 97% of the time:
+> premature optimization is the root of all evil. Yet we should not pass up our
+> opportunities in that critical 3%.
+>
+> \medskip
+> _—Donald Knuth_
+
+. . .
+
+\medskip
+
+Maybe your code is already fast enough (for your use case)?
+
+## Benchmarking
+
+A good place to start is to benchmark your code against existing
+implementations^[Provided they exist!].
+
+\pause\medskip
+
+### Example
+
+For instance, let's say we want to compute the standard deviation
+of each column of a matrix.
+
+
 ## Profiling
+
+But if your code **is** too slow, then it's time to 
 
 A profiler quantifies how much time each part of a function takes up. R uses a
 **sampling** profiler.
@@ -132,17 +197,6 @@ bench::mark(
   refactor and optimize.
 
 . . .
-
-### The Root of All Evil
-
-\medskip
-
-> We _should_ forget about small efficiencies, say about 97% of the time:
-> premature optimization is the root of all evil. Yet we should not pass up our
-> opportunities in that critical 3%.
->
-> \medskip
-> _—Donald Knuth_
 
 ## Example: Density Estimation
 
