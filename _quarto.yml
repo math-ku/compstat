@@ -44,7 +44,8 @@ format:
     html-math-method: katex
   beamer:
     aspectratio: 1610
-    classoption: onlytextwidth
+    classoption:
+      - onlytextwidth
     theme: moloch
     colortheme: moloch-tomorrow
     keep-tex: true

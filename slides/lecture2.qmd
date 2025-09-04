@@ -1,5 +1,7 @@
 ---
 title: "Object-Oriented Programming and Density Estimation"
+execute:
+  cache: false
 ---
 
 {{< include _common.qmd >}}
