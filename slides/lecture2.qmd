@@ -1269,7 +1269,8 @@ $$
 ```{r}
 #| echo: false
 #| fig-width: 5.5
-#| fig-cap: Silverman's rule of thumb bandwidth.
+#| fig-cap: "Silverman's rule of thumb bandwidth (default in `density()`, uses
+#|          `bw = 'nrd'`)."
 phipsi_plot("nrd0")
 ```
 
@@ -1284,7 +1285,7 @@ $$
 ```{r}
 #| echo: false
 #| fig-width: 5.5
-#| fig-cap: Scott's rule of thumb bandwidth.
+#| fig-cap: "Scott's rule of thumb bandwidth, using `bw = 'nrd'`."
 phipsi_plot("nrd")
 ```
 
@@ -1297,7 +1298,8 @@ More elaborate method!
 ```{r}
 #| echo: false
 #| fig-width: 5.5
-#| fig-cap: Sheather & Jones' bandwidth.
+#| fig-cap: "Sheather & Jones' bandwidth. Uses `bw = 'SJ'` (in `density()`) and
+#|          `bw = 'sj'` (in ggplot2)."
 phipsi_plot("sj")
 ```
 
