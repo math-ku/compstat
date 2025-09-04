@@ -47,6 +47,7 @@ format:
     classoption: onlytextwidth
     theme: moloch
     colortheme: moloch-tomorrow
+    keep-tex: true
     fig-width: 2.6
     fig-height: 2
     colorlinks: true
@@ -60,8 +61,6 @@ format:
     include-in-header:
       - text: |
           \setbeamertemplate{page number in head/foot}[appendixframenumber]
-          \usepackage{fontsetup}
-          \usepackage[hidenotes]{pdfpc}
       - file: slides/packages.tex
 
 date-format: long
