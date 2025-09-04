@@ -1243,7 +1243,7 @@ estimate the _asymptotically optimal bandwidth_ (with respect to MISE).
 library(patchwork)
 
 phipsi_plot <- function(bw) {
-  phi <-  ggplot(phipsi, aes(x = phi)) +
+  phi <- ggplot(phipsi, aes(x = phi)) +
     geom_histogram(aes(y = ..density..), fill = "grey60") +
     geom_rug(alpha = 0.3) +
     geom_density(bw = bw, color = "blue") +
