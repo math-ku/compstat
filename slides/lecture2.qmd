@@ -998,7 +998,8 @@ ggplot(df_diff, aes(x, y)) +
 \medskip
 
 These tests are ad-hoc. Later in the course we will learn about formal testing
-using the `testthat` package.\pause Here's a rough idea:
+using the `testthat` package.\pause 
+Here's a rough idea:
 
 ```{r}
 test <- all.equal(f_hat$y, f_hat_dens$y)
