@@ -7,8 +7,5 @@ format:
       - text: |
           \renewcommand{\pdfpcnote}[1]{}
 
-filters:
-  - incremental-to-static-slides
-
 execute:
   cache: false
