@@ -260,7 +260,7 @@ S3 classes are standard data structures (typically lists) with _class labels_.
 
 \bigskip
 
-It is a simple but informal system: no formal object defintion and no type checking.
+It is a simple but informal system: no formal object definition and no type checking.
 
 . . .
 
@@ -292,7 +292,7 @@ The system is widely used to write methods for the generic functions `print()`,
 
 ### Handle function output
 
-One common use of OOP is to make it easier to handle object that your
+One common use of OOP is to make it easier to handle objects that your
 functions create, especially if they are complex (e.g. `lm()`).
 
 . . .
@@ -1341,6 +1341,6 @@ vectors of length 2.
 
 ### Exercise 3: Manually Insert Bandwidth Selection
 
-Sample a data set from a Gaussial mixture model, varying the
+Sample a data set from a Gaussian mixture model, varying the
 standard deviation of the components. How does the different bandwidth
 selection methods in `density()` perform?
