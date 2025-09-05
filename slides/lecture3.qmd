@@ -81,6 +81,12 @@ even need to do so?
 
 Maybe your code is already fast enough (for your use case)?
 
+\medskip
+
+. . .
+
+Often, improving performance comes at the cost of code readability.
+
 ## Benchmarking
 
 A good place to start is to benchmark your code against existing
