@@ -1,43 +1,31 @@
 kern_dens <- function(x, h, m = 512) {
   rg <- range(x)
-  grid_points <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
   y <- numeric(m)
-  for (i in seq_along(grid_points)) {
-    for (j in seq_along(x)) {
-      y[i] <- y[i] + exp(-(grid_points[i] - x[j])^2 / (2 * h^2))
-    }
-  }
-  y <- y / (sqrt(2 * pi) * h * length(x))
-  list(x = grid_points, y = y)
-}
 
-kern_dens_detail <- function(x, h, m = 512) {
-  rg <- range(x)
-  grid_points <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
-  y <- numeric(m)
-  for (i in seq_along(grid_points)) {
+  for (i in seq_along(xx)) {
     for (j in seq_along(x)) {
-      ## y[i] <- y[i] + exp(- (xx[i] - x[j])^2 / (2 * h^2))
-      z <- grid_points[i] - x[j]
-      z <- z^2
-      z <- z / (2 * h^2)
-      z <- exp(-z)
-      y[i] <- y[i] + z
+      y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
     }
   }
+
   y <- y / (sqrt(2 * pi) * h * length(x))
-  list(x = grid_points, y = y)
+
+  list(x = xx, y = y)
 }
 
 kern_dens_vec <- function(x, h, m = 512) {
   rg <- range(x)
-  grid_points <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
   y <- numeric(m)
-  const <- (sqrt(2 * pi) * h * length(x))
-  for (i in seq_along(grid_points)) {
-    y[i] <- sum(exp(-(grid_points[i] - x)^2 / (2 * h^2))) / const
+
+  for (i in seq_along(xx)) {
+    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) 
   }
-  list(x = grid_points, y = y)
+
+  y <- y / (sqrt(2 * pi) * h * length(x))
+
+  list(x = xx, y = y)
 }
 
 ## Binning is done by constructing an equidistant grid of centers from
@@ -46,7 +34,6 @@ kern_dens_vec <- function(x, h, m = 512) {
 ## There are m centers in this sequence. A convenient technique for finding
 ## the correct bin for x[i] is via floor, which below will give j if and only if
 ## lo + (j - 0.5) delta <= x[i] < lo + (j + 0.5) delta
-
 
 kern_bin <- function(x, l, u, B) {
   w <- numeric(B)
