@@ -1145,7 +1145,12 @@ Profile `gauss()`. Where is the bottleneck? Can you improve the performance?
 ### Exercise 3
 
 Write a parallelized version of the `gauss()` function using the `foreach`
-package.
+package. Your function should take a vector and devide the work across multiple
+cores.
+
+\medskip\pause
+
+Benchmark your implementation against the original `gauss()` function.
 
 
 ## Summary
