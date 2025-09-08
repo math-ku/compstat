@@ -751,7 +751,7 @@ ggplot(bind_rows(df1, df2), aes(x, y, fill = method, color = method)) +
 ##
 
 ```{r test-kern-dens-bench}
-#| fig-width: 5.5
+#| fig-width: 5.3
 #| echo: false
 #| fig-cap: Absolute errors due to bining decrease with increasing length of
 #|   data sequence.
