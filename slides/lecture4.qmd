@@ -94,24 +94,24 @@ where $N_i = N(x_i)$.
 
 \medskip\pause
 
-$S_{ij} = \frac{1}{k} \mathbf{1}_{N_i}(j)$, $\mathbf{S} = (S_{ij})$, and
+$S_{ij} = \frac{1}{k} \symbf{1}_{N_i}(j)$, $\symbf{S} = (S_{ij})$, and
 $$
-  \hat{\bm{f}} = (\hat{f}_i) = \mathbf{S} \mathbf{y}.
+  \hat{\symbf{f}} = (\hat{f}_i) = \symbf{S} \symbf{y}.
 $$
 
 . . .
 
-$\hat{\bm{f}}$ is an estimator of the vector $(f(x_i))$.
+$\hat{\symbf{f}}$ is an estimator of the vector $(f(x_i))$.
 
 \pdfpcnote{
-  The vector f̂ can be computed as a linear function of y.
-  S is a relatively sparse n × n matrix.
+  The vector hat(f) can be computed as a linear function of y.
+  S is a relatively sparse n x n matrix.
 }
 
 ## Linear Smoothers
 
-$(f(x_i))$ of the form $\mathbf{S} \mathbf{y}$ for a _smoother matrix_
-$\mathbf{S}$ is called a _linear smoother_.
+$(f(x_i))$ of the form $\symbf{S} \symbf{y}$ for a _smoother matrix_
+$\symbf{S}$ is called a _linear smoother_.
 
 \pause\medskip
 
@@ -121,9 +121,11 @@ works for $x$-values in any metric space.
 \pause\medskip
 
 The representation of a linear smoother as a matrix-vector product,
-$$\mathbf{S} \mathbf{y}$$
+$$
+  \symbf{S} \symbf{y}
+$$
 is theoretically useful, but often not the best way to actually compute
-$\hat{\mathbf{f}}$.
+$\hat{\symbf{f}}$.
 
 ## Running Mean
 
@@ -131,7 +133,7 @@ When $x_i \in \mathbb{R}$ we can sort data according to $x$-values and then use
 a _symmetric_ neighbor definition:
 
 $$
-  N_i = \{i - (k - 1) / 2, i - (k - 1) / 2 + 1, \ldots, i - 1 , i, i + 1, \ldots,   i + (k - 1) / 2\}
+  N_i = \{i - (k - 1) / 2, i - (k - 1) / 2 + 1, \ldots, i - 1 , i, i + 1, \ldots, i + (k - 1) / 2\}
 $$
 (for $k$ odd.)
 
@@ -192,7 +194,6 @@ run_mean <- function(y, k) {
   for (i in (m + 1):(n - m - 1)) {
     s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m]
   }
-
   s
 }
 ```
@@ -206,8 +207,9 @@ run_mean <- function(y, k) {
 
 ```{r nuuk-NN-plot2}
 #| warning: false
-#| fig-width: 5.5
-#| fig-height: 3
+#| fig-width: 5
+#| fig-height: 2.2
+#| fig-cap: Running mean smoother with $k = 11$.
 f_hat <- run_mean(nuuk_year$Temperature, 11)
 nuuk_plot + geom_line(aes(y = f_hat), color = "blue")
 ```
@@ -225,7 +227,10 @@ autoregression).
 
 ```{r run-mean-nas, echo=2}
 op <- options(digits = 2)
-f_hat_filter <- stats::filter(nuuk_year$Temperature, rep(1 / 11, 11))
+f_hat_filter <- stats::filter(
+  nuuk_year$Temperature,
+  rep(1 / 11, 11)
+)
 f_hat_filter[c(1:10, 137:147)]
 options(digits = op$digits)
 ```
@@ -234,15 +239,18 @@ options(digits = op$digits)
 
 ```{r runmean-test}
 f_hat <- run_mean(nuuk_year$Temperature, 11)
-f_hat_filter <- stats::filter(nuuk_year$Temperature, rep(1 / 11, 11))
+f_hat_filter <- stats::filter(
+  nuuk_year$Temperature,
+  rep(1 / 11, 11)
+)
 
 all.equal(f_hat, as.numeric(f_hat_filter))
 ```
 
-. . .
+\pause
 
-^[There is a `filter()` function in the **dplyr** package (part of the
-tidyverse), so look out for name clashes. Safest to call `stats::filter()`.]
+There is a `filter()` function in the **dplyr** package (part of the
+tidyverse), so look out for name clashes. Safest to call `stats::filter()`.
 
 \pdfpcnote{
   - filter(): general linear filtering function
@@ -250,14 +258,14 @@ tidyverse), so look out for name clashes. Safest to call `stats::filter()`.]
   - `rep(1, /11, 11)` are MA coefficients
 }
 
-## Benchmarking (Using `bench::press()`)
+## 
 
 ```{r runMeanBench}
 #| echo: false
 #| warning: false
 #| message: false
 #| fig-width: 5.5
-#| fig-height: 3.5
+#| fig-height: 3
 nn_bench <- bench::press(
   n = c(512, 1024, 2048, 4196),
   {
@@ -279,7 +287,7 @@ plot(nn_bench)
 
 The Matrix-vector multiplication is $O(n^2)$.
 
-. . .
+\medskip\pause
 
 The two other algorithms are $O(n)$.
 
@@ -290,11 +298,9 @@ If data is i.i.d. with $V(Y \mid X) = \sigma^2$ and $f(x) = E(Y \mid X = x)$,
 
 $$
 \begin{aligned}
-  \mathrm{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\ & =
-  \operatorname{Var}\big(f(x)-\hat{f}(x)\big) +
-  \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\ & =
-  \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \underbrace{\left(f(x) -
-  \frac{1}{k} \sum_{l \in N(x)} f(x*l)\right)^2}*{\text{squared bias}}.
+  \mathrm{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\
+                  & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\
+                  & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \underbrace{\left(f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x*l)\right)^2}*{\text{squared bias}}.
 \end{aligned}
 $$
 
@@ -308,19 +314,21 @@ $$
 
 ## Leave-One Out Cross-Validation (LOOCV)
 
-The running mean/nearest neighbour smoother is a _linear smoother_,
-$\hat{\mathbf{f}} = \mathbf{S} \mathbf{Y}$.
+The running mean/nearest neighbor smoother is a _linear smoother_,
+$\hat{\symbf{f}} = \symbf{S} \symbf{Y}$.
 
-. . .
+\medskip\pause
 
 How to predict $y_i$ if $(x_i, y_i)$ is left out?
 
-. . .
+\medskip\pause
 
 A _definition_ for a linear smoother is
-$$\hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}}.$$
+$$
+  \hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}}.
+$$
 
-. . .
+\medskip\pause
 
 For many smoothing procedures with a natural "out-of-sample" prediction method,
 the identity above holds.
@@ -334,8 +342,7 @@ Can for running mean in principle compute this without leaving anything out.
 It follows that for **leave-one-out cross validation,**
 
 $$
-\mathrm{LOOCV} = \sum_{i} (y_i - \hat{f}^{-i}_i)^2 =
-\sum_{i} \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2
+  \text{LOOCV} = \sum_{i} (y_i - \hat{f}^{-i}_i)^2 = \sum_{i} \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2
 $$
 
 . . .
@@ -349,18 +356,17 @@ loocv <- function(k, y) {
 }
 ```
 
-^[The implementation removes missing values due to the way we handle the
+[The implementation removes missing values due to the way we handle the
 boundaries, and it uses `mean()` instead of `sum()` to correctly adjust for
-this.]
+this.
 
-::: {.notes}
-
+\pdfpcnote{
 - For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$.
+
 - **Derive the formula on the blackboard!**
+}
 
-:::
-
-## LOOCV
+## 
 
 ```{r nuuk-running-loocv}
 k <- seq(3, 40, 2)
@@ -368,9 +374,12 @@ cv_error <- sapply(k, function(kk) loocv(kk, nuuk_year$Temperature))
 k_opt <- k[which.min(cv_error)]
 ```
 
---
+\medskip\pause
 
-```{r nuuk-running-loocv-plot, echo = FALSE, fig.width = 9, fig.height = 5}
+```{r nuuk-running-loocv-plot}
+#| fig-width: 5
+#| fig-height: 2.5
+#| echo: false
 ggplot(tibble(k, cv_error), aes(k, cv_error)) +
   geom_vline(xintercept = k_opt, color = "dark orange") +
   geom_line() +
@@ -378,11 +387,15 @@ ggplot(tibble(k, cv_error), aes(k, cv_error)) +
   labs(y = "LOOCV Error", x = expression(k))
 ```
 
-## LOOCV
+## 
 
 The optimal choice of $k$ is `r k_opt`.
 
-```{r nuuk-NN-plot3, warning=FALSE, fig.width = 9, fig.height = 5, echo = FALSE}
+```{r nuuk-NN-plot3}
+#| warning: false
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot +
   geom_line(aes(y = run_mean(nuuk_year$Temperature, k_opt)), color = "blue")
 ```
@@ -405,17 +418,17 @@ But another idea is to use \alert{smoothing splines} instead.
 
 The minimizer of
 $$
-  L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \mathrm{d} z}_{\|f''\|_2^2}
+  L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \mathrm{d} z}_{|f''|_2^2}
 $$
 is a **cubic spline** with **knots** in the data points $x_i$, that is, a
 function
 $$
   f = \sum_j \beta_j \varphi_j
-  $$
+$$
 where $\varphi_j$ is a basis function for the $n$-dimensional space of such
 splines.
 
-. . .
+\medskip\pause
 
 Cubic splines are piecewise degree 3 polynomials in between knots.
 
@@ -425,27 +438,26 @@ Cubic splines are piecewise degree 3 polynomials in between knots.
 - **Derive the minimizer on the blackboard!**
 }
 
-### Loss Function
+## Loss Function
 
 In vector notation
 $$
-  \hat{\mathbf{f}} = \boldsymbol{\Phi}\hat{\beta}
+  \hat{\symbf{f}} = \symbf{\Phi}\hat{\beta}
 $$
-with $\boldsymbol{\Phi}_{ij} = \varphi_j(x_i)$, and
+with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and\pause
 $$
-\begin{aligned} 
-  L(\mathbf{f}) & = (\mathbf{y} - \mathbf{f})^T (\mathbf{y} - \mathbf{f}) + \lambda \|f''\|_2^2 \\ 
-                & = (\mathbf{y} - \boldsymbol{\Phi}\beta)^T (\mathbf{y} - \boldsymbol{\Phi}\beta) + \lambda \beta^T \mathbf{\Omega} \beta
+\begin{aligned}
+  L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\ 
+               & = (\symbf{y} - \symbf{\Phi}\beta)^T (\symbf{y} - \symbf{\Phi}\beta) + \lambda \beta^T \symbf{\Omega} \beta
 \end{aligned}
 $$
 with
 $$
-  \mathbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \mathrm{d}z.
+  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \mathrm{d}z.
 $$
 
 \pdfpcnote{
-  Can rewrite penalty term in quadratic form $\lambda \beta^T \mathbf{\Omega}
-  \beta$.
+  Can rewrite penalty term in quadratic form $\lambda \beta^T \symbf{\Omega} \beta$.
 }
 
 
@@ -455,7 +467,7 @@ $$
 \pause\medskip
 
 We recognize this as a _linear smoother_ with smoother matrix
-$\mathbf{S}_{\lambda}$.
+$\symbf{S}_{\lambda}$.
 
 \pdfpcnote{
   Similar to ridge (Tikhonov) regression: OLS + squared l2 penalty.
@@ -463,7 +475,11 @@ $\mathbf{S}_{\lambda}$.
 
 ## Splines in R
 
-```{r splines, fig.width = 10, fig.height = 5, message = FALSE, warning = FALSE}
+```{r splines}
+#| fig-width: 5
+#| fig-height: 2
+#| message: false
+#| warning: false
 library(Matrix)
 library(splines)
 # Note the specification of repeated boundary knots
@@ -480,7 +496,8 @@ control points and is smooth.
 
 ## Penalty Matrix
 
-```{r Omega-Simpson, echo=FALSE}
+```{r Omega-Simpson}
+#| echo: false
 pen_mat <- function(inner_knots) {
   knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
   d <- diff(inner_knots) # the vector of knot differences; b - a
@@ -498,23 +515,29 @@ pen_mat <- function(inner_knots) {
 
 :::: {.columns}
 
-::: {.column width="47%"}
+::: {.column width="40%"}
 
 ```{r Omega-Simpson2}
 #| eval: false
-omega <- pen_mat(seq(0, 1, 0.1))
+omega <- pen_mat(
+  seq(0, 1, 0.1)
+)
 
 image(Matrix(omega))
 ```
 
+(See [slide source](/slides/lecture4.qmd) for implementation
+of `pen_mat()`.)
+
 :::
 
-::: {.column width="47%"}
+::: {.column width="54%"}
 
-```{r Omega-Simpson3}
+```{r}
 #| ref-label: Omega-Simpson2
+#| fig-width: 4
+#| fig-height: 2
 #| echo: false
-
 ```
 
 :::
@@ -523,13 +546,11 @@ image(Matrix(omega))
 
 . . .
 
-See [slide source](/slides/lecture4.qmd) for implementation
-of `pen_mat()`.
 
 ## Fitting a Smoothing Spline
 
-We implement the matrix-algebra directly for computing $\mathbf{S}_{\lambda}
-\mathbf{y}$.
+We implement the matrix-algebra directly for computing $\symbf{S}_{\lambda}
+\symbf{y}$.
 
 ```{r nuuk-smooth-spline}
 inner_knots <- nuuk_year$Year
@@ -553,20 +574,27 @@ smoother <- function(lambda) {
 }
 ```
 
-```{r nuuk-smoother-plot, fig.width = 10, fig.height = 6}
+##
+
+```{r nuuk-smoother-plot}
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot +
-  geom_line(aes(y = smoother(10)), color = "steelblue4") + # Undersmooth
-  geom_line(aes(y = smoother(1000)), color = "red") + # Smooth
-  geom_line(aes(y = smoother(100000)), color = "orange") # Oversmooth
+  geom_line(aes(y = smoother(10)), color = "blue") +
+  geom_line(aes(y = smoother(1000)), color = "red") +
+  geom_line(aes(y = smoother(100000)), color = "orange")
 ```
 
 ## Generalized Cross-Validation
 
-With $\mathrm{df} = \mathrm{trace}(\mathbf{S}) = \sum_{i=1}^n S_{ii}$ we
-replace $S_{ii}$ in LOOCV by $\mathrm{df} / n$ to get the **generalized**
+With $\text{df} = \text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$ we
+replace $S_{ii}$ in LOOCV by $\text{df} / n$ to get the **generalized**
 cross-validation criterion
-$$\mathrm{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / n}\right)^2.$$
---
+$$
+  \mathrm{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / n}\right)^2.
+$$
+
+. . .
 
 ### Implementation
 
@@ -578,7 +606,7 @@ gcv <- function(lambda, y) {
 }
 ```
 
-### GCV-Optimal $\lambda$
+## GCV-Optimal $\lambda$
 
 Apply `gcv()` across grid of $\lambda$-values and choose $\lambda$ that
 minimizes GCV.
@@ -589,7 +617,10 @@ gcv <- sapply(lambda, gcv, y = nuuk_year$Temperature)
 lambda_opt <- lambda[which.min(gcv)]
 ```
 
-```{r gc-plot, fig.width = 10, fig.height = 4.5, echo = FALSE}
+```{r gc-plot}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
 tibble(lambda, gcv) |>
   ggplot(aes(lambda, gcv)) +
   geom_vline(xintercept = lambda_opt, color = "dark orange") +
@@ -598,9 +629,11 @@ tibble(lambda, gcv) |>
   labs(y = "GCV Error", x = expression(lambda))
 ```
 
-### GCV-Optimal Smoothing Spline
+## GCV-Optimal Smoothing Spline
 
-```{r nuuk-spline-opt, fig.width = 9, fig.height = 5}
+```{r nuuk-spline-opt}
+#| fig-width: 5
+#| fig-height: 2.5
 smooth_opt <- smoother(lambda_opt)
 nuuk_plot + geom_line(aes(y = smooth_opt), color = "blue")
 ```
@@ -612,11 +645,9 @@ smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature, all.knots = TRUE)
 nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
 ```
 
-::: {.notes}
-
+\pdfpcnote{
 - Disable fast heuristic to have similar results as us.
-
-:::
+}
 
 ## Efficient Computations
 
@@ -624,43 +655,46 @@ In practice we use $p < n$ basis functions.
 
 Using the singular value decomposition
 $$
-  \Phi = \mathbf{U} D \mathbf{V}^T
-$$
+  \Phi = \symbf{U} D \symbf{V}^T
+$$\pause
 it holds that
 $$
-  \mathbf{S}_{\lambda} = \widetilde{\mathbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\mathbf{U}}^T
+  \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
 $$
-where $\widetilde{\mathbf{U}} = \mathbf{U} \mathbf{W}$ and
+where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and\pause
 $$
-  D^{-1} \mathbf{V}^T \mathbf{\Omega} \mathbf{V} D^{-1} = \mathbf{W} \Gamma \mathbf{W}^T.
+  D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
 $$
 
 \pdfpcnote{
 - Can be done whether we use all or a subset of our basis functions
 - $S_\lambda$ is diagonalized
-- DERIVE $\mathbf{S}_\lambda$ ON BLACKBOARD!
+- DERIVE $\symbf{S}_\lambda$ ON BLACKBOARD!
 }
 
-### Interpretation
+## Interpretation
 
-The coefficients, $\hat{\beta} = \widetilde{\mathbf{U}}^Ty$, are computed for
-expanding $y$ in the basis given by the columns of $\widetilde{\mathbf{U}}$.
+The coefficients, $\hat{\beta} = \widetilde{\symbf{U}}^Ty$, are computed for
+expanding $y$ in the basis given by the columns of $\widetilde{\symbf{U}}$.
 
 \pause\medskip
 
 The $i$-th coefficient is shrunk towards 0,
-$$\hat{\beta}_i(\lambda) =
-\frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.$$
---
+$$
+  \hat{\beta}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
+$$
 
 \pause\medskip
 
-The smoothed values, $\widetilde{\mathbf{U}} \hat{\beta}(\lambda)$, are computed
+The smoothed values, $\widetilde{\symbf{U}} \hat{\beta}(\lambda)$, are computed
 as an expansion using the shrunken coefficients.
 
-### The Demmler-Reinsch Basis (Columns of $\widetilde{\mathbf{U}}$)
+## The Demmler-Reinsch Basis (Columns of $\widetilde{\symbf{U}}$)
 
-```{r spline-diagonalization, echo=FALSE, fig.width = 12, fig.height = 7}
+```{r spline-diagonalization}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2.5
 inner_knots <- seq(1867, 2013, length.out = 18)
 phi <- splineDesign(c(rep(range(inner_knots), 3), inner_knots), nuuk_year$Year)
 omega <- pen_mat(inner_knots)
@@ -689,7 +723,7 @@ bind_cols(select(nuuk_year, Year), as_tibble(u_tilde)) |>
   ylab("")
 ```
 
-### The Eigenvalues $\gamma_i$
+## The Eigenvalues $\gamma_i$
 
 ```{r spline-gamma}
 #| echo: false
@@ -710,7 +744,7 @@ p2 <- p1 + scale_y_log10()
 p1 / p2
 ```
 
-## S3 Smoother
+# S3 Smoother
 
 ## A LOESS Smoother
 
@@ -741,37 +775,49 @@ insensitive to outliers.
 
 ## Another LOESS Smoother
 
-```{r loess2, fig.height = 5, fig.width = 10}
+```{r loess2}
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot + geom_smooth(method = "loess", span = 0.5)
 ```
 
 ## A Linear "Smoother"
 
-```{r linear-smoother, fig.height = 5, fig.width = 10}
+```{r linear-smoother}
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot + geom_smooth(method = "lm")
 ```
 
 ## A Polynomial Smoother
 
-```{r poly-smoother, fig.height = 5, fig.width = 10}
+```{r poly-smoother}
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot + geom_smooth(method = "lm", formula = y ~ poly(x, 5))
 ```
 
 ## Another Polynomial Smoother
 
-```{r poly-smother2, fig.height = 5, fig.width = 10}
+```{r poly-smother2}
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot + geom_smooth(method = "lm", formula = y ~ poly(x, 20))
 ```
 
 ## A Spline Smoother
 
-```{r spline-smoother, fig.height = 5, fig.width = 10}
+```{r spline-smoother}
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot + geom_smooth(method = "gam", formula = y ~ s(x))
 ```
 
 ## Another Spline Smoother
 
-```{r spline-smoother2, fig.height = 5, fig.width = 10}
+```{r spline-smoother2}
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot + geom_smooth(method = "gam", formula = y ~ s(x, k = 100))
 ```
 
@@ -821,13 +867,19 @@ predict.running_mean <- function(object, newdata, ...) {
 
 ## A Running Mean
 
-```{r, warning=FALSE, fig.height=5, fig.width = 10}
+```{r}
+#| warning: false
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot + geom_smooth(method = "running_mean", se = FALSE, n = 200)
 ```
 
 ## Specifying Arguments to Our Method
 
-```{r, warning=FALSE, fig.height=4, fig.width = 10}
+```{r}
+#| warning: false
+#| fig-width: 5
+#| fig-height: 2.5
 nuuk_plot +
   geom_smooth(
     method = "running_mean",
@@ -915,9 +967,9 @@ nuuk_plot + smooth3 + smooth2 + smooth1
 
 ## Exercise
 
-$\mathbf{S}$ is a sparse matrix but it is stored in a dense format currently.
+$\symbf{S}$ is a sparse matrix but it is stored in a dense format currently.
 
-**Note:** The following is **not** the real $\mathbf{S}$. It is just used for
+**Note:** The following is **not** the real $\symbf{S}$. It is just used for
 illustration.
 
 ```{r ex-sparse}
@@ -930,7 +982,7 @@ S <- matrix(w, n, n, byrow = TRUE)
 
 Use the [Matrix
 package](https://CRAN.R-project.org/package=Matrix) to
-convert $\mathbf{S}$ to a sparse format using `Matrix::Matrix(S, sparse = TRUE)`
+convert $\symbf{S}$ to a sparse format using `Matrix::Matrix(S, sparse = TRUE)`
 and then benchmark the sparse multiplication against the dense one. Parameterize
 the benchmark with $n$ and $k$.
 

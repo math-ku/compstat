@@ -60,6 +60,7 @@ format:
     include-in-header:
       - text: |
           \setbeamertemplate{page number in head/foot}[appendixframenumber]
+          \unimathsetup{math-style=ISO,bold-style=ISO}
       - file: slides/packages.tex
 
 date-format: long

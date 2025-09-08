@@ -6,7 +6,7 @@ date: today
 titlegraphic: ../images/ucph-horizontal-left.pdf
 titlegraphicoptions: right
 
-pdf-engine: lualatex
+pdf-engine: xelatex
 
 execute:
   echo: true
