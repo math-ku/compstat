@@ -56,8 +56,8 @@ We will focus on **speed**, not **memory**.
 
 ## Do You Even Need to Optimize?
 
-Before starting to think about improving performance---do you
-even need to do so?
+Before starting to think about improving performance---do you even need to do
+so?
 
 . . .
 
@@ -93,8 +93,8 @@ But if your code \alert{is} too slow, then it's time to profile it.
 
 \medskip
 
-A profiler quantifies how much time each part of your code takes to run.
-There are two main types of profiling:
+A profiler quantifies how much time each part of your code takes to run. There
+are two main types of profiling:
 
 . . .
 
@@ -122,7 +122,7 @@ This is what R's profilers do.
 
 ::: {.column width="47%"}
 
-### Outputs of Profilers
+### Outputs of Profilers {.alert}
 
 Profilers record both time and memory usage.
 
@@ -132,9 +132,10 @@ Profilers record both time and memory usage.
 
 ## Profiling in R
 
-The R package [profvis](https://CRAN.R-project.org/package=profvis) provides
-useful visualization tools. Can also be called activated through the RStudio/Positron
-IDE.
+The R package
+[profvis](https://CRAN.R-project.org/package=profvis)
+provides useful visualization tools. Can also be called activated through the
+RStudio/Positron IDE.
 
 ```{r load_profvis}
 library(profvis)
@@ -145,9 +146,9 @@ library(profvis)
 ### Simple to Use
 
 1. Source the code you want to profile using `source()`.\pause
-2. Either run `profvis()` on the expression you want to profile or 
-   in R studio, `Profile -> Start Profiling`, run your code, and then `Profile
-   -> `Stop Profiling`.
+2. Either run `profvis()` on the expression you want to profile or in R studio,
+   `Profile -> Start Profiling`, run your code, and then `Profile -> `Stop
+   Profiling`.
 
 . . .
 
@@ -161,8 +162,8 @@ profvis(your_function())
 
 ## Example
 
-Let's profile the implementation of the kernel density estimator
-from the last lecture.
+Let's profile the implementation of the kernel density estimator from the last
+lecture.
 
 ```{r}
 # In file R/kernel.R
@@ -183,7 +184,7 @@ kern_dens <- function(x, h, m = 512) {
 }
 ```
 
-## Example 
+## Example
 
 Now let's run the profiler.
 
@@ -200,8 +201,8 @@ profvis(kern_dens(x, 0.2))
 
 . . .
 
-We could have also just placed the code inside the same source file, but
-this way we can keep the code clean.
+We could have also just placed the code inside the same source file, but this
+way we can keep the code clean.
 
 ##
 
@@ -215,8 +216,7 @@ this way we can keep the code clean.
 
 ## A First Optimization
 
-The bottleneck is the nested loop, which imposes considerable overhead
-in R.
+The bottleneck is the nested loop, which imposes considerable overhead in R.
 
 \pause\medskip
 
@@ -224,10 +224,10 @@ Fixing this is easy! We can \alert{vectorize} the inner loop.
 
 . . .
 
-### Old (Nested Loop)
 
 ```{r}
 #| eval: false
+# Old (Nested Loop)
 kern_dens_vec <- function(x, h, m = 512) {
   # ...
   for (i in seq_along(xx)) {
@@ -241,15 +241,13 @@ kern_dens_vec <- function(x, h, m = 512) {
 
 ## A First Optimization
 
-The bottleneck is the nested loop, which imposes considerable overhead
-in R.
+The bottleneck is the nested loop, which imposes considerable overhead in R.
 
 Fixing this is easy! We can \alert{vectorize} the inner loop.
 
-### New (Vectorized)
-
 ```{r}
 #| eval: false
+# New (vectorized)
 kern_dens_vec <- function(x, h, m = 512) {
   # ...
 
@@ -299,8 +297,8 @@ you really need to profile them then?
 
 ### Quarto and R Markdown
 
-Running profvis inside Quarto/RMarkdown often does not work well. But,
-if you do, using `keep.source = TRUE` in `source()` might help.
+Running profvis inside Quarto/RMarkdown often does not work well. But, if you
+do, using `keep.source = TRUE` in `source()` might help.
 
 # Benchmarking
 
@@ -313,7 +311,8 @@ implementations of the same task.
 
 ### The bench Package
 
-We use the R package [bench](https://cran.r-project.org/web/package=bench) for
+We use the R package
+[bench](https://cran.r-project.org/web/package=bench) for
 benchmarking.
 
 ```{r}
@@ -322,7 +321,7 @@ library(bench)
 
 . . .
 
-### `mark()` (`bench::mark()`)
+### `bench::mark()`
 
 The main function of the package: a high-precision timer that adaptively chooses
 the number of iterations to get accurate results.
@@ -346,18 +345,23 @@ sqrt_bench
 
 ## `plot.bench_mark()`
 
-[ggbeeswarm](https://CRAN.R-project.org/package=ggbeeswarm) necessary for
-default plot behavior.
 
 ```{r bee-bench}
 #| fig-width: 5.5
+#| fig-cap: A beeswarm plot of the benchmark results.
 plot(sqrt_bench)
 ```
+
+. . .
+
+The
+[ggbeeswarm](https://CRAN.R-project.org/package=ggbeeswarm)
+package is necessary for default plot behavior.
 
 
 ## Parameterized Benchmarking
 
-Achieve parameterized benchmarking with `bench::mark()`, that runs functions
+Achieve parameterized benchmarking with `bench::press()`, that runs functions
 across outer product of its initial arguments.
 
 . . .
@@ -385,7 +389,7 @@ dens_bench <- bench::press(
 head(dens_bench, 6)
 ```
 
-## 
+##
 
 ```{r default-press-plot}
 #| fig-cap: Default plot method for `bench::press()` results, here showing
@@ -396,7 +400,7 @@ head(dens_bench, 6)
 plot(dens_bench)
 ```
 
-## 
+##
 
 ```{r custom-bench-plot-code}
 #| ref-label: "custom-bench-plot-code"
@@ -410,6 +414,10 @@ mutate(dens_bench, method = as.character(expression)) |>
   geom_line() +
   labs(y = "time (µs)")
 ```
+
+\pdfpcnote{
+  Mention the difference in how performance scales with n.
+}
 
 ## Notes About Benchmarking
 
@@ -438,8 +446,8 @@ Hardware matters: different computers may give different results.
 
 ## Improving Performance
 
-We could divide the strategies for optimizing code into
-a **general** and a **R-specific** section.
+We could divide the strategies for optimizing code into a **general** and a
+**R-specific** section.
 
 . . .
 
@@ -449,8 +457,7 @@ a **general** and a **R-specific** section.
 
 ### General Strategies
 
-Strategies that apply to **every** computer language, such
-as
+Strategies that apply to **every** computer language, such as
 
 - avoiding copies,\pause
 - storing data wisely,\pause and
@@ -464,11 +471,10 @@ as
 
 ### R-Specific Tricks
 
-Strategies that apply selectively to the R language,
-such as
+Strategies that apply selectively to the R language, such as calling
 
-- calling compiled code,\pause and
-- calling specialized functions.
+- vectorized (compiled) functions, or\pause
+- specialized functions.
 
 :::
 
@@ -478,8 +484,8 @@ such as
 
 ### Context-Specific Tricks
 
-Strategies that are specific to the problem at hand,
-such as **binning** (later this lecture).
+Strategies that are specific to the problem at hand, such as **binning** (later
+this lecture).
 
 ## R Is Slow ...
 
@@ -487,20 +493,20 @@ such as **binning** (later this lecture).
 
 \pause\medskip
 
-R is an **interpreted** (as opposed to _compiled_) language. You 
-have the convenience of never having to wait around for something to
-compile, but pay the price when you need a piece of code to be fast.
+R is an **interpreted** (as opposed to _compiled_) language. You have the
+convenience of never having to wait around for something to compile, but pay the
+price when you need a piece of code to be fast.
 
 
 \pause\medskip
 
-It was written mainly for specifying statistical models (not for developing
-new numerical methods).
+It was written mainly for specifying statistical models (not for developing new
+numerical methods).
 
 \pause\medskip
 
-It is suitable for high-level programming where most low-level computations
-are implemented in a compiled language (e.g. `lm()` and `qr()`.)
+It is suitable for high-level programming where most low-level computations are
+implemented in a compiled language (e.g. `lm()` and `qr()`.)
 
 ## R Is Fast ...
 
@@ -522,7 +528,7 @@ bench_res <- bench::mark(
 )
 ```
 
-## 
+##
 
 ```{r bench-plot}
 #| fig-width: 5
@@ -532,20 +538,19 @@ plot(bench_res)
 
 ## Vectorization
 
-Vectorization means rewriting code to operate on entire vectors at once,
-instead of looping over elements.
+Vectorization means rewriting code to operate on entire vectors at once, instead
+of looping over elements. (E.g. `mean()` instead of a `for` loop.)
 
 . . .
 
 \medskip
 
-But the term is misleading, since most "vectorized" code involves a loop too.
-But these loops are typically written in C, C++, or Fortran, which makes
-them fast.
+The term is misleading. Most "vectorized" code also involves a loop, but one
+that is typically written in C, C++, or Fortran.
 
 ## Beware of Loops in Disguise
 
-Just because you ran a vectorized function, it does not mean that it is fast.
+Just because you ran a vectorized function, it doesn't make it fast.
 
 . . .
 
@@ -569,7 +574,7 @@ loop_bench <- bench::mark(
 ```{r}
 #| fig-width: 5
 #| fig-height: 2
-#| fig-cap: The loop is slightly faster than the 'vectorized' apply function.
+#| fig-cap: The loop is slightly faster than the vectorized `sapply()`.
 #| echo: false
 plot(loop_bench)
 ```
@@ -581,7 +586,8 @@ we cannot optimize the kernel further.
 
 \medskip\pause
 
-But we can use \alert{binning}: create $B$ bins and evaluate the kernel and replace
+But we can use \alert{binning}: create $B$ bins and evaluate the kernel and
+replace
 $$
   \hat{f}(x) = \frac{1}{n h} \sum_{i=1}^n K\left( \frac{x - x_i}{h} \right)
 $$
@@ -616,12 +622,13 @@ It's an example of context-specific optimization.
 
 ### Caution
 
-If $n < B$, then binning will **not** help.
+If $n < B$, then binning will not help^[But do you need to optimize for this
+scenario?].
 
 ## Implementation
 
-A key to the implementation is this function, which loops over the data, for each point
-checking which bin center is closest.
+A key to the implementation is this function, which loops over the data, for
+each point checking which bin center is closest.
 
 ```{r}
 kern_bin <- function(x, l, u, B) {
@@ -654,10 +661,10 @@ kern_dens_bin <- function(x, h, m = 512) {
 }
 ```
 
-The `kern_dens_bin()` function computes bin
-weights using `kern_bin()` with grid points as bin centers.
+The `kern_dens_bin()` function computes bin weights using `kern_bin()` with grid
+points as bin centers.
 
-## 
+##
 
 ```{r micro3}
 #| echo: false
@@ -694,6 +701,10 @@ mutate(
 
 ## Testing
 
+As always, we should test our code to ensure it works as expected.
+
+. . .
+
 ```{r plot-kern-dens-benchmark}
 #| fig-width: 3.5
 #| echo: false
@@ -718,41 +729,34 @@ df2 <- tibble(
 )
 
 ggplot() +
-  geom_area(aes(x, y), data = df2, fill = "blue", alpha = 0.5) +
+  geom_area(aes(x, y), data = df2, fill = "blue", alpha = 0.4) +
   geom_line(aes(x = x, y = y), data = df1)
 ```
 
-## Testing
+##
 
 ```{r test-kern-dens-bench}
 #| fig-width: 5.5
 #| echo: false
+#| fig-cap: Absolute errors due to bining decrease with increasing length of
+#|   data sequence.
 x0 <- kern_dens(x, 0.2)$x
-plot(
-  x0,
-  kern_dens(x, 0.2)$y - kern_dens_bin(x, 0.2)$y,
-  type = "l",
-  ylim = c(-3e-3, 3e-3),
-  lwd = 2,
-  ylab = "Difference"
+df <- data.frame(
+  x = rep(x0, 3),
+  diff = c(
+    kern_dens(x[1:128], 0.2)$y - kern_dens_bin(x[1:128], 0.2)$y,
+    kern_dens(x[1:1024], 0.2)$y - kern_dens_bin(x[1:1024], 0.2)$y,
+    kern_dens(x, 0.2)$y - kern_dens_bin(x, 0.2)$y
+  ),
+  n = factor(rep(c(128, 1024, 8192), each = length(x0)))
 )
-lines(
-  x0,
-  kern_dens(x[1:1024], 0.2)$y - kern_dens_bin(x[1:1024], 0.2)$y,
-  col = "red",
-  lwd = 2
-)
-lines(
-  x0,
-  kern_dens(x[1:128], 0.2)$y - kern_dens_bin(x[1:128], 0.2)$y,
-  col = "blue",
-  lwd = 2
-)
-```
 
-The absolute errors due to binning are small but increasing with decreasing
-length of data sequence. Here $n = 8192$ is black, $n = 1024$ is red and
-$n = 128$ is blue.
+ggplot(df, aes(x, diff)) +
+  facet_wrap(~n) +
+  geom_hline(yintercept = 0, col = "grey80") +
+  geom_line() +
+  ylab("Difference")
+```
 
 ## Line Profiling
 
@@ -761,47 +765,34 @@ good profiling results we use a 512 times longer data sequence.
 
 ```{r eval = FALSE}
 x <- rnorm(2^22)
-# profvis(kern_dens_bin(x, 0.2))
+source(here::here("R", "kernel.R"))
+profvis(kern_dens_bin(x, 0.2))
 ```
 
-## Vectorization
+##
 
-- Vectorization is the process of replacing loops with vectorized operations.
-- These vectorized operations are also loops, but they are written in C instead
-  or R.
-  - Examples of vectorized functions: `mean()`, `exp()`
-  - Examples of non-vectorized functions: `apply()`, `Vectorize()`
-- Vectorizing code is often about finding the right function in R.
-  - `colSums()` instead of for loop or apply-type of function.
+![](../images/profvis-kern-bin.png)
 
-## Exercise on Vectorization
-
-- Vectorize the `kern_bin()` function
-- Benchmark the performance of the two functions.
-- **Hint:** Use `tabulate()`.
-
-```{r}
-kern_bin
-```
-
-```{r kern-bin-vec, include = FALSE}
-kern_bin_vec <- function(x, lo, hi, m) {
-  delta <- (hi - lo) / (m - 1)
-  i <- floor((x - lo) / delta + 0.5) + 1
-  w <- tabulate(i, nbins = m)
-  w / sum(w)
+\pdfpcnote{
+  The bottleneck is now the loop in `kern_bin()`.
 }
-```
+
 
 ## Avoiding Copies
 
-### Copy-on-Modify
+### Copy-on-Write (Modify)
 
-- In R, objects are passed by reference, but when an object is modified a copy
-  is created.
-- For instance, when subsetting a matrix, a copy is created. It's not possible
-  to access for instance a column by reference.
-- Growing vectors (`c()`) and matrices (`rbind()`, `cbind()`) creates copies.
+**Recall:** R passes objects by reference, but when an object is
+\alert{modified} a copy is created.
+
+\pause\medskip
+
+### Examples {.example}
+
+- Accessing a column of a matrix.\pause
+- Growing vectors (`c()`) and matrices (`rbind()`, `cbind()`).
+
+. . .
 
 ```{r}
 x <- rnorm(100)
@@ -816,54 +807,38 @@ In R, everything is typically loaded into memory.
 
 ### Garbage Collection
 
-R includes a garbage collector, which intermittently releases unused blocks in
-memory.
+R includes a garbage collector, which intermittently releases unused blocks
+in memory.
 
 ### Trade-Offs
 
 Storing intermediate objects that are used multiple times will boost performance
 at the cost of additional memory storage.
 
-## Exercise
-
-Can you rewrite the following function to avoid creating copies?
-
-```{r}
-#| eval: false
-matrix_vector_dot
-```
-
-## Storage Modes
+## Storage Mode
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-- In R, matrices are stored in column-major order.
-- This is generally language-dependent.
-- This means that when you access a column of a matrix, you are accessing a
-  contiguous block of memory.
-- Some operations are faster with column-major order and others with row-major
-  order.
+R stores matrices are in \alert{column-major order}.
+
+\pause\medskip
+
+When you access a column of a matrix, you are accessing a \alert{contiguous}
+block of memory.
+
+\pause\medskip
+
+Some operations are faster with column-major order and others with row-major
+order.
+
 
 :::
 
 ::: {.column width="47%"}
 
-:::
-
-::::
-
-## Exercise
-
-Benchmark the following three implementations of matrix-vector multiplication.
-
-1. Take the inner product of each row with the vector and sum up.
-2. First transpose the matrix and then take the inner product.
-3. Take the elementwise (Hadamard) product of each column of the matrix and
-   vector and sum up. --
-
-### Implementation of First Method
+### Computing Matrix-Vector Products
 
 ```{r}
 matvecmul_v1 <- function(x, y) {
@@ -877,7 +852,19 @@ matvecmul_v1 <- function(x, y) {
 }
 ```
 
-```{r, include = FALSE, cache = TRUE}
+:::
+
+::::
+
+
+
+##
+
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-cap: Benchmark results for three different implementations of
+#|   matrix-vector multiplication.
 n <- 1e3
 p <- 1e1
 
@@ -917,12 +904,13 @@ f3 <- function(x, y) {
   z
 }
 
-bench::mark(f1(x, y), f2(x, y), f3(x, y))
+bench::mark(f1(x, y), f2(x, y), f3(x, y)) |>
+  plot()
 ```
 
 ## Concurrency
 
-Modern processors have multiple cores.
+Most processors have multiple cores.
 
 \medskip\pause
 
@@ -933,17 +921,17 @@ But unless instructed otherwise, only a single core is going to be used.
 The computer doesn't automatically know that your computations are safe to do
 in parallel.
 
-## Embarassingly Parallel Tasks
+## Embarrassingly Parallel Tasks
 
-Trivial implementation of parallelization
+Tasks that easily separate into independent subtasks.
 
-It would be embarassing to miss the opportuity to parallelize the task.
+\pause\medskip
 
-### Examples
+### Examples {.example}
 
-- Summing a vector (or matrix): `sum()`
-- Linear algebra operations: `%*%` (`crossprod()`)
-- Running iterations of a simulation
+- Summing a vector (or matrix): `sum()`\pause
+- Linear algebra operations: `%*%` (`crossprod()`)\pause
+- Running iterations of a simulation\pause
 - Cross-validation
 
 ## The foreach Package
@@ -952,12 +940,14 @@ It would be embarassing to miss the opportuity to parallelize the task.
 
 ::: {.column width="47%"}
 
-```{r foreach-load, message = FALSE, echo = -1}
-options(width = 40)
+```{r foreach-load}
+#| warning: true
+#| message: true
 library(foreach)
 ```
 
 ```{r foreach-sqrt}
+#| eval: false
 foreach(i = seq_len(3)) %dopar%
   {
     sqrt(i)
@@ -966,36 +956,43 @@ foreach(i = seq_len(3)) %dopar%
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-### Notes
+```{r}
+#| echo: false
+#| ref-label: "foreach-sqrt"
+```
 
-- Returns a list (so not really a for loop).
-- The warning tells us that actually nothing is parallel yet.
-- First, we need to register a **backend**.
 
 :::
 
 ::::
 
-## Backends
+\pause\medskip
 
-- Multiple backends, installed separately (**doParallel**, **doMC**,
-  **doFuture**)
-- Load and **register** one before using foreach
-- Windows user cannot use forking (which is cheaper)
+### Notes {.alert}
 
-```{r doparallel, echo = -1, message = FALSE}
-options(width = 80)
+- Returns a list (so not really a for loop).\pause
+- Nothing is actually parallel yet!\pause
+- First, we need to register a **backend**.
+
+## Backends to foreach
+
+Multiple backends, installed separately (**doParallel**, **doMC**, **doFuture**)
+
+\pause\medskip
+
+Load and **register** one before using foreach.
+
+```{r doparallel}
+#| message: true
 library(doParallel)
-
 cl <- makeCluster(2) # 2 is the number of threads requested
-# cl <- makeForkedCluster(2) # Only on non-Windows
-
 registerDoParallel(cl)
-# registerDoParallel(cores = 4) # If not on Windows
 
-res <- foreach(i = seq_len(3)) %dopar%
+foreach(i = seq_len(3)) %dopar%
   {
     cat("Hello from process", Sys.getpid(), "\n")
   }
@@ -1003,9 +1000,12 @@ res <- foreach(i = seq_len(3)) %dopar%
 
 ## Combining Results
 
-- `foreach()` always returns a list.
-- If you want to reduce your result, use either the `.combine` argument or
-  manually reduce the resulting list.
+`foreach()` always returns a list.
+
+\medskip\pause
+
+If you want to reduce your result, use either the `.combine` argument or
+manually reduce the resulting list.
 
 . . .
 
@@ -1020,52 +1020,14 @@ foreach(i = seq_len(4), .combine = c) %dopar%
   }
 ```
 
-## Exercise
-
-### Part 1
-
-Write a parallelized version of `mean()`. The function should take a vector as
-it's first argument and a cluster object as the second argument.
-
-```{r par-mean-intro, eval = FALSE}
-par_mean <- function(x) {
-  n <- length(x)
-  # Your code here
-}
-```
-
-```{r par-mean, include = FALSE}
-par_mean <- function(x) {
-  n <- length(x)
-  foreach(i = seq_len(n), .combine = sum) %dopar%
-    {
-      x[[i]] / n
-    }
-}
-```
-
-. . .
-
-### Part 2
-
-Write a parallelized version of `lapply()`. Pass along arguments to the
-function.
-
-```{r, include = FALSE}
-par_lapply <- function(x, fun, ...) {
-  foreach(i = seq_along(x), .combine = sum) %dopar%
-    {
-      fun(x[[i]], ...)
-    }
-}
-
-par_lapply(x, sum)
-```
 
 ## Futures
 
-- An abstraction for a value that may be available at some point in the future.
-- Sometimes called promises: "I promise to give you the result later."
+A future represents a value that may be available later on.
+
+\medskip\pause
+
+Sometimes called \alert{promises}: "I promise to give you the result later."
 
 . . .
 
@@ -1073,7 +1035,7 @@ par_lapply(x, sum)
 
 ::: {.column width="47%"}
 
-### Without Futures
+### Without Futures {.alert}
 
 ```{r}
 v <- {
@@ -1085,9 +1047,11 @@ v
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-### With Futures
+### With Futures {.example}
 
 ```{r}
 library(future)
@@ -1105,136 +1069,95 @@ v
 
 ## Futures Enable Parallelization
 
-- To parallelize a computation, we can use futures.
-- A thread is created for each future.
+A new \alert{thread} is created for each future.
+
+\medskip\pause
+
 - Other work can be done in the meantime on main thread.
 - Once the value is needed, hopefully it is already (or best: just-in-time)
   available.
 
 ```{r}
 #| eval: false
-plan(multisession)
-
-# plan(multicore) # Not on Windows or RStudio!
+plan(multicore) # Not on Windows or RStudio!
 
 z %<-%
   {
-    # Expensive computation
+    # Peform some expensive computation
   }
 
-# Other expensive computations
+# Perform other work here ...
 
-z # Will block until the value is available
+z # This line blocks until z is available
 ```
 
-## Caveats Regarding Parallelization
+## Caveats
 
-- Twice as many cores $\neq$ twice as fast (in practice).
-  - Communication overhead
-  - Memory overhead
-- Thread safety
-- Parallelizing functions that are already parallelized internally typicall has
-  no (or negative) effect.
+### Realistic Expectations
 
-## Exercise
+In practice, twice as many cores $\neq$ twice as fast (in practice).
 
-Write a program for running ordinary least squares regression in parallel using
-the **futures** package.
 
-**Recall:** The OLS estimator is given by $\hat{\beta} = (X^TX)^{-1}X^T y$.
+. . .
 
-```{r ols-future, include = FALSE}
-n <- 100
-p <- 10
-x <- matrix(rnorm(n * p), n, p)
-y <- rnorm(n)
+### Overhead
 
-xty %<-%
-  {
-    crossprod(x, y)
-  }
-xtx <- crossprod(x)
-solve(xtx, xty)
+Parallelization comes with overhead (starting threads, communication).
+
+
+. . .
+
+### Thread Safety
+
+Some functions are not thread safe (e.g. random number generation).
+
+. . .
+
+### Redundancies
+
+Parallelizing a task that is already parallelized may not help and may even
+\alert{hurt} performance.
+
+
+# Exercises
+
+## Exercises
+
+### Exercise 1
+
+Benchmark `gauss()` against `dnorm()`; plot and compare the results. Before
+starting: which do you think will be faster?
+
+```{r}
+gauss <- function(x, h = 1) {
+  exp(-x^2 / (2 * h^2)) / (h * sqrt(2 * pi))
+}
 ```
+
+. . .
+
+### Exercise 2
+
+Profile `gauss()`. Where is the bottleneck? Can you improve the performance?
+
+. . .
+
+### Exercise 3
+
+Write a parallelized version of the `gauss()` function using the `foreach`
+package.
+
 
 ## Summary
 
-- First find bottlenecks through profiling
-- Benchmark different implementations and use existing solutions
+- First find bottlenecks through profiling\pause
+- Benchmark different implementations and use existing solutions\pause
 - Vectorize and use domain-specific knowledge to improve performance.
 
 . . .
 
 ### Keep in Mind
 
-- Only optimize when it's needed: profile first
-- Keep readability in mind: performant code can be hard to read.
+- Only optimize when it's needed: profile first\pause
+- Keep readability in mind: performant code can be hard to read.\pause
 - Write tests: performance improvements can introduce bugs.
-
-## Exercise
-
-- Profile this implementation of computing a matrix-vector inner product for
-  different choices of $n$ and $p$.
-- Before starting: where do you think the bottleneck is?
-
-```{r matvec-mul-ex}
-matrix_vector_dot <- function(x, y) {
-  p <- NCOL(x)
-
-  out <- c()
-
-  for (i in seq_len(p)) {
-    xi_y <- t(x[, i]) %*% y
-    out <- c(out, xi_y)
-  }
-
-  out
-}
-```
-
-## Exercise
-
-Consider the following implementation of the Gaussian kernel.
-
-```{r gauss-def}
-gauss <- function(x, h = 1) {
-  exp(-x^2 / (2 * h^2)) / (h * sqrt(2 * pi))
-}
-```
-
-Benchmark `gauss()` against `dnorm()`; plot and compare the results. Before
-starting: which do you think will be faster?
-
-```{r gauss-bench, include = FALSE}
-x <- seq(-3, 3, length.out = 10000)
-
-gauss_bench <- bench::mark(
-  gauss(x),
-  dnorm(x)
-)
-plot(gauss_bench)
-```
-
-## Exercise
-
-- Benchmark `crossprod()` against `%*%` for computing the inner product between
-  a matrix and a vector. --
-
-- Parameterize the benchmark by $n$ and $p$.
-- Where do you think the difference comes from?
-
-```{r crossprod-bench, include = FALSE, cache = TRUE}
-crossprod_bench <- bench::press(
-  n = 10^(1:3),
-  p = 10^(1:2),
-  {
-    x <- matrix(rnorm(n * p), n)
-    y <- rnorm(n)
-
-    bench::mark(
-      t(x) %*% y,
-      crossprod(x, y)
-    )
-  }
-)
-```

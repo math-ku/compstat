@@ -44,7 +44,7 @@ for you to solve independently at your own pace.
 
 #### Lecture 3: Measuring and Improving Performance
 
-<!-- - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf) -->
+- **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf)
 - **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and
   [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (Advanced R)
 - **Exercises:**

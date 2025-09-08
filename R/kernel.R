@@ -20,20 +20,13 @@ kern_dens_vec <- function(x, h, m = 512) {
   y <- numeric(m)
 
   for (i in seq_along(xx)) {
-    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2))) 
+    y[i] <- sum(exp(-(xx[i] - x)^2 / (2 * h^2)))
   }
 
   y <- y / (sqrt(2 * pi) * h * length(x))
 
   list(x = xx, y = y)
 }
-
-## Binning is done by constructing an equidistant grid of centers from
-## lo to hi with a distance delta between each center, that is
-##     lo, lo + delta, lo + 2 delta, ..., lo + (m - 1) delta = hi
-## There are m centers in this sequence. A convenient technique for finding
-## the correct bin for x[i] is via floor, which below will give j if and only if
-## lo + (j - 0.5) delta <= x[i] < lo + (j + 0.5) delta
 
 kern_bin <- function(x, l, u, B) {
   w <- numeric(B)
@@ -44,10 +37,6 @@ kern_bin <- function(x, l, u, B) {
   }
   w / sum(w)
 }
-
-## This implementation assumes a symmetric kernel!
-## It's possible to avoid the symmetry assumption,
-## but it's a little more complicated.
 
 kern_dens_bin <- function(x, h, m = 512) {
   rg <- range(x) + c(-3 * h, 3 * h)
