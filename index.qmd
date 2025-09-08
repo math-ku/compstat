@@ -54,13 +54,14 @@ for you to solve independently at your own pace.
 - **Main topic**: Functional Programming vs OOP (+ Currying/Function Factories)
 - In class walkthrough: A.8-A.12 (CSwR, Appendix A) and exercises 2.1-2.6 (CSwR,
   Chapter 2) -->
-<!-- #### Lecture 4: Scatterplot Smoothing -->
-<!---->
+
+#### Lecture 4: Scatterplot Smoothing
+
 <!-- - **Slides:** [Scatterplot Smoothing](slides/lecture4.pdf) -->
-<!-- - **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html) -->
-<!-- - **Exercises:** -->
-<!--   [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex) -->
-<!---->
+- **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)
+- **Exercises:**
+  [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
+
 
 <!-- ### Week 3 -->
 <!---->
