@@ -941,8 +941,8 @@ Tasks that easily separate into independent subtasks.
 ::: {.column width="47%"}
 
 ```{r foreach-load}
-#| warning: true
-#| message: true
+#| warning: false
+#| message: false
 library(foreach)
 ```
 
@@ -1139,6 +1139,8 @@ gauss <- function(x, h = 1) {
 ### Exercise 2
 
 Profile `gauss()`. Where is the bottleneck? Can you improve the performance?
+
+\medskip\pause
 
 . . .
 
