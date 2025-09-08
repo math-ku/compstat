@@ -1,12 +1,14 @@
 ---
 title: "Measuring and Improving Performance"
+
+execute:
+  cache: false
 ---
 
 {{< include _common.qmd >}}
 
 ```{r setup, include=FALSE}
 source(here::here("R", "kernel.R"), keep.source = TRUE)
-source(here::here("R", "gauss.R"), keep.source = TRUE)
 
 phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
@@ -93,8 +95,7 @@ But if your code \alert{is} too slow, then it's time to profile it.
 
 \medskip
 
-A profiler quantifies how much time each part of your code takes to run. There
-are two main types of profiling:
+A profiler quantifies how much time each part of your code takes to run.
 
 . . .
 
@@ -102,7 +103,7 @@ are two main types of profiling:
 
 ::: {.column width="47%"}
 
-### Types of Profiling {.example}
+### Two Types of Profiling {.example}
 
 **Instrumentation-based profiling** inserts code to measure time taken by
 functions.
@@ -150,7 +151,7 @@ library(profvis)
    `Profile -> Start Profiling`, run your code, and then `Profile -> `Stop
    Profiling`.
 
-. . .
+\pause\medskip
 
 The result is an interactive webpage (tab in RStudio).
 
@@ -160,7 +161,7 @@ source("<your-file>.R")
 profvis(your_function())
 ```
 
-## Example
+##
 
 Let's profile the implementation of the kernel density estimator from the last
 lecture.
@@ -282,6 +283,13 @@ kern_dens_vec <- function(x, h, m = 512) {
 
 ## Common Pitfalls
 
+### Nested Calls
+
+With multiple function calls on the same line, you won't directly see where the
+time is spent.
+
+. . .
+
 ### Anonymous Functions
 
 Complicates profiling since you will only see `<Anonymous>` in the output.
@@ -299,6 +307,7 @@ you really need to profile them then?
 
 Running profvis inside Quarto/RMarkdown often does not work well. But, if you
 do, using `keep.source = TRUE` in `source()` might help.
+
 
 # Benchmarking
 
@@ -446,8 +455,7 @@ Hardware matters: different computers may give different results.
 
 ## Improving Performance
 
-We could divide the strategies for optimizing code into a **general** and a
-**R-specific** section.
+We could divide the strategies for optimizing code into multiple categories.
 
 . . .
 
@@ -463,11 +471,7 @@ Strategies that apply to **every** computer language, such as
 - storing data wisely,\pause and
 - parallelizing.
 
-:::
-
 . . .
-
-::: {.column width="47%"}
 
 ### R-Specific Tricks
 
@@ -478,14 +482,18 @@ Strategies that apply selectively to the R language, such as calling
 
 :::
 
-::::
-
 . . .
+
+::: {.column width="47%"}
 
 ### Context-Specific Tricks
 
 Strategies that are specific to the problem at hand, such as **binning** (later
 this lecture).
+
+:::
+
+::::
 
 ## R Is Slow ...
 
@@ -622,8 +630,8 @@ It's an example of context-specific optimization.
 
 ### Caution
 
-If $n < B$, then binning will not help^[But do you need to optimize for this
-scenario?].
+If $n < B$, then binning will not help. (But do you need to optimize for this
+scenario?)
 
 ## Implementation
 
@@ -706,7 +714,7 @@ As always, we should test our code to ensure it works as expected.
 . . .
 
 ```{r plot-kern-dens-benchmark}
-#| fig-width: 3.5
+#| fig-width: 4
 #| echo: false
 #| fig-cap: The standard density estimator as a filled area and
 #|   the binning estimate as a black line.
@@ -728,9 +736,16 @@ df2 <- tibble(
   method = "binning"
 )
 
-ggplot() +
-  geom_area(aes(x, y), data = df2, fill = "blue", alpha = 0.4) +
-  geom_line(aes(x = x, y = y), data = df1)
+ggplot(bind_rows(df1, df2), aes(x, y, fill = method, color = method)) +
+  geom_area(
+    alpha = 0.4,
+    position = "identity",
+    color = "transparent"
+  ) +
+  geom_line() +
+  scale_fill_manual(values = c(standard = "transparent", binning = "blue")) +
+  scale_color_manual(values = c(standard = "black", binning = "transparent")) +
+  labs(fill = "Method", color = "Method")
 ```
 
 ##
@@ -752,7 +767,7 @@ df <- data.frame(
 )
 
 ggplot(df, aes(x, diff)) +
-  facet_wrap(~n) +
+  facet_wrap(~n, labeller = "label_both") +
   geom_hline(yintercept = 0, col = "grey80") +
   geom_line() +
   ylab("Difference")
@@ -763,9 +778,9 @@ ggplot(df, aes(x, diff)) +
 The `kern_dens_bin()` function is so much faster for long sequences that to get
 good profiling results we use a 512 times longer data sequence.
 
-```{r eval = FALSE}
+```{r}
+#| eval: false
 x <- rnorm(2^22)
-source(here::here("R", "kernel.R"))
 profvis(kern_dens_bin(x, 0.2))
 ```
 
@@ -817,10 +832,6 @@ at the cost of additional memory storage.
 
 ## Storage Mode
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
 R stores matrices in \alert{column-major order}.
 
 \pause\medskip
@@ -834,20 +845,71 @@ Some operations are faster with column-major order and others are faster with
 row-major order.
 
 
-:::
+## Computing Matrix-Vector Products
 
-::: {.column width="47%"}
+Let's say we want to compute the product of a matrix `x` and a vector `y`.
 
-### Computing Matrix-Vector Products
+### Strategy 1
+
+We access rows, then transpose.
 
 ```{r}
-matvecmul_v1 <- function(x, y) {
+f1 <- function(x, y) {
   n <- NROW(x)
   z <- double(n)
 
   for (i in seq_len(n)) {
     z[i] <- t(x[i, ]) %*% y
   }
+
+  z
+}
+```
+
+##
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Strategy 2
+
+Transpose first, then access columns.
+
+```{r}
+f2 <- function(x, y) {
+  n <- NROW(x)
+  x_t <- t(x)
+  z <- double(n)
+
+  for (i in seq_len(n)) {
+    z[i] <- x_t[, i] %*% y
+  }
+
+  z
+}
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### Strategy 3
+
+Access columns directly, update sums together.
+
+```{r}
+f3 <- function(x, y) {
+  n <- NROW(x)
+  p <- NCOL(x)
+  z <- double(n)
+
+  for (i in seq_len(p)) {
+    z <- z + x[, i] * y[i]
+  }
+
   z
 }
 ```
@@ -863,6 +925,7 @@ matvecmul_v1 <- function(x, y) {
 ```{r}
 #| echo: false
 #| fig-width: 5
+#| fig-height: 2.8
 #| fig-cap: Benchmark results for three different implementations of
 #|   matrix-vector multiplication.
 n <- 1e3
@@ -870,39 +933,6 @@ p <- 1e1
 
 x <- matrix(rnorm(n * p), n)
 y <- matrix(rnorm(p), p, 1)
-
-f1 <- function(x, y) {
-  n <- NROW(x)
-  z <- double(n)
-
-  for (i in seq_len(n)) {
-    z[i] <- t(x[i, ]) %*% y
-  }
-  z
-}
-
-f2 <- function(x, y) {
-  n <- NROW(x)
-  x_t <- t(x)
-  z <- double(n)
-
-  for (i in seq_len(n)) {
-    z[i] <- x_t[, i] %*% y
-  }
-
-  z
-}
-
-f3 <- function(x, y) {
-  n <- NROW(x)
-  z <- double(n)
-
-  for (i in seq_len(NCOL(x))) {
-    z <- z + x[, i] * y[i]
-  }
-
-  z
-}
 
 bench::mark(f1(x, y), f2(x, y), f3(x, y)) |>
   plot()
@@ -978,26 +1008,47 @@ foreach(i = seq_len(3)) %dopar%
 - Nothing is actually parallel yet!\pause
 - First, we need to register a **backend**.
 
-## Backends to foreach
+## Backends
 
 Multiple backends, installed separately (**doParallel**, **doMC**, **doFuture**)
-
-\pause\medskip
-
 Load and **register** one before using foreach.
 
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
 ```{r doparallel}
-#| message: true
+#| eval: false
 library(doParallel)
-cl <- makeCluster(2) # 2 is the number of threads requested
+cl <- makeCluster(2)
 registerDoParallel(cl)
 
 foreach(i = seq_len(3)) %dopar%
   {
-    cat("Hello from process", Sys.getpid(), "\n")
+    paste(
+      "Hello from process",
+      Sys.getpid()
+    )
   }
 ```
 
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+#| message: false
+#| ref-label: "doparallel"
+```
+
+:::
+
+::::
 ## Combining Results
 
 `foreach()` always returns a list.
@@ -1008,8 +1059,6 @@ If you want to reduce your result, use either the `.combine` argument or
 manually reduce the resulting list.
 
 . . .
-
-### `.combine`
 
 ```{r}
 x <- c(4, 1, 1e2, 2)
@@ -1157,14 +1206,26 @@ Benchmark your implementation against the original `gauss()` function.
 
 ## Summary
 
-- First find bottlenecks through profiling\pause
-- Benchmark different implementations and use existing solutions\pause
-- Vectorize and use domain-specific knowledge to improve performance.
+First find bottlenecks through profiling.
+
+\pause\medskip
+
+Benchmark different implementations and use existing solutions.
+
+\pause\medskip
+
+Vectorize and use domain-specific knowledge to improve performance.
 
 . . .
 
 ### Keep in Mind
 
-- Only optimize when it's needed: profile first\pause
-- Keep readability in mind: performant code can be hard to read.\pause
-- Write tests: performance improvements can introduce bugs.
+Only optimize when it's needed: profile first.
+
+\pause\medskip
+
+Keep readability in mind: performant code can be hard to read.
+
+\pause\medskip
+
+Write tests: performance improvements can introduce bugs.
