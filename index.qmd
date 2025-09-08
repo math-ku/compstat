@@ -58,7 +58,7 @@ for you to solve independently at your own pace.
 - **Mini-slides**: TBA
 
 #### Lecture 4: Scatterplot Smoothing
-- **Slides:** [Scatterplot Smoothing](slides/lecture4.pdf)
+<!-- - **Slides:** [Scatterplot Smoothing](slides/lecture4.pdf) -->
 - **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)
 - **Exercises:**
   [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
