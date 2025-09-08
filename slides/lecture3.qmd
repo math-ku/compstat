@@ -134,7 +134,7 @@ Profilers record both time and memory usage.
 
 The R package
 [profvis](https://CRAN.R-project.org/package=profvis)
-provides useful visualization tools. Can also be called activated through the
+provides useful visualization tools. Can also be activated through the
 RStudio/Positron IDE.
 
 ```{r load_profvis}
@@ -312,7 +312,7 @@ implementations of the same task.
 ### The bench Package
 
 We use the R package
-[bench](https://cran.r-project.org/web/package=bench) for
+[bench](https://cran.r-project.org/package=bench) for
 benchmarking.
 
 ```{r}
@@ -821,7 +821,7 @@ at the cost of additional memory storage.
 
 ::: {.column width="47%"}
 
-R stores matrices are in \alert{column-major order}.
+R stores matrices in \alert{column-major order}.
 
 \pause\medskip
 
@@ -830,8 +830,8 @@ block of memory.
 
 \pause\medskip
 
-Some operations are faster with column-major order and others with row-major
-order.
+Some operations are faster with column-major order and others are faster with
+row-major order.
 
 
 :::
