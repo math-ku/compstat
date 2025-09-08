@@ -716,8 +716,8 @@ As always, we should test our code to ensure it works as expected.
 ```{r plot-kern-dens-benchmark}
 #| fig-width: 4
 #| echo: false
-#| fig-cap: The standard density estimator as a filled area and
-#|   the binning estimate as a black line.
+#| fig-cap: The standard density estimator as a black line and
+#|   the binning estimate as a filled area.
 set.seed(123)
 x <- rnorm(1e4) + rnorm(1e4, -3, 0.7)
 
