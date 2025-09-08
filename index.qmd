@@ -61,7 +61,7 @@ for you to solve independently at your own pace.
 - **Slides:** [Scatterplot Smoothing](slides/lecture4.pdf)
 - **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)
 - **Exercises:**
-  [3.4 (CSwR, Chapter 3)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
+  [3.4 (Chapter 3, CSWR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
 
 
 <!-- ### Week 3 -->
