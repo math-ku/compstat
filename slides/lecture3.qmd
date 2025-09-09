@@ -57,14 +57,12 @@ We will focus on **speed**, not **memory**.
 
 ### What is Your Use Case?
 
-Before starting to think about improving performance, consider if you even need
-to.
+Before thinking about improving performance, consider if you even need to. Maybe
+your code is already fast enough?
 
-. . .
+\medskip\pause
 
-\medskip
-
-Maybe your code is already fast enough (for your use case)?
+If you're only doing it for yourself, then is the **investment** worth it?
 
 . . .
 
