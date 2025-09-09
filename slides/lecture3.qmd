@@ -245,6 +245,8 @@ kern_dens_vec <- function(x, h, m = 512) {
 
 The bottleneck is the nested loop, which imposes considerable overhead in R.
 
+\pause\medskip
+
 Fixing this is easy! We can \alert{vectorize} the inner loop.
 
 ```{r}
