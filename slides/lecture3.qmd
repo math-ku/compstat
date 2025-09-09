@@ -960,7 +960,8 @@ gauss <- function(x, h = 1) {
 
 ### Exercise 2
 
-Profile `gauss()`. Where is the bottleneck? Can you improve the performance?
+Profile `gauss()` by breaking the function apart. Is there a bottleneck? Can you
+improve the performance?
 
 \medskip\pause
 
