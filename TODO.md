@@ -20,6 +20,14 @@ format: html
 - Maybe add one example for each topic covered in the course, aligned with the
   book.
 
+## Lecture 3: Measuring and Improving Performance
+
+- Add another exercise.
+- Introduce garbage collection before the benchmarking.
+- Expand material on memory management.
+- Make binning part clearer: add illustrations and skip the implementation
+  altogether.
+
 ## Lecture 8: Optimization
 
 - Too much material! Consider making Poisson example simpler.
