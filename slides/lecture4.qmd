@@ -1,5 +1,5 @@
 ---
-title: "Scatterplot Smoothing"
+title: "Parallelization and Scatterplot Smoothing"
 
 execute:
   cache: false
@@ -8,6 +8,12 @@ execute:
 {{< include _common.qmd >}}
 
 ## Today
+
+### Parallelization
+
+Using multiple cores to speed up computations.
+
+. . .
 
 ### Nearest Neighbors
 
@@ -19,11 +25,237 @@ Simple algorithm for nonparametric smoothing.
 
 A generalization of polynomial regression.
 
+# Parallelization
+
+## Parallelization
+
+Most processors have multiple cores.
+
+\medskip\pause
+
+But unless instructed otherwise, only a single core is going to be used.
+
+\medskip\pause
+
+The computer doesn't automatically know that your computations are safe to do
+in parallel.
+
+## Embarrassingly Parallel Tasks
+
+Tasks that easily separate into independent subtasks.
+
+\pause\medskip
+
+### Examples {.example}
+
+- Summing a vector (or matrix): `sum()`\pause
+- Linear algebra operations: `%*%` (`crossprod()`)\pause
+- Running iterations of a simulation\pause
+- Cross-validation
+
+## The foreach Package
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r foreach-load}
+#| warning: false
+#| message: false
+library(foreach)
+```
+
+```{r foreach-sqrt}
+#| eval: false
+foreach(i = seq_len(3)) %dopar%
+  {
+    sqrt(i)
+  }
+```
+
+:::
+
 . . .
 
-### S3 Smoother
+::: {.column width="47%"}
 
-We develop a S3 smoother for ggplot2.
+```{r}
+#| echo: false
+#| ref-label: "foreach-sqrt"
+```
+
+
+:::
+
+::::
+
+\pause\medskip
+
+### Notes {.alert}
+
+- Returns a list (so not really a for loop).\pause
+- Nothing is actually parallel yet!\pause
+- First, we need to register a **backend**.
+
+## Backends
+
+Multiple backends, installed separately (**doParallel**, **doMC**, **doFuture**)
+Load and **register** one before using foreach.
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r doparallel}
+#| eval: false
+library(doParallel)
+cl <- makeCluster(2)
+registerDoParallel(cl)
+
+foreach(i = seq_len(3)) %dopar%
+  {
+    paste(
+      "Hello from process",
+      Sys.getpid()
+    )
+  }
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+#| message: false
+#| ref-label: "doparallel"
+```
+
+:::
+
+::::
+## Combining Results
+
+`foreach()` always returns a list.
+
+\medskip\pause
+
+If you want to reduce your result, use either the `.combine` argument or
+manually reduce the resulting list.
+
+. . .
+
+```{r}
+x <- c(4, 1, 1e2, 2)
+
+foreach(i = seq_len(4), .combine = c) %dopar%
+  {
+    log(x[[i]])
+  }
+```
+
+
+## Futures
+
+A future represents a value that may be available later on.
+
+\medskip\pause
+
+Sometimes called \alert{promises}: "I promise to give you the result later."
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Without Futures {.alert}
+
+```{r}
+v <- {
+  cat("Hello world!\n")
+  3.14
+}
+v
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### With Futures {.example}
+
+```{r}
+library(future)
+v %<-%
+  {
+    cat("Hello world!\n")
+    3.14
+  }
+v
+```
+
+:::
+
+::::
+
+## Futures Enable Parallelization
+
+A new \alert{thread} is created for each future.
+
+\medskip\pause
+
+- Other work can be done in the meantime on main thread.
+- Once the value is needed, hopefully it is already (or best: just-in-time)
+  available.
+
+```{r}
+#| eval: false
+plan(multicore) # Not on Windows or RStudio!
+
+z %<-%
+  {
+    # Peform some expensive computation
+  }
+
+# Perform other work here ...
+
+z # This line blocks until z is available
+```
+
+## Caveats
+
+### Realistic Expectations
+
+In practice, twice as many cores $\neq$ twice as fast (in practice).
+
+
+. . .
+
+### Overhead
+
+Parallelization comes with overhead (starting threads, communication).
+
+
+. . .
+
+### Thread Safety
+
+Some functions are not thread safe (e.g. random number generation).
+
+. . .
+
+### Redundancies
+
+Parallelizing a task that is already parallelized may not help and may even
+\alert{hurt} performance.
+
 
 ## Nuuk Temperature Data
 
@@ -110,8 +342,8 @@ $\hat{\symbf{f}}$ is an estimator of the vector $(f(x_i))$.
 
 ## Linear Smoothers
 
-$(f(x_i))$ of the form $\symbf{S} \symbf{y}$ for a _smoother matrix_
-$\symbf{S}$ is called a _linear smoother_.
+$(f(x_i))$ of the form $\symbf{S} \symbf{y}$ for a _smoother matrix_ $\symbf{S}$
+is called a _linear smoother_.
 
 \pause\medskip
 
@@ -249,8 +481,8 @@ all.equal(f_hat, as.numeric(f_hat_filter))
 
 \pause
 
-There is a `filter()` function in the **dplyr** package (part of the
-tidyverse), so look out for name clashes. Safest to call `stats::filter()`.
+There is a `filter()` function in the **dplyr** package (part of the tidyverse),
+so look out for name clashes. Safest to call `stats::filter()`.
 
 \pdfpcnote{
   - filter(): general linear filtering function
@@ -258,7 +490,7 @@ tidyverse), so look out for name clashes. Safest to call `stats::filter()`.
   - `rep(1, /11, 11)` are MA coefficients
 }
 
-## 
+##
 
 ```{r runMeanBench}
 #| echo: false
@@ -366,7 +598,7 @@ this.
 - **Derive the formula on the blackboard!**
 }
 
-## 
+##
 
 ```{r nuuk-running-loocv}
 k <- seq(3, 40, 2)
@@ -387,7 +619,7 @@ ggplot(tibble(k, cv_error), aes(k, cv_error)) +
   labs(y = "LOOCV Error", x = expression(k))
 ```
 
-## 
+##
 
 The optimal choice of $k$ is `r k_opt`.
 
@@ -587,9 +819,9 @@ nuuk_plot +
 
 ## Generalized Cross-Validation
 
-With $\text{df} = \text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$ we
-replace $S_{ii}$ in LOOCV by $\text{df} / n$ to get the **generalized**
-cross-validation criterion
+With $\text{df} = \text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$ we replace
+$S_{ii}$ in LOOCV by $\text{df} / n$ to get the **generalized** cross-validation
+criterion
 $$
   \mathrm{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / n}\right)^2.
 $$
@@ -656,8 +888,8 @@ In practice we use $p < n$ basis functions.
 Using the singular value decomposition
 $$
   \Phi = \symbf{U} D \symbf{V}^T
-$$\pause
-it holds that
+$$
+\pause it holds that
 $$
   \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
 $$
@@ -964,6 +1196,19 @@ nuuk_plot + smooth3 + smooth2 + smooth1
 ```
 
 # Exercises
+
+## Exercises
+
+### Exercise 1
+
+Write a parallelized version of the `gauss()` function using the `foreach`
+package. Your function should take a vector and devide the work across multiple
+cores.
+
+\medskip\pause
+
+Benchmark your implementation against the original `gauss()` function.
+
 
 ## Exercise
 
