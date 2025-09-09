@@ -77,7 +77,6 @@ If you're only doing it for yourself, then is the **investment** worth it?
 > \medskip
 > _—Donald Knuth_
 
-
 . . .
 
 ### Readability
@@ -137,8 +136,8 @@ In this course we focus mostly on time.
 
 The R package
 [profvis](https://CRAN.R-project.org/package=profvis)
-provides useful visualization tools. Can also be activated through the
-RStudio/Positron IDE.
+provides tools to visualize profiling output.^[Can be activated directly in
+RSTudio (but not Positron)].
 
 ```{r load_profvis}
 library(profvis)
@@ -149,8 +148,8 @@ library(profvis)
 ### Simple to Use
 
 1. Source the code you want to profile using `source()`.\pause
-2. Either run `profvis()` on the expression you want to profile or in R studio,
-   `Profile -> Start Profiling`, run your code, and then `Profile -> `Stop
+2. Either run `profvis()` on the expression you want to profile or in RStudio,
+   `Profile -> Start Profiling`. Run your code, and then `Profile -> `Stop
    Profiling`.
 
 \pause\medskip
@@ -358,7 +357,7 @@ sqrt_bench
 
 
 ```{r bee-bench}
-#| fig-width: 5.5
+#| fig-width: 5.3
 #| fig-cap: A beeswarm plot of the benchmark results.
 plot(sqrt_bench)
 ```
@@ -406,7 +405,7 @@ head(dens_bench, 6)
 #| fig-cap: Default plot method for `bench::press()` results, here showing
 #|  the performance of three different implementations of a kernel density
 #|  estimator.
-#| fig-width: 5.5
+#| fig-width: 5.3
 #| fig-height: 2.6
 plot(dens_bench)
 ```
@@ -678,7 +677,7 @@ points as bin centers.
 
 ```{r micro3}
 #| echo: false
-#| fig-width: 5.5
+#| fig-width: 5.2
 #| fig-cap: The relative benefit of binning increases with the size of the data.
 #| fig-height: 3
 res2 <- bench::press(
