@@ -1,8 +1,5 @@
 ---
 title: "Measuring and Improving Performance"
-
-execute:
-  cache: false
 ---
 
 {{< include _common.qmd >}}
@@ -56,14 +53,22 @@ Often, improving one worsens the other.
 
 We will focus on **speed**, not **memory**.
 
-## Do You Even Need to Optimize?
+## Should You Optimize?
 
-Before starting to think about improving performance---do you even need to do
-so?
+### What is Your Use Case?
+
+Before starting to think about improving performance, consider if you even need
+to.
 
 . . .
 
-### The Root of All Evil
+\medskip
+
+Maybe your code is already fast enough (for your use case)?
+
+. . .
+
+### Premature Optimization: The Root of All Evil?
 
 \medskip
 
@@ -74,17 +79,12 @@ so?
 > \medskip
 > _—Donald Knuth_
 
-. . .
-
-\medskip
-
-Maybe your code is already fast enough (for your use case)?
-
-\medskip
 
 . . .
 
-Often, improving performance comes at the cost of code readability.
+### Readability
+
+Improving performance often comes at the cost of code readability.
 
 
 ## Profiling
@@ -126,6 +126,10 @@ This is what R's profilers do.
 ### Outputs of Profilers {.alert}
 
 Profilers record both time and memory usage.
+
+\pause\medskip
+
+In this course we focus mostly on time.
 
 :::
 
@@ -1220,7 +1224,7 @@ Vectorize and use domain-specific knowledge to improve performance.
 
 ### Keep in Mind
 
-Only optimize when it's needed: profile first.
+Beware of the **root of all evil**: profile first, optimize second.
 
 \pause\medskip
 
