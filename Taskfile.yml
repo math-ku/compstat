@@ -4,3 +4,7 @@ tasks:
   preview:
     cmds:
       - quarto preview
+
+  render:
+    cmds:
+      - "quarto render --profile present"
