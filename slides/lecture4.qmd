@@ -691,17 +691,31 @@ $\symbf{S}_{\lambda}$ and penalty matrix $\symbf{\Omega}$.
 ## Splines in R
 
 ```{r splines}
-#| fig-width: 5
-#| fig-height: 2
 #| message: false
 #| warning: false
-#| fig-cap: Cubic B-spline basis functions with knots at 0, 0.2, 0.4, 0.6, 0.8,
-#|   and 1.
-library(Matrix)
 knots <- c(0, 0, 0, seq(0, 1, 0.2), 1, 1, 1)
 xx <- seq(0, 1, 0.005)
 b_splines <- splines::splineDesign(knots, xx)
-matplot(xx, b_splines, type = "l", lty = 1)
+```
+
+. . .
+
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+#| fig-cap: Cubic B-spline basis functions with knots at 0, 0.2, 0.4, 0.6, 0.8,
+#|   and 1.
+df <- data.frame(
+  x = rep(xx, times = ncol(b_splines)),
+  y = as.vector(b_splines),
+  group = as.character(rep(seq_len(ncol(b_splines)), each = length(xx)))
+)
+
+ggplot(df, aes(x = x, y = y, group = group, color = group)) +
+  geom_line() +
+  labs(x = "x", y = "Basis Value") +
+  guides(color = "none")
 ```
 
 \pdfpcnote{
@@ -714,9 +728,10 @@ control points and is smooth.
 ```{r Omega-Simpson}
 #| echo: false
 #| fig-cap: The penalty matrix $\symbf{\Omega}$ for a cubic spline with knots at
-#|   0, 0.1, 0.2, ..., 0.9, 1.
+#|   0, 0.2, ..., 0.8, 1.
 #| fig-width: 5
-#| fig-height: 2.5
+#| fig-height: 3
+library(Matrix)
 pen_mat <- function(inner_knots) {
   knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
   d <- diff(inner_knots) # the vector of knot differences; b - a
@@ -735,7 +750,22 @@ omega <- pen_mat(
   seq(0, 1, 0.1)
 )
 
-image(Matrix(omega), sub = NULL)
+omega_mat <- as.matrix(omega)
+
+n_row <- nrow(omega_mat)
+n_col <- ncol(omega_mat)
+
+omega_df <- expand.grid(
+  Row = seq_len(n_row),
+  Col = seq_len(n_col)
+)
+omega_df$Value <- as.vector(omega_mat)
+
+ggplot(omega_df, aes(x = Col, y = Row, fill = Value)) +
+  geom_tile() +
+  scale_y_reverse() +
+  scale_fill_gradient2() +
+  coord_fixed()
 ```
 
 ## Fitting a Smoothing Spline
@@ -889,10 +919,13 @@ as an expansion using the shrunken coefficients.
 
 ```{r spline-diagonalization}
 #| echo: false
-#| fig-width: 5
+#| fig-width: 5.3
 #| fig-height: 2.5
 inner_knots <- seq(1867, 2013, length.out = 18)
-phi <- splineDesign(c(rep(range(inner_knots), 3), inner_knots), nuuk_year$Year)
+phi <- splines::splineDesign(
+  c(rep(range(inner_knots), 3), inner_knots),
+  nuuk_year$Year
+)
 omega <- pen_mat(inner_knots)
 phi_svd <- svd(phi)
 omega_tilde <- t(
@@ -939,92 +972,81 @@ p2 <- p1 + scale_y_log10()
 p1 / p2 + plot_layout(axes = "collect")
 ```
 
-## Boundary Adjustments
-
-- Boundary adjustment is important for all local smoothing methods (running
-  mean, kernel smoothing, LOESS, splines).
-- At the edges, standard symmetric windows/neighborhoods cannot be applied.
-- Solutions include asymmetric windows, padding, extrapolation, or excluding
-  boundary points.
-
-## Example: Padding and Asymmetric Windows
-
-```r
-# Pad data at boundaries
-y_padded <- c(rep(y[1], m), y, rep(y[n], m))
-s_padded <- run_mean(y_padded, k)
-
-# Asymmetric window at left boundary
-s_left <- mean(y[1:k])
-
-# Asymmetric window at right boundary
-s_right <- mean(y[(n - k + 1):n])
-```
-
-- Padding reduces bias at boundaries.
-- Asymmetric windows use available points when full window is not possible.
-
 # Exercises
 
 ## Exercises
 
-### Exercise 1
+### Exercise 1: Parallel Square
 
-Write a parallelized version of the `gauss()` function using the `foreach`
-package. Your function should take a vector and devide the work across multiple
-cores.
+Use the `foreach` and `doParallel` packages to compute the squares of a vector
+in parallel. Benchmark the parallel version against a regular `for` loop using
+`bench::mark()`.
 
-\medskip\pause
-
-Benchmark your implementation against the original `gauss()` function.
-
-
-## Exercise
-
-$\symbf{S}$ is a sparse matrix but it is stored in a dense format currently.
-
-**Note:** The following is **not** the real $\symbf{S}$. It is just used for
-illustration.
-
-```{r ex-sparse}
-#| warning: false
-k <- 11
-y <- rnorm(n)
-w <- c(rep(1, k * n), rep(0, n * (n - k)))
-S <- matrix(w, n, n, byrow = TRUE)
-```
-
-Use the [Matrix
-package](https://CRAN.R-project.org/package=Matrix) to
-convert $\symbf{S}$ to a sparse format using `Matrix::Matrix(S, sparse = TRUE)`
-and then benchmark the sparse multiplication against the dense one. Parameterize
-the benchmark with $n$ and $k$.
-
-\pause\medskip
-
-Don't include the time used to construct the matrix in the benchmark.
-
-```{r ex-sparse-result}
+```{r}
 #| echo: false
-#| message: false
-#| warning: false
-#| fig-width: 5.5
-sparse_bench <- bench::press(
-  n = c(512, 1024, 4196),
-  k = c(10, 100),
-  {
-    k <- 11
-    y <- rnorm(n)
-    w <- c(rep(1, k * n), rep(0, n * (n - k)))
-    S <- matrix(w, n, n, byrow = TRUE)
-    S_sparse <- Matrix::Matrix(S, sparse = TRUE)
-    bench::mark(
-      S %*% y,
-      S_sparse %*% y,
-      check = FALSE
-    )
-  }
-)
+#| eval: false
+library(foreach)
+library(doParallel)
+library(bench)
 
-plot(sparse_bench)
+x <- rnorm(10000)
+
+loop_square <- function(x) {
+  n <- length(x)
+  result <- numeric(n)
+
+  for (i in seq_len(n)) {
+    result[i] <- x[i]^2
+  }
+
+  result
+}
+
+parallel_square <- function(x) {
+  result <- foreach(i = seq_along(x), .combine = c) %dopar%
+    {
+      x[i]^2
+    }
+  result
+}
+
+cl <- makeCluster(detectCores() / 2)
+registerDoParallel(cl)
+
+bench::mark(
+  loop = loop_square(x),
+  parallel = parallel_square(x),
+  check = FALSE
+)
 ```
+
+. . .
+
+### Exercise 2: Future
+
+Create a future that waits for 5 seconds using `Sys.sleep(5)`. When it's done,
+it should prints "Future is done!" and return the value 42. Try accessing the
+value of the future before and after the computation is complete.
+
+```{r}
+#| echo: false
+#| eval: false
+library(future)
+plan(multicore) # Not on Windows or RStudio!
+v %<-%
+  {
+    Sys.sleep(5)
+    cat("Future is done!\n")
+    42
+  }
+
+v # This line blocks until v is available
+```
+
+. . .
+
+### Exercise 3: Smoothing Air Quality Data
+
+Apply `stats::filter()` and `smooth.spline()` to the `airquality$Temp` data. Try
+different window sizes for the moving average and different `spar` values for
+the spline. Plot and compare the results.
