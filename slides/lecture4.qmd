@@ -1,8 +1,5 @@
 ---
 title: "Parallelization and Scatterplot Smoothing"
-
-execute:
-  cache: false
 ---
 
 {{< include _common.qmd >}}
@@ -717,7 +714,7 @@ library(splines)
 # Note the specification of repeated boundary knots
 knots <- c(0, 0, 0, seq(0, 1, 0.2), 1, 1, 1)
 xx <- seq(0, 1, 0.005)
-b_splines <- splineDesign(knots, xx)
+b_splines <- splines::splineDesign(knots, xx)
 matplot(xx, b_splines, type = "l", lty = 1)
 ```
 
@@ -733,9 +730,9 @@ control points and is smooth.
 pen_mat <- function(inner_knots) {
   knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
   d <- diff(inner_knots) # the vector of knot differences; b - a
-  g_ab <- splineDesign(knots, inner_knots, derivs = 2)
+  g_ab <- splines::splineDesign(knots, inner_knots, derivs = 2)
   knots_mid <- inner_knots[-length(inner_knots)] + d / 2
-  g_ab_mid <- splineDesign(knots, knots_mid, derivs = 2)
+  g_ab_mid <- splines::splineDesign(knots, knots_mid, derivs = 2)
   g_a <- g_ab[-nrow(g_ab), ]
   g_b <- g_ab[-1, ]
   (crossprod(d * g_a, g_a) +
@@ -789,7 +786,7 @@ inner_knots <- nuuk_year$Year
 # Note that order does not matter
 knots <- c(rep(range(inner_knots), 3), inner_knots)
 
-phi <- splineDesign(knots, inner_knots)
+phi <- splines::splineDesign(knots, inner_knots)
 ```
 
 . . .
@@ -856,7 +853,6 @@ tibble(lambda, gcv) |>
   ggplot(aes(lambda, gcv)) +
   geom_vline(xintercept = lambda_opt, color = "dark orange") +
   geom_line() +
-  geom_point() +
   labs(y = "GCV Error", x = expression(lambda))
 ```
 
@@ -884,6 +880,8 @@ nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
 
 In practice we use $p < n$ basis functions.
 
+\medskip\pause
+
 Using the singular value decomposition
 $$
   \Phi = \symbf{U} D \symbf{V}^T
@@ -898,9 +896,11 @@ $$
 $$
 
 \pdfpcnote{
-- Can be done whether we use all or a subset of our basis functions
-- $S_\lambda$ is diagonalized
-- DERIVE $\symbf{S}_\lambda$ ON BLACKBOARD!
+Can be done whether we use all or a subset of our basis functions
+
+$S_\lambda$ is diagonalized
+
+DERIVE $\symbf{S}_\lambda$ ON BLACKBOARD!
 }
 
 ## Interpretation
@@ -938,9 +938,6 @@ omega_tilde <- t(
 ) /
   phi_svd$d
 
-# It is safer to use the numerical singular value decomposition ('svd')
-# for diagonalizing a positive semidefinite matrix than to use a
-# more general numerical diagonalization implementation such as 'eigen'.
 omega_tilde_svd <- svd(omega_tilde)
 u_tilde <- phi_svd$u %*% omega_tilde_svd$u
 
@@ -954,12 +951,14 @@ bind_cols(select(nuuk_year, Year), as_tibble(u_tilde)) |>
   ylab("")
 ```
 
-## The Eigenvalues $\gamma_i$
+##
 
 ```{r spline-gamma}
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 3.5
+#| fig-cap: The eigenvalues $\gamma_i$ of the penalty matrix in the
+#|   Demmler-Reinsch basis.
 library(patchwork)
 
 d <- omega_tilde_svd$d
@@ -972,227 +971,33 @@ p1 <- ggplot(eigen_data, aes(i, Eigenvalues)) +
 
 p2 <- p1 + scale_y_log10()
 
-p1 / p2
+p1 / p2 + plot_layout(axes = "collect")
 ```
 
-# S3 Smoother
+## Boundary Adjustments
 
-## A LOESS Smoother
+- Boundary adjustment is important for all local smoothing methods (running
+  mean, kernel smoothing, LOESS, splines).
+- At the edges, standard symmetric windows/neighborhoods cannot be applied.
+- Solutions include asymmetric windows, padding, extrapolation, or excluding
+  boundary points.
 
-LOESS: locally weighted scatterplot smoothing^[Default behavior in ggplot2 is to
-use LOESS for small data sets and generalized additive models (GAMs) for larger
-data sets.]
+## Example: Padding and Asymmetric Windows
 
-```{r loess}
-#| fig-width: 5
-#| fig-heigth: 3
-nuuk_plot + geom_smooth()
+```r
+# Pad data at boundaries
+y_padded <- c(rep(y[1], m), y, rep(y[n], m))
+s_padded <- run_mean(y_padded, k)
+
+# Asymmetric window at left boundary
+s_left <- mean(y[1:k])
+
+# Asymmetric window at right boundary
+s_right <- mean(y[(n - k + 1):n])
 ```
 
-## LOESS
-
-- A mix of nearest neighbors and smoothing splines.
-- Implemented in `loess()`
-- Does not automatically select the span (tuning parameter)
-- Default span is 0.75, often too large
-- Nonlinear, so the formulas for linear smoothers do not apply.
-- Instead use 5- or 10-fold cross validation for tuning.
-- Or use the GCV criterion (using `trace.hat` entry in the returned object).
-
-. . .
-
-Loess is a **robust** smoother (linear smoothers are not) and relatively
-insensitive to outliers.
-
-## Another LOESS Smoother
-
-```{r loess2}
-#| fig-width: 5
-#| fig-height: 2.5
-nuuk_plot + geom_smooth(method = "loess", span = 0.5)
-```
-
-## A Linear "Smoother"
-
-```{r linear-smoother}
-#| fig-width: 5
-#| fig-height: 2.5
-nuuk_plot + geom_smooth(method = "lm")
-```
-
-## A Polynomial Smoother
-
-```{r poly-smoother}
-#| fig-width: 5
-#| fig-height: 2.5
-nuuk_plot + geom_smooth(method = "lm", formula = y ~ poly(x, 5))
-```
-
-## Another Polynomial Smoother
-
-```{r poly-smother2}
-#| fig-width: 5
-#| fig-height: 2.5
-nuuk_plot + geom_smooth(method = "lm", formula = y ~ poly(x, 20))
-```
-
-## A Spline Smoother
-
-```{r spline-smoother}
-#| fig-width: 5
-#| fig-height: 2.5
-nuuk_plot + geom_smooth(method = "gam", formula = y ~ s(x))
-```
-
-## Another Spline Smoother
-
-```{r spline-smoother2}
-#| fig-width: 5
-#| fig-height: 2.5
-nuuk_plot + geom_smooth(method = "gam", formula = y ~ s(x, k = 100))
-```
-
-## Smoothing with ggplot2
-
-The `geom_smooth()` function easily adds miscellaneous model fits or scatter
-plot smoothers to the scatter plot.
-
-\pause\medskip
-
-Spline smoothing is performed via the `gam()` function in the mgcv package,
-whereas loess smoothing is via the `loess()` function in the stats package.
-
-\pause\medskip
-
-Any "smoother" can be used that supports a formula interface and has a
-prediction function adhering to the standards of `predict.lm()`.
-
-## Our Running Mean Implementation
-
-```{r run_mean_def_again, ref.label="run_mean_def"}
-run_mean
-```
-
-## An Interface for `geom_smooth()`
-
-```{r}
-running_mean <- function(..., data, k = 5) {
-  ord <- order(data$x)
-  s <- run_mean(data$y[ord], k = k)
-  structure(
-    list(x = data$x[ord], y = s),
-    class = "running_mean"
-  )
-}
-```
-
-. . .
-
-### Prediction Method
-
-```{r}
-predict.running_mean <- function(object, newdata, ...) {
-  approx(object$x, object$y, newdata$x)$y # Linear interpolation
-}
-```
-
-## A Running Mean
-
-```{r}
-#| warning: false
-#| fig-width: 5
-#| fig-height: 2.5
-nuuk_plot + geom_smooth(method = "running_mean", se = FALSE, n = 200)
-```
-
-## Specifying Arguments to Our Method
-
-```{r}
-#| warning: false
-#| fig-width: 5
-#| fig-height: 2.5
-nuuk_plot +
-  geom_smooth(
-    method = "running_mean",
-    se = FALSE,
-    n = 200,
-    method.args = list(k = 13)
-  )
-```
-
-## Handling Boundary Values
-
-```{r}
-running_mean <- function(..., data, k = 5, boundary = NULL) {
-  ord <- order(data$x)
-  y <- data$y[ord]
-  n <- length(y)
-  m <- floor((k - 1) / 2)
-  if (m > 0 && !is.null(boundary)) {
-    if (boundary == "pad") {
-      y <- c(rep(y[1], m), y, rep(y[n], m))
-    }
-    if (boundary == "rev") {
-      y <- c(y[m:1], y, y[n:(n - m + 1)])
-    }
-  }
-  s <- run_mean(y, k = k)
-  if (!is.null(boundary)) {
-    s <- na.omit(s)
-  }
-  structure(list(x = data$x[ord], y = s), class = "running_mean")
-}
-```
-
-### No Boundary Adjustment
-
-```{r}
-#| warning: false
-#| echo: false
-#| fig-width: 5
-#| fig-height: 3
-smooth1 <- geom_smooth(
-  method = "running_mean",
-  se = FALSE,
-  n = 200,
-  method.args = list(k = 13)
-)
-nuuk_plot + smooth1
-```
-
-### Padding
-
-```{r}
-#| warning: false
-#| echo: false
-#| fig-width: 5
-#| fig-height: 3
-smooth2 <- geom_smooth(
-  method = "running_mean",
-  se = FALSE,
-  n = 200,
-  method.args = list(k = 13, boundary = "pad"),
-  color = "red"
-)
-nuuk_plot + smooth2 + smooth1
-```
-
-### Reversion
-
-```{r}
-#| warning: false
-#| echo: false
-#| fig-width: 5
-#| fig-height: 3
-smooth3 <- geom_smooth(
-  method = "running_mean",
-  se = FALSE,
-  n = 200,
-  method.args = list(k = 13, boundary = "rev"),
-  color = "purple"
-)
-nuuk_plot + smooth3 + smooth2 + smooth1
-```
+- Padding reduces bias at boundaries.
+- Asymmetric windows use available points when full window is not possible.
 
 # Exercises
 
