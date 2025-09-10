@@ -805,7 +805,7 @@ p4 <- p3 +
 
 Let's say we have a data set
 $$
-\boldsymbol{x} = (-1, 3, 5, 6, 9).
+\symbf{x} = (-1, 3, 5, 6, 9).
 $$
 
 :::
@@ -832,7 +832,7 @@ p2
 
 Let's say we have a data set
 $$
-\boldsymbol{x} = (-1, 3, 5, 6, 9).
+\symbf{x} = (-1, 3, 5, 6, 9).
 $$
 
 \smallskip
@@ -862,7 +862,7 @@ p3
 
 Let's say we have a data set
 $$
-\boldsymbol{x} = (-1, 3, 5, 6, 9).
+\symbf{x} = (-1, 3, 5, 6, 9).
 $$
 
 \smallskip

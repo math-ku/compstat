@@ -352,7 +352,7 @@ $$
 To test out how this works, we introduce two simplifications:
 
 - $\Sigma_u(\nu) = \nu I_m$
-- $X = \mathbf{1}$ (intercept-only fixed effects)
+- $X = \symbf{1}$ (intercept-only fixed effects)
 - $z_{ij} \in \{0, 1\}$ (random intercept, fixed slope)
 
 . . .

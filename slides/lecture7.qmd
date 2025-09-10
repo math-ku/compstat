@@ -699,30 +699,30 @@ options(digits = old_options$digits)
 ### Exponential Families
 
 Joint density:
-$$f(\mathbf{y} \mid \theta) = \prod_{i=1}^n \frac{1}{\varphi_i(\theta)} e^{\theta^T t_i(y_i)} = e^{\theta^T \sum_{i=1}^n t_i(y_i) - \sum_{i=1}^n \kappa_i(\theta)}$$
+$$f(\symbf{y} \mid \theta) = \prod_{i=1}^n \frac{1}{\varphi_i(\theta)} e^{\theta^T t_i(y_i)} = e^{\theta^T \sum_{i=1}^n t_i(y_i) - \sum_{i=1}^n \kappa_i(\theta)}$$
 where $\varphi_i(\theta) = \int e^{\theta^T t_i(u)} \mu_i(\mathrm{d}u)$ and
 $\kappa_i(\theta) = \log(\varphi_i(\theta)).$ The log-likelihood is
-$$\ell(\theta) = \theta^T t(\mathbf{y}) - \kappa(\theta)$$ where
+$$\ell(\theta) = \theta^T t(\symbf{y}) - \kappa(\theta)$$ where
 
 $$
-t(\mathbf{y}) = \sum_{i=1}^m t_i(y_i) \quad \text{and} \quad
+t(\symbf{y}) = \sum_{i=1}^m t_i(y_i) \quad \text{and} \quad
 \kappa(\theta) = \sum_{i=1}^m \log \varphi_i(\theta).
 $$
 
-The gradient is $$\nabla \ell(\theta) = t(\mathbf{y}) - \nabla \kappa(\theta).$$
+The gradient is $$\nabla \ell(\theta) = t(\symbf{y}) - \nabla \kappa(\theta).$$
 
 ### The Poisson Regression model
 
 For the Poisson regression model we find that
 
 $$
-t(\mathbf{y}) = \sum_{i=1}^n x_i y_i = \mathbf{X}^T \mathbf{y} \quad \text{and} \quad
+t(\symbf{y}) = \sum_{i=1}^n x_i y_i = \symbf{X}^T \symbf{y} \quad \text{and} \quad
 \kappa(\beta) = \sum_{i=1}^n e^{x_i^T \beta}.
 $$
 
 Moreover,
-$$\nabla \kappa(\beta) = \sum_{i=1}^n x_i e^{x_i^T \beta} = \mathbf{X}^T \mathbf{w}(\beta)$$
-where $$ \mathbf{w}(\beta) = \exp(\mathbf{X}^T \beta)$$
+$$\nabla \kappa(\beta) = \sum_{i=1}^n x_i e^{x_i^T \beta} = \symbf{X}^T \symbf{w}(\beta)$$
+where $$ \symbf{w}(\beta) = \exp(\symbf{X}^T \beta)$$
 with $\exp$ applied
 coordinatewisely.
 

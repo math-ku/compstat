@@ -496,7 +496,7 @@ tmp <- sample_gamma(1e5, 1)
 When $f$ is _log-concave_ on $I$ we can construct bounds of the form
 $$f(x) \leq e^{V(x)}$$ --
 
-where $$V(x) = \sum_{i=1}^m  (a_i x + b_i) \mathbf{1}_{I_i}(x)$$ for intervals
+where $$V(x) = \sum_{i=1}^m  (a_i x + b_i) \symbf{1}_{I_i}(x)$$ for intervals
 $I_i$ forming a partition of $I$.
 
 . . .

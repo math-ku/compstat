@@ -216,7 +216,7 @@ $n = n_{CC} + n_{CI} + n_{CT} + n_{II} + n_{IT} + n_{TT}$.
 
 . . .
 
-For us $\hat{p} = \frac{1}{n} \mathbf{X} y$.
+For us $\hat{p} = \frac{1}{n} \symbf{X} y$.
 
 :::: {.columns}
 

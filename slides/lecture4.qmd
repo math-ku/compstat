@@ -306,21 +306,20 @@ $$
 
 We can express all fitted values as a matrix-vector product:
 $$
-\hat{\mathbf{f}} = \mathbf{S} \mathbf{y}
+\hat{\symbf{f}} = \symbf{S} \symbf{y}
 $$
-where $\mathbf{y} = (y_1, \ldots, y_n)^T$ and $\mathbf{S}$ is the **smoother
+where $\symbf{y} = (y_1, \ldots, y_n)^T$ and $\symbf{S}$ is the **smoother
 matrix**.
 
 \pause
 
 ### Smoother Matrix
 
-Each entry of $\mathbf{S}$ is
+Each entry of $\symbf{S}$ is
 $$
-S_{ij} = \frac{1}{k} \cdot \mathbf{1}_{\{j \in N_i\}}
+S_{ij} = \frac{1}{k} \cdot \symbf{1}_{\{j \in N_i\}}
 $$
-where $\mathbf{1}_{\{j \in N_i\}}$ is 1 if $j$ is a neighbor of $i$, 0
-otherwise.
+where $\symbf{1}_{\{j \in N_i\}}$ is 1 if $j$ is a neighbor of $i$, 0 otherwise.
 
 \pdfpcnote{
   Each fitted value is a weighted average of the y-values.
@@ -352,14 +351,15 @@ $\hat{\symbf{f}}$.
 When $x_i \in \mathbb{R}$ we can sort data according to $x$-values and then use
 a _symmetric_ neighbor definition:
 $$
-  N_i = \{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\}
+  N_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
 $$
 (for $k$ odd.)
 
 \pause\medskip
 
-This simplifies computations: we don't need to keep track of metric comparisons,
-only the order matters.
+### Simplifies Computations
+
+We don't need to keep track of metric comparisons. Only the order matters.
 
 \pdfpcnote{
 - Symmetric neighborhoods do not take distance into account.
