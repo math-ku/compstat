@@ -758,8 +758,7 @@ omega <- pen_mat(
 image(Matrix(omega))
 ```
 
-(See [slide source](/slides/lecture4.qmd) for implementation
-of `pen_mat()`.)
+(See [slide source](/slides/lecture4.qmd) for implementation of `pen_mat()`.)
 
 :::
 
@@ -1225,11 +1224,10 @@ w <- c(rep(1, k * n), rep(0, n * (n - k)))
 S <- matrix(w, n, n, byrow = TRUE)
 ```
 
-Use the [Matrix
-package](https://CRAN.R-project.org/package=Matrix) to
-convert $\symbf{S}$ to a sparse format using `Matrix::Matrix(S, sparse = TRUE)`
-and then benchmark the sparse multiplication against the dense one. Parameterize
-the benchmark with $n$ and $k$.
+Use the [Matrix package](https://CRAN.R-project.org/package=Matrix) to convert
+$\symbf{S}$ to a sparse format using `Matrix::Matrix(S, sparse = TRUE)` and
+then benchmark the sparse multiplication against the dense one. Parameterize the
+benchmark with $n$ and $k$.
 
 \pause\medskip
 
