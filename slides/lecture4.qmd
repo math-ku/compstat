@@ -284,18 +284,12 @@ Data is available [here](../data/nuuk.dat.txt).
 
 ## Nearest Neighbor Estimation
 
-Our data is of the form
+Given data points $(x_1, y_1), \ldots, (x_n, y_n)$, the $k$-nearest neighbor
+estimator at $x_i$ is
 $$
-  (x_1, y_1), \ldots, (x_n, y_n).
+\hat{f}_i = \frac{1}{k} \sum_{j \in N_i} y_j
 $$
-
-\medskip\pause
-
-The $k$-nearest neighbor smoother in $x$ is defined as
-$$
-  \hat{f}(x) = \frac{1}{k} \sum_{j \in N(x)} y_j
-$$
-where $N(x)$ is the set of indices for the $k$ nearest neighbors of $x$.
+where $N_i$ is the set of indices for the $k$ nearest neighbors of $x_i$.
 
 \medskip\pause
 
@@ -308,27 +302,29 @@ $$
  N(x) is the neighborhood of x.
 }
 
-## Nearest Neighbor Estimation
+## Matrix Formulation
 
-The estimator in $x_i$ is
+We can express all fitted values as a matrix-vector product:
 $$
-  \hat{f}_i = \frac{1}{k} \sum_{j \in N_i} y_j
+\hat{\mathbf{f}} = \mathbf{S} \mathbf{y}
 $$
-where $N_i = N(x_i)$.
+where $\mathbf{y} = (y_1, \ldots, y_n)^T$ and $\mathbf{S}$ is the **smoother
+matrix**.
 
-\medskip\pause
+\pause
 
-$S_{ij} = \frac{1}{k} \symbf{1}_{N_i}(j)$, $\symbf{S} = (S_{ij})$, and
+### Smoother Matrix
+
+Each entry of $\mathbf{S}$ is
 $$
-  \hat{\symbf{f}} = (\hat{f}_i) = \symbf{S} \symbf{y}.
+S_{ij} = \frac{1}{k} \cdot \mathbf{1}_{\{j \in N_i\}}
 $$
-
-. . .
-
-$\hat{\symbf{f}}$ is an estimator of the vector $(f(x_i))$.
+where $\mathbf{1}_{\{j \in N_i\}}$ is 1 if $j$ is a neighbor of $i$, 0
+otherwise.
 
 \pdfpcnote{
-  The vector hat(f) can be computed as a linear function of y.
+  Each fitted value is a weighted average of the y-values.
+
   S is a relatively sparse n x n matrix.
 }
 
@@ -356,7 +352,7 @@ $\hat{\symbf{f}}$.
 When $x_i \in \mathbb{R}$ we can sort data according to $x$-values and then use
 a _symmetric_ neighbor definition:
 $$
-  N_i = \{i - (k - 1) / 2, i - (k - 1) / 2 + 1, \ldots, i - 1 , i, i + 1, \ldots, i + (k - 1) / 2\}
+  N_i = \{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\}
 $$
 (for $k$ odd.)
 
@@ -398,12 +394,11 @@ run_mean_naive <- function(y, k) {
 
 ## Efficient Running Mean
 
-Implementation (assuming $y$ is sorted) using the identity
+A more efficient implementation can be defined by, assuming $y$ is symmetric, we
+use the identity
 $$
   \hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)/2}}{k}.
 $$
-
-. . .
 
 ```{r run_mean_def}
 #| echo: false
@@ -510,11 +505,13 @@ The two other algorithms are $O(n)$.
 
 If data is i.i.d. with $V(Y \mid X) = \sigma^2$ and $f(x) = E(Y \mid X = x)$,
 
+\pause
+
 $$
 \begin{aligned}
-  \mathrm{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\
-                  & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\
-                  & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \underbrace{\left(f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x*l)\right)^2}*{\text{squared bias}}.
+  \text{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\ \pause
+                  & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\ \pause
+                  & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \bigg( \underbrace{f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)}_{\text{bias}}\bigg)^2.
 \end{aligned}
 $$
 
@@ -522,7 +519,7 @@ $$
 
 ### Bias-Variance Trade-Off
 
-- Small $k$ gives large variance and small bias (if $f$ is smooth).
+- Small $k$ gives large variance and small bias (if $f$ is smooth).\pause
 - Large $k$ gives small variance and potentially large bias (if $f$ is not
   constant).
 
@@ -632,7 +629,7 @@ But another idea is to use \alert{smoothing splines} instead.
 
 The minimizer of
 $$
-  L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \mathrm{d} z}_{|f''|_2^2}
+  L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \text{d} z}_{\lVert f''\rVert_2^2}
 $$
 is a **cubic spline** with **knots** in the data points $x_i$.
 
@@ -670,7 +667,7 @@ $$
 $$
 with
 $$
-  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \mathrm{d}z.
+  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
 $$
 
 \pdfpcnote{
@@ -812,7 +809,7 @@ With $\text{df} = \text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$ we replace
 $S_{ii}$ in LOOCV by $\text{df} / n$ to get the **generalized** cross-validation
 criterion
 $$
-  \mathrm{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / n}\right)^2.
+  \text{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \text{df} / n}\right)^2.
 $$
 
 . . .
