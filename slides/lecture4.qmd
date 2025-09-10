@@ -202,13 +202,14 @@ A new \alert{thread} is created for each future.
 
 \medskip\pause
 
-- Other work can be done in the meantime on main thread.
-- Once the value is needed, hopefully it is already (or best: just-in-time)
-  available.
+- Meanwhile, the main thread can continue doing other work.
+- Once the value is needed, the main thread blocks until it's available.
+
+. . .
 
 ```{r}
 #| eval: false
-plan(multicore) # Not on Windows or RStudio!
+plan(multisession) # or multicore, mirai_multisession, etc.
 
 z %<-%
   {
@@ -219,6 +220,25 @@ z %<-%
 
 z # This line blocks until z is available
 ```
+
+## Backends for Futures
+
+Need to pick a backend (plan), with multiple options.
+
+. . .
+
+### `multicore`
+
+Available on Linux and macOS, but not Windows or RStudio. _Forks_ the current
+R process, instead of starting a new one. But _not_ recommended because of
+potential stability issues.
+
+. . .
+
+### `mirai_multisession`/`mirai_cluster`
+
+A newer alternative, available through the
+[future.mirai](https://cran.r-project.org/package=future.mirai) package.
 
 ## Caveats
 
@@ -246,6 +266,37 @@ Some functions are not thread safe (e.g. random number generation).
 
 Parallelizing a task that is already parallelized may not help and may even
 \alert{hurt} performance.
+
+## Comparison of foreach and future
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### foreach
+
+Main use case is to run computations in parallel that would otherwise be done in
+a `for` loop.
+
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### future
+
+More general abstraction for asynchronous programming and parallelization.
+
+\pause\medskip
+
+Primarily used when you have various independent tasks that you want to run
+in parallel.
+
+:::
+
+::::
 
 # Scatterplot Smoothing
 
@@ -300,6 +351,10 @@ $$
 
 \pdfpcnote{
  N(x) is the neighborhood of x.
+}
+
+\pdfpcnote{
+  Show example with k = 3.
 }
 
 ## Matrix Formulation
@@ -394,14 +449,14 @@ run_mean_naive <- function(y, k) {
 
 ## Efficient Running Mean
 
-A more efficient implementation can be defined by, assuming $y$ is symmetric, we
-use the identity
+We can achieve a more efficient implementation by noting that
 $$
   \hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)/2}}{k}.
 $$
 
+. . .
+
 ```{r run_mean_def}
-#| echo: false
 run_mean <- function(y, k) {
   n <- length(y)
   m <- floor((k - 1) / 2)
@@ -501,7 +556,12 @@ The Matrix-vector multiplication is $O(n^2)$.
 The two other algorithms are $O(n)$.
 
 
-## Mean-Squared Error
+## Bias--Variance Trade-Off
+
+There is a bias-variance trade-off in nearest neighbor smoothing with respect
+to $k$.
+
+\medskip\pause
 
 If data is i.i.d. with $V(Y \mid X) = \sigma^2$ and $f(x) = E(Y \mid X = x)$,
 
@@ -510,8 +570,8 @@ If data is i.i.d. with $V(Y \mid X) = \sigma^2$ and $f(x) = E(Y \mid X = x)$,
 $$
 \begin{aligned}
   \text{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\ \pause
-                  & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\ \pause
-                  & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \bigg( \underbrace{f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)}_{\text{bias}}\bigg)^2.
+                & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\ \pause
+                & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \bigg( \underbrace{f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)}_{\text{bias}}\bigg)^2.
 \end{aligned}
 $$
 
@@ -523,38 +583,63 @@ $$
 - Large $k$ gives small variance and potentially large bias (if $f$ is not
   constant).
 
-## Leave-One Out Cross-Validation (LOOCV)
+## How to Choose $k$?
 
-The running mean/nearest neighbor smoother is a _linear smoother_,
-$\hat{\symbf{f}} = \symbf{S} \symbf{Y}$.
+We know there is a bias-variance trade-off in $k$---so how do we choose $k$?
 
-\medskip\pause
+\pause
 
-How to predict $y_i$ if $(x_i, y_i)$ is left out?
+### Leave-One-Out Cross Validation (LOOCV)
 
-\medskip\pause
+Leave out one observation at a time, predict using remaining data, and measure
+the prediction error.
 
-A _definition_ for a linear smoother is
+
+\pause\medskip
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+The general LOOCV formula is
 $$
-  \hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}}.
+  \text{LOOCV} = \sum_{i=1}^n (y_i - \hat{f}^{-i}_i)^2.
 $$
 
-\medskip\pause
+\pause
 
-For many smoothing procedures with a natural "out-of-sample" prediction method,
-the identity above holds.
+For a *linear* smoother, we have
+$$
+  \hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}},
+$$
+
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+This leads to the simplified formula
+$$
+  \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2.
+$$
+
+:::
+
+::::
+
 
 \pdfpcnote{
 Can for running mean in principle compute this without leaving anything out.
 }
 
-## LOOCV
+## LOOCV for Nearest Neighbors
 
-It follows that for **leave-one-out cross validation,**
-
+For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$, so
 $$
-  \text{LOOCV} = \sum_{i} (y_i - \hat{f}^{-i}_i)^2 = \sum_{i} \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2
-$$
+  \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
+$$  
 
 . . .
 
@@ -566,6 +651,10 @@ loocv <- function(k, y) {
   mean(((y - f_hat) / (1 - 1 / k))^2, na.rm = TRUE)
 }
 ```
+
+. . .
+
+### Note {.alert}
 
 The implementation removes missing values due to the way we handle the
 boundaries, and it uses `mean()` instead of `sum()` to correctly adjust for
@@ -627,11 +716,20 @@ But another idea is to use \alert{smoothing splines} instead.
 
 ## Smoothing Splines
 
-The minimizer of
+We want a smooth function $f$ that balances goodness-of-fit and wiggliness.
+
+\medskip\pause
+
+To do this, we minimize an objective function that penalizes wiggliness:
 $$
   L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \text{d} z}_{\lVert f''\rVert_2^2}
 $$
-is a **cubic spline** with **knots** in the data points $x_i$.
+where $\lambda \geq 0$ is a tuning parameter that controls the trade-off.
+
+\pause\medskip
+
+The minimizer of this objective is a **cubic spline** with **knots** in the data
+points $x_i$.
 
 \medskip\pause
 
@@ -644,25 +742,25 @@ splines.
 
 \medskip\pause
 
-Cubic splines are piecewise degree 3 polynomials in between knots.
+The problem reduces to finding the coefficients $\symbf{\beta}$.
 
 \pdfpcnote{
-- Without penalty term, any interpolating function would work well.
-- Penalty term penalizes solutions with large second derivatives (in norm).
-- **Derive the minimizer on the blackboard!**
+Without penalty term, any interpolating function would work well.
+
+Penalty term penalizes solutions with large second derivatives (in norm).
 }
 
 ## Loss Function
 
 In vector notation
 $$
-  \hat{\symbf{f}} = \symbf{\Phi}\hat{\beta}
+  \symbf{f} = \symbf{\Phi}\symbf{\beta}
 $$
 with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
 $$
 \begin{aligned}
   L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\ 
-               & = (\symbf{y} - \symbf{\Phi}\beta)^T (\symbf{y} - \symbf{\Phi}\beta) + \lambda \beta^T \symbf{\Omega} \beta
+               & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
 \end{aligned}
 $$
 with
@@ -670,19 +768,20 @@ $$
   \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
 $$
 
-\pdfpcnote{
-  Can rewrite penalty term in quadratic form $\lambda \beta^T \symbf{\Omega} \beta$.
-}
-
-### Solution
 
 \pause\medskip
 
-We recognize this as a _linear smoother_ with smoother matrix
-$\symbf{S}_{\lambda}$ and penalty matrix $\symbf{\Omega}$.
+### Solution
+
+The solution is a _linear smoother_ with smoother matrix $\symbf{S}_{\lambda}$
+and penalty matrix $\symbf{\Omega}$.
 
 \pdfpcnote{
   Similar to ridge (Tikhonov) regression: OLS + squared l2 penalty.
+
+  Can rewrite penalty term in quadratic form $\lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}$.
+
+  Derive the minimizer on the blackboard.
 }
 
 ## Splines in R
@@ -709,7 +808,10 @@ df <- data.frame(
   group = as.character(rep(seq_len(ncol(b_splines)), each = length(xx)))
 )
 
+knot_points <- c(0, 0.2, 0.4, 0.6, 0.8, 1)
+
 ggplot(df, aes(x = x, y = y, group = group, color = group)) +
+  scale_x_continuous(breaks = knot_points, minor_breaks = NULL) +
   geom_line() +
   labs(x = "x", y = "Basis Value") +
   guides(color = "none")
@@ -782,7 +884,7 @@ phi <- splines::splineDesign(knots, inner_knots)
 . . .
 
 ```{r nuuk-smooth-spline2}
-omega <- pen_mat(inner_knots)
+omega <- pen_mat(inner_knots) # Complicated, but depends only on knots
 smoother <- function(lambda) {
   phi %*%
     solve(
@@ -803,11 +905,18 @@ nuuk_plot +
   geom_line(aes(y = smoother(100000)), color = "orange")
 ```
 
-## Generalized Cross-Validation
+## Generalized Cross-Validation (GCV)
 
-With $\text{df} = \text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$ we replace
-$S_{ii}$ in LOOCV by $\text{df} / n$ to get the **generalized** cross-validation
-criterion
+For smoothing splines, $S_{ii}$ varies with $i$, which makes LOOCV expensive
+to compute.
+
+\medskip\pause
+
+### Idea
+
+Replace $S_{ii}$ in LOOCV by $\text{df} / n$, with $\text{df} =
+\text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$, to get the **generalized**
+cross-validation criterion
 $$
   \text{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \text{df} / n}\right)^2.
 $$
@@ -819,10 +928,16 @@ $$
 ```{r gcv-smooth-spline}
 gcv <- function(lambda, y) {
   S <- phi %*% solve(crossprod(phi) + lambda * omega, t(phi))
-  df <- sum(diag(S)) # The trace of the smoother matrix
+  df <- sum(diag(S))
   sum(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE)
 }
 ```
+
+\pdfpcnote{
+  The df approximation relies on S_ii being nearly constant.
+
+  GCV does not make sense for running mean since S_ii is constant.
+}
 
 ## GCV-Optimal $\lambda$
 
@@ -870,54 +985,71 @@ nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
 
 ## Efficient Computations
 
-In practice we use $p < n$ basis functions.
+When $n$ is large, computing $\symbf{S}_{\lambda} \symbf{y}$ directly is
+expensive.
 
 \medskip\pause
+
+In practice, we therefore often use fewer basis functions than data points, $p
+< n$.
+
+\pause
+
+### Singular Value Decomposition
 
 Using the singular value decomposition
 $$
   \Phi = \symbf{U} D \symbf{V}^T
 $$
-\pause it holds that
+\pause we can rewrite the smoother matrix as
 $$
   \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
 $$
-where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and\pause
+where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and \pause
 $$
   D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
 $$
 
+\medskip\pause
+
+The columns of $\widetilde{\symbf{U}}$ form the **Demmler-Reinsch basis**.
+
 \pdfpcnote{
-Can be done whether we use all or a subset of our basis functions
+  Can be done whether we use all or a subset of our basis functions
 
-$S_\lambda$ is diagonalized
+  S_\lambda is diagonalized
 
-DERIVE $\symbf{S}_\lambda$ ON BLACKBOARD!
+  Derive $\symbf{S}_\lambda$ on blackboard.
 }
 
 ## Interpretation
 
-The coefficients, $\hat{\beta} = \widetilde{\symbf{U}}^Ty$, are computed for
-expanding $y$ in the basis given by the columns of $\widetilde{\symbf{U}}$.
+Project the data $y$ onto the Demmler-Reinsch basis (columns of
+$\widetilde{\symbf{U}}$) to get coefficients $\hat{\symbf{\beta}} =
+\widetilde{\symbf{U}}^Ty$.
 
 \pause\medskip
 
-The $i$-th coefficient is shrunk towards 0,
+Each coefficient is shrunk according to the corresponding eigenvalue $\gamma_i$
+and smoothing parameter $\lambda$:
 $$
-  \hat{\beta}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
+  \hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
 $$
 
 \pause\medskip
 
-The smoothed values, $\widetilde{\symbf{U}} \hat{\beta}(\lambda)$, are computed
-as an expansion using the shrunken coefficients.
+The final smoothed values are reconstructed by combining the shrunk coefficients
+with the basis functions.
+$$
+  \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
+$$
 
 ## The Demmler-Reinsch Basis (Columns of $\widetilde{\symbf{U}}$)
 
 ```{r spline-diagonalization}
 #| echo: false
-#| fig-width: 5.3
-#| fig-height: 2.5
+#| fig-width: 5.5
+#| fig-height: 3
 inner_knots <- seq(1867, 2013, length.out = 18)
 phi <- splines::splineDesign(
   c(rep(range(inner_knots), 3), inner_knots),
@@ -951,7 +1083,7 @@ bind_cols(select(nuuk_year, Year), as_tibble(u_tilde)) |>
 ```{r spline-gamma}
 #| echo: false
 #| fig-width: 5.5
-#| fig-height: 3.5
+#| fig-height: 3
 #| fig-cap: The eigenvalues $\gamma_i$ of the penalty matrix in the
 #|   Demmler-Reinsch basis.
 library(patchwork)
