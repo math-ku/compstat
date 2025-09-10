@@ -12,15 +12,9 @@ Using multiple cores to speed up computations.
 
 . . .
 
-### Nearest Neighbors
+### Scatterplot Smoothing
 
-Simple algorithm for nonparametric smoothing.
-
-. . .
-
-### Smoothing Splines
-
-A generalization of polynomial regression.
+Cover **nearest neighbor smoothing** and **smoothing splines**
 
 # Parallelization
 
@@ -253,6 +247,7 @@ Some functions are not thread safe (e.g. random number generation).
 Parallelizing a task that is already parallelized may not help and may even
 \alert{hurt} performance.
 
+# Scatterplot Smoothing
 
 ## Nuuk Temperature Data
 
@@ -360,7 +355,6 @@ $\hat{\symbf{f}}$.
 
 When $x_i \in \mathbb{R}$ we can sort data according to $x$-values and then use
 a _symmetric_ neighbor definition:
-
 $$
   N_i = \{i - (k - 1) / 2, i - (k - 1) / 2 + 1, \ldots, i - 1 , i, i + 1, \ldots, i + (k - 1) / 2\}
 $$
@@ -402,7 +396,7 @@ run_mean_naive <- function(y, k) {
 - Can speed this up by replacing mean computation
 }
 
-## Running Mean
+## Efficient Running Mean
 
 Implementation (assuming $y$ is sorted) using the identity
 $$
@@ -412,6 +406,7 @@ $$
 . . .
 
 ```{r run_mean_def}
+#| echo: false
 run_mean <- function(y, k) {
   n <- length(y)
   m <- floor((k - 1) / 2)
@@ -428,7 +423,7 @@ run_mean <- function(y, k) {
 ```
 
 \pdfpcnote{
-  Ensures $k$ is odd
+  Ensures k is odd
 }
 
 
@@ -449,8 +444,7 @@ nuuk_plot + geom_line(aes(y = f_hat), color = "blue")
 
 ## `stats::filter()`
 
-The R function `stats::filter()` applies linear filtering (moving averages or
-autoregression).
+`stats::filter()` applies linear filtering (moving averages or autoregression).
 
 . . .
 
@@ -468,23 +462,14 @@ options(digits = op$digits)
 
 ```{r runmean-test}
 f_hat <- run_mean(nuuk_year$Temperature, 11)
-f_hat_filter <- stats::filter(
-  nuuk_year$Temperature,
-  rep(1 / 11, 11)
-)
 
 all.equal(f_hat, as.numeric(f_hat_filter))
 ```
 
-\pause
-
-There is a `filter()` function in the **dplyr** package (part of the tidyverse),
-so look out for name clashes. Safest to call `stats::filter()`.
-
 \pdfpcnote{
-  - filter(): general linear filtering function
+  Warn about name clash with dplyr::filter.
 
-  - `rep(1, /11, 11)` are MA coefficients
+  `rep(1, /11, 11)` are MA coefficients
 }
 
 ##
@@ -585,7 +570,7 @@ loocv <- function(k, y) {
 }
 ```
 
-[The implementation removes missing values due to the way we handle the
+The implementation removes missing values due to the way we handle the
 boundaries, and it uses `mean()` instead of `sum()` to correctly adjust for
 this.
 
@@ -607,8 +592,9 @@ k_opt <- k[which.min(cv_error)]
 
 ```{r nuuk-running-loocv-plot}
 #| fig-width: 5
-#| fig-height: 2.5
+#| fig-height: 2
 #| echo: false
+#| fig-cap: LOOCV error for nearest neighbor smoothing as a function of $k$.
 ggplot(tibble(k, cv_error), aes(k, cv_error)) +
   geom_vline(xintercept = k_opt, color = "dark orange") +
   geom_line() +
@@ -618,13 +604,12 @@ ggplot(tibble(k, cv_error), aes(k, cv_error)) +
 
 ##
 
-The optimal choice of $k$ is `r k_opt`.
-
 ```{r nuuk-NN-plot3}
 #| warning: false
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2.5
+#| fig-cap: Nearest neighbor smoother with LOOCV-optimal $k=15$.
 nuuk_plot +
   geom_line(aes(y = run_mean(nuuk_year$Temperature, k_opt)), color = "blue")
 ```
@@ -635,7 +620,7 @@ The running mean is wiggly!
 
 \pause\medskip
 
-We can use kernel smoothing (as we did last week) to fix this
+We can use kernel smoothing (as we did last week) to fix this.
 
 \pause\medskip
 
@@ -649,8 +634,11 @@ The minimizer of
 $$
   L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \mathrm{d} z}_{|f''|_2^2}
 $$
-is a **cubic spline** with **knots** in the data points $x_i$, that is, a
-function
+is a **cubic spline** with **knots** in the data points $x_i$.
+
+\medskip\pause
+
+That is, a function
 $$
   f = \sum_j \beta_j \varphi_j
 $$
@@ -673,7 +661,7 @@ In vector notation
 $$
   \hat{\symbf{f}} = \symbf{\Phi}\hat{\beta}
 $$
-with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and\pause
+with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
 $$
 \begin{aligned}
   L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\ 
@@ -689,14 +677,12 @@ $$
   Can rewrite penalty term in quadratic form $\lambda \beta^T \symbf{\Omega} \beta$.
 }
 
-
 ### Solution
-
 
 \pause\medskip
 
 We recognize this as a _linear smoother_ with smoother matrix
-$\symbf{S}_{\lambda}$.
+$\symbf{S}_{\lambda}$ and penalty matrix $\symbf{\Omega}$.
 
 \pdfpcnote{
   Similar to ridge (Tikhonov) regression: OLS + squared l2 penalty.
@@ -709,9 +695,9 @@ $\symbf{S}_{\lambda}$.
 #| fig-height: 2
 #| message: false
 #| warning: false
+#| fig-cap: Cubic B-spline basis functions with knots at 0, 0.2, 0.4, 0.6, 0.8,
+#|   and 1.
 library(Matrix)
-library(splines)
-# Note the specification of repeated boundary knots
 knots <- c(0, 0, 0, seq(0, 1, 0.2), 1, 1, 1)
 xx <- seq(0, 1, 0.005)
 b_splines <- splines::splineDesign(knots, xx)
@@ -719,14 +705,18 @@ matplot(xx, b_splines, type = "l", lty = 1)
 ```
 
 \pdfpcnote{
-Repeated knots at boundaries are necessary to ensure function goes throgh
+Repeated knots at boundaries necessary to ensure function goes through
 control points and is smooth.
 }
 
-## Penalty Matrix
+## Penalty Matrix $\symbf{\Omega}$
 
 ```{r Omega-Simpson}
 #| echo: false
+#| fig-cap: The penalty matrix $\symbf{\Omega}$ for a cubic spline with knots at
+#|   0, 0.1, 0.2, ..., 0.9, 1.
+#| fig-width: 5
+#| fig-height: 2.5
 pen_mat <- function(inner_knots) {
   knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
   d <- diff(inner_knots) # the vector of knot differences; b - a
@@ -740,40 +730,13 @@ pen_mat <- function(inner_knots) {
     crossprod(d * g_b, g_b)) /
     6
 }
-```
 
-:::: {.columns}
-
-::: {.column width="40%"}
-
-```{r Omega-Simpson2}
-#| eval: false
 omega <- pen_mat(
   seq(0, 1, 0.1)
 )
 
-image(Matrix(omega))
+image(Matrix(omega), sub = NULL)
 ```
-
-(See [slide source](/slides/lecture4.qmd) for implementation of `pen_mat()`.)
-
-:::
-
-::: {.column width="54%"}
-
-```{r}
-#| ref-label: Omega-Simpson2
-#| fig-width: 4
-#| fig-height: 2
-#| echo: false
-```
-
-:::
-
-::::
-
-. . .
-
 
 ## Fitting a Smoothing Spline
 
@@ -865,10 +828,12 @@ smooth_opt <- smoother(lambda_opt)
 nuuk_plot + geom_line(aes(y = smooth_opt), color = "blue")
 ```
 
-### Using `smooth.spline()`
+## Using `smooth.spline()`
 
-```{r nuuk-spline-opt2, fig.width = 9, fig.height = 5}
-smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature, all.knots = TRUE)
+```{r nuuk-spline-opt2}
+#| fig-width: 5
+#| fig-height: 2.5
+smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature)
 nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
 ```
 
@@ -1029,10 +994,11 @@ w <- c(rep(1, k * n), rep(0, n * (n - k)))
 S <- matrix(w, n, n, byrow = TRUE)
 ```
 
-Use the [Matrix package](https://CRAN.R-project.org/package=Matrix) to convert
-$\symbf{S}$ to a sparse format using `Matrix::Matrix(S, sparse = TRUE)` and
-then benchmark the sparse multiplication against the dense one. Parameterize the
-benchmark with $n$ and $k$.
+Use the [Matrix
+package](https://CRAN.R-project.org/package=Matrix) to
+convert $\symbf{S}$ to a sparse format using `Matrix::Matrix(S, sparse = TRUE)`
+and then benchmark the sparse multiplication against the dense one. Parameterize
+the benchmark with $n$ and $k$.
 
 \pause\medskip
 
