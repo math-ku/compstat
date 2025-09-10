@@ -27,6 +27,8 @@ format: html
 - Expand material on memory management.
 - Make binning part clearer: add illustrations and skip the implementation
   altogether.
+- Say something about sparse matrices.
+- Maybe add something about GPU computing.
 
 ## Lecture 8: Optimization
 
