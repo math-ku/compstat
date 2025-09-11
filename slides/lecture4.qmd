@@ -413,6 +413,11 @@ $$
 
 \pause\medskip
 
+A version of nearest neighbor smoothing that assumes ordered and symmetric
+neighborhoods.
+
+\pause
+
 ### Simplifies Computations
 
 We don't need to keep track of metric comparisons. Only the order matters.
@@ -475,6 +480,10 @@ run_mean <- function(y, k) {
 
 \pdfpcnote{
   Ensures k is odd
+
+  Complexity goes from O(nk) to O(n).
+
+  Based on the idea of keeping and updating a running sum.
 }
 
 
@@ -770,7 +779,7 @@ $$
 $$
 
 
-\pause\medskip
+\pause
 
 ### Solution
 
@@ -879,7 +888,7 @@ inner_knots <- nuuk_year$Year
 # Note that order does not matter
 knots <- c(rep(range(inner_knots), 3), inner_knots)
 
-phi <- splines::splineDesign(knots, inner_knots)
+Phi <- splines::splineDesign(knots, inner_knots)
 ```
 
 . . .
@@ -887,10 +896,10 @@ phi <- splines::splineDesign(knots, inner_knots)
 ```{r nuuk-smooth-spline2}
 omega <- pen_mat(inner_knots) # Complicated, but depends only on knots
 smoother <- function(lambda) {
-  phi %*%
+  Phi %*%
     solve(
-      crossprod(phi) + lambda * omega, # Phi^T Phi + lambda Omega
-      crossprod(phi, nuuk_year$Temperature) # Phi^T y
+      crossprod(Phi) + lambda * omega, # Phi^T Phi + lambda Omega
+      crossprod(Phi, nuuk_year$Temperature) # Phi^T y
     )
 }
 ```
@@ -928,7 +937,7 @@ $$
 
 ```{r gcv-smooth-spline}
 gcv <- function(lambda, y) {
-  S <- phi %*% solve(crossprod(phi) + lambda * omega, t(phi))
+  S <- Phi %*% solve(crossprod(Phi) + lambda * omega, t(Phi))
   df <- sum(diag(S))
   sum(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE)
 }
@@ -1052,25 +1061,25 @@ $$
 #| fig-width: 5.5
 #| fig-height: 3
 inner_knots <- seq(1867, 2013, length.out = 18)
-phi <- splines::splineDesign(
+Phi <- splines::splineDesign(
   c(rep(range(inner_knots), 3), inner_knots),
   nuuk_year$Year
 )
 omega <- pen_mat(inner_knots)
-phi_svd <- svd(phi)
+Phi_svd <- svd(Phi)
 omega_tilde <- t(
   t(
-    crossprod(phi_svd$v, omega %*% phi_svd$v)
+    crossprod(Phi_svd$v, omega %*% Phi_svd$v)
   ) /
-    phi_svd$d
+    Phi_svd$d
 ) /
-  phi_svd$d
+  Phi_svd$d
 
-omega_tilde_svd <- svd(omega_tilde)
-u_tilde <- phi_svd$u %*% omega_tilde_svd$u
+Omega_tilde_svd <- svd(omega_tilde)
+U_tilde <- Phi_svd$u %*% Omega_tilde_svd$u
 
-colnames(u_tilde) <- paste0(rep("u", 20), 1:20)
-bind_cols(select(nuuk_year, Year), as_tibble(u_tilde)) |>
+colnames(U_tilde) <- paste0(rep("u", 20), 1:20)
+bind_cols(select(nuuk_year, Year), as_tibble(U_tilde)) |>
   gather(key = "term", value = "value", -Year, factor_key = TRUE) |>
   ggplot(aes(Year, value, color = term)) +
   geom_line() +
@@ -1089,7 +1098,7 @@ bind_cols(select(nuuk_year, Year), as_tibble(u_tilde)) |>
 #|   Demmler-Reinsch basis.
 library(patchwork)
 
-d <- omega_tilde_svd$d
+d <- Omega_tilde_svd$d
 
 eigen_data <- tibble(i = 1:20, Eigenvalues = d)
 
@@ -1123,21 +1132,21 @@ x <- rnorm(10000)
 
 loop_square <- function(x) {
   n <- length(x)
-  result <- numeric(n)
+  out <- numeric(n)
 
   for (i in seq_len(n)) {
-    result[i] <- x[i]^2
+    out[i] <- x[i]^2
   }
 
-  result
+  out
 }
 
 parallel_square <- function(x) {
-  result <- foreach(i = seq_along(x), .combine = c) %dopar%
+  out <- foreach(i = seq_along(x), .combine = c) %dopar%
     {
       x[i]^2
     }
-  result
+  out
 }
 
 cl <- makeCluster(detectCores() / 2)
@@ -1155,8 +1164,8 @@ bench::mark(
 ### Exercise 2: Future
 
 Create a future that waits for 5 seconds using `Sys.sleep(5)`. When it's done,
-it should prints "Future is done!" and return the value 42. Try accessing the
-value of the future before and after the computation is complete.
+it should prints "The future is here!" and return the value 42. Try accessing
+the value of the future before and after the computation is complete.
 
 ```{r}
 #| echo: false
@@ -1166,7 +1175,7 @@ plan(multicore) # Not on Windows or RStudio!
 v %<-%
   {
     Sys.sleep(5)
-    cat("Future is done!\n")
+    cat("The future is here!\n")
     42
   }
 
