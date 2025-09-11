@@ -376,3 +376,5 @@ TSWLatexianTemp*
 *.rmarkdown
 
 site_libs/
+
+*-listing.json
