@@ -1081,6 +1081,10 @@ $$
   \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
 $$
 
+\pdfpcnote{
+  \hat\beta are the original coefficients (if lambda = 0).
+}
+
 ## The Demmler-Reinsch Basis (Columns of $\widetilde{\symbf{U}}$)
 
 ```{r spline-diagonalization}
