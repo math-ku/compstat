@@ -47,10 +47,13 @@ $$
 ## Exercise 2.2
 **Q**: Use `density()` to compute the kernel density estimate with the Epanechnikov kernel to the `log(F12)` data. Try different bandwidths.
 
-**A**: Import the data first
+**A**: Download the `infrared` data set from
+[this link](https://math-ku.github.io/compstat/data/infrared.txt)
+and place it in the `data/` folder of your working directory.
+Then load the data:
 ```{r}
-infrared = read.table("https://math-ku.github.io/compstat/data/infrared.txt", header = TRUE)
-F12 = infrared$F12
+infrared <- read.table(here::here("data", "infrared.txt"), header = TRUE)
+F12 <- infrared$F12
 ```
 We can compute the density estimates as follows with `bw = 1`
 ```{r}

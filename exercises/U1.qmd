@@ -89,9 +89,12 @@ gt_h4(y, 0.3)
 We overwrote `x`, which might be a bad design choice in some scenarios
 
 ## Exercise A4
-Load data
+Download the `infrared` data set from
+[this link](https://math-ku.github.io/compstat/data/infrared.txt)
+and place it in the `data/` folder of your working directory.
+Then load the data:
 ```{r}
-infrared <- read.table("https://math-ku.github.io/compstat/data/infrared.txt", header = TRUE)
+infrared <- read.table(here::here("data", "infrared.txt"), header = TRUE)
 F12 <- infrared$F12
 ```
 **Q**: Plot a histogram of `log(F12)` using the default value of the argument breaks. Experiment with alternative values of breaks.
