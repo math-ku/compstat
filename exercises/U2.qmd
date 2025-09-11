@@ -1,0 +1,321 @@
+---
+title: "Solutions to Exercises Week 2"
+format: html
+author:
+  - Jinyang Liu
+date: today
+description:
+  "Keywords: KDE, benchmarking, memory usage"
+---
+
+```{r setup, include = F}
+library(ggplot2)
+theme_set(theme_bw()) # this line is very important
+```
+
+## Exercise 2.1
+
+**Q**: The Epanechnikov kernel is given by
+
+$$
+K(x)= \begin{cases}\frac{3}{4}\left(1-x^2\right), & \text { if } x \in[-1,1] \\ 0, & \text { otherwise }\end{cases}
+$$
+
+Show that this is a probability density with mean zero and compute $\sigma_K^2$ and $\|K\|_2^2$ as defined in CSWR paragraph 2.3.2.
+
+**Solution**: Since $K$ is non-negative, integrable, and integrates to one over the entire sample space,
+
+$$
+\int_{\mathbb{R}} \frac{3}{4}\left(1-x^2\right) \mathbf{1}_{[-1,1]}(x) \mathrm{d} x=\frac{3}{4} \int_{-1}^1\left(1-x^2\right) \mathrm{d} x=\frac{3}{4}\left[x-\frac{1}{3} x^3\right]_{-1}^1=1
+$$
+
+$K$ is a probability density function. For an absolute continuous random variable $X$ with density $K$ we have the following properties:
+
+$$
+\begin{aligned}
+\mathbb{E}[X] & =\int_{\mathbb{R}} x K(x) \mathrm{d} x=\frac{3}{4} \int_{-1}^1\left(x-x^3\right) \mathrm{d} x=\frac{3}{4}\left[\frac{1}{2} x^2-\frac{1}{4} x^4\right]_{-1}^1=0 \\
+\sigma_K^2 & =\mathbb{E}\left[X^2\right]=\int_{\mathbb{R}} x^2 K(x) \mathrm{d} x=\frac{3}{4} \int_{-1}^1\left(x^2-x^4\right) \mathrm{d} x=\frac{3}{4}\left[\frac{1}{3} x^3-\frac{1}{5} x^5\right]_{-1}^1=\frac{1}{5} \\
+\mathbb{V}[X] & =\mathbb{E}\left[X^2\right]-\mathbb{E}[X]^2=\frac{1}{5} \\
+\|K\|_2^2 & =\int_{\mathbb{R}} K^2(x) \mathrm{d} x=\frac{9}{16} \int_{-1}^1\left(1+x^4-2 x^2\right) \mathrm{d} x=\frac{9}{16}\left[x+\frac{1}{5} x^5-\frac{2}{3} x^3\right]_{-1}^1=\frac{3}{5}
+\end{aligned}
+$$
+
+
+**Take away points**: The properties of many kernels are completely known. If you want an implementation to take different default kernels as input, you can store such information in a list that is accessible for your functions. That way your implementation saves a lot of calculation. If you want your implementation to take any probability density as input, then you need a smart way to calculate the above quantities.
+
+
+## Exercise 2.2
+**Q**: Use `density()` to compute the kernel density estimate with the Epanechnikov kernel to the `log(F12)` data. Try different bandwidths.
+
+**A**: Import the data first
+```{r}
+infrared = read.table("https://math-ku.github.io/compstat/data/infrared.txt", header = TRUE)
+F12 = infrared$F12
+```
+We can compute the density estimates as follows with `bw = 1`
+```{r}
+dens <- density(log(F12), bw = 1, kernel = "epanechnikov")
+```
+Plot the density using ggplot, here we can use `stat_density` or plot it the old way
+```{r, warning=FALSE}
+dens_df <- as.data.frame(dens[1:2])
+p0 <- ggplot(infrared, aes(x = log(F12))) + 
+  stat_density(kernel = "epanechnikov", bw = 1, fill = "green")
+
+p1 <- ggplot(infrared, aes(x = log(F12), y = after_stat(density))) + 
+   geom_histogram(bins = 20, fill = "blue", alpha = 0.3) + 
+   geom_line(data = dens_df, aes(x = x, y = y), color = "red") +
+   xlim(-4, 12) + 
+   ylim(0, 0.6)
+
+p0
+p1
+```
+Setting tbhe bandwidth to 0.1
+```{r, warning=FALSE}
+# Density estimates with bw = 0.1
+dens <- as.data.frame(density(log(F12), bw = 0.1, kernel = "epanechnikov")[1:2])
+p <- p1 + geom_line(data = dens, aes(x = x, y = y), color = "purple")
+p
+```
+Setting the bandwidth to 0.5
+```{r, warning=FALSE}
+dens <- as.data.frame(density(log(F12), bw = 0.5, kernel = "epanechnikov")[1:2])
+p <- p + geom_line(data = dens, aes(x = x, y = y), color = "blue")
+p
+```
+
+**Take away points**: bandwidth selection determines how well the density estimate fits the data, choosing it too small can result in overfitting. 
+
+## Exercise 2.3
+**Q**: Implement kernel density estimation yourself using the Epanechnikov kernel. Test your implementation by comparing it to `density()` using the `log(F12)` data.
+
+**A**: Modify the existing function from the book
+```{r}
+# FALSE * number == 0 
+kern <- function(z) (abs(z) <= 1) * (1 - z^2) * 3 / 4 
+
+kern_dens_vec <- function(x, h, n = 512) {
+  rg <- range(x)
+  xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = n)
+  y <- numeric(n)
+  # The inner loop from 'kern_dens_loop()' has been vectorized, and 
+  # only the outer loop over the grid points remains. 
+  for (i in seq_along(xx)) {
+      y[i] <- mean(kern((xx[i] - x)/h)) /h
+  }
+  list(x = xx, y = y)
+}
+```
+
+Compare it with density
+```{r, warning=FALSE}
+my_dens_df <- as.data.frame(kern_dens_vec(log(F12), 1)[1:2])
+p1 + geom_line(data = my_dens_df, aes(x = x, y = y), color = "green")
+```
+
+The two estimates don't match, despite the bandwidths being the same, why is that? If we look at the documentation for `density()`, we see that it uses an normalized kernel that guarantees $\sigma_K^2$ is scaled to 1. That means that the bandwidth we set on our kernel will have a different effect than setting the bandwith on `density()`, luckily, we can scale our bandwidth by a factor in order to obtain the same density estimate as we would have gotten by using `density()`. Namely, if we set the bandwidth to be $h = 1$ in `density()`, then we can choose our bandwidth to be $\tilde{h} = (\sigma_K^2)^{-1/2} h= (1/5)^{-1/2}$ to get the same density estimate, see [this article](https://bookdown.org/egarpor/NP-UC3M/kde-i-kde.html). 
+
+```{r, warning=FALSE}
+my_dens_df2 <- as.data.frame(kern_dens_vec(log(F12), sqrt(5))[1:2])
+p1 + geom_line(data = my_dens_df2, aes(x = x, y = y), color = "green", alpha = 0.5)
+```
+
+## Exercise 2.4
+**Q**: 
+Construct the following vector
+```r
+x <- rnorm(2^13)
+
+```
+Then use `bench::mark()` to benchmark the computation of
+```r
+density(x[1:k], 0.2)
+```
+for `k` ranging from $2^5$ to $2^{13}$. Summarize the benchmarking results.
+
+**A**: Ok let's do the following
+```{r}
+# Load necessary libraries
+library(bench)
+
+# Construct the vector
+x <- rnorm(2^13)
+
+benchmark_results <- bench::press(
+  k = 2^(5:13),
+  {
+    bench::mark(
+      density(x[1:k], 0.2),
+      check = F
+    )
+  }
+)
+
+
+# Summarize the benchmarking results
+autoplot(benchmark_results)
+benchmark_results
+```
+## Exercise 2.5
+**Q**: Benchmark your own implementation of kernel density estimation using the Epanechnikov kernel. Compare the results to those obtained for `density()`.
+
+**A**: If we look at our own results, we observe that the benchmark times are scattered with a higher variance, and after $k = 2^{11}$ points, we begin calling the garbage collector in pretty much all of the cases. 
+```{r}
+benchmark_results2 <- bench::press(
+  k = 2^(5:13),
+  {
+    bench::mark(
+      kern_dens_vec(x[1:k], 0.2),
+      check = F
+    )
+  }
+)
+
+autoplot(benchmark_results2)
+print(benchmark_results2)
+```
+We can also look at the time complexities of both methods
+```{r}
+# Extract median times from benchmark results
+median_times_density <- summary(benchmark_results)$median
+median_times_kern_dens_vec <- summary(benchmark_results2)$median
+
+# Create a data frame for plotting
+input_sizes <- 2^(5:13)
+benchmark_data <- data.frame(
+  InputSize = rep(input_sizes, 2),
+  MedianTime = c(median_times_density, median_times_kern_dens_vec),
+  Method = rep(c("density", "kern_dens_vec"), each = length(input_sizes))
+)
+
+# Plot the median times against input sizes
+ggplot(benchmark_data, aes(x = InputSize, y = MedianTime, color = Method)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(trans = 'log2') +
+  scale_x_continuous(trans = 'log2') +
+  labs(title = "Median Times vs Input Sizes",
+       x = "Input Size (log2 scale)",
+       y = "Median Time (log2 scale)",
+       color = "Method") +
+  theme_minimal()
+```
+
+We see that our kernel estimate has a different time complexity, it also uses more memory, what can we do to optimize it?
+
+## Exercise 2.6
+You have all the tools you need to solve this by yourself! Remember, programming is a craftsmanship, so try different things out to see what works and doesn't.
+
+# Extra exercises
+
+
+## Exercise 24.4.3.2
+
+**Q**: Make a faster version of `chisq.test()` that only computes the chi-square test statistic when the input is two numeric vectors with no missing values. You can try simplifying `chisq.test()` or by coding from the mathematical definition.
+
+**A**: Okay, we will try
+
+```{r}
+x <- sample(1:3, 100, replace = T)
+y <- sample(4:5, 100, replace = T)
+
+chisq_test_improved <- function(x, y, tab_fun = table) {
+  M <- tab_fun(x, y)
+  m_i <- rowSums(M) %o% colSums(M) / sum(M)
+  
+  sum((M - m_i)^2 / m_i) 
+}
+
+chisq_test_improved(x, y)
+chisq.test(x, y)$statistic
+```
+We can now benchmark the two, seems that our implementation is fast!
+```{r}
+res <- bench::mark(
+  chisq_test_improved(x, y),
+  chisq.test(x, y)$statistic,
+  check = F
+)
+
+autoplot(res)
+res
+```
+## Exercise 24.4.3.3
+**Q**: Can you make a faster version of table() for the case of an input of two integer vectors with no missing values? Can you use it to speed up your chi-square test?
+
+**A**: Maybe
+```{r}
+fast_table <- function(x, y) {
+  unique_x <- sort(unique(x))
+  unique_y <- sort(unique(y))
+
+  table_matrix <- matrix(0, nrow = length(unique_x), ncol = length(unique_y))
+  rownames(table_matrix) <- unique_x
+  colnames(table_matrix) <- unique_y
+  
+  for (i in unique_x) {
+    for (j in unique_y) {
+      table_matrix[as.character(i), as.character(j)] <- sum(x == i & y == j)
+    }
+  }
+  
+  table_matrix
+}
+fast_table(x,y)
+table(x,y)
+```
+
+Benchmark it to see if it is really faster
+
+```{r}
+table_bench <- bench::mark(
+  table(x, y),
+  fast_table(x,y),
+  check = F
+)
+autoplot(table_bench)
+table_bench
+```
+But wait, we can make it even faster?
+```{r}
+fast_table2 <- function(x, y) {
+  fx <- as.factor(x)
+  fy <- as.factor(y)
+  lx <- levels(fx)
+  ly <- levels(fy)
+  
+  pd <- 1
+  bin <- 0L
+  bin <- bin + pd * (as.integer(fx) - 1L)
+  pd <- pd * length(lx)
+  
+  bin <- bin + pd * (as.integer(fy) - 1L)
+  pd <- pd * length(ly)
+  
+  array(tabulate(bin + 1, pd), c(length(lx), length(ly)), dimnames = list(lx, ly))
+}
+```
+
+Benchmark it
+
+```{r}
+table_bench2 <- bench::mark(
+  table(x, y),
+  fast_table(x,y),
+  fast_table2(x,y),
+  check = F
+)
+autoplot(table_bench2)
+table_bench
+```
+We can now optimize our ChiSq test
+```{r}
+chisq_bench <- bench::mark(
+  chisq_test_improved(x, y, tab_fun = table),
+  chisq_test_improved(x, y, tab_fun = fast_table),
+  chisq_test_improved(x, y, tab_fun = fast_table2)
+)
+autoplot(chisq_bench)
+chisq_bench
+```

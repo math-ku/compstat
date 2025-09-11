@@ -1,0 +1,51 @@
+---
+title: "How to properly use AI"
+author: Jinyang Liu
+subtitle: Computational Statistics
+institute: Department of Mathematical Sciences, University of Copenhagen
+date: today
+execute:
+  cache: false
+---
+
+{{< include _common.qmd >}}
+
+## Introduction
+The best model, from my own testing, is **GPT-5 Thinking**:
+
+- It can infer the mathematics from reading the code
+- It can provide novel mathematical insights that improve the efficiency of the code
+- Hallucinations still occur, albeit much less frequently than previous models
+
+. . .
+
+### Tools that I use
+- Cursor (VS Code) + ChatGPT Plus for coding
+- DeepSeek is also a great alternative for information gathering
+
+Free for students: [GitHub Copilot](https://education.github.com/pack) (VS Code)
+
+## What to ask AI?
+
+### "Can you write a unit test for this function?"
+
+Unit tests are an easy way to verify the correctness of the code. AI is often much better at writing unit tests, than coming up with solutions.
+
+. . .
+
+### "Can you add print statements to the code to check the intermediate results?"
+It can be hard for less intelligent models to see where the code is failing. Adding print statements helps guide the model to the correct solution.
+
+. . .
+
+### "Can you break this code into smaller functions?"
+Using AI to refactor your code is a great way to improve the readability and maintainability of the code.
+
+. . .
+
+### "I have this problem, can you come up with some testable hypotheses to narrow down the cause of the problem?"
+Asking the AI directly to come up with a solution directly usually results in hallucinations. Instead, try asking it to think of tests, so that you don't waste time on the wrong solution.
+
+## Conclusion
+- Don't ask AI to solve the problem directly, while it can do that, you probably won't learn anything.
+- Ask AI to help you brainstorm ideas and draw insights. 

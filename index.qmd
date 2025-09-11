@@ -54,8 +54,8 @@ for you to solve independently at your own pace.
 - **Main topic**: Using AI propperly, memory usage and benchmarking
 - **In class walkthrough:** Exercises 2.1-2.6 (CSwR,
   Chapter 2)
-- **Solutions**: TBA
-- **Mini-slides**: TBA
+- **Solutions**: [Exercise 2 Solutions](exercises/U2.qmd)
+- **Mini-slides**: [Tips for using AI](slides/llm_use.pdf)
 
 #### Lecture 4: Parallelization and Scatterplot Smoothing
 - **Slides:** [Parallelization and Scatterplot Smoothing](slides/lecture4.pdf)
