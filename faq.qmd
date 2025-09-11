@@ -3,19 +3,35 @@ title: Frequently Asked Questions
 format: html
 ---
 
+## General
+
 > Can I use generative artificial intelligence tools (e.g. ChatGPT and
 > CodePilot)?
 
-Yes, you are allowed to use generative AI tools. You are, however, expected to
-understand all of the work that you present, including details in your code,
-irrespective of whether or not you have had help from a generative AI in
+Yes, you are allowed to use generative AI tools. You are, however, expected
+to understand all of the work that you present, including details in your
+code, irrespective of whether or not you have had help from a generative AI in
 creating it. You may be asked to explain how and to what extent you have used
 generative AI in your work, which will factor into the overal evaluation.
 
 > How much code should I put on my slides?
 
-There is no fixed rule for this. But, we recommend that you place only the most
-essential parts of your code on the slides. You should be able to explain all of
-the code that you present, but you do not need to present every single line of
-code. We expect, however, that you have the code available during your
+There is no fixed rule for this. But, we recommend that you place only the
+most essential parts of your code on the slides. You should be able to explain
+all of the code that you present, but you do not need to present every single
+line of code. We expect, however, that you have the code available during your
 presentation in case we want to ask you questions about it.
+
+## Assignments
+
+> Do I need to submit anything for the assignments?
+
+No, you do not need to submit anything for the assignments.
+
+## Presentations
+
+> Do we need to prepare slides for the group presentations?
+
+No, you don't need to prepare slides for the _group presentation_. It is fine if
+you, for instance, use a R Markdown or Quarto notebook while presenting. For the
+oral examination, however, you will need to prepare slides.
