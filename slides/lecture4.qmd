@@ -238,7 +238,8 @@ potential stability issues.
 ### `mirai_multisession`/`mirai_cluster`
 
 A newer alternative, available through the
-[future.mirai](https://cran.r-project.org/package=future.mirai) package.
+[future.mirai](https://cran.r-project.org/package=future.mirai)
+package.
 
 ## Caveats
 
@@ -384,8 +385,8 @@ where $\symbf{1}_{\{j \in N_i\}}$ is 1 if $j$ is a neighbor of $i$, 0 otherwise.
 
 ## Linear Smoothers
 
-$(f(x_i))$ of the form $\symbf{S} \symbf{y}$ for a _smoother matrix_ $\symbf{S}$
-is called a _linear smoother_.
+Smoothers of the form $\hat{\symbf{f}} = \symbf{S} \symbf{y}$ are called a
+_linear_ smoothers.
 
 \pause\medskip
 
@@ -433,13 +434,13 @@ run_mean_naive <- function(y, k) {
   n <- length(y)
   m <- (k - 1) / 2
   y <- y / k
-  s <- rep(NA, n)
+  f_hat <- rep(NA, n)
 
   for (i in (m + 1):(n - m - 1)) {
-    s[i] <- mean(y[(i - m):(i + m)])
+    f_hat[i] <- mean(y[(i - m):(i + m)])
   }
 
-  s
+  f_hat
 }
 ```
 
@@ -462,13 +463,13 @@ run_mean <- function(y, k) {
   m <- floor((k - 1) / 2)
   k <- 2 * m + 1 # Ensures k is odd and m = (k - 1) / 2
   y <- y / k
-  s <- rep(NA, n)
-  s[m + 1] <- sum(y[1:k])
+  f_hat <- rep(NA, n)
+  f_hat[m + 1] <- sum(y[1:k])
 
   for (i in (m + 1):(n - m - 1)) {
-    s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m]
+    f_hat[i + 1] <- f_hat[i] - y[i - m] + y[i + 1 + m]
   }
-  s
+  f_hat
 }
 ```
 
@@ -639,7 +640,7 @@ Can for running mean in principle compute this without leaving anything out.
 For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$, so
 $$
   \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
-$$  
+$$
 
 . . .
 
