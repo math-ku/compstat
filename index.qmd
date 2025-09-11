@@ -64,28 +64,28 @@ for you to solve independently at your own pace.
   [3.4 (Chapter 3, CSWR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
 
 
-<!-- ### Week 3 -->
-<!---->
-<!-- #### Lecture 5: Random Number Generation and Rejection Sampling -->
-<!---->
+### Week 3
+
+#### Lecture 5: Random Number Generation and Rejection Sampling
+
 <!-- - **Slides:** -->
 <!--   [Random Number Generation and Rejection Sampling](slides/lecture5.pdf) -->
-<!-- - **Reading:** -->
-<!--   - [Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation), but -->
-<!--     skip 5.1 -->
-<!--   - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp) -->
-<!-- - **Exercises:** -->
-<!--   - [Exercises 5.1-5.2 in Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation#univariate:ex) -->
-<!---->
-<!-- #### Lecture 6: Monte Carlo Methods and Importance Sampling -->
-<!---->
+- **Reading:**
+  - [Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation), but
+    skip 5.1
+  - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp)
+- **Exercises:**
+  - [Exercises 5.1-5.2 in Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation#univariate:ex)
+
+#### Lecture 6: Monte Carlo Methods and Importance Sampling
+
 <!-- - **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf) -->
-<!-- - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci) -->
-<!---->
-<!-- #### Presentation of Assignment 1 -->
-<!---->
-<!-- - **Instructions:** [Assignment 1](assignments/assignment1.html) -->
-<!---->
+- **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci)
+
+#### Presentation of Assignment 1
+
+- **Instructions:** [Assignment 1](assignments/assignment1.html)
+
 <!-- ### Week 4 -->
 <!---->
 <!-- #### Lecture 7: Optimization -->

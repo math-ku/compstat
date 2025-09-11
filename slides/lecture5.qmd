@@ -12,25 +12,13 @@ knitr::read_chunk(here::here("R", "vMSim.R"))
 source(here::here("R/vMSim.R"), keep.source = TRUE)
 ```
 
-## Questions from Last Time
+## Today
 
-### Rule of Thumb Bandwidth for Non-Gaussian Kernels
+### Leftovers From Last Lecture
 
-- Depends on kernel $K$ and reference distribution $\tilde{f}$ (plugin for $f$):
-  $$\mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}$$
-- R's `density()` uses Silverman's rule of thumb and adapts to kernel but
-  **not** reference distribution.
+Efficient computations of smoothing splines
 
 . . .
-
-### Alternative Loss Functions for Smoothing Splines
-
-- Definitely several alternatives
-- L1 loss for data-fitting term exists.
-- Not sure about L1 loss on penalty term. Should work but not sure what the
-  optimal spline would look like.
-
-## Today
 
 ### Pseudo-Random Numbers
 
@@ -41,6 +29,129 @@ source(here::here("R/vMSim.R"), keep.source = TRUE)
 ### Rejection Sampling
 
 - General and useful method for sampling from a target distribution
+
+
+## Efficient Computations
+
+When $n$ is large, computing $\symbf{S}_{\lambda} \symbf{y}$ directly is
+expensive.
+
+\medskip\pause
+
+In practice, we therefore often use fewer basis functions than data points, $p
+< n$.
+
+\pause
+
+### Singular Value Decomposition
+
+Using the singular value decomposition
+$$
+  \Phi = \symbf{U} D \symbf{V}^T
+$$
+\pause we can rewrite the smoother matrix as
+$$
+  \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
+$$
+where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and \pause
+$$
+  D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
+$$
+
+\medskip\pause
+
+The columns of $\widetilde{\symbf{U}}$ form the **Demmler-Reinsch basis**.
+
+\pdfpcnote{
+  Can be done whether we use all or a subset of our basis functions
+
+  S_\lambda is diagonalized
+
+  Derive $\symbf{S}_\lambda$ on blackboard.
+}
+
+## Interpretation
+
+Project the data $y$ onto the Demmler-Reinsch basis (columns of
+$\widetilde{\symbf{U}}$) to get coefficients $\hat{\symbf{\beta}} =
+\widetilde{\symbf{U}}^Ty$.
+
+\pause\medskip
+
+Each coefficient is shrunk according to the corresponding eigenvalue $\gamma_i$
+and smoothing parameter $\lambda$:
+$$
+  \hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
+$$
+
+\pause\medskip
+
+The final smoothed values are reconstructed by combining the shrunk coefficients
+with the basis functions.
+$$
+  \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
+$$
+
+\pdfpcnote{
+  \hat\beta are the original coefficients (if lambda = 0).
+}
+
+## The Demmler-Reinsch Basis (Columns of $\widetilde{\symbf{U}}$)
+
+```{r spline-diagonalization}
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 3
+inner_knots <- seq(1867, 2013, length.out = 18)
+Phi <- splines::splineDesign(
+  c(rep(range(inner_knots), 3), inner_knots),
+  nuuk_year$Year
+)
+omega <- pen_mat(inner_knots)
+Phi_svd <- svd(Phi)
+omega_tilde <- t(
+  t(
+    crossprod(Phi_svd$v, omega %*% Phi_svd$v)
+  ) /
+    Phi_svd$d
+) /
+  Phi_svd$d
+
+Omega_tilde_svd <- svd(omega_tilde)
+U_tilde <- Phi_svd$u %*% Omega_tilde_svd$u
+
+colnames(U_tilde) <- paste0(rep("u", 20), 1:20)
+bind_cols(select(nuuk_year, Year), as_tibble(U_tilde)) |>
+  gather(key = "term", value = "value", -Year, factor_key = TRUE) |>
+  ggplot(aes(Year, value, color = term)) +
+  geom_line() +
+  facet_wrap(~term) +
+  theme(legend.position = "none") +
+  ylab("")
+```
+
+##
+
+```{r spline-gamma}
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 3
+#| fig-cap: The eigenvalues $\gamma_i$ of the penalty matrix in the
+#|   Demmler-Reinsch basis.
+library(patchwork)
+
+d <- Omega_tilde_svd$d
+
+eigen_data <- tibble(i = 1:20, Eigenvalues = d)
+
+p1 <- ggplot(eigen_data, aes(i, Eigenvalues)) +
+  geom_point() +
+  labs(y = expression(gamma[i]))
+
+p2 <- p1 + scale_y_log10()
+
+p1 / p2 + plot_layout(axes = "collect")
+```
 
 ## Pseudo-Random Numbers
 

@@ -241,33 +241,6 @@ A newer alternative, available through the
 [future.mirai](https://cran.r-project.org/package=future.mirai)
 package.
 
-## How Futures Work
-
-\centering
-
-```{dot}
-//| echo: false
-//| fig-width: 2.8
-//| fig-height: 2.5
-//| fig-align: center
-digraph Futures {
-  node [shape=box, style="rounded,filled", fillcolor="#e3f2fd"];
-
-  FutureCreate [label="Future created", fillcolor="#bbdefb"];
-  MainWork [label="Main thread does other work", fillcolor="#c8e6c9"];
-  FutureRun [label="Future runs in parallel", fillcolor="#ffe0b2"];
-  Wait [label="Main thread waits if not ready", fillcolor="#ffcdd2"];
-  Receive [label="Main thread receives result", fillcolor="#d1c4e9"];
-
-  FutureCreate -> FutureRun;
-  FutureCreate -> MainWork;
-  MainWork -> Wait;
-  FutureRun -> Receive;
-  Wait -> Receive;
-}
-```
-
-
 ## Caveats
 
 ### Realistic Expectations
