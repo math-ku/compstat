@@ -207,14 +207,12 @@ We see that our kernel estimate has a different time complexity, it also uses mo
 ## Exercise 2.6
 You have all the tools you need to solve this by yourself! Remember, programming is a craftsmanship, so try different things out to see what works and doesn't.
 
-# Extra exercises
 
-
-## Exercise 24.4.3.2
+## Exercise 24.4.3.2 (interesting)
 
 **Q**: Make a faster version of `chisq.test()` that only computes the chi-square test statistic when the input is two numeric vectors with no missing values. You can try simplifying `chisq.test()` or by coding from the mathematical definition.
 
-**A**: Okay, we will try
+**A**: Okay, we will try:
 
 ```{r}
 x <- sample(1:3, 100, replace = T)
@@ -230,6 +228,8 @@ chisq_test_improved <- function(x, y, tab_fun = table) {
 chisq_test_improved(x, y)
 chisq.test(x, y)$statistic
 ```
+**NB**: notice in the implementation above, we pass in the table function as an argument. This is a versatile design pattern known as **Dependency Injection**, and can be used to switch the behavior of a function during **Runtime**. In contrast, imagine hardcoding the table function into the implementation, we would have to change the implementation if we wanted to use a different table function.
+
 We can now benchmark the two, seems that our implementation is fast!
 ```{r}
 res <- bench::mark(
@@ -241,10 +241,10 @@ res <- bench::mark(
 autoplot(res)
 res
 ```
-## Exercise 24.4.3.3
+## Exercise 24.4.3.3 (interesting)
 **Q**: Can you make a faster version of table() for the case of an input of two integer vectors with no missing values? Can you use it to speed up your chi-square test?
 
-**A**: Maybe
+**A**: Let's try the following:
 ```{r}
 fast_table <- function(x, y) {
   unique_x <- sort(unique(x))
@@ -266,8 +266,7 @@ fast_table(x,y)
 table(x,y)
 ```
 
-Benchmark it to see if it is really faster
-
+Benchmark it to see if it is really faster:
 ```{r}
 table_bench <- bench::mark(
   table(x, y),
@@ -277,7 +276,7 @@ table_bench <- bench::mark(
 autoplot(table_bench)
 table_bench
 ```
-But wait, we can make it even faster?
+We see that it is faster, this is really because table does a lot of different things under the hood, validating inputs etc. If we can guarantee that the inputs are correct, then we can drop the extra validation steps to obtain a speedup. But wait, we can make it even faster?
 ```{r}
 fast_table2 <- function(x, y) {
   fx <- as.factor(x)
@@ -296,8 +295,7 @@ fast_table2 <- function(x, y) {
   array(tabulate(bin + 1, pd), c(length(lx), length(ly)), dimnames = list(lx, ly))
 }
 ```
-
-Benchmark it
+Benchmark it:
 
 ```{r}
 table_bench2 <- bench::mark(
@@ -309,7 +307,7 @@ table_bench2 <- bench::mark(
 autoplot(table_bench2)
 table_bench
 ```
-We can now optimize our ChiSq test
+We see that it is faster! However I did not come up with this implementation myself, nor did I ask AI. I simply **reversed engineered** it from the implementation of table. One can inspect the source code by typing `table` in the R console. To reverse engineer code by hand, it is often beneficial to use a debugger, and step through the code line by line. We can now optimize our ChiSq test using this new implementation:
 ```{r}
 chisq_bench <- bench::mark(
   chisq_test_improved(x, y, tab_fun = table),
@@ -319,3 +317,5 @@ chisq_bench <- bench::mark(
 autoplot(chisq_bench)
 chisq_bench
 ```
+
+**Take away points**: There are many different ways to optimize code, a common strategy is to break down the problem into smaller subproblems, and then optimize each subproblem. This is often referred to as **Divide and Conquer**.
