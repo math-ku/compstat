@@ -30,6 +30,11 @@ format: html
 - Say something about sparse matrices.
 - Maybe add something about GPU computing.
 
+## Lecture 4: Parallelization and Scatterplot Smoothing
+
+- Too much content. Maybe skip futures and just stick with foreach.
+  Or skip some implementation parts of the running mean smoother, for instance.
+
 ## Lecture 8: Optimization
 
 - Too much material! Consider making Poisson example simpler.
