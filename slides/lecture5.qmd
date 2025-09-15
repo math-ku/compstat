@@ -34,6 +34,33 @@ How do you simulate random numbers in R?
 
 General and useful method for sampling from a target distribution
 
+## Smoothing Splines
+
+Recall, that our smoothing spline estimate is
+$$
+\symbf{f} = \symbf{\Phi}\symbf{\beta}
+$$
+with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
+$$
+\begin{aligned}
+  L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\
+               & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
+\end{aligned}
+$$
+with
+$$
+\symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
+$$
+
+\pause
+
+### Solution
+
+The solution is
+$$
+\hat{\symbf{\beta}} = (\symbf{\Phi}^T \symbf{\Phi} + \lambda \symbf{\Omega})^{-1} \symbf{\Phi}^T \symbf{y}.
+$$
+
 
 ## Efficient Computations of Smoothing Splines
 
@@ -91,15 +118,15 @@ In practice, we therefore often use fewer basis functions than data points, $p
 
 Using the singular value decomposition
 $$
-\Phi = \symbf{U} D \symbf{V}^T
+\symbf{\Phi} = \symbf{U} \symbf{D} \symbf{V}^T
 $$
 \pause we can rewrite the smoother matrix as
 $$
-\symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
+\symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda \operatorname{diag}(\symbf{\gamma}))^{-1} \widetilde{\symbf{U}}^T
 $$
 where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and \pause
 $$
-D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
+\symbf{D}^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} \symbf{D}^{-1} = \symbf{W} \operatorname{diag}(\symbf{\gamma}) \symbf{W}^T.
 $$
 
 \medskip\pause
@@ -118,7 +145,7 @@ The columns of $\widetilde{\symbf{U}}$ form the **Demmler-Reinsch basis**.
 
 Project the data $y$ onto the Demmler-Reinsch basis (columns of
 $\widetilde{\symbf{U}}$) to get coefficients $\hat{\symbf{\beta}} =
-\widetilde{\symbf{U}}^Ty$.
+\widetilde{\symbf{U}}^T\symbf{y}$.
 
 \pause\medskip
 
@@ -199,7 +226,8 @@ p1 / p2 + plot_layout(axes = "collect")
 
 ## Pseudo-Random Numbers
 
-Computers usually generate **pseudo-random** numbers.
+Computers have no concept of "true" randomness and instead generate
+**pseudo-random** numbers.
 
 \medskip\pause
 
@@ -233,12 +261,46 @@ interval (with some tweaks to avoid division by 0).
 
 ## Transformation Methods
 
+What if we want to sample from a different distribution?
+
+\medskip\pause
+
+We could use **the transformation method**, which relies on the following fact:
+
+\medskip
+
 If $T : \mathcal{Z} \to \mathbb{R}$ is a map and $Z \in \mathcal{Z}$ is a random
 variable we can sample, then we can sample $X = T(Z).$
 
-. . .
+\begin{figure}
+\centering
+\begin{tikzpicture}[node distance=1cm, auto, >=stealth, thick]
+  \node[draw, rectangle, rounded corners, fill=blue!10] (A) {Sample $Z$};
+  \node[draw, rectangle, rounded corners, right = of A, fill=green!10] (B) {Apply $T$};
+  \node[draw, rectangle, rounded corners, right = of B, fill=orange!10] (C) {Get $X = T(Z)$};
+  \draw[->] (A) -- (B);
+  \draw[->] (B) -- (C);
+\end{tikzpicture}
+\end{figure}
 
-### Inversion Sampling
+\pause
+
+Transformation methods let us generate samples from complex distributions by
+applying a function to samples from a simpler distribution.
+
+\medskip
+
+### Example {.example}
+
+To sample $X \sim \mathrm{Exp}(\lambda)$, use $X = -\log(U)/\lambda$ with $U
+\sim \mathrm{Uniform}(0,1)$.
+
+
+## Inversion Sampling
+
+A type of **transformation** sampling.
+
+\medskip\pause
 
 If $F^{-1} : (0,1) \mapsto \mathbb{R}$ is the generalized inverse of a
 distribution function and $U$ is uniformly distributed on $(0, 1)$ then
@@ -249,8 +311,8 @@ has distribution function $F$.
 
 \medskip\pause
 
-Computing quantile function is easy for discrete distributions, but hard for
-continuous ones.
+Computing $F^{-1}$: easy for discrete distributions, but hard for continuous
+ones.
 
 ## Gaussian Random Variables
 
@@ -375,8 +437,8 @@ ggplot(tibble(x = x), aes(x)) +
 
 ## Rejection Sampling
 
-We want to sample from a target distribution $f(x)$ but have no readily
-available transform $T$ for our proposal $g(x)$.
+We want to sample from a target distribution $f(y)$ but have no readily
+available transform $T$ for our proposal $g(y)$.
 
 \medskip\pause
 
@@ -387,7 +449,7 @@ Let $Y_1, Y_2, \ldots$ be i.i.d. with density $g$ on $\mathbb{R}$ and $U_1, U_2,
 
 Define
 $$
-\sigma = \inf\{n \geq 1 \mid U_n \leq \alpha f(Y_n) / g(Y_n)\},
+k = \inf\left\{n \geq 1 \mid U_n \leq \alpha \frac{f(Y_n)}{g(Y_n)}\right\},
 $$
 for $\alpha \in (0, 1]$, where $f$ is a density.
 
@@ -395,30 +457,116 @@ for $\alpha \in (0, 1]$, where $f$ is a density.
 
 ### Theorem
 
-If $\alpha f(y) \leq g(y)$ for all $y \in \mathbb{R}$ then the distribution of
-$Y_{\sigma}$ has density $f$.
+If $f(y) \leq g(y)/\alpha$ for all $y \in \mathbb{R}$, then the distribution of
+$Y_k$ has density $f$.
 
 \medskip\pause
 
 $\alpha$is the **acceptance probability** and $g(y)/\alpha$ the **envelope** of $f$.
 
+##
+
+```{r rejection-sampling-ggplot}
+#| echo: false
+#| fig-height: 2.5
+#| fig-width: 5
+#| fig-cap: Illustration of rejection sampling for a normal target density,
+#|   using a uniform proposal.
+set.seed(1)
+n <- 1000
+y <- runif(n, 0, 9)
+u <- runif(n, 0, 3.2)
+target <- function(x) 3 * exp(-0.5 * (x - 5)^2)
+envelope <- function(x) rep(3.2, length(x))
+
+accepted <- u <= target(y)
+df <- data.frame(y = y, u = u, accepted = accepted)
+
+curve_df <- data.frame(
+  x = seq(0, 9, length.out = 200),
+  target = target(seq(0, 9, length.out = 200)),
+  envelope = envelope(seq(0, 9, length.out = 200))
+)
+
+ggplot() +
+  geom_line(
+    data = curve_df,
+    aes(x = x, y = envelope)
+  ) +
+  geom_area(
+    data = curve_df,
+    aes(x = x, y = target),
+    col = "black",
+    fill = "grey90"
+  ) +
+  geom_point(
+    data = df,
+    aes(x = y, y = u, color = accepted),
+    size = 0.5
+  ) +
+  scale_color_manual(
+    values = c("red", "steelblue2"),
+    labels = c("Rejected", "Accepted")
+  ) +
+  labs(x = "y", y = "Density / U", color = NULL) +
+  theme_minimal() +
+  theme(legend.position = "right")
+```
+
 ## Normalizing Constants
 
-If $f(y) = c q(y)$ and $g(y) = d p(y)$ for (unknown) normalizing constants $c, d
-> 0$ and $\alpha' q \leq p$ then <br> <br>
+Rejection sampling works with unnormalized densities!
+
+\medskip\pause
+
+Suppose:
+
+- Target: $f(y) = c q(y)$ (unknown $c$)
+- Proposal: $g(y) = d p(y)$ (unknown $d$)
+
+\medskip\pause
+
+Acceptance test:
 $$
-\underbrace{\left(\frac{\alpha' d}{c}\right)}_{= \alpha} \ f \leq g.
+U \leq \frac{\alpha f(y)}{g(y)} = \frac{\alpha c q(y)}{d p(y)}
 $$
 
-. . .
+\medskip\pause
 
-Moreover,
+If $\alpha = \frac{\alpha' d}{c}$, then
 $$
-u > \frac{\alpha f(y)}{g(y)} \Leftrightarrow u > \frac{\alpha'q(y)}{p(y)},
+\frac{\alpha f(y)}{g(y)} = \frac{\alpha' q(y)}{p(y)}
 $$
-and rejection sampling can be implemented without computing $c$ or $d$.
 
-. . .
+\pause
+
+### Takeaway
+
+You do not need to know $c$ or $d$!
+
+## How to Find $\alpha'$?
+
+Given functions $q$ and $p$, we need to find $\alpha'$ such that
+$$
+\alpha' q(y) \leq p(y) \quad \text{for all } y.
+$$
+
+\medskip\pause
+
+### How?
+
+We can try to solve the problem
+$$
+\alpha' = \inf_{y: q(y) > 0} \frac{p(y)}{q(y)} > 0.
+$$
+
+\medskip\pause
+
+Optimally, find the minimum analytically.
+
+\medskip\pause
+
+Otherwise, numerically via optimization (e.g. `optimize()` in R).
 
 ## Von Mises Rejection Sampling
 
@@ -480,7 +628,7 @@ sample_vonmises_slow <- function(n, kappa) {
 #| echo: false
 #| fig-cap: Histogram of samples from `sample_vonmises_slow()`, with
 #|   theoretical density overlaid.
-f <- function(x, kappa) exp(kappa * cos(x)) / (2 * pi * besselI(kappa, 0))
+f <- function(y, kappa) exp(kappa * cos(y)) / (2 * pi * besselI(kappa, 0))
 
 # Simulate data
 x1 <- sample_vonmises_slow(100000, 0.5)
@@ -501,13 +649,13 @@ ggplot(df, aes(x)) +
   stat_function(
     fun = f,
     args = list(kappa = 0.5),
-    color = "blue",
+    color = "steelblue3",
     data = data.frame(x = seq(-pi, pi, length.out = 200), kappa = 0.5)
   ) +
   stat_function(
     fun = f,
     args = list(kappa = 2),
-    color = "blue",
+    color = "steelblue3",
     data = data.frame(x = seq(-pi, pi, length.out = 200), kappa = 2)
   ) +
   labs(y = "Density", x = "x") +
@@ -574,14 +722,14 @@ in advance.
   \caption{Sampling exactly $n$ values via rejection sampling with unknown
     acceptance probability $\alpha$.}
   $\alpha \gets 1$\;
-  $\symbf{y} \gets$ empty list\;
+  $\symbf{y} \gets$ empty vector\;
   $n_\text{accepted} \gets 0$\;
   \While{$n_\text{accepted} < n$}{
     $m \gets \lceil (n - n_\text{accepted}) / \alpha \rceil$\;
     $\symbf{y}_\text{new} \gets$ Generate $m$ candidate samples $x_1, \ldots, x_m$\;
     $n_\text{accepted} \gets n_\text{accepted} +$ length$(\symbf{y}_\text{new})$\;
     \If{first batch}{
-      $\alpha \gets (n_\text{accepted} + 1) / (m + 1)$\;
+      $\alpha \gets (n_\text{accepted} + 1) / (m + 1)$ \tcp*[f]{estimate acceptance probability}
     }
     Append $\symbf{y}_\text{new}$ to $\symbf{y}$\;
   }
@@ -627,6 +775,10 @@ bench::mark(
 
 ## Adaptive Envelopes
 
+:::: {.columns}
+
+::: {.column width="47%"}
+
 When $f$ is _log-concave_ on $I$ we can construct bounds of the form
 $$
 f(x) \leq e^{V(x)}
@@ -637,13 +789,67 @@ V(x) = \sum_{i=1}^m  (a_i x + b_i) \symbf{1}_{I_i}(x)
 $$
 for intervals $I_i$ forming a partition of $I$.
 
-\medskip\pause
+
+:::
+
+::: {.column width="47%"}
+
+```{r log-concave-envelope-general}
+#| echo: false
+library(ggplot2)
+
+curve_fun <- function(x) exp(-0.5 * x^2)
+log_curve <- function(x) -0.5 * x^2
+
+# Tangent points
+x1 <- -1.5
+x2 <- 1.5
+
+# Compute tangent lines in log-space
+slope1 <- -x1
+intercept1 <- log_curve(x1) - slope1 * x1
+slope2 <- -x2
+intercept2 <- log_curve(x2) - slope2 * x2
+
+xseq <- seq(-3, 3, length.out = 400)
+envelope_log <- ifelse(
+  xseq < 0,
+  slope1 * xseq + intercept1,
+  slope2 * xseq + intercept2
+)
+envelope <- exp(envelope_log)
+
+df <- data.frame(
+  x = xseq,
+  curve = curve_fun(xseq),
+  envelope = envelope
+)
+
+ggplot(df, aes(x)) +
+  geom_line(aes(y = curve), color = "grey60") +
+  geom_line(aes(y = envelope)) +
+  geom_point(aes(x = x1, y = curve_fun(x1))) +
+  geom_point(aes(x = x2, y = curve_fun(x2))) +
+  scale_y_continuous(
+    transform = scales::log_trans(),
+    labels = scales::label_math(e^.x, format = log)
+  ) +
+  labs(y = "Density") +
+  theme_minimal()
+```
+
+:::
+
+::::
+
+\bigskip\pause
 
 Typically, $a_i x + b_i$ is tangent to the graph of $\log(f)$ at $x_i \in I_i =
 (z_{i-1}, z_i]$ for
 $$
 z_0 < x_1 < z_1 < x_2 < \ldots < z_{m-1} < x_m < z_m.
 $$
+
 
 ## Beta Distribution
 
@@ -685,82 +891,94 @@ sample_beta <- new_rejection_sampler(fixed_beta_sampler)
 
 ```{r Beta-fig}
 #| fig-cap: Histograms of samples from sample_beta() with theoretical
-#|   densities (blue) and envelopes (red) overlaid.
+#|   densities (blue) and envelopes (orange) overlaid.
 #| fig-width: 5.5
 #| fig-height: 3
 #| echo: false
-par(mfrow = c(2, 2))
-envelope <- function(x, x1, x2, alpha, beta) {
-  lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
-  lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
-  a1 <- lf_deriv(x1)
-  a2 <- lf_deriv(x2)
-  b1 <- lf(x1) - a1 * x1
-  b2 <- lf(x2) - a2 * x2
-  z1 <- (b2 - b1) / (a1 - a2)
-  ifelse(x < z1, exp(a1 * x + b1), exp(a2 * x + b2))
+params <- data.frame(
+  x1 = c(0.3, 0.3, 0.2, 0.2),
+  x2 = c(0.7, 0.7, 0.5, 0.5),
+  alpha = c(4, 1.8, 4, 1.8),
+  beta = c(2, 2.4, 2, 2.4),
+  label = c(
+    "x1=0.3, x2=0.7, alpha=4, beta=2",
+    "x1=0.3, x2=0.7, alpha=1.8, beta=2.4",
+    "x1=0.2, x2=0.5, alpha=4, beta=2",
+    "x1=0.2, x2=0.5, alpha=1.8, beta=2.4"
+  )
+)
+
+make_beta_df <- function(n, x1, x2, alpha, beta, label) {
+  x <- sample_beta(n, x1 = x1, x2 = x2, alpha = alpha, beta = beta)$x
+  data.frame(x = x, label = label)
 }
 
-hist(
-  sample_beta(100000, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2)$x,
-  prob = TRUE,
-  main = "",
-  ylim = c(0, 3)
-)
-curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, add = TRUE)
-curve(
-  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2) / beta(4, 2),
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
+sample_df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(params)), function(i) {
+    with(params[i, ], make_beta_df(100000, x1, x2, alpha, beta, label))
+  })
 )
 
-hist(
-  sample_beta(100000, x1 = 0.3, x2 = 0.7, alpha = 1.8, beta = 2.4)$x,
-  prob = TRUE,
-  main = "",
-  ylim = c(0, 3)
+xseq <- seq(0, 1, length.out = 400)
+
+make_density_df <- function(xseq, alpha, beta, label) {
+  data.frame(
+    x = xseq,
+    density = xseq^(alpha - 1) * (1 - xseq)^(beta - 1) / beta(alpha, beta),
+    label = label
+  )
+}
+
+make_envelope_df <- function(xseq, x1, x2, alpha, beta, label) {
+  envelope <- function(x, x1, x2, alpha, beta) {
+    lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+    lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
+    a1 <- lf_deriv(x1)
+    a2 <- lf_deriv(x2)
+    b1 <- lf(x1) - a1 * x1
+    b2 <- lf(x2) - a2 * x2
+    z1 <- (b2 - b1) / (a1 - a2)
+    ifelse(x < z1, exp(a1 * x + b1), exp(a2 * x + b2))
+  }
+  data.frame(
+    x = xseq,
+    envelope = envelope(xseq, x1, x2, alpha, beta) / beta(alpha, beta),
+    label = label
+  )
+}
+
+dens_df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(params)), function(i) {
+    with(params[i, ], make_density_df(xseq, alpha, beta, label))
+  })
 )
-curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, add = TRUE)
-curve(
-  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
+env_df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(params)), function(i) {
+    with(params[i, ], make_envelope_df(xseq, x1, x2, alpha, beta, label))
+  })
 )
 
-hist(
-  sample_beta(100000, x1 = 0.2, x2 = 0.5, alpha = 4, beta = 2)$x,
-  prob = TRUE,
-  main = "",
-  ylim = c(0, 3)
-)
-curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, add = TRUE)
-curve(
-  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 4, beta = 2) / beta(4, 2),
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
-)
-
-hist(
-  sample_beta(100000, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4)$x,
-  prob = TRUE,
-  main = "",
-  ylim = c(0, 3)
-)
-curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, add = TRUE)
-curve(
-  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
-)
-par(mfrow = c(1, 1))
+ggplot(sample_df, aes(x)) +
+  geom_histogram(
+    aes(y = ..density..),
+    bins = 50,
+    fill = "grey80"
+  ) +
+  geom_line(
+    data = dens_df,
+    aes(x = x, y = density),
+    color = "steelblue3"
+  ) +
+  geom_line(
+    data = env_df,
+    aes(x = x, y = envelope),
+    color = "dark orange"
+  ) +
+  ylim(0, 3) +
+  facet_wrap(~label, ncol = 2)
 ```
 
 ##
@@ -770,26 +988,52 @@ par(mfrow = c(1, 1))
 #| warning: false
 #| fig-width: 5.5
 #| fig-height: 3
-#| fig-cap: Theoretical densities (blue) and envelopes (red) for
+#| fig-cap: Theoretical densities (blue) and envelopes (orange) for
 #|   different parameter values and choices of $x_1$ and $x_2$.
-par(mfrow = c(1, 2))
-curve(x^3 * (1 - x) / beta(4, 2), col = "blue", lwd = 2, log = "y")
-curve(
-  envelope(x, x1 = 0.3, x2 = 0.7, alpha = 4, beta = 2) / beta(4, 2),
-  col = "red",
-  lwd = 2,
-  n = 400,
-  add = TRUE
+params <- data.frame(
+  alpha = c(4, 1.8),
+  beta = c(2, 2.4),
+  x1 = c(0.3, 0.2),
+  x2 = c(0.7, 0.5),
+  label = c(
+    "alpha=4, beta=2, x1=0.3, x2=0.7",
+    "alpha=1.8, beta=2.4, x1=0.2, x2=0.5"
+  )
 )
-curve(x^0.8 * (1 - x)^1.4 / beta(1.8, 2.4), col = "blue", lwd = 2, log = "y")
-curve(
-  envelope(x, x1 = 0.2, x2 = 0.5, alpha = 1.8, beta = 2.4) / beta(1.8, 2.4),
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
+
+xseq <- seq(0.05, 0.95, length.out = 400)
+
+make_df <- function(xseq, alpha, beta, x1, x2, label) {
+  envelope_fun <- function(x, x1, x2, alpha, beta) {
+    lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+    lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
+    a1 <- lf_deriv(x1)
+    a2 <- lf_deriv(x2)
+    b1 <- lf(x1) - a1 * x1
+    b2 <- lf(x2) - a2 * x2
+    z1 <- (b2 - b1) / (a1 - a2)
+    ifelse(x < z1, exp(a1 * x + b1), exp(a2 * x + b2))
+  }
+  data.frame(
+    x = xseq,
+    density = xseq^(alpha - 1) * (1 - xseq)^(beta - 1) / beta(alpha, beta),
+    envelope = envelope_fun(xseq, x1, x2, alpha, beta) / beta(alpha, beta),
+    label = label
+  )
+}
+
+plot_df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(params)), function(i) {
+    with(params[i, ], make_df(xseq, alpha, beta, x1, x2, label))
+  })
 )
-par(mfrow = c(1, 1))
+
+ggplot(plot_df, aes(x = x)) +
+  geom_line(aes(y = density), color = "steelblue3") +
+  geom_line(aes(y = envelope), color = "dark orange") +
+  scale_y_log10() +
+  facet_wrap(~label, ncol = 2)
 ```
 
 ## Von Mises Adaptive Envelope
@@ -882,120 +1126,107 @@ envelope <- function(x, x1, x2, kappa) {
 
 ```{r vonmises-adaptive-plot}
 #| fig-cap: Histograms of samples from von_mises_adapt() with theoretical
-#|   densities (blue) and envelopes (red) overlaid.
+#|   densities (blue) and envelopes (orange) overlaid.
 #| fig-width: 5.5
 #| fig-height: 3
 #| echo: false
-par(mfrow = c(2, 2))
-
-x <- von_mises_adapt(100000, -0.4, 0.4, 5)$x
-hist(
-  x,
-  breaks = seq(-pi, pi, length.out = 30),
-  prob = TRUE,
-  main = expression(paste(kappa == 5, ", ", x[1] == -0.4, ", ", x[2] == 0.4)),
-  ylim = c(0, 1.5)
-)
-curve(dvm(x, 5), -pi, pi, col = "blue", lwd = 2, add = TRUE, n = )
-curve(
-  envelope(x, -0.4, 0.4, 5) / (2 * pi * besselI(5, 0)),
-  -pi,
-  pi,
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
+params <- data.frame(
+  x1 = c(-0.4, -0.1, -0.4, -1),
+  x2 = c(0.4, 0.1, 0.4, 1),
+  kappa = c(5, 5, 2, 2),
+  label = c(
+    "kappa=5, x1=-0.4, x2=0.4",
+    "kappa=5, x1=-0.1, x2=0.1",
+    "kappa=2, x1=-0.4, x2=0.4",
+    "kappa=2, x1=-1, x2=1"
+  )
 )
 
-x <- von_mises_adapt(100000, -0.1, 0.1, 5)$x
-hist(
-  x,
-  breaks = seq(-pi, pi, length.out = 30),
-  prob = TRUE,
-  main = expression(paste(kappa == 5, ", ", x[1] == -0.1, ", ", x[2] == 0.1)),
-  ylim = c(0, 1.5)
-)
-curve(dvm(x, 5), -pi, pi, col = "blue", lwd = 2, add = TRUE, n = )
-curve(
-  envelope(x, -0.1, 0.1, 5) / (2 * pi * besselI(5, 0)),
-  -pi,
-  pi,
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
+make_vm_df <- function(n, x1, x2, kappa, label) {
+  x <- von_mises_adapt(n, x1, x2, kappa)$x
+  data.frame(x = x, label = label)
+}
+
+sample_df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(params)), function(i) {
+    with(params[i, ], make_vm_df(100000, x1, x2, kappa, label))
+  })
 )
 
-x <- von_mises_adapt(100000, -0.4, 0.4, 2)$x
-hist(
-  x,
-  breaks = seq(-pi, pi, length.out = 30),
-  prob = TRUE,
-  main = expression(paste(kappa == 2, ", ", x[1] == -0.4, ", ", x[2] == 0.4)),
-  ylim = c(0, 1.5)
+xseq <- seq(-pi, pi, length.out = 400)
+
+make_density_df <- function(xseq, kappa, label) {
+  data.frame(
+    x = xseq,
+    density = dvm(xseq, kappa),
+    label = label
+  )
+}
+
+make_envelope_df <- function(xseq, x1, x2, kappa, label) {
+  env <- envelope(xseq, x1, x2, kappa) / (2 * pi * besselI(kappa, 0))
+  data.frame(
+    x = xseq,
+    envelope = env,
+    label = label
+  )
+}
+
+dens_df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(params)), function(i) {
+    with(params[i, ], make_density_df(xseq, kappa, label))
+  })
 )
-curve(dvm(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
-curve(
-  envelope(x, -0.4, 0.4, 2) / (2 * pi * besselI(2, 0)),
-  -pi,
-  pi,
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
+env_df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(params)), function(i) {
+    with(params[i, ], make_envelope_df(xseq, x1, x2, kappa, label))
+  })
 )
 
-x <- von_mises_adapt(100000, -1, 1, 2)$x
-hist(
-  x,
-  breaks = seq(-pi, pi, length.out = 30),
-  prob = TRUE,
-  main = expression(paste(kappa == 2, ", ", x[1] == -1, ", ", x[2] == 1)),
-  ylim = c(0, 1.5)
-)
-curve(dvm(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
-curve(
-  envelope(x, -1, 1, 2) / (2 * pi * besselI(2, 0)),
-  -pi,
-  pi,
-  col = "red",
-  lwd = 2,
-  add = TRUE,
-  n = 400
-)
+ggplot(sample_df, aes(x)) +
+  geom_histogram(
+    aes(y = ..density..),
+    bins = 30,
+    fill = "grey80"
+  ) +
+  geom_line(
+    data = dens_df,
+    aes(x = x, y = density),
+    color = "steelblue3"
+  ) +
+  geom_line(
+    data = env_df,
+    aes(x = x, y = envelope),
+    color = "dark orange"
+  ) +
+  ylim(0, 1.5) +
+  facet_wrap(~label, ncol = 2)
 ```
 
-## Benchmark
+## Caveats about Adaptive Envelopes
 
-```{r benchmark-vonmises-adaptive}
-#| echo: false
-#| fig-width: 5.5
-#| fig-height: 2.5
-bench::mark(
-  adaptive = von_mises_adapt(100, -1, 1, 5),
-  vec = sample_vonmises(100, 5),
-  check = FALSE
-) |>
-  plot()
-```
+Adaptive envelopes is a general and powerful technique, but tricky to implement! 
 
-. . .
+\medskip\pause
 
-Differences due to R implementation.
+Efficiency depends on number of rejections and also quality of implementation.
 
-## Notes about Adaptive Envelopes
+\medskip\pause
 
-- General and powerful technique
-- But tricky to implement
-- Efficiency depends on number of rejections and also quality of implementation.
-- A good implementation should make use of new points to update envelope.
+A good implementation should make use of new points to update envelope.
 
 ## Exercises
 
 ### Step 1
 
-Use that $W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k$ for $X_1, \ldots, X_k$
-i.i.d. $\mathcal{N}(0, 1)$ to implement a function, `my_rchisq()`, such that
+Use that 
+$$
+W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k \quad \text{for} \quad X_1, \ldots, X_k \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
+$$
+to implement a function, `my_rchisq()`, such that
 `my_rchisq(n, k)` returns a sample of $n$ i.i.d. observations from $\chi^2_k$.
 
 ```{r rchisq2-implementation, include = FALSE}
