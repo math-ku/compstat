@@ -335,11 +335,6 @@ See [Exercise 5.1 in
 CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex) or the
 [Ziggurat algorithm](https://en.wikipedia.org/wiki/Ziggurat_algorithm).
 
-. . .
-
-```{r rng-kind}
-RNGkind()
-```
 
 ## Computing $\Phi^{-1}$
 
@@ -350,6 +345,15 @@ $$
 
 . . .
 
+
+But $\Phi^{-1}$ (the quantile function) does not have a closed-form expression.  
+
+\medskip\pause
+
+We need to approximate $\Phi^{-1}$ numerically.
+
+\medskip\pause
+
 [This](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/snorm.c#L265),
 together with [this technical
 approximation](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52)
@@ -357,28 +361,67 @@ of $\Phi^{-1}$ is how R generates samples from $\mathcal{N}(0,1)$.
 
 \medskip\pause
 
-The technical approximation is a rational function.
 
-## Sampling from a $t$-Distribution
+## Sampling in R
 
-Let $Z = (Y, W) \in \mathbb{R} \times (0, \infty)$ with $Z \sim \mathcal{N}(0,
-1)$ and $W \sim \chi^2_k$ independent.
+R has three basic options for customizing the behavior,
+set through `RNGkind()`.
 
-\medskip\pause
+```{r rng-kind}
+RNGkind()
+```
 
-Define $T : \mathbb{R} \times (0, \infty) \to \mathbb{R}$ by
+. . .
+
+### Options
+
+- `kind`: type of pseudo-random number generator
+- `normal.kind`: type of sampler for Normal samples
+- `sample.kind`: type of sampler for `sample()`
+
+##
+
+
+\begin{figure}
+  \begin{tikzpicture}[node distance=1cm, auto, >=stealth, thick]
+    % Nodes
+    \node[draw, rectangle, rounded corners, fill=gray!20] (A) {Integers from Pseudo-RNG};
+    \node[draw, rectangle, rounded corners, below=of A, fill=green!10] (B) {$\mathcal{U}(0, 1)$};
+    \node[draw, rectangle, rounded corners, below right=of B, fill=orange!10] (D1) {Transformation methods};
+    \node[draw, rectangle, rounded corners, below left=of B, fill=red!10] (D2) {Rejection sampling};
+
+    % Arrows
+    \draw[->] (A) -- (B);
+    \draw[->] (B) -- (D1);
+    \draw[->] (B) -- (D2);
+  \end{tikzpicture}
+  \caption{Main categories of sampling methods (in this course).}
+\end{figure}
+
+
+## Example: Sampling from a $t$-Distribution
+
+If we let
 $$
 T(z,w) = \frac{z}{\sqrt{w/k}},
 $$
-then
+and take $Z \sim \mathcal{N}(0,1)$ and $W \sim \chi^2_k$, then
 $$
 X = T(Z, W) = \frac{Z}{\sqrt{W/k}} \sim t_k.
 $$
 
 . . .
 
-This is how R simulates from a $t$-distribution with $W$ generated from a Gamma
-distribution with shape parameter $k / 2$ and scale parameter $2$.
+This transformation is used in R and other software to simulate $t$-distributed random variables.
+
+\medskip\pause
+
+\begin{algorithm}[H]
+  \caption{Transformation sampling for the $t$-distribution}
+  $z \gets $ sample from $\mathcal{N}(0, 1)$\;
+  $w \gets $ sample from $\chi^2_k$\;
+  \KwRet{$z / \sqrt{w / k}$}\;
+\end{algorithm}
 
 
 ## Von Mises Distribution
@@ -856,7 +899,7 @@ $$
 ```{r}
 #| echo: false
 #| fig-width: 5.5
-#| fig-height: 3
+#| fig-height: 2.5
 fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
   lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
   lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
@@ -1218,11 +1261,66 @@ Efficiency depends on number of rejections and also quality of implementation.
 
 A good implementation should make use of new points to update envelope.
 
+## Transformation Methods vs. Rejection Sampling
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Transformation Methods
+
+Transform samples from a simple distribution to the target distribution.
+
+\medskip\pause
+
+Efficient if the transformation is available
+and cheap to compute.
+
+\medskip\pause
+
+But may not work for complex or unnormalized distributions!
+
+:::
+
+
+. . .
+
+
+::: {.column width="47%"}
+
+### Rejection Sampling
+
+Uses a proposal distribution and accepts/rejects samples.
+
+\medskip\pause
+
+Works even if quantile function is unavailable or expensive.
+
+\medskip\pause
+
+Often less efficient, but very general.
+
+\medskip\pause
+
+Useful for complex, high-dimensional, or unnormalized distributions.
+
+:::
+
+::::
+
+. . .
+
+
+### Takeaway {.example}
+
+Use transformation methods when possible for efficiency; use rejection sampling
+when transformation is impractical or impossible.
+
 ## Exercises
 
 ### Step 1
 
-Use that 
+Use the fact that 
 $$
 W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k \quad \text{for} \quad X_1, \ldots, X_k \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
 $$
