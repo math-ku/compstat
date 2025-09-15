@@ -20,8 +20,8 @@ for you to solve independently at your own pace.
 
 - **Slides:** [Introduction and Functions in R](slides/lecture1.pdf)
 - **Reading:** [Chapter 6 (AdvR)](https://adv-r.hadley.nz/functions.html)
-- **Exercises:**
-  [A1-A7 (CSWR, Appendix A)](https://cswr.nrhstat.org/app-r#app-ex)
+- **Exercises:** [A1-A7 (CSWR, Appendix
+  A)](https://cswr.nrhstat.org/app-r#app-ex)
   - **Data:** [`infrared.txt`](data/infrared.txt)
 
 #### Exercise Session 1
@@ -47,35 +47,37 @@ for you to solve independently at your own pace.
 - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf)
 - **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and
   [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (Advanced R)
-- **Exercises:**
-  [1-3 (Section 24.4.3, AdvR)](https://adv-r.hadley.nz/perf-improve.html#exercises-71)
+- **Exercises:** [1-3 (Section 24.4.3,
+  AdvR)](https://adv-r.hadley.nz/perf-improve.html#exercises-71)
 
 #### Exercise Session 2
-- **Main topic**: Using AI propperly, memory usage and benchmarking, dependency injection, reverse engineering
-- **In class walkthrough:** Exercises 2.1-2.6 (CSwR,
-  Chapter 2) + 24.4.3.2 + 24.4.3.3 (AdvR)
+
+- **Main topic**: Using AI properly, memory usage and benchmarking, dependency
+  injection, reverse engineering
+- **In class walkthrough:** Exercises 2.1-2.6 (CSwR, Chapter 2) + 24.4.3.2 +
+  24.4.3.3 (AdvR)
 - **Solutions**: [Exercise 2 Solutions](exercises/U2.qmd)
 - **Mini-slides**: [Tips for using AI](slides/llm_use.pdf)
 
-#### Lecture 4: Parallelization and Scatterplot Smoothing
-- **Slides:** [Parallelization and Scatterplot Smoothing](slides/lecture4.pdf)
-- **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)
-- **Exercises:**
-  [3.4 (Chapter 3, CSWR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
+#### Lecture 4: Parallelization and Scatterplot Smoothing - **Slides:**
+[Parallelization and Scatterplot Smoothing](slides/lecture4.pdf) - **Reading:**
+[Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html) - **Exercises:**
+[3.4 (Chapter 3, CSWR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
 
 
 ### Week 3
 
 #### Lecture 5: Random Number Generation and Rejection Sampling
 
-<!-- - **Slides:** -->
-<!--   [Random Number Generation and Rejection Sampling](slides/lecture5.pdf) -->
+- **Slides:** [Random Number Generation and Rejection
+  Sampling](slides/lecture5.pdf)
 - **Reading:**
   - [Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation), but
     skip 5.1
   - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp)
 - **Exercises:**
-  - [Exercises 5.1-5.2 in Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation#univariate:ex)
+  - [Exercises 5.1-5.2 in Chapter 5
+    (CSwR)](https://cswr.nrhstat.org/random-number-generation#univariate:ex)
 
 #### Lecture 6: Monte Carlo Methods and Importance Sampling
 
