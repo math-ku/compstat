@@ -238,8 +238,7 @@ potential stability issues.
 ### `mirai_multisession`/`mirai_cluster`
 
 A newer alternative, available through the
-[future.mirai](https://cran.r-project.org/package=future.mirai)
-package.
+[future.mirai](https://cran.r-project.org/package=future.mirai) package.
 
 ## Caveats
 
@@ -347,7 +346,7 @@ where $N_i$ is the set of indices for the $k$ nearest neighbors of $x_i$.
 
 This is an estimator of
 $$
-  f(x) = E(Y \mid X = x).
+f(x) = E(Y \mid X = x).
 $$
 
 \pdfpcnote{
@@ -397,7 +396,7 @@ works for $x$-values in any metric space.
 
 The representation of a linear smoother as a matrix-vector product,
 $$
-  \symbf{S} \symbf{y}
+\symbf{S} \symbf{y}
 $$
 is theoretically useful, but often not the best way to actually compute
 $\hat{\symbf{f}}$.
@@ -407,7 +406,7 @@ $\hat{\symbf{f}}$.
 When $x_i \in \mathbb{R}$ we can sort data according to $x$-values and then use
 a _symmetric_ neighbor definition:
 $$
-  N_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
+N_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
 $$
 (for $k$ odd.)
 
@@ -457,7 +456,7 @@ run_mean_naive <- function(y, k) {
 
 We can achieve a more efficient implementation by noting that
 $$
-  \hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)/2}}{k}.
+\hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)/2}}{k}.
 $$
 
 . . .
@@ -613,14 +612,14 @@ the prediction error.
 
 The general LOOCV formula is
 $$
-  \text{LOOCV} = \sum_{i=1}^n (y_i - \hat{f}^{-i}_i)^2.
+\text{LOOCV} = \sum_{i=1}^n (y_i - \hat{f}^{-i}_i)^2.
 $$
 
 \pause
 
 For a *linear* smoother, we have
 $$
-  \hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}},
+\hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}},
 $$
 
 
@@ -632,7 +631,7 @@ $$
 
 This leads to the simplified formula
 $$
-  \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2.
+\text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2.
 $$
 
 :::
@@ -648,7 +647,7 @@ Can for running mean in principle compute this without leaving anything out.
 
 For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$, so
 $$
-  \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
+\text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
 $$
 
 . . .
@@ -732,7 +731,7 @@ We want a smooth function $f$ that balances goodness-of-fit and wiggliness.
 
 To do this, we minimize an objective function that penalizes wiggliness:
 $$
-  L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \text{d} z}_{\lVert f''\rVert_2^2}
+L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \text{d} z}_{\lVert f''\rVert_2^2}
 $$
 where $\lambda \geq 0$ is a tuning parameter that controls the trade-off.
 
@@ -745,7 +744,7 @@ points $x_i$.
 
 That is, a function
 $$
-  f = \sum_j \beta_j \varphi_j
+f = \sum_j \beta_j \varphi_j
 $$
 where $\varphi_j$ is a basis function for the $n$-dimensional space of such
 splines.
@@ -764,18 +763,18 @@ Penalty term penalizes solutions with large second derivatives (in norm).
 
 In vector notation
 $$
-  \symbf{f} = \symbf{\Phi}\symbf{\beta}
+\symbf{f} = \symbf{\Phi}\symbf{\beta}
 $$
 with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
 $$
 \begin{aligned}
-  L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\ 
+  L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\
                & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
 \end{aligned}
 $$
 with
 $$
-  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
+\symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
 $$
 
 
@@ -928,7 +927,7 @@ Replace $S_{ii}$ in LOOCV by $\text{df} / n$, with $\text{df} =
 \text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$, to get the **generalized**
 cross-validation criterion
 $$
-  \text{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \text{df} / n}\right)^2.
+\text{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \text{df} / n}\right)^2.
 $$
 
 . . .
@@ -1009,15 +1008,15 @@ In practice, we therefore often use fewer basis functions than data points, $p
 
 Using the singular value decomposition
 $$
-  \Phi = \symbf{U} D \symbf{V}^T
+\Phi = \symbf{U} D \symbf{V}^T
 $$
 \pause we can rewrite the smoother matrix as
 $$
-  \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
+\symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
 $$
 where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and \pause
 $$
-  D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
+D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
 $$
 
 \medskip\pause
@@ -1043,7 +1042,7 @@ $\widetilde{\symbf{U}}$) to get coefficients $\hat{\symbf{\beta}} =
 Each coefficient is shrunk according to the corresponding eigenvalue $\gamma_i$
 and smoothing parameter $\lambda$:
 $$
-  \hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
+\hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
 $$
 
 \pause\medskip
@@ -1051,7 +1050,7 @@ $$
 The final smoothed values are reconstructed by combining the shrunk coefficients
 with the basis functions.
 $$
-  \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
+\hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
 $$
 
 \pdfpcnote{
