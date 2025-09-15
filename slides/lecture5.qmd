@@ -1079,7 +1079,57 @@ ggplot(plot_df, aes(x = x)) +
   facet_wrap(~label, ncol = 2)
 ```
 
-## Von Mises Adaptive Envelope
+## Von Mises Adaptive Envelopes
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+The von Mises density is unfortunately not globally log-concave.
+
+\medskip\pause
+
+But, it *is* 
+
+- log-concave on $(-\pi, \pi/2)$ and $(\pi/2, \pi)$ and
+- log-convex on $(-\pi, -\pi/2)$ and $(-\pi/2, \pi/2)$.
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+#| fig-cap: The von Mises density with $\kappa = 0.5$.
+theta <- 0.5 * c(cos(-1.5), sin(-1.5))
+
+dvm <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
+
+xy <- tibble(
+  x = seq(-pi, pi, length.out = 400),
+  y = log(dvm(x, 0.5))
+)
+
+a <- seq(-2 * pi, 2 * pi, length.out = 100)
+
+ggplot(xy, aes(x = x, y = exp(y))) +
+  geom_vline(
+    xintercept = c(-pi, -pi / 2, pi / 2, pi),
+    color = "grey60"
+  ) +
+  geom_line() +
+  labs(y = "Density") +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+```
+
+:::
+
+::::
+
+##
 
 ```{r vonmises-adaptive}
 #| echo: false
