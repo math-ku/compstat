@@ -574,7 +574,70 @@ estimates. For $c \neq 1$ it is necessary to estimate $c$ as
 $$
 \hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)
 $$
-.
+
+##
+
+```{r delta-method-plot3D}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 4
+#| fig-cap: Tangent plane approximation of the function $t(x,y) = x/y$ at the point
+#|   $(2,3)$.
+library(plot3D)
+
+# Define function and means
+t_fun <- function(x, y) x / y
+mu_x <- 2
+mu_y <- 3
+
+# Grid for surface
+x_seq <- seq(1, 3, length.out = 26)
+y_seq <- seq(2, 4, length.out = 26)
+z <- outer(x_seq, y_seq, t_fun)
+
+# Tangent plane at (mu_x, mu_y)
+grad_x <- 1 / mu_y
+grad_y <- -mu_x / mu_y^2
+tangent_plane <- function(x, y) {
+  t_fun(mu_x, mu_y) + grad_x * (x - mu_x) + grad_y * (y - mu_y)
+}
+z_tangent <- outer(x_seq, y_seq, tangent_plane)
+
+# Plot both surfaces together
+persp3D(
+  x_seq,
+  y_seq,
+  z,
+  col = "steelblue",
+  xlab = "x",
+  ylab = "y",
+  zlab = "t(x, y)",
+  theta = 30,
+  phi = 10,
+  border = "black"
+)
+
+# Add tangent plane
+persp3D(
+  x_seq,
+  y_seq,
+  z_tangent,
+  add = TRUE,
+  col = "grey",
+  alpha = 0.6
+)
+
+# Add mean point
+points3D(
+  mu_x,
+  mu_y,
+  t_fun(mu_x, mu_y),
+  col = "darkorange",
+  pch = 19,
+  add = TRUE,
+  cex = 1
+)
+```
 
 ## Gamma Standardized Weights, Variance
 

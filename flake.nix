@@ -38,6 +38,7 @@
             CSwR
             lme4
             Matrix
+            plot3D
             mvtnorm
             numDeriv
             patchwork
