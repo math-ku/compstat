@@ -1159,13 +1159,13 @@ xy <- tibble(
 
 a <- seq(-2 * pi, 2 * pi, length.out = 100)
 
-ggplot(xy, aes(x = x, y = exp(y))) +
+ggplot(xy, aes(x = x, y = y)) +
   geom_vline(
     xintercept = c(-pi, -pi / 2, pi / 2, pi),
     color = "grey60"
   ) +
   geom_line() +
-  labs(y = "Density") +
+  labs(y = "log-density") +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
