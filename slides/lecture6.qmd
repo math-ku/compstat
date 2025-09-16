@@ -20,14 +20,20 @@ normalization.
 Suppose that $g(y) \propto p(y)$ is another density, known up to normalization,
 that we can simulate from, and suppose
 
-$$\alpha' q \leq p$$
+$$
+\alpha' q \leq p
+$$
 
 for some $\alpha' > 0$.
 
 . . .
 
 If $Y$ has density $g$ and $U$ is uniform on $(0,1)$ then the conditional
-distribution $$Y \mid U \leq \alpha' q(Y) / p(Y)$$ has density $f$.
+distribution
+$$
+Y \mid U \leq \alpha' q(Y) / p(Y)
+$$
+has density $f$.
 
 ### Basic Algorithm
 
@@ -74,7 +80,9 @@ Variance reduction technique
 ### Monte Carlo Integration
 
 With $X_1, \ldots, X_n$ i.i.d. with density $f$
-$$\hat{\mu}_{\textrm{MC}} := \frac{1}{n} \sum_{i=1}^n h(X_i) \rightarrow \mu := \mathbb{E} h(X_1) = \int h(x) f(x) \ dx$$
+$$
+\hat{\mu}_{\textrm{MC}} := \frac{1}{n} \sum_{i=1}^n h(X_i) \rightarrow \mu := \mathbb{E} h(X_1) = \int h(x) f(x) \ dx
+$$
 for $n \to \infty$ by the law of large numbers (LLN).
 
 ## Monte Carlo Integration
@@ -87,17 +95,23 @@ $$
 $$
 
 where
-$$\sigma^2_{\textrm{MC}} = \mathbb{V} h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.$$
+$$
+\sigma^2_{\textrm{MC}} = \mathbb{V} h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.
+$$
 
 ## Monte Carlo Integration
 
 We can estimate $\sigma^2_{\textrm{MC}}$ using the empirical variance
-$$\hat{\sigma}^2_{\textrm{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\textrm{MC}})^2,$$
+$$
+\hat{\sigma}^2_{\textrm{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\textrm{MC}})^2,
+$$
 
 then the variance of $\hat{\mu}_{\textrm{MC}}$ is estimated as
 $\hat{\sigma}^2_{\textrm{MC}} / n$ and a standard 95% confidence interval for
 $\mu$ is
-$$\hat{\mu}_{\textrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\textrm{MC}}}{\sqrt{n}}.$$
+$$
+\hat{\mu}_{\textrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\textrm{MC}}}{\sqrt{n}}.
+$$
 
 ## Example: Gamma Distribution
 
@@ -200,13 +214,20 @@ from the target distribution.
 . . .
 
 We want to find $\mu = \operatorname{E} h(X)$. Observe that
-$$\mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx$$
-whenever $g$ is a density fulfilling that $$g(x) = 0 \Rightarrow f(x) = 0.$$
+$$
+\mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
+$$
+whenever $g$ is a density fulfilling that
+$$
+g(x) = 0 \Rightarrow f(x) = 0.
+$$
 
 ### Weights
 
 With $X_1, \ldots, X_n$ i.i.d. with density $g$ define the _weights_
-$$w^*(X_i) = \frac{f(X_i)}{g(X_i)}.$$
+$$
+w^*(X_i) = \frac{f(X_i)}{g(X_i)}.
+$$
 
 . . .
 
@@ -218,7 +239,9 @@ $$w^*(X_i) = \frac{f(X_i)}{g(X_i)}.$$
 
 ### Estimator
 
-$$\hat{\mu}_{\textrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).$$
+$$
+\hat{\mu}_{\textrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).
+$$
 
 . . .
 
@@ -285,8 +308,10 @@ p
 ## Importance Sampling Variance
 
 Again by the LLN
-$$\hat{\mu}_{\textrm{IS}}^* \rightarrow \mathbb{E} h(X_1) w^*(X_1) = \mu,$$ and
-by the CLT
+$$
+\hat{\mu}_{\textrm{IS}}^* \rightarrow \mathbb{E} h(X_1) w^*(X_1) = \mu,
+$$
+and by the CLT
 
 $$
 \hat{\mu}_{\textrm{IS}}^* \overset{\textrm{approx}} \sim
@@ -294,17 +319,23 @@ $$
 $$
 
 where
-$$\sigma^{*2}_{\textrm{IS}} = \mathbb{V} h(X_1)w^*(X_1) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.$$
+$$
+\sigma^{*2}_{\textrm{IS}} = \mathbb{V} h(X_1)w^*(X_1) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.
+$$
 
 ## Importance Sampling Variance
 
 The importance sampling variance can be estimated just as the MC variance
-$$\hat{\sigma}^{*2}_{\textrm{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\textrm{IS}}^*)^2,$$
+$$
+\hat{\sigma}^{*2}_{\textrm{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\textrm{IS}}^*)^2,
+$$
 
 . . .
 
 And a 95% standard confidence interval is
-$$\hat{\mu}^*_{\textrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\textrm{IS}}}{\sqrt{n}}.$$
+$$
+\hat{\mu}^*_{\textrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\textrm{IS}}}{\sqrt{n}}.
+$$
 
 . . .
 
@@ -349,12 +380,17 @@ sd(mu_hat_IS) * sqrt(B)
 ## Standardized Weights
 
 If $f = c^{-1} q$ with $c$ unknown then
-$$c = \int q(x) dx = \int \frac{q(x)}{g(x)} g(x) d x.$$
+$$
+c = \int q(x) dx = \int \frac{q(x)}{g(x)} g(x) d x.
+$$
 
 . . .
 
-And $$\mu = \frac{\int h(x) w^*(x) g(x) \ d x}{\int w^*(x) g(x) \ d x},$$ where
-$w^*(x) = q(x) / g(x).$
+And
+$$
+\mu = \frac{\int h(x) w^*(x) g(x) \ d x}{\int w^*(x) g(x) \ d x},
+$$
+where $w^*(x) = q(x) / g(x).$
 
 ## IS with Standardized Weights
 
@@ -367,9 +403,11 @@ $$
 $$
 
 where $w^*(X_i) = q(X_i) / g(X_i)$ and
-$$w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}$$ are the _standardized
-weights_. This works irrespectively of the value of the normalizing constant
-$c$, and also if an unnormalized $g$ is used.
+$$
+w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}
+$$
+are the _standardized weights_. This works irrespectively of the value of the
+normalizing constant $c$, and also if an unnormalized $g$ is used.
 
 ## Gamma Standardized Weights
 
@@ -448,8 +486,8 @@ $$
 . . .
 
 For $c = 1$, the asymptotic variance can be estimated by plugging in empirical
-estimates. For $c \neq 1$ it is necessary to estimate $c$ as
-$\hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)$.
+estimates. For $c \neq 1$ it is necessary to estimate $c$ as $\hat{c} =
+\frac{1}{n} \sum_{i=1}^n w^*(X_i)$.
 
 ## Gamma Standardized Weights, Variance
 
@@ -684,19 +722,24 @@ mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
 
 ## A High-Dimensional Integral
 
-$$\mu := (2 \pi)^{-p/2} \int e^{-\frac{1}{2}\left(x_1^2 + \sum_{i=2}^p (x_i - \alpha x_{i-1})^2\right)}  \mathrm{d} x.$$
+$$
+\mu := (2 \pi)^{-p/2} \int e^{-\frac{1}{2}\left(x_1^2 + \sum_{i=2}^p (x_i - \alpha x_{i-1})^2\right)}  \mathrm{d} x.
+$$
 
 . . .
 
 \begin{align*} \mu & = (2 \pi)^{-p/2} \int e^{- \frac{1}{2} \sum*{i = 2}^p
 \alpha^2 x*{i-1}^2 - 2\alpha x*i x*{i-1}} e^{-\frac{||x||*2^2}{2}} \mathrm{d} x
 \\ & = \int \underbrace{e^{- \frac{1}{2} \sum*{i = 2}^p \alpha^2 x*{i-1}^2 -
-2\alpha x_i x*{i-1}}}\_{h(x)} f(x) \mathrm{d} x \end{align*} where $f$ is the
-density for the $\mathcal{N}(0, I_p)$ distribution.
+2\alpha x_i x*{i-1}}}\_{h(x)} f(x) \mathrm{d} x \end{align*}
+where $f$ is the density for the $\mathcal{N}(0, I_p)$ distribution.
 
 . . .
 
-In fact, $$\mu = 1.$$
+In fact,
+$$
+\mu = 1.
+$$
 
 ## A High-Dimensional Integral
 
