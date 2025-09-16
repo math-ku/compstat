@@ -15,18 +15,16 @@ old_options <- options(digits = 4)
 Suppose that $f(y) \propto q(y)$ is the **target** density, known up to
 normalization.
 
-. . .
+\medskip\pause
 
 Suppose that $g(y) \propto p(y)$ is another density, known up to normalization,
 that we can simulate from, and suppose
-
 $$
 \alpha' q \leq p
 $$
-
 for some $\alpha' > 0$.
 
-. . .
+\medskip\pause
 
 If $Y$ has density $g$ and $U$ is uniform on $(0,1)$ then the conditional
 distribution
@@ -51,8 +49,8 @@ returns a value:
 
 ### Two Challenges
 
-- Finding an envelope $p/\alpha'$, of $q$
-- Finding a **tight-enough** envelope
+- Finding an envelope $p/\alpha'$, of $q$.
+- Finding a **tight-enough** envelope.
 
 ## Today
 
@@ -85,15 +83,15 @@ $$
 $$
 for $n \to \infty$ by the law of large numbers (LLN).
 
+. . .
+
 ## Monte Carlo Integration
 
 The CLT gives that
-
 $$
 \frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\textrm{approx}} \sim
 \mathcal{N}(\mu, \sigma^2_{\textrm{MC}} / n)
 $$
-
 where
 $$
 \sigma^2_{\textrm{MC}} = \mathbb{V} h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.
@@ -105,7 +103,6 @@ We can estimate $\sigma^2_{\textrm{MC}}$ using the empirical variance
 $$
 \hat{\sigma}^2_{\textrm{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\textrm{MC}})^2,
 $$
-
 then the variance of $\hat{\mu}_{\textrm{MC}}$ is estimated as
 $\hat{\sigma}^2_{\textrm{MC}} / n$ and a standard 95% confidence interval for
 $\mu$ is
@@ -180,21 +177,10 @@ p +
 
 - Can use concentration inequalities to get a stopping rule
 - But need variance estimate for Chebychev-based bound and moment generating
-  functions for Chernoff-based bounds. --
-
+  functions for Chernoff-based bounds.
 - If you overshoot then you waste computer resources, and if you undershoot then
   you get a bad estimate.
 
-. . .
-
-### Exercise
-
-Implement a heuristic stopping rule that stops when the confidence interval is
-0.1 units wide.
-
-```{r excercise-stop, include = FALSE}
-# TO DO
-```
 
 # Importance Sampling
 
@@ -243,7 +229,7 @@ $$
 \hat{\mu}_{\textrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).
 $$
 
-. . .
+\medskip\pause
 
 It has mean $\mu$.
 
@@ -312,12 +298,10 @@ $$
 \hat{\mu}_{\textrm{IS}}^* \rightarrow \mathbb{E} h(X_1) w^*(X_1) = \mu,
 $$
 and by the CLT
-
 $$
 \hat{\mu}_{\textrm{IS}}^* \overset{\textrm{approx}} \sim
 \mathcal{N}(\mu, \sigma^{*2}_{\textrm{IS}} / n)
 $$
-
 where
 $$
 \sigma^{*2}_{\textrm{IS}} = \mathbb{V} h(X_1)w^*(X_1) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.
@@ -337,7 +321,7 @@ $$
 \hat{\mu}^*_{\textrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\textrm{IS}}}{\sqrt{n}}.
 $$
 
-. . .
+\medskip\pause
 
 We may have $\sigma^{*2}_{\textrm{IS}} > \sigma^2_{\textrm{MC}}$ or
 $\sigma^{*2}_{\textrm{IS}} < \sigma^2_{\textrm{MC}}$ depending on $h$ and $g$.
@@ -395,13 +379,11 @@ where $w^*(x) = q(x) / g(x).$
 ## IS with Standardized Weights
 
 An importance sampling estimate of $\mu$ is thus
-
 $$
 \begin{aligned} \hat{\mu}_{\textrm{IS}} & = \frac{\sum_{i=1}^n h(X*i) w^*(X_i)}{\sum*{i=1}^n w^*(X*i)} \\
                                         & = \sum*{i=1}^n h(X_i) w(X_i),
 \end{aligned}
 $$
-
 where $w^*(X_i) = q(X_i) / g(X_i)$ and
 $$
 w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}
@@ -728,10 +710,10 @@ $$
 
 . . .
 
-\begin{align*} \mu & = (2 \pi)^{-p/2} \int e^{- \frac{1}{2} \sum*{i = 2}^p
-\alpha^2 x*{i-1}^2 - 2\alpha x*i x*{i-1}} e^{-\frac{||x||*2^2}{2}} \mathrm{d} x
-\\ & = \int \underbrace{e^{- \frac{1}{2} \sum*{i = 2}^p \alpha^2 x*{i-1}^2 -
-2\alpha x_i x*{i-1}}}\_{h(x)} f(x) \mathrm{d} x \end{align*}
+\begin{align*}
+  \mu            & = (2 \pi)^{-p/2} \int e^{- \frac{1}{2} \sum_{i = 2}^p \alpha^2 x_{i-1}^2 - 2\alpha x*i x*{i-1}} e^{-\frac{\lVert x \rVert_2^2}{2}} \mathrm{d} x \\
+                 & = \int \underbrace{e^{- \frac{1}{2} \sum*{i = 2}^p \alpha^2 x*{i-1}^2 - 2\alpha x_i x*{i-1}}}_{h(x)} f(x) \mathrm{d} x
+\end{align*}
 where $f$ is the density for the $\mathcal{N}(0, I_p)$ distribution.
 
 . . .
@@ -849,3 +831,14 @@ vonmises_importance <- function(n, mu = 0, kappa = 2) {
 - Monte Carlo methods are useful for estimating integrals and means
 - Importance sampling can reduce variance considerably
 - But the proposal distribution must be chosen carefully
+
+. . .
+
+### Exercise
+
+Implement a heuristic stopping rule that stops when the confidence interval is
+0.1 units wide.
+
+```{r excercise-stop, include = FALSE}
+# TO DO
+```
