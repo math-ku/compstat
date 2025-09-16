@@ -232,7 +232,7 @@ Computers have no concept of "true" randomness and instead generate
 \medskip\pause
 
 
-Not really random, but have properties that make them appear to be so.
+Not really random, but appear to be so.
 
 \medskip\pause
 
@@ -258,6 +258,10 @@ equally often in a period.
 
 `runif()` samples by just scaling these pseduo-random integers to the unit
 interval (with some tweaks to avoid division by 0).
+
+\pdfpcnote{
+  Random numbers are used in many applications.
+}
 
 ## Transformation Methods
 
@@ -325,7 +329,8 @@ random variables (polar coordinates).
 
 ### Inverse Transform
 
-$X = \Phi^{-1}(U)$where $\Phi$ is the distribution function for the Gaussian distribution.
+$X = \Phi^{-1}(U)$ where $\Phi$ is the distribution function for the Gaussian
+distribution.
 
 . . .
 
@@ -430,10 +435,52 @@ The density on $(-\pi, \pi]$ is
 $$
 f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x - \mu)}
 $$
-for $\kappa > 0$ and $\mu \in (-\pi, \pi]$ parameters and $I_0$ is a modified
+for $\kappa > 0$ and $\mu \in (-\pi, \pi]$ parameters and $I_0$ is the modified
 Bessel function.
 
-. . .
+\medskip
+
+```{r}
+#| fig-cap: The von Mises density for $\mu = 2$ and $\kappa = 9$.
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+library(ggplot2)
+
+dvm <- function(x, k) exp(k * cos(x - 2)) / (2 * pi * besselI(k, 0))
+
+xy <- tibble(
+  x = seq(0, 2 * pi, length.out = 400),
+  y = dvm(x, 9)
+)
+
+
+p1 <- ggplot(xy, aes(x, y)) +
+  geom_line() +
+  coord_fixed(ratio = 2 * pi / 1.2) +
+  labs(y = "Density") +
+  theme_minimal()
+
+p2 <- ggplot(xy, aes(x = x, y = y)) +
+  geom_line() +
+  coord_polar(
+    theta = "x",
+    start = 0,
+    direction = 1
+  ) +
+  labs(
+    x = "Angle (radians)",
+    y = NULL
+  ) +
+  theme_minimal()
+
+p1 + p2
+```
+
+
+## Sampling from the von Mises Distribution
+
+### Using movMF
 
 ```{r vMsim}
 library(movMF)
