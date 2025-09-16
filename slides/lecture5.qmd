@@ -1,9 +1,5 @@
 ---
 title: "Random Number Generation and Rejection Sampling"
-
-format:
-  beamer:
-    keep-tex: true
 ---
 
 {{< include _common.qmd >}}
@@ -980,7 +976,7 @@ sample_beta <- new_rejection_sampler(fixed_beta_sampler)
 ```
 
 ```{r Beta-fig}
-#| fig-cap: Histograms of samples from sample_beta() with theoretical
+#| fig-cap: Histograms of samples from an adaptive envelope sampler with theoretical
 #|   densities (blue) and envelopes (orange) overlaid.
 #| fig-width: 5.5
 #| fig-height: 3
@@ -1265,8 +1261,8 @@ envelope <- function(x, x1, x2, kappa) {
 ```
 
 ```{r vonmises-adaptive-plot}
-#| fig-cap: Histograms of samples from von_mises_adapt() with theoretical
-#|   densities (blue) and envelopes (orange) overlaid.
+#| fig-cap: Histograms of samples from an adaptive envelope sampler for the von Mises distribution,
+#|   with theoretical densities (blue) and envelopes (orange) overlaid.
 #| fig-width: 5.5
 #| fig-height: 3
 #| echo: false
