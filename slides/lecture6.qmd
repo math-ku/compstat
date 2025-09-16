@@ -9,13 +9,12 @@ title: "Monte Carlo Methods"
 #| message: false
 #| warning: false
 library(tidyverse)
+library(patchwork)
 theme_set(theme_minimal(base_size = 10))
 options(width = 60)
 ```
 
 ```{r setup, include=FALSE}
-library(patchwork)
-
 old_options <- options(digits = 4)
 ```
 
@@ -42,30 +41,32 @@ Y \mid U \leq \alpha' q(Y) / p(Y)
 $$
 has density $f$.
 
-## Basic Algorithm
+## Basic Rejection Sampling Algorithm
 
-To simulate one variable with density $f$, run the following code until it
-returns a value:
-
-. . .
-
-- Simulate $y$ from $g$
-- Simulate $u$ from $\operatorname{Uniform}(0,1)$
-- If $u > \alpha' q(y) / p(y)$ return to step one
-- Else return $y$
+\begin{algorithm}[H]
+  \caption{Rejection sampling to simulate from a random variable $X$ with density
+           $f \propto q$ using proposal $Z$ with density $g \propto p$.}
+  \Repeat{$x$ is accepted}{
+    Generate $x \sim Z$\;
+    Generate $u \sim \mathsf{Uniform}(0, 1)$\;
+    \If{$u \leq \frac{\alpha' q(x)}{p(x)}$}{
+      Accept $x$\;
+    }
+  }
+\end{algorithm}
 
 . . .
 
 ### Two Challenges
 
-- Finding an envelope $p/\alpha'$, of $q$.
+- Finding an envelope $p/\alpha'$ of $q$.\pause
 - Finding a **tight-enough** envelope.
 
 ## Today
 
 ### Monte Carlo Methods
 
-General class of methods for estimating integrals and means
+General class of methods for estimating integrals and means.
 
 \medskip\pause
 
@@ -75,33 +76,33 @@ Rejection sampling is a type of Monte Carlo method.
 
 ### Importance Sampling
 
-Focus on integrating functions and estimating means
+Focus on integrating functions and estimating means.
 
 \medskip\pause
 
-Useful when we cannot analytically compute the integral
+Useful when we cannot analytically compute the integral.
 
 \medskip\pause
 
-Variance reduction technique
+It is also a variance reduction technique.
 
 ## Monte Carlo Methods
 
 ### Basic, Simple Idea
 
-Use random sampling to obtain numerical results
+Use random sampling to obtain numerical results.
 
 \medskip\pause
 
-Useful when analytical solutions are infeasible
+Useful when analytical solutions are infeasible.
 
 . . .
 
 ### Monte Carlo Integration
 
-With $X_1, \ldots, X_n$ i.i.d. with density $f$
+With $X_1, \ldots, X_n$ i.i.d. with density $f$,
 $$
-\hat{\mu}_{\textrm{MC}} := \frac{1}{n} \sum_{i=1}^n h(X_i) \rightarrow \mu := \mathbb{E} h(X_1) = \int h(x) f(x) \ dx
+\hat{\mu}_{\mathsf{MC}} = \frac{1}{n} \sum_{i=1}^n h(X_i) \rightarrow \mu = \E h(X_1) = \int h(x) f(x) \ dx
 $$
 for $n \to \infty$ by the law of large numbers (LLN).
 
@@ -109,25 +110,25 @@ for $n \to \infty$ by the law of large numbers (LLN).
 
 By the central limit theorem (CLT), we know that
 $$
-\frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\textrm{approx}} \sim
-\mathcal{N}(\mu, \sigma^2_{\textrm{MC}} / n)
+\frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\mathsf{approx}} \sim
+\mathcal{N}(\mu, \sigma^2_{\mathsf{MC}} / n)
 $$
 where
 $$
-\sigma^2_{\textrm{MC}} = \mathbb{V} h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.
+\sigma^2_{\mathsf{MC}} = \var h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.
 $$
 
 ## Monte Carlo Integration
 
-We can estimate $\sigma^2_{\textrm{MC}}$ using the empirical variance
+We can estimate $\sigma^2_{\mathsf{MC}}$ using the empirical variance
 $$
-\hat{\sigma}^2_{\textrm{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\textrm{MC}})^2,
+\hat{\sigma}^2_{\mathsf{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\mathsf{MC}})^2,
 $$
-then the variance of $\hat{\mu}_{\textrm{MC}}$ is estimated as
-$\hat{\sigma}^2_{\textrm{MC}} / n$ and a standard 95% confidence interval for
+then the variance of $\hat{\mu}_{\mathsf{MC}}$ is estimated as
+$\hat{\sigma}^2_{\mathsf{MC}} / n$ and a standard 95% confidence interval for
 $\mu$ is
 $$
-\hat{\mu}_{\textrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\textrm{MC}}}{\sqrt{n}}.
+\hat{\mu}_{\mathsf{MC}} \pm 1.96 \frac{\hat{\sigma}_{\mathsf{MC}}}{\sqrt{n}}.
 $$
 
 ## Example: Gamma Distribution
@@ -136,7 +137,7 @@ $$
 
 ::: {.column width="47%"}
 
-We want to estimate the mean of a $\operatorname{Gamma}(8,1)$ distribution.
+We want to estimate the mean of a $\mathsf{Gamma}(8,1)$ distribution.
 
 . . .
 
@@ -198,7 +199,8 @@ p +
 
 ## When to Stop?
 
-Can use concentration inequalities to get a stopping rule
+We could use concentration inequalities (Chebyshev/Chernoff) to get a stopping
+rule.
 
 \medskip\pause
 
@@ -207,10 +209,14 @@ functions for Chernoff-based bounds.
 
 \medskip\pause
 
+More commonly, just run until the confidence interval is sufficiently narrow.
+
+. . .
+
+### Trade-Offs
+
 If you overshoot then you waste computer resources, and if you undershoot then
 you get a bad estimate.
-
-# Importance Sampling
 
 ## Importance Sampling
 
@@ -221,13 +227,16 @@ from the target distribution.
 
 ### Basic Idea
 
-- Usually, some regions of the target distribution are more important
-- So let's oversample these regions
-- But we need to correct for this oversampling
+Some regions of the target distribution are often more important than others.
 
 \medskip\pause
 
-We want to find $\mu = \operatorname{E} h(X)$. Observe that
+So let's oversample these regions, but correct for this by \alert{weighting}
+the samples.
+
+\medskip\pause
+
+We want to find $\mu = \E h(X)$. Observe that
 $$
 \mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
 $$
@@ -245,16 +254,14 @@ $$
 
 . . .
 
-- $f/g$ is called the _likelihood ratio_.
-- $f$ is the _nominal_ density
-- $g$ is the _importance_ density
+$g$is the _importance_ density and $f/g$ is called the _likelihood ratio_.
 
 . . .
 
 ### Estimator
 
 $$
-\hat{\mu}_{\textrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).
+\hat{\mu}_{\mathsf{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).
 $$
 
 It has mean $\mu$.
@@ -263,26 +270,26 @@ It has mean $\mu$.
 
 ```{r}
 #| echo: false
-#| fig-cap: "Target (dashed blue) and proposal (orange) densities
+#| fig-cap: "Target (dashed blue) and importance (orange) densities
 #|  with corresponding importance weights."
 #| fig-width: 5
 #| fig-height: 3
 x <- seq(-5, 5, length.out = 200)
 target <- dnorm(x, mean = 0, sd = 1)
-proposal <- dnorm(x, mean = 1, sd = 1)
+importance <- dnorm(x, mean = 1, sd = 1)
 
-p1 <- tibble(x, target, proposal) |>
+p1 <- tibble(x, target, importance) |>
   pivot_longer(
-    cols = c(target, proposal),
+    cols = c(target, importance),
     names_to = "Density",
     values_to = "value"
   ) |>
   ggplot(aes(x, value, color = Density, linetype = Density)) +
   geom_line() +
   scale_color_manual(
-    values = c(target = "steelblue", proposal = "darkorange")
+    values = c(target = "steelblue", importance = "darkorange")
   ) +
-  scale_linetype_manual(values = c(target = "dashed", proposal = "solid")) +
+  scale_linetype_manual(values = c(target = "dashed", importance = "solid")) +
   theme(legend.position.inside = c(0.87, 0.82)) +
   guides(
     color = guide_legend(position = "inside"),
@@ -295,7 +302,7 @@ p1 <- tibble(x, target, proposal) |>
     linetype = "Distribution"
   )
 
-w <- target / proposal
+w <- target / importance
 
 p2 <- tibble(x, w) |>
   ggplot(aes(x, w)) +
@@ -365,7 +372,7 @@ p1 / p2 + plot_layout(axes = "collect")
 
 ```{r gamma-IS-fig1, echo = FALSE}
 #| fig-cap: "Convergence of the importance sampling estimate of the mean of a
-#|   Gamma(8,1) distribution using a N(10,3) proposal."
+#|   Gamma(8,1) distribution using a N(10,3) importance distribution."
 #| fig-width: 5
 #| fig-height: 2.5
 p <- ggplot(
@@ -383,36 +390,36 @@ p
 
 Again by the LLN
 $$
-\hat{\mu}_{\textrm{IS}}^* \rightarrow \mathbb{E} h(X_1) w^*(X_1) = \mu,
+\hat{\mu}_{\mathsf{IS}}^* \rightarrow \E h(X_1) w^*(X_1) = \mu,
 $$
 and by the CLT
 $$
-\hat{\mu}_{\textrm{IS}}^* \overset{\textrm{approx}} \sim
-\mathcal{N}(\mu, \sigma^{*2}_{\textrm{IS}} / n)
+\hat{\mu}_{\mathsf{IS}}^* \overset{\mathsf{approx}} \sim
+\mathcal{N}(\mu, \sigma^{*2}_{\mathsf{IS}} / n)
 $$
 where
 $$
-\sigma^{*2}_{\textrm{IS}} = \mathbb{V} h(X_1)w^*(X_1) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.
+\sigma^{*2}_{\mathsf{IS}} = \var \big( h(X_1)w^*(X_1)\big) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.
 $$
 
 ## Importance Sampling Variance
 
 The importance sampling variance can be estimated just as the MC variance
 $$
-\hat{\sigma}^{*2}_{\textrm{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\textrm{IS}}^*)^2,
+\hat{\sigma}^{*2}_{\mathsf{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\mathsf{IS}}^*)^2,
 $$
 
 . . .
 
 And a 95% standard confidence interval is
 $$
-\hat{\mu}^*_{\textrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\textrm{IS}}}{\sqrt{n}}.
+\hat{\mu}^*_{\mathsf{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\mathsf{IS}}}{\sqrt{n}}.
 $$
 
 \medskip\pause
 
-We may have $\sigma^{*2}_{\textrm{IS}} > \sigma^2_{\textrm{MC}}$ or
-$\sigma^{*2}_{\textrm{IS}} < \sigma^2_{\textrm{MC}}$ depending on $h$ and $g$.
+We may have $\sigma^{*2}_{\mathsf{IS}} > \sigma^2_{\mathsf{MC}}$ or
+$\sigma^{*2}_{\mathsf{IS}} < \sigma^2_{\mathsf{MC}}$ depending on $h$ and $g$.
 
 . . .
 
@@ -475,7 +482,7 @@ $$
 
 An importance sampling estimate of $\mu$ is thus
 $$
-\begin{aligned} \hat{\mu}_{\textrm{IS}} & = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \\ \pause
+\begin{aligned} \hat{\mu}_{\mathsf{IS}} & = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \\ \pause
                                         & = \sum_{i=1}^n h(X_i) w(X_i),
 \end{aligned}
 $$
@@ -530,18 +537,18 @@ complicated, because the estimator is a \alert{ratio of random variables}.
 From the multivariate CLT, we have
 $$
 \frac{1}{n} \sum_{i=1}^n \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
-\overset{\textrm{approx}}{\sim}
+\overset{\mathsf{approx}}{\sim}
 \mathcal{N}\left(
   c \begin{bmatrix} \mu \\ 1\end{bmatrix},
-  \frac{1}{n} \begin{bmatrix} \sigma^{2}_{\textrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
+  \frac{1}{n} \begin{bmatrix} \sigma^{2}_{\mathsf{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
 \right),
 $$
 where
 $$
 \begin{aligned}
-  \sigma^2_{\textrm{IS}} & = \mathbb{V}(h(X_1) w^*(X_1)) \\
-  \gamma & = \mathrm{cov}(h(X_1) w^*(X_1), w^*(X_1)) \\
-  \sigma^2_{w^*} & = \mathbb{V}(w^*(X_1))
+  \sigma^2_{\mathsf{IS}} & = \var\big(h(X_1) w^*(X_1)\big) \\
+  \gamma & = \cov (h(X_1) w^*(X_1), w^*(X_1)) \\
+  \sigma^2_{w^*} & = \var (w^*(X_1))
 \end{aligned}
 $$
 
@@ -555,16 +562,16 @@ Observe that $\nabla t(x, y) = \begin{bmatrix}1 / y \\ - x / y^2\end{bmatrix}$,
 whence
 
 $$
-\nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\textrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
-\end{array} \right) \nabla t(c\mu, c) = \frac{\sigma^{2}_{\textrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^{2}}.
+\nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\mathsf{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
+\end{array} \right) \nabla t(c\mu, c) = \frac{\sigma^{2}_{\mathsf{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^{2}}.
 $$
 
 . . .
 
 By the $\Delta$-method,
 $$
-\hat{\mu}_{\textrm{IS}} \overset{\textrm{approx}}{\sim}
-\mathcal{N}\left(\mu, \frac{\sigma^{2}_{\textrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 n} \right).
+\hat{\mu}_{\mathsf{IS}} \overset{\mathsf{approx}}{\sim}
+\mathcal{N}\left(\mu, \frac{\sigma^{2}_{\mathsf{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 n} \right).
 $$
 
 . . .
@@ -580,7 +587,7 @@ $$
 ```{r delta-method-plot3D}
 #| echo: false
 #| fig-width: 5
-#| fig-height: 4
+#| fig-height: 4.5
 #| fig-cap: Tangent plane approximation of the function $t(x,y) = x/y$ at the point
 #|   $(2,3)$.
 library(plot3D)
@@ -694,15 +701,16 @@ p +
   variance, importance sampling can reduce variance by focusing samples where
   the integrand is large.
 - **Difficult-to-Sample Targets:** When direct sampling from the target
-  distribution is hard, but sampling from a related proposal is easy.
+  distribution is hard, but sampling from a related importance distribution
+  is easy.
 - **Integrals with Heavy Tails:** For integrals dominated by regions with low
   probability under the target, importance sampling can improve accuracy.
 - **Bayesian Computation:** Useful for marginal likelihood estimation and
   posterior expectations when the posterior is complex.
 
-## Poor Proposals
+## Poor Importance Distribution
 
-If the proposal distribution does not cover regions where the target is large,
+If the importance distribution does not cover regions where the target is large,
 weights become highly variable and estimates unreliable.
 
 
@@ -710,16 +718,11 @@ weights become highly variable and estimates unreliable.
 
 ### Remedies
 
-Redesign proposal to better match the target.
-
-\medskip\pause
-
-Use adaptive or mixture proposals.
+Redesign importance distribution to better match the n
 
 \medskip\pause
 
 Increase sample size (if feasible).
-
 
 ## Diagnostics for Importance Sampling
 
@@ -751,30 +754,30 @@ shows whether importance sampling actually improves efficiency.
 ::: {.column width="47%"}
 
 Suppose $X \sim \mathcal{N}(0, I_{10})$ and we want to estimate
-$\mathbb{E}[f(X)]$ where $f(X)$ is large near the origin.
+$\operatorname{E}[f(X)]$ where $f(X)$ is large near the origin.
 
 \medskip\pause
 
-If we use a proposal $g(x) = \mathcal{N}(\mu, I_{10})$ with large $|\mu|$, most
-samples are far from the origin, so $f(X)$ is nearly zero and weights are highly
-variable.
+If we use a importance density $g(x) = \mathcal{N}(\mu, I_{10})$ with large
+$|\mu|$, most samples are far from the origin, so $f(X)$ is nearly zero and
+weights are highly variable.
 
 :::
 
 ::: {.column width="47%"}
 
 
-```{r poor-proposal-demo}
+```{r poor-importance-demo}
 #| echo: false
 #| fig-height: 2.3
-#| fig-cap: "Target (blue) and proposal (orange) densities
-#|   with samples from the proposal."
+#| fig-cap: "Target (blue) and importance (orange) densities
+#|   with samples from the importance distribution."
 library(mvtnorm)
 
 set.seed(1)
 d <- 2
 n <- 1000
-mu <- rep(2, d) # Poor proposal: mean far from origin
+mu <- rep(2, d)
 x <- matrix(rnorm(n * d, mean = mu), ncol = d)
 
 colnames(x) <- c("x1", "x2")
@@ -786,17 +789,17 @@ grid <- expand.grid(
 grid_mat <- as.matrix(grid)
 
 grid$target <- dmvnorm(grid_mat, mean = rep(0, d))
-grid$proposal <- dmvnorm(grid_mat, mean = mu)
+grid$importance <- dmvnorm(grid_mat, mean = mu)
 
 tibble(
   x1 = grid$x1,
   x2 = grid$x2,
   target = grid$target,
-  proposal = grid$proposal
+  importance = grid$importance
 ) |>
   ggplot(aes(x1, x2)) +
   geom_contour(aes(z = target), color = "steelblue", linetype = "dashed") +
-  geom_contour(aes(z = proposal), color = "darkorange") +
+  geom_contour(aes(z = importance), color = "darkorange") +
   geom_point(aes(x1, x2), data = as_tibble(x), alpha = 0.3, size = 0.5) +
   labs(
     x = expression(X[1]),
@@ -818,11 +821,11 @@ tibble(
 #| echo: false
 #| fig-cap: "Histogram of importance weights showing weight degeneracy."
 target_density <- function(x) dmvnorm(x, mean = rep(0, d))
-proposal_density <- function(x) dmvnorm(x, mean = mu)
+importance_density <- function(x) dmvnorm(x, mean = mu)
 f <- function(x) exp(-sum(x^2) / 2) # Large near origin
 
 weights <- apply(x, 1, function(row) {
-  target_density(row) / proposal_density(row)
+  target_density(row) / importance_density(row)
 })
 values <- apply(x, 1, f)
 estimate <- sum(values * weights) / sum(weights)
@@ -852,14 +855,14 @@ contribute to the estimate.
 
 It is defined as
 $$
-\text{ESS} = \frac{(\sum_{i=1}^n w_i)^2}{\sum_{i=1}^n w_i^2}
+\mathsf{ESS} = \frac{(\sum_{i=1}^n w_i)^2}{\sum_{i=1}^n w_i^2}
 $$
 where $w_i$ are the importance weights.
 
 \medskip\pause
 
-If all weights are equal, $\text{ESS} = n$. If one weight dominates, $\text{ESS}
-\approx 1$, and the estimate is unreliable.
+If all weights are equal, $\mathsf{ESS} = n$. If one weight dominates,
+$\mathsf{ESS} \approx 1$, and the estimate is unreliable.
 
 . . .
 
@@ -905,6 +908,10 @@ Aup[lower.tri(Aup)] <- 0
 ```
 
 ## Check Connectivity
+
+We begin with a function that checks if nodes 1 and 10 are disconnected.
+
+. . .
 
 ```{r discon-def}
 discon <- function(Aup) {
@@ -1098,7 +1105,9 @@ dvmises <- function(x, mu = 0, kappa = 2) {
 }
 ```
 
-Try various proposals.
+Try various importance distributions
+
+\medskip\pause
 
 If you have time, create a function that takes parameters of the von Mises
 distribution and adjusts the proposal distribution based on these.
