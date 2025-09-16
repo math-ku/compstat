@@ -4,6 +4,15 @@ title: "Monte Carlo Methods"
 
 {{< include _common.qmd >}}
 
+```{r setup-common2}
+#| echo: false
+#| message: false
+#| warning: false
+library(tidyverse)
+theme_set(theme_minimal(base_size = 10))
+options(width = 60)
+```
+
 ```{r setup, include=FALSE}
 library(patchwork)
 
@@ -33,7 +42,7 @@ Y \mid U \leq \alpha' q(Y) / p(Y)
 $$
 has density $f$.
 
-### Basic Algorithm
+## Basic Algorithm
 
 To simulate one variable with density $f$, run the following code until it
 returns a value:
@@ -58,20 +67,33 @@ returns a value:
 
 General class of methods for estimating integrals and means
 
+\medskip\pause
+
 Rejection sampling is a type of Monte Carlo method.
+
+. . .
 
 ### Importance Sampling
 
 Focus on integrating functions and estimating means
 
+\medskip\pause
+
 Useful when we cannot analytically compute the integral
+
+\medskip\pause
 
 Variance reduction technique
 
 ## Monte Carlo Methods
 
-- Basic idea: use random sampling to obtain numerical results
-- Useful when analytical solutions are infeasible
+### Basic, Simple Idea
+
+Use random sampling to obtain numerical results
+
+\medskip\pause
+
+Useful when analytical solutions are infeasible
 
 . . .
 
@@ -83,11 +105,9 @@ $$
 $$
 for $n \to \infty$ by the law of large numbers (LLN).
 
-. . .
-
 ## Monte Carlo Integration
 
-The CLT gives that
+By the central limit theorem (CLT), we know that
 $$
 \frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\textrm{approx}} \sim
 \mathcal{N}(\mu, \sigma^2_{\textrm{MC}} / n)
@@ -116,6 +136,10 @@ $$
 
 ::: {.column width="47%"}
 
+We want to estimate the mean of a $\operatorname{Gamma}(8,1)$ distribution.
+
+. . .
+
 ```{r gamma-sim, echo=-1}
 set.seed(1234)
 B <- 1000
@@ -123,43 +147,41 @@ x <- rgamma(B, 8)
 
 mu_hat <- (cumsum(x) / (1:B))
 sigma_hat <- sd(x)
-mu_hat[B] # Theoretical value: 8
-sigma_hat # Theoretical value: √8
+mu_hat[B] # Theoretical: 8
+sigma_hat # Theoretical: √8
 ```
 
 :::
 
 ::: {.column width="47%"}
 
-```{r gamma-fig, echo = FALSE, fig.width = 5, fig.height = 4}
+```{r gamma-fig, echo = FALSE}
+#| fig-cap: "Density of a Gamma(8,1) distribution with mean indicated."
 x <- seq(0, 20, length.out = 100)
 y <- dgamma(x, 8)
 
 tibble(x, y) |>
   ggplot(aes(x, y)) +
   geom_line() +
-  geom_vline(xintercept = 8, linetype = "dashed", color = "steelblue4") +
-  annotate("text", x = 8, y = 0.02, label = "E(X)", hjust = -0.5)
+  geom_vline(xintercept = 8, linetype = "dashed", color = "steelblue") +
+  annotate("text", x = 7, y = 0.02, label = "E(X)", hjust = -0.5)
 ```
 
 :::
 
 ::::
 
-### Convergence
+##
 
-```{r gamma-fig1, fig.height = 4}
+```{r gamma-fig1, fig.height = 3, fig.width=5}
+#| echo: false
+#| fig-cap: "Convergence of the Monte Carlo estimate of the mean of a Gamma(8,1) distribution."
 p <- ggplot(tibble(x = 1:B, y = mu_hat), aes(x, y)) +
   geom_hline(yintercept = 8, linetype = "dashed", col = "steelblue4") +
   geom_line() +
-  geom_point() +
+  geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10))
-p
-```
 
-### Confidence Bands
-
-```{r gamma-fig2, fig.height = 4}
 p +
   geom_ribbon(
     aes(
@@ -170,17 +192,23 @@ p +
     alpha = 0.4
   ) +
   geom_line() +
-  geom_point()
+  geom_point(size = 0.5) +
+  coord_cartesian(ylim = c(6, 10))
 ```
 
 ## When to Stop?
 
-- Can use concentration inequalities to get a stopping rule
-- But need variance estimate for Chebychev-based bound and moment generating
-  functions for Chernoff-based bounds.
-- If you overshoot then you waste computer resources, and if you undershoot then
-  you get a bad estimate.
+Can use concentration inequalities to get a stopping rule
 
+\medskip\pause
+
+But need variance estimate for Chebychev-based bound and moment generating
+functions for Chernoff-based bounds.
+
+\medskip\pause
+
+If you overshoot then you waste computer resources, and if you undershoot then
+you get a bad estimate.
 
 # Importance Sampling
 
@@ -197,7 +225,7 @@ from the target distribution.
 - So let's oversample these regions
 - But we need to correct for this oversampling
 
-. . .
+\medskip\pause
 
 We want to find $\mu = \operatorname{E} h(X)$. Observe that
 $$
@@ -208,7 +236,7 @@ $$
 g(x) = 0 \Rightarrow f(x) = 0.
 $$
 
-### Weights
+## Weights
 
 With $X_1, \ldots, X_n$ i.i.d. with density $g$ define the _weights_
 $$
@@ -229,9 +257,57 @@ $$
 \hat{\mu}_{\textrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).
 $$
 
-\medskip\pause
-
 It has mean $\mu$.
+
+##
+
+```{r}
+#| echo: false
+#| fig-cap: "Target (dashed blue) and proposal (orange) densities
+#|  with corresponding importance weights."
+#| fig-width: 5
+#| fig-height: 3
+x <- seq(-5, 5, length.out = 200)
+target <- dnorm(x, mean = 0, sd = 1)
+proposal <- dnorm(x, mean = 1, sd = 1)
+
+p1 <- tibble(x, target, proposal) |>
+  pivot_longer(
+    cols = c(target, proposal),
+    names_to = "Density",
+    values_to = "value"
+  ) |>
+  ggplot(aes(x, value, color = Density, linetype = Density)) +
+  geom_line() +
+  scale_color_manual(
+    values = c(target = "steelblue", proposal = "darkorange")
+  ) +
+  scale_linetype_manual(values = c(target = "dashed", proposal = "solid")) +
+  theme(legend.position.inside = c(0.87, 0.82)) +
+  guides(
+    color = guide_legend(position = "inside"),
+    linetype = guide_legend(position = "inside")
+  ) +
+  labs(
+    y = "Density",
+    x = "x",
+    color = "Distribution",
+    linetype = "Distribution"
+  )
+
+w <- target / proposal
+
+p2 <- tibble(x, w) |>
+  ggplot(aes(x, w)) +
+  geom_line() +
+  labs(
+    x = "x",
+    y = "Weight"
+  ) +
+  theme_minimal(base_size = 10)
+
+p1 / p2 + plot_layout(heights = c(2, 1), axes = "collect")
+```
 
 ## Gamma Importance Sampling
 
@@ -247,14 +323,20 @@ w_star <-
   dgamma(x, 8) / dnorm(x, 10, 3)
 mu_hat_IS <-
   cumsum(x * w_star) / (1:B)
-mu_hat_IS[B] # Theoretical value 8
+mu_hat_IS[B]
 ```
+
+Close to theoretical value (8).
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-```{r gammasim-fig, echo = FALSE, fig.height = 6, fig.width = 6}
+```{r gammasim-fig, echo = FALSE}
+#| fig-height: 3.2
+#| fig-width: 2.7
 z <- seq(-12, 12, length.out = 100) + 10
 f_x <- dgamma(z, 8)
 g_x <- dnorm(z, 10, 3)
@@ -264,28 +346,34 @@ p1 <- tibble(x = z, f_x, g_x) |>
   pivot_longer(c(f_x, g_x)) |>
   ggplot(aes(x, value, color = name)) +
   geom_line() +
+  guides(color = guide_legend(position = "inside")) +
+  theme(legend.position.inside = c(0.8, 0.8)) +
   labs(y = "Density", color = NULL)
 
 p2 <- tibble(x = z, w) |>
   ggplot(aes(x, w)) +
   geom_line()
 
-p1 / p2
+p1 / p2 + plot_layout(axes = "collect")
 ```
 
 :::
 
 ::::
 
-### Convergence
+##
 
 ```{r gamma-IS-fig1, echo = FALSE}
+#| fig-cap: "Convergence of the importance sampling estimate of the mean of a
+#|   Gamma(8,1) distribution using a N(10,3) proposal."
+#| fig-width: 5
+#| fig-height: 2.5
 p <- ggplot(
   tibble(x = 1:B, y = mu_hat_IS),
   aes(x, y)
 ) +
   geom_line() +
-  geom_point() +
+  geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10)) +
   geom_hline(yintercept = 8, linetype = "dashed", col = "steelblue4")
 p
@@ -339,7 +427,11 @@ sigma_hat_IS <- sd(x * w_star)
 sigma_hat_IS # Theoretical value?
 ```
 
+. . .
+
 ```{r gamma-IS-fig2, echo=FALSE}
+#| fig-width: 4.5
+#| fig-cap: "Importance sampling estimate of the mean of a Gamma(8,1)."
 p +
   geom_ribbon(
     aes(
@@ -349,7 +441,7 @@ p +
     fill = "gray"
   ) +
   geom_line() +
-  geom_point()
+  geom_point(size = 0.5)
 ```
 
 ```{r test, echo=FALSE, eval=FALSE}
@@ -374,22 +466,29 @@ And
 $$
 \mu = \frac{\int h(x) w^*(x) g(x) \ d x}{\int w^*(x) g(x) \ d x},
 $$
-where $w^*(x) = q(x) / g(x).$
+where
+$$
+w^*(x) = \frac{q(x)}{g(x)}.
+$$
 
 ## IS with Standardized Weights
 
 An importance sampling estimate of $\mu$ is thus
 $$
-\begin{aligned} \hat{\mu}_{\textrm{IS}} & = \frac{\sum_{i=1}^n h(X*i) w^*(X_i)}{\sum*{i=1}^n w^*(X*i)} \\
-                                        & = \sum*{i=1}^n h(X_i) w(X_i),
+\begin{aligned} \hat{\mu}_{\textrm{IS}} & = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \\ \pause
+                                        & = \sum_{i=1}^n h(X_i) w(X_i),
 \end{aligned}
 $$
 where $w^*(X_i) = q(X_i) / g(X_i)$ and
 $$
 w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}
 $$
-are the _standardized weights_. This works irrespectively of the value of the
-normalizing constant $c$, and also if an unnormalized $g$ is used.
+are the _standardized weights_.
+
+\medskip\pause
+
+Works irrespectively of the value of the normalizing constant $c$, and also if
+an unnormalized $g$ is used.
 
 ## Gamma Standardized Weights
 
@@ -405,13 +504,17 @@ mu_hat_IS <- cumsum(x * w_star) / cumsum(w_star)
 mu_hat_IS[B] # Theoretical value 8
 ```
 
-### Convergence
+##
 
 ```{r gamma-ISw-fig1, echo = FALSE}
+#| fig-width: 4.5
+#| fig-height: 3
+#| fig-cap: "Convergence of the importance sampling estimate of the mean of a
+#|   Gamma(8,1) distribution using standardized weights."
 p <- tibble(x = 1:B, y = mu_hat_IS) |>
   ggplot(aes(x, y)) +
   geom_line() +
-  geom_point() +
+  geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10)) +
   labs(y = expression(hat(mu)[IS]), x = "Number of samples")
 p
@@ -420,26 +523,25 @@ p
 ## Importance Sampling Variance
 
 The variance of the IS estimator with standardized weights is a little more
-complicated, because the estimator is a ratio of random variables.
+complicated, because the estimator is a \alert{ratio of random variables}.
 
-. . .
+\medskip\pause
 
 From the multivariate CLT, we have
-
 $$
-\frac{1}{n} \sum_{i=1}^n \left(\begin{array}{c} h(X_i) w^*(X_i) \\ w^*(X_i) \end{array}\right) \overset{\textrm{approx}}{\sim}
-\mathcal{N}\left( c \left(\begin{array}{c} \mu  \\   {1} \end{array}\right),
-\frac{1}{n} \left(\begin{array}{cc} \sigma^{*2}_{\textrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
-\end{array} \right)\right),
+\frac{1}{n} \sum_{i=1}^n \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
+\overset{\textrm{approx}}{\sim}
+\mathcal{N}\left(
+  c \begin{bmatrix} \mu \\ 1\end{bmatrix},
+  \frac{1}{n} \begin{bmatrix} \sigma^{2}_{\textrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
+\right),
 $$
-
 where
-
 $$
 \begin{aligned}
-\sigma^2_{\textrm{IS}} & = \mathbb{V}(h(X_1) w^*(X_1)) \\
-\gamma & = \mathrm{cov}(h(X_1) w^*(X_1), w^*(X_1)) \\
-\sigma^2_{w^*} & = \mathbb{V}(w^*(X_1))
+  \sigma^2_{\textrm{IS}} & = \mathbb{V}(h(X_1) w^*(X_1)) \\
+  \gamma & = \mathrm{cov}(h(X_1) w^*(X_1), w^*(X_1)) \\
+  \sigma^2_{w^*} & = \mathbb{V}(w^*(X_1))
 \end{aligned}
 $$
 
@@ -447,29 +549,32 @@ $$
 
 We can then apply the $\Delta$-method with $t(x, y) = x / y$.
 
-. . .
+\medskip\pause
 
-Observe that $Dt(x, y) = (1 / y, - x / y^2)$, whence
+Observe that $\nabla t(x, y) = \begin{bmatrix}1 / y \\ - x / y^2\end{bmatrix}$,
+whence
 
 $$
-Dt(c\mu, c)   \left(\begin{array}{cc} \hat{\sigma}^{*2}_{\textrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
-\end{array} \right) Dt(c\mu, c)^T = c^{-2} (\sigma^{*2}_{\textrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma).
+\nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\textrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
+\end{array} \right) \nabla t(c\mu, c) = \frac{\sigma^{2}_{\textrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^{2}}.
 $$
 
 . . .
 
-By the $\Delta$-method
-
+By the $\Delta$-method,
 $$
 \hat{\mu}_{\textrm{IS}} \overset{\textrm{approx}}{\sim}
-\mathcal{N}(\mu, c^{-2} (\sigma^{*2}_{\textrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma) / n).
+\mathcal{N}\left(\mu, \frac{\sigma^{2}_{\textrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 n} \right).
 $$
 
 . . .
 
 For $c = 1$, the asymptotic variance can be estimated by plugging in empirical
-estimates. For $c \neq 1$ it is necessary to estimate $c$ as $\hat{c} =
-\frac{1}{n} \sum_{i=1}^n w^*(X_i)$.
+estimates. For $c \neq 1$ it is necessary to estimate $c$ as
+$$
+\hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)
+$$
+.
 
 ## Gamma Standardized Weights, Variance
 
@@ -498,9 +603,13 @@ mu_hat_IS <- replicate(10000, {
 sd(mu_hat_IS) * sqrt(B)
 ```
 
-## Gamma Importance Sampling
+##
 
-```{r gamma-ISw-fig2, fig.height = 4}
+```{r gamma-ISw-fig2}
+#| echo: false
+#| fig-width: 4.5
+#| fig-cap: "Importance sampling estimate of the mean of a Gamma(8,1)
+#|   distribution with 95% confidence bands using standardized weights."
 p +
   geom_ribbon(
     aes(
@@ -510,24 +619,207 @@ p +
     fill = "gray"
   ) +
   geom_line() +
-  geom_point()
+  geom_point(size = 0.5)
 ```
 
-# Examples
+## When to Use Importance Sampling?
 
-## Network Failure
+- **Rare Event Estimation:** When the event of interest has low probability
+  under the target distribution, importance sampling can efficiently estimate
+  probabilities or expectations.
+- **High Variance Monte Carlo:** If standard Monte Carlo methods yield high
+  variance, importance sampling can reduce variance by focusing samples where
+  the integrand is large.
+- **Difficult-to-Sample Targets:** When direct sampling from the target
+  distribution is hard, but sampling from a related proposal is easy.
+- **Integrals with Heavy Tails:** For integrals dominated by regions with low
+  probability under the target, importance sampling can improve accuracy.
+- **Bayesian Computation:** Useful for marginal likelihood estimation and
+  posterior expectations when the posterior is complex.
 
-## ![](../images/networkfig.png)
+## Poor Proposals
 
-The different edges "fail" independently with probability $p$.
+If the proposal distribution does not cover regions where the target is large,
+weights become highly variable and estimates unreliable.
+
+
+\medskip\pause
+
+### Remedies
+
+Redesign proposal to better match the target.
+
+\medskip\pause
+
+Use adaptive or mixture proposals.
+
+\medskip\pause
+
+Increase sample size (if feasible).
+
+
+## Diagnostics for Importance Sampling
+
+### Weight Distribution
+
+A histogram of weights visualizes the distribution of importance weights. This
+reveals weight degeneracy, where many weights are near zero and a few are very
+large.
+
+\medskip\pause
+
+### Effective Sample Size (ESS)
+
+Effective sample size (ESS) measures how many samples are effectively
+contributing to the estimate. A low ESS indicates poor sampling efficiency and
+high variance.
+
+\medskip\pause
+
+### Comparison with Standard Monte Carlo
+
+Comparing importance sampling estimates and variances with standard Monte Carlo
+shows whether importance sampling actually improves efficiency.
+
+## Weight Degeneracies
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+Suppose $X \sim \mathcal{N}(0, I_{10})$ and we want to estimate
+$\mathbb{E}[f(X)]$ where $f(X)$ is large near the origin.
+
+\medskip\pause
+
+If we use a proposal $g(x) = \mathcal{N}(\mu, I_{10})$ with large $|\mu|$, most
+samples are far from the origin, so $f(X)$ is nearly zero and weights are highly
+variable.
+
+:::
+
+::: {.column width="47%"}
+
+
+```{r poor-proposal-demo}
+#| echo: false
+#| fig-height: 2.3
+#| fig-cap: "Target (blue) and proposal (orange) densities
+#|   with samples from the proposal."
+library(mvtnorm)
+
+set.seed(1)
+d <- 2
+n <- 1000
+mu <- rep(2, d) # Poor proposal: mean far from origin
+x <- matrix(rnorm(n * d, mean = mu), ncol = d)
+
+colnames(x) <- c("x1", "x2")
+
+grid <- expand.grid(
+  x1 = seq(-5, 8, length.out = 100),
+  x2 = seq(-5, 8, length.out = 100)
+)
+grid_mat <- as.matrix(grid)
+
+grid$target <- dmvnorm(grid_mat, mean = rep(0, d))
+grid$proposal <- dmvnorm(grid_mat, mean = mu)
+
+tibble(
+  x1 = grid$x1,
+  x2 = grid$x2,
+  target = grid$target,
+  proposal = grid$proposal
+) |>
+  ggplot(aes(x1, x2)) +
+  geom_contour(aes(z = target), color = "steelblue", linetype = "dashed") +
+  geom_contour(aes(z = proposal), color = "darkorange") +
+  geom_point(aes(x1, x2), data = as_tibble(x), alpha = 0.3, size = 0.5) +
+  labs(
+    x = expression(X[1]),
+    y = expression(X[2])
+  ) +
+  coord_fixed() +
+  theme_minimal(base_size = 10)
+```
+
+:::
+
+::::
+
+##
+
+```{r}
+#| fig-width: 5
+#| fig-height: 2.5
+#| echo: false
+#| fig-cap: "Histogram of importance weights showing weight degeneracy."
+target_density <- function(x) dmvnorm(x, mean = rep(0, d))
+proposal_density <- function(x) dmvnorm(x, mean = mu)
+f <- function(x) exp(-sum(x^2) / 2) # Large near origin
+
+weights <- apply(x, 1, function(row) {
+  target_density(row) / proposal_density(row)
+})
+values <- apply(x, 1, f)
+estimate <- sum(values * weights) / sum(weights)
+
+ggplot(tibble(weights = weights), aes(weights)) +
+  geom_histogram() +
+  labs(
+    x = "Importance Weights",
+    y = "Frequency"
+  )
+```
+
+Most weights are near zero, with a few large weights.
+
+\medskip\pause
+
+\pdfpcnote{
+This indicates weight degeneracy and poor sampling efficiency.
+}
+
+## Effective Sample Size (ESS)
+
+The effective sample size (ESS) quantifies how many samples effectively
+contribute to the estimate.
+
+\medskip\pause
+
+It is defined as
+$$
+\text{ESS} = \frac{(\sum_{i=1}^n w_i)^2}{\sum_{i=1}^n w_i^2}
+$$
+where $w_i$ are the importance weights.
+
+\medskip\pause
+
+If all weights are equal, $\text{ESS} = n$. If one weight dominates, $\text{ESS}
+\approx 1$, and the estimate is unreliable.
 
 . . .
 
-What is the probability that nodes 1 and 10 are disconnected?
+```{r ess-demo}
+ess <- (sum(weights))^2 / sum(weights^2)
+ess
+```
+
+## Example: Network Failure
+
+![A network graph. Different edges "fail" independently with probability
+$p$.](../images/networkfig.png){ width=70% }
+
+. . .
+
+**Problem:** What is the probability that nodes 1 and 10 are disconnected?
 
 ## Representing Graphs
 
-```{r network_adj, echo=12}
+We can represent a graph using an adjacency matrix.
+
+```{r network_adj, echo=13}
+options(width = 65)
 A <- matrix(0, 10, 10)
 A[1, c(2, 4, 5)] <- 1
 A[2, c(1, 3, 6)] <- 1
@@ -587,7 +879,7 @@ sim_net <- function(Aup, p) {
 bench::bench_time(replicate(1e5, sim_net(Aup, 0.5)))
 ```
 
-### Estimating Probability of Nodes 1 and 10 Disconnected
+## Estimating Probability of Nodes 1 and 10 Disconnected
 
 ```{r sim, cache = TRUE}
 set.seed(27092016)
@@ -629,7 +921,7 @@ weights <- function(Aup, Aup0, p0, p) {
 For the IS estimator the weights will be multiplied by the indicator that 1 and
 10 are disconnected.
 
-### Estimating Probability of Nodes 1 and 10 Disconnected
+## Estimating Probability of Nodes 1 and 10 Disconnected
 
 ```{r sim2, cache = TRUE, dependson = "impw"}
 tmp <- replicate(n, weights(Aup, sim_net(Aup, 0.2), 0.2, 0.05))
@@ -645,8 +937,10 @@ Confidence interval using empirical variance estimate $\hat{\sigma}^2$.
 mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
 ```
 
+. . .
+
 ```{r}
-c(sd(tmp), sqrt(mu_hat * (1 - mu_hat))) # The estimated standard deviations
+c(sd(tmp), sqrt(mu_hat * (1 - mu_hat))) # Estimated standard deviations
 ```
 
 ## Comparison
@@ -657,15 +951,17 @@ The ratio of variances is estimated as
 mu_hat * (1 - mu_hat) / var(tmp)
 ```
 
-- Need about `r round(mu_hat * (1 - mu_hat) / var(tmp))` times more naive
-  samples compared to importance sampling for same precision.
-
 . . .
 
-- Benchmarking would should that the extra computing time for importance
-  sampling is small compared to the reduction of variance.
+Need about `r round(mu_hat * (1 - mu_hat) / var(tmp))` times more naive samples
+compared to importance sampling for same precision.
 
-. . .
+\medskip\pause
+
+Benchmarking would should that the extra computing time for importance sampling
+is small compared to the reduction of variance.
+
+\medskip\pause
 
 It is worth the coding effort if used repeatedly, but not if it is a one-off
 computation.
@@ -694,107 +990,39 @@ for (i in 0:(2^18 - 1)) {
 
 ## Probability of 1 and 10 Being Disconnected
 
+Here is the true value:
+
 ```{r disconnect-prob}
-sum(prob) # True value
-# MC estimate and interval
+sum(prob)
+```
+
+. . .
+
+And here's the MC estimate with confidence interval:
+
+```{r}
 mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
-# IS estimate and interval
+```
+
+. . .
+
+And the IS estimate with confidence interval:
+
+```{r}
 mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
 ```
 
-## A High-Dimensional Integral
 
-$$
-\mu := (2 \pi)^{-p/2} \int e^{-\frac{1}{2}\left(x_1^2 + \sum_{i=2}^p (x_i - \alpha x_{i-1})^2\right)}  \mathrm{d} x.
-$$
-
-. . .
-
-\begin{align*}
-  \mu            & = (2 \pi)^{-p/2} \int e^{- \frac{1}{2} \sum_{i = 2}^p \alpha^2 x_{i-1}^2 - 2\alpha x*i x*{i-1}} e^{-\frac{\lVert x \rVert_2^2}{2}} \mathrm{d} x \\
-                 & = \int \underbrace{e^{- \frac{1}{2} \sum*{i = 2}^p \alpha^2 x*{i-1}^2 - 2\alpha x_i x*{i-1}}}_{h(x)} f(x) \mathrm{d} x
-\end{align*}
-where $f$ is the density for the $\mathcal{N}(0, I_p)$ distribution.
-
-. . .
-
-In fact,
-$$
-\mu = 1.
-$$
-
-## A High-Dimensional Integral
-
-First we define the function we want to integrate.
-
-```{r MC_hfun, cache = TRUE}
-h <- function(x, alpha = 0.1) {
-  p <- length(x)
-  tmp <- alpha * x[1L:(p - 1L)]
-  exp(-sum((tmp / 2.0 - x[2L:p]) * tmp))
-}
-```
-
-## A High-Dimensional Integral
-
-Then we specify various parameters and implement the simulations as a simple
-loop.
-
-```{r MC_loop, dependson="MC_hfun", cache = TRUE}
-n <- 10000 # The number of random variables to generate
-p <- 100 # The dimension of each random variable
-alpha <- 0.2
-evaluations <- numeric(n)
-set.seed(123)
-
-for (i in 1:n) {
-  x <- rnorm(p)
-  evaluations[i] <- h(x, alpha = alpha)
-}
-```
-
-### Convergence
-
-```{r MC_CLT, dependson="MC_loop", fig.height=6, echo = FALSE}
-plot(cumsum(evaluations) / 1:n, pch = 20)
-abline(h = 1, col = "red")
-mu_hat <- cumsum(evaluations) / 1:n
-sigma_hat <- sd(evaluations)
-lines(1:n, mu_hat + 1.96 * sigma_hat / sqrt(1:n))
-lines(1:n, mu_hat - 1.96 * sigma_hat / sqrt(1:n))
-```
-
-## Different Target
-
-```{r MC4, cache = TRUE}
-alpha <- 0.4
-evaluations <- numeric(n)
-set.seed(123)
-
-for (i in 1:n) {
-  x <- rnorm(p)
-  evaluations[i] <- h(x, alpha = alpha)
-}
-```
-
-### Convergence
-
-```{r MC4_CLT, dependson="MC4", echo=FALSE, fig.height=6}
-plot(cumsum(evaluations) / 1:n, pch = 20)
-abline(h = 1, col = "red")
-mu_hat <- cumsum(evaluations) / 1:n
-sigma_hat <- sd(evaluations)
-lines(1:n, mu_hat + 1.96 * sigma_hat / sqrt(1:n))
-lines(1:n, mu_hat - 1.96 * sigma_hat / sqrt(1:n))
-```
-
-### Caution
-
-With $\alpha = 0.4$, proposal and target are too different
-
-```{r reset-options, echo=FALSE}
+```{r reset-options}
+#| echo: false
 options(digits = old_options$digits)
 ```
+
+## Summary
+
+- Monte Carlo methods are useful for estimating integrals and means
+- Importance sampling can reduce variance considerably
+- But the proposal distribution must be chosen carefully
 
 ## Exercise: Von Mises Importance Sampling
 
@@ -814,25 +1042,18 @@ distribution and adjusts the proposal distribution based on these.
 
 Plot the result and check convergence.
 
-```{r vmises-importance, echo = FALSE}
+```{r vmises-importance}
+#| include: false
 vonmises_importance <- function(n, mu = 0, kappa = 2) {
   x <- rnorm(n, 0, pi / 2)
   w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)
-  cumsum(x * w_star) / 1:n
+  cumsum(x * w) / 1:n
 }
 
-# x <- seq(-pi, pi, length.out = 100)
-# plot(x, dvmises(x))
-# lines(x, dnorm(x, 0, pi / 2))
+x <- seq(-pi, pi, length.out = 100)
+plot(x, dvmises(x))
+lines(x, dnorm(x, 0, pi / 2))
 ```
-
-## Summary
-
-- Monte Carlo methods are useful for estimating integrals and means
-- Importance sampling can reduce variance considerably
-- But the proposal distribution must be chosen carefully
-
-. . .
 
 ### Exercise
 
@@ -842,3 +1063,5 @@ Implement a heuristic stopping rule that stops when the confidence interval is
 ```{r excercise-stop, include = FALSE}
 # TO DO
 ```
+$$
+$$
