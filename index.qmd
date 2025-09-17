@@ -83,7 +83,8 @@ for you to solve independently at your own pace.
 #### Exercise Session 3
 
 - **Main topic**: Premature optimization
-- **In class walkthrough:** Exercises 3.4 (Chapter 3, CSWR) + 5.1-5.2 (Chapter 5, CSWR)
+- **In class walkthrough:** Exercises 3.4 (Chapter 3, CSWR) + 5.1-5.2 (Chapter
+  5, CSWR)
 - **Solutions**: TBA
 
 #### Lecture 6: Monte Carlo Methods and Importance Sampling
