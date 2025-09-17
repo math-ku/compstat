@@ -82,7 +82,7 @@ for you to solve independently at your own pace.
 
 #### Lecture 6: Monte Carlo Methods and Importance Sampling
 
-<!-- - **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf) -->
+- **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf)
 - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci)
 
 #### Presentation of Assignment 1
