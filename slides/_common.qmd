@@ -12,6 +12,8 @@ options(width = 60)
 
 \DeclareMathOperator*{\argmin}{\arg\!\min}
 
+\DeclareMathOperator*{\argmax}{\arg\!\min}
+
 \DeclareMathOperator*{\minimize}{minimize}
 
 \DeclareMathOperator{\E}{\mathrm{E}}
