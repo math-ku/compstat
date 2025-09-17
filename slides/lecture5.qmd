@@ -548,7 +548,7 @@ $Y_k$ has density $f$.
 
 \medskip\pause
 
-$\alpha$is the **acceptance probability** and $g(y)/\alpha$ the **envelope** of $f$.
+$\alpha$ is the **acceptance probability** and $g(y)/\alpha$ the **envelope** of $f$.
 
 ##
 
