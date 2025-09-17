@@ -35,3 +35,19 @@ No, you do not need to submit anything for the assignments.
 No, you don't need to prepare slides for the _group presentation_. It is fine if
 you, for instance, use a R Markdown or Quarto notebook while presenting. For the
 oral examination, however, you will need to prepare slides.
+
+## Oral Examination
+
+> How long is the oral examination?
+
+You will have 15 minutes to present your work, followed by 10 minutes of
+discussion with the examiners.
+
+> Is it fine to reuse work, including solutions from the group presentation for
+> the oral examination?
+
+You may reuse material or solutions from the group presentation for your oral
+examination. However, your slide deck must be prepared individually and should
+demonstrate your own understanding. Direct copying of slides is discouraged;
+instead, adapt and personalize the content to reflect your approach. That being
+said, we do expect some overlap.
