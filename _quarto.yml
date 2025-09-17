@@ -45,8 +45,8 @@ format:
       - onlytextwidth
     theme: moloch
     colortheme: moloch-tomorrow
-    fig-width: 2.7
-    fig-height: 2
+    fig-width: 2.8
+    fig-height: 2.1
     fig-align: center
     colorlinks: true
     linkcolor: black
