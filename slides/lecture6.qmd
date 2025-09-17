@@ -37,7 +37,7 @@ for some $\alpha' > 0$.
 If $Y$ has density $g$ and $U$ is uniform on $(0,1)$ then the conditional
 distribution
 $$
-Y \mid U \leq \alpha' q(Y) / p(Y)
+Y \mid U \leq \alpha' \frac{q(Y)}{p(Y)}
 $$
 has density $f$.
 
@@ -233,8 +233,8 @@ Some regions of the target distribution are often more important than others.
 
 \medskip\pause
 
-So let's oversample these regions, but correct for this by \alert{weighting}
-the samples.
+So let's \alert{oversample} these regions, but correct for this by
+\alert{weighting} the samples.
 
 \medskip\pause
 
@@ -256,7 +256,7 @@ $$
 
 . . .
 
-$g$is the _importance_ density and $f/g$ is called the _likelihood ratio_.
+$g$ is the _importance_ density and $f/g$ is called the _likelihood ratio_.
 
 . . .
 
@@ -419,9 +419,9 @@ $$
 
 ## Importance Sampling Variance
 
-The importance sampling variance can be estimated just as the MC variance
+The IS variance can be estimated analogously with the MC variance,
 $$
-\hat{\sigma}^{*2}_{\mathrm{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2,
+\hat{\sigma}^{*2}_{\mathrm{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2.
 $$
 
 . . .
@@ -475,6 +475,184 @@ mu_hat_IS <- replicate(10000, {
 sd(mu_hat_IS) * sqrt(B)
 ```
 
+## Nonlinear Functions
+
+It is not always the case that the best importance distribution is close to the
+target distribution.
+
+. . .
+
+### Example
+
+Suppose we want to estimate
+$$
+\E(X^4) = \int x^4 \, f(x) \, dx = 3
+$$
+where $f(x)$ is the standard normal density.
+
+\medskip\pause
+
+If we use $g(x) = f(x) = \mathcal{N}(0,1)$, the weights are $w^*(x) = 1$, so the
+estimator is just the sample mean of $x^4$.
+
+\medskip\pause
+
+But $h(x) = x^4$ is large in the tails, so sampling from a normal may not be
+efficient, as most samples are near zero.
+
+\medskip\pause
+
+Instead, we can try a heavy-tailed importance distribution, such as Student-$t$.
+
+##
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r is-normal-plot}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: "Densities, integrand, and weights for the importance sampling example
+#|   with a normal importance distribution."
+set.seed(1)
+n <- 1000
+x_norm <- rnorm(n)
+target <- dnorm(x_norm, 0, 1)
+importance_norm <- dnorm(x_norm, 0, 1)
+weights_norm <- target / importance_norm # All 1
+w_h <- x_norm^4 * weights_norm
+
+x_grid <- seq(-6, 6, length.out = 200)
+dens_df <- tibble(
+  x = x_grid,
+  target = dnorm(x_grid, 0, 1),
+  integrand = x_grid^4 * dnorm(x_grid, 0, 1)
+) |>
+  pivot_longer(
+    cols = c(target, integrand),
+    names_to = "Type",
+    values_to = "value"
+  )
+
+p1 <- ggplot(dens_df, aes(x, value, color = Type, linetype = Type)) +
+  geom_line() +
+  labs(y = "Density / Integrand") +
+  scale_color_manual(
+    values = c(
+      target = "black",
+      integrand = "darkorange"
+    ),
+    labels = c(
+      target = expression(f(x) == g(x)),
+      integrand = expression(h(x) * f(x))
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(target = "solid", integrand = "dashed"),
+    labels = c(
+      target = expression(f(x) == g(x)),
+      integrand = expression(h(x) * f(x))
+    )
+  ) +
+  guides(
+    color = guide_legend(position = "inside"),
+    linetype = guide_legend(position = "inside")
+  ) +
+  labs(color = NULL, linetype = NULL) +
+  theme(legend.position.inside = c(0.85, 0.85))
+
+p1b <- ggplot(tibble(x = w_h), aes(x)) +
+  geom_histogram() +
+  labs(x = expression(abs(h(x)) * w^"*"))
+
+p1 / p1b + plot_layout(heights = c(2, 1), axes = "collect")
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+
+```{r is-t-plot}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: "Densities, integrand, and weights for the importance sampling example
+#|   with Student-$t$ as importance distribution."
+dens_df_t <- tibble(
+  x = x_grid,
+  target = dnorm(x_grid, 0, 1),
+  importance = dt(x_grid, df = 3)
+) |>
+  pivot_longer(
+    cols = c(target, importance),
+    names_to = "Density",
+    values_to = "value"
+  )
+
+set.seed(1)
+x_t <- rt(n, df = 3)
+target_t <- dnorm(x_t, 0, 1)
+importance_t <- dt(x_t, df = 3)
+weights_t <- target_t / importance_t
+w_h_t <- x_t^4 * weights_t
+
+dens_df_t <- tibble(
+  x = x_grid,
+  target = dnorm(x_grid, 0, 1),
+  importance = dt(x_grid, df = 2),
+  integrand = x_grid^4 * dnorm(x_grid, 0, 1)
+) |>
+  pivot_longer(
+    cols = c(target, importance, integrand),
+    names_to = "Type",
+    values_to = "value"
+  )
+
+p2 <- ggplot(dens_df_t, aes(x, value, color = Type, linetype = Type)) +
+  geom_line() +
+  labs(y = "Density / Integrand") +
+  scale_color_manual(
+    values = c(
+      target = "black",
+      importance = "steelblue",
+      integrand = "darkorange"
+    ),
+    labels = c(
+      target = expression(f(x)),
+      importance = expression(g(x)),
+      integrand = expression(h(x) * f(x))
+    )
+  ) +
+  guides(
+    color = guide_legend(position = "inside"),
+    linetype = guide_legend(position = "inside")
+  ) +
+  scale_linetype_manual(
+    values = c(target = "solid", importance = "dashed", integrand = "dotdash"),
+    labels = c(
+      target = expression(f(x)),
+      importance = expression(g(x)),
+      integrand = expression(h(x) * f(x))
+    )
+  ) +
+  labs(color = NULL, linetype = NULL) +
+  theme(legend.position.inside = c(0.85, 0.85))
+
+p2b <- ggplot(tibble(x = abs(w_h_t)), aes(x)) +
+  geom_histogram() +
+  labs(x = expression(abs(h(x)) * w^"*"))
+
+p2 / p2b + plot_layout(heights = c(2, 1), axes = "collect")
+```
+
+:::
+
+::::
+
+
 ## Normalized Weights
 
 If $f = c^{-1} q$ with $c$ unknown then
@@ -518,8 +696,8 @@ an unnormalized $g$ is used.
 
 ## Gamma Sampling with Normalized Weights
 
-Let's pretend that we do not know the normalizing constant of the target
-($\mathrm{Gamma}(8,1)$) and importance ($\normal(10, 3^2)$) distributions. Then
+Let's pretend that we do not know the normalizing constant of the target (
+$\mathrm{Gamma}(8,1)$) and importance ($\normal(10, 3^2)$) distributions. Then
 $$
 w^*(x) = \frac{x^7 \exp(-x)}{\exp{\left(-\frac{(x-10)^2}{18}\right)}}
        = \exp\left(\frac{(x-10)^2}{18} - x + 7 \log(x)\right).
@@ -557,8 +735,8 @@ p
 
 ## Variance for IS with Normalized Weights
 
-Computing the variance of IS with normalized weights is more
-complicated because the estimator is a \alert{ratio of random variables}.
+Computing the variance of IS with normalized weights is more complicated because
+the estimator is a \alert{ratio of random variables}.
 
 \medskip\pause
 
@@ -586,8 +764,8 @@ We can then apply the $\Delta$-method with $t(x, y) = x / y$.
 
 \medskip\pause
 
-Observe that $\nabla t(x, y) = \begin{bmatrix}1 / y \\ - x / y^2\end{bmatrix}$,
-whence
+Observe that $\nabla t(x, y) = \begin{bmatrix}1 / y \\ - x / y^2\end{bmatrix}$
+, whence
 
 $$
 \nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
@@ -732,16 +910,15 @@ Estimating probabilities or expectations involving rare events.
 
 ### High-Variance Monte Carlo
 
-Importance sampling can
-reduce variance by focusing samples where the integrand is large.
+Importance sampling can reduce variance by focusing samples where the integrand
+is large.
 
 . . .
 
 ### Difficult-to-Sample Targets
 
-When direct sampling from the target
-  distribution is hard, but sampling from a related importance distribution
-  is easy.
+When direct sampling from the target distribution is hard, but sampling from a
+related importance distribution is easy.
 
 ## Poor Importance Distribution
 
@@ -752,7 +929,7 @@ weights become highly variable and estimates unreliable.
 
 ### Remedies
 
-Increase sample size (if feasible). 
+Increase sample size (if feasible).
 
 \medskip\pause
 
@@ -762,22 +939,20 @@ Redesign importance density to better match the target density.
 
 ### Weight Distribution
 
-Visualize the weight distribution with, for example, histograms or box plots to identify
-degeneracies.
+Visualize the weight distribution with, for example, histograms or box plots to
+identify degeneracies.
 
 . . .
 
 ### Effective Sample Size (ESS)
 
-ESS measures how many samples are effectively
-contributing to the estimate.
+ESS measures how many samples are effectively contributing to the estimate.
 
 . . .
 
 ### Coefficient of Variation (CV)
 
-CV quantifies the relative
-variability of the weights. 
+CV quantifies the relative variability of the weights.
 
 . . .
 
@@ -796,8 +971,8 @@ Suppose that
 $$
 X \sim \mathcal{N}(0, I_{10})
 $$
-and that we want to estimate $\operatorname{E}[f(X)]$
-where $f(X)$ is large near the origin.
+and that we want to estimate $\operatorname{E}[f(X)]$ where $f(X)$ is large near
+the origin.
 
 \medskip\pause
 
@@ -805,8 +980,8 @@ If we use a importance density $g(x)$ from
 $$
 \mathcal{N}(\mu, I_{10})
 $$
-with large $|\mu|$, most samples are far from the origin, so $f(X)$ is nearly zero and
-weights are highly variable.
+with large $|\mu|$, most samples are far from the origin, so $f(X)$ is nearly
+zero and weights are highly variable.
 
 :::
 
@@ -945,8 +1120,8 @@ variance.
 
 \medskip\pause
 
-CV near 0 means weights are nearly uniform---great! As a rule of thumb, CV
-below 1 ($\mathrm{ESS} > n/2$) is good.
+CV near 0 means weights are nearly uniform---great! As a rule of thumb, CV below
+1 ($\mathrm{ESS} > n/2$) is good.
 
 . . .
 
@@ -955,7 +1130,7 @@ below 1 ($\mathrm{ESS} > n/2$) is good.
 There is a direct relationship between ESS and CV:
 $$
 \mathrm{ESS} = \frac{n}{1 + \mathrm{CV}^2}.
-$$ 
+$$
 
 ## Choosing the Importance Distribution
 
@@ -983,8 +1158,8 @@ distribution is significant.
 
 ### Match the Bulk
 
-The mean and spread of $q$ should roughly match the regions of large
-$|h(x)|f(x)$.
+The mean and spread of the importance distribution should roughly match the
+regions of large $|h(x)|f(x)$.
 
 . . .
 
@@ -1025,14 +1200,15 @@ Use a mixture of distributions to capture multiple modes or complex shapes.
 
 ### Basic Idea
 
-Take a Gaussian approximation of the target density at its mode $x^*$ as the importance
-distribution.
+Take a Gaussian approximation of the target density at its mode $x^*$ as the
+importance distribution.
 
 . . .
 
 ### Motivation
 
-Connection comes from the second-order Taylor expansion of $\log f(x)$ at the mode $x^*$,
+Connection comes from the second-order Taylor expansion of $\log f(x)$ at the
+mode $x^*$,
 $$
 \log f(x) \approx \log f(x^*) - \frac{1}{2}(x - x^*)^T H (x - x^*)
 $$
@@ -1052,7 +1228,8 @@ $$
 ### Steps
 
 1. Find the mode $x^* = \arg\max_x f(x)$.\pause
-2. Compute the Hessian $H$ of the first-order Taylor approximation of $-\log
+2. Compute the Hessian $H$ of the first-order Taylor approximation of
+   $-\log
    f(x)$ around $x^*$.\pause
 3. Use $\mathcal{N}(x^*, H^{-1})$ as importance distribution.
 
@@ -1145,8 +1322,8 @@ based on the samples obtained.
 
 ### Basic Idea
 
-Start with an initial importance distribution and refine it based on
-samples and weights.
+Start with an initial importance distribution and refine it based on samples
+and weights.
 
 . . .
 
@@ -1154,7 +1331,8 @@ samples and weights.
 
 1. Choose an initial importance distribution $g_0(x)$.\pause
 2. Draw samples from $g_0$ and compute weights.\pause
-3. Update the importance distribution parameters based on weighted samples.\pause
+3. Update the importance distribution parameters based on weighted samples.
+   \pause
 4. Repeat steps 2-3 until convergence.
 
 ## Moment-Matching Importance Sampling
@@ -1619,19 +1797,22 @@ options(digits = old_options$digits)
 
 ### Monte Carlo Methods
 
-Estimate integrals and means using random sampling when analytic solutions are not possible.
+Estimate integrals and means using random sampling when analytic solutions are
+not possible.
 
 . . .
 
 ### Importance Sampling
 
-Focus samples where they matter most, but choose your proposal carefully to avoid large or variable weights.
+Focus samples where they matter most, but choose your proposal carefully to
+avoid large or variable weights.
 
 . . .
 
 ### Diagnostics
 
-Examine weight distribution and check effective sample size to ensure reliable estimates.
+Examine weight distribution and check effective sample size to ensure reliable
+estimates.
 
 . . .
 
@@ -1657,8 +1838,7 @@ dvmises <- function(x, mu = 0, kappa = 2) {
 
 ### Step 2
 
-Implement importance sampling using an importance
-density of your choice.
+Implement importance sampling using an importance density of your choice.
 
 \medskip\pause
 
@@ -1669,8 +1849,8 @@ standard Monte Carlo estimate.
 
 ### Step 3
 
-Compute the effective sample size and coefficient of variation of the
-importance weights. Experiment with different importance densities.
+Compute the effective sample size and coefficient of variation of the importance
+weights. Experiment with different importance densities.
 
 
 ```{r vmises-importance}
