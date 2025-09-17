@@ -174,7 +174,9 @@ tibble(x, y) |>
 
 ##
 
-```{r gamma-fig1, fig.height = 3, fig.width=5}
+```{r gamma-fig1}
+#| fig-height: 2.8
+#| fig-width: 5
 #| echo: false
 #| fig-cap: "Convergence of the Monte Carlo estimate of the mean of a Gamma(8,1) distribution."
 p <- ggplot(tibble(x = 1:B, y = mu_hat), aes(x, y)) +
@@ -287,9 +289,9 @@ p1 <- tibble(x, target, importance) |>
   ggplot(aes(x, value, color = Density, linetype = Density)) +
   geom_line() +
   scale_color_manual(
-    values = c(target = "steelblue", importance = "darkorange")
+    values = c(target = "black", importance = "steelblue")
   ) +
-  scale_linetype_manual(values = c(target = "dashed", importance = "solid")) +
+  scale_linetype_manual(values = c(target = "solid", importance = "dashed")) +
   theme(legend.position.inside = c(0.87, 0.82)) +
   guides(
     color = guide_legend(position = "inside"),
@@ -307,11 +309,7 @@ w <- target / importance
 p2 <- tibble(x, w) |>
   ggplot(aes(x, w)) +
   geom_line() +
-  labs(
-    x = "x",
-    y = "Weight"
-  ) +
-  theme_minimal(base_size = 10)
+  labs(x = "x", y = "Weight")
 
 p1 / p2 + plot_layout(heights = c(2, 1), axes = "collect")
 ```
@@ -349,13 +347,19 @@ f_x <- dgamma(z, 8)
 g_x <- dnorm(z, 10, 3)
 w <- f_x / g_x
 
-p1 <- tibble(x = z, f_x, g_x) |>
-  pivot_longer(c(f_x, g_x)) |>
-  ggplot(aes(x, value, color = name)) +
+p1 <- tibble(x = z, target = f_x, importance = g_x) |>
+  pivot_longer(c(target, importance)) |>
+  ggplot(aes(x, value, color = name, linetype = name)) +
   geom_line() +
   guides(color = guide_legend(position = "inside")) +
+  scale_color_manual(
+    values = c(target = "black", importance = "steelblue")
+  ) +
+  scale_linetype_manual(
+    values = c(target = "solid", importance = "dashed")
+  ) +
   theme(legend.position.inside = c(0.8, 0.8)) +
-  labs(y = "Density", color = NULL)
+  labs(y = "Density", color = "Density", linetype = "Density")
 
 p2 <- tibble(x = z, w) |>
   ggplot(aes(x, w)) +
@@ -375,10 +379,21 @@ p1 / p2 + plot_layout(axes = "collect")
 #|   Gamma(8,1) distribution using a N(10,3) importance distribution."
 #| fig-width: 5
 #| fig-height: 2.5
+mu_hat_IS <- cumsum(x * w_star) / (1:B)
+sigma_hat_IS <- sd(x * w_star)
+
 p <- ggplot(
   tibble(x = 1:B, y = mu_hat_IS),
   aes(x, y)
 ) +
+  geom_ribbon(
+    aes(
+      ymin = mu_hat_IS - 1.96 * sigma_hat_IS / sqrt(1:B),
+      ymax = mu_hat_IS + 1.96 * sigma_hat_IS / sqrt(1:B)
+    ),
+    fill = "dark orange",
+    alpha = 0.4
+  ) +
   geom_line() +
   geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10)) +
@@ -653,12 +668,14 @@ c_hat <- mean(w_star)
 sigma_hat_IS <- sd(x * w_star)
 sigma_hat_w_star <- sd(w_star)
 gamma_hat <- cov(x * w_star, w_star)
+
 sigma_hat_IS_w <- sqrt(
   sigma_hat_IS^2 +
     mu_hat_IS[B]^2 * sigma_hat_w_star^2 -
     2 * mu_hat_IS[B] * gamma_hat
 ) /
   c_hat
+
 sigma_hat_IS_w
 ```
 
@@ -694,31 +711,35 @@ p +
 
 ## When to Use Importance Sampling?
 
-- **Rare Event Estimation:** When the event of interest has low probability
-  under the target distribution, importance sampling can efficiently estimate
-  probabilities or expectations.
-- **High Variance Monte Carlo:** If standard Monte Carlo methods yield high
-  variance, importance sampling can reduce variance by focusing samples where
-  the integrand is large.
-- **Difficult-to-Sample Targets:** When direct sampling from the target
+### Rare Events
+
+Estimating probabilities or expectations involving rare events.
+
+. . .
+
+### High-Variance Monte Carlo
+
+Importance sampling can
+reduce variance by focusing samples where the integrand is large.
+
+. . .
+
+### Difficult-to-Sample Targets
+
+When direct sampling from the target
   distribution is hard, but sampling from a related importance distribution
   is easy.
-- **Integrals with Heavy Tails:** For integrals dominated by regions with low
-  probability under the target, importance sampling can improve accuracy.
-- **Bayesian Computation:** Useful for marginal likelihood estimation and
-  posterior expectations when the posterior is complex.
 
 ## Poor Importance Distribution
 
 If the importance distribution does not cover regions where the target is large,
 weights become highly variable and estimates unreliable.
 
-
 \medskip\pause
 
 ### Remedies
 
-Redesign importance distribution to better match the n
+Redesign importance density to better match the target density.
 
 \medskip\pause
 
@@ -732,7 +753,7 @@ A histogram of weights visualizes the distribution of importance weights. This
 reveals weight degeneracy, where many weights are near zero and a few are very
 large.
 
-\medskip\pause
+. . .
 
 ### Effective Sample Size (ESS)
 
@@ -740,7 +761,15 @@ Effective sample size (ESS) measures how many samples are effectively
 contributing to the estimate. A low ESS indicates poor sampling efficiency and
 high variance.
 
-\medskip\pause
+. . .
+
+### Coefficient of Variation (CV)
+
+The coefficient of variation (CV) of the weights quantifies their relative
+variability. A high CV indicates that a few samples dominate the estimate,
+leading to high variance.
+
+. . .
 
 ### Comparison with Standard Monte Carlo
 
@@ -753,13 +782,20 @@ shows whether importance sampling actually improves efficiency.
 
 ::: {.column width="47%"}
 
-Suppose $X \sim \mathcal{N}(0, I_{10})$ and we want to estimate
-$\operatorname{E}[f(X)]$ where $f(X)$ is large near the origin.
+Suppose that
+$$
+X \sim \mathcal{N}(0, I_{10})
+$$
+and that we want to estimate $\operatorname{E}[f(X)]$
+where $f(X)$ is large near the origin.
 
 \medskip\pause
 
-If we use a importance density $g(x) = \mathcal{N}(\mu, I_{10})$ with large
-$|\mu|$, most samples are far from the origin, so $f(X)$ is nearly zero and
+If we use a importance density $g(x)$ from
+$$
+\mathcal{N}(\mu, I_{10})
+$$
+with large $|\mu|$, most samples are far from the origin, so $f(X)$ is nearly zero and
 weights are highly variable.
 
 :::
@@ -805,8 +841,7 @@ tibble(
     x = expression(X[1]),
     y = expression(X[2])
   ) +
-  coord_fixed() +
-  theme_minimal(base_size = 10)
+  coord_fixed()
 ```
 
 :::
@@ -855,23 +890,463 @@ contribute to the estimate.
 
 It is defined as
 $$
-\mathsf{ESS} = \frac{(\sum_{i=1}^n w_i)^2}{\sum_{i=1}^n w_i^2}
+\mathrm{ESS} = \frac{1}{\sum_{i=1}^n w_i^2}
 $$
-where $w_i$ are the importance weights.
+where $w_i$ are the \alert{normalized} importance weights.
 
 \medskip\pause
 
-If all weights are equal, $\mathsf{ESS} = n$. If one weight dominates,
-$\mathsf{ESS} \approx 1$, and the estimate is unreliable.
+If all weights are equal, $\mathrm{ESS} = n$. If one weight dominates,
+$\mathrm{ESS} \approx 1$, and the estimate is unreliable.
 
 . . .
 
 ```{r ess-demo}
-ess <- (sum(weights))^2 / sum(weights^2)
+ess <- 1 / sum(weights^2)
 ess
 ```
 
-## Example: Network Failure
+## Coefficient of Variation (CV)
+
+The coefficient of variation (CV) of the weights measures their relative
+variability.
+
+\medskip\pause
+
+It is defined as
+$$
+\mathrm{CV} = \frac{\sqrt{\frac{1}{n} \sum_{i=1}^n (w_i - \bar{w})^2}}{\bar{w}}
+$$
+where $\bar{w} = \frac{1}{n} \sum_{i=1}^n w_i$ is the mean weight.
+
+. . .
+
+### Interpretation
+
+A high CV indicates that a few samples dominate the estimate, leading to high
+variance.
+
+## Choosing the Importance Distribution
+
+We want low-variance estimates of
+$$
+I = \int h(x) f(x) \ dx
+$$
+
+. . .
+
+The importance distribution determines the weights
+$$
+w^*(x) = \frac{f(x)}{g(x)}
+$$
+and the variance of these weights drives the variance of the IS estimator.
+
+## Principles for Choosing the Importance Distribution
+
+### Cover the Support
+
+Ensure the importance distribution covers all regions where the target
+distribution is significant.
+
+. . .
+
+### Match the Bulk
+
+The mean and spread of $q$ shuold roughly match the regions of large
+$|h(x)|f(x)$.
+
+. . .
+
+### Give it Heavy-Enough Tails
+
+The importance distribution should have heavier tails than the target to avoid
+extreme weights.
+
+## Common Strategies
+
+### Laplace Approximation
+
+Use a Gaussian approximation centered at the mode of the target distribution.
+
+. . .
+
+
+### Adaptive Importance Sampling
+
+Iteratively refine the importance distribution based on pilot runs.
+
+. . .
+
+
+### Defensive Mixtures
+
+Combine a well-chosen importance distribution with a broader distribution to
+ensure coverage of the entire target support.
+
+. . .
+
+### Mixture Distributions
+
+Use a mixture of distributions to capture multiple modes or complex shapes.
+
+
+## Laplace Approximation
+
+### Basic Idea
+
+Take a Gaussian approximation of the target density at its mode $x^*$ as the importance
+distribution. 
+
+. . .
+
+### Motivation
+
+Connection comes from the second-order Taylor expansion of $\log f(x)$ at the mode $x^*$,
+$$
+\log f(x) \approx \log f(x^*) - \frac{1}{2}(x - x^*)^T H (x - x^*)
+$$
+where $H$ is the Hessian of $-\log f(x)$ at $x^*$. 
+
+\medskip\pause
+
+Exponentiating both sides gives:
+$$
+f(x) \approx f(x^*) \exp\left(-\frac{1}{2}(x - x^*)^T H (x - x^*)\right)
+$$
+
+
+## Laplace Approximation
+
+
+### Steps
+
+1. Find the mode $x^* = \arg\max_x f(x)$.\pause
+2. Compute the Hessian $H$ of the first-order Taylor approximation of $-\log
+   f(x)$ around $x^*$.\pause
+3. Use $\mathcal{N}(x^*, H^{-1})$ as importance distribution.
+
+. . .
+
+### When to Use
+
+Best for unimodal, smooth, and symmetric target densities.
+
+## Example: Gamma Distribution
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+The density of the $\mathsf{Gamma}(3,1)$ distribution is
+$$
+f(x) = \frac{1}{2} x^2 e^{-x}, \quad x > 0.
+$$
+
+. . .
+
+The mode is at $x^* = 2$ and the Hessian of $-\log f(x)$ at $x^*$ is 
+$$
+H = \frac{\alpha - 1}{(x^*)^2} = \frac 1 2.
+$$
+
+\medskip\pause
+
+So the Laplace approximation is $\mathcal{N}(2, 2)$.
+
+:::
+
+::: {.column width="47%"}
+
+
+```{r}
+#| echo: false
+#| fig-cap: "Target (solid black) and Laplace approximation (dashed blue)
+#|   densities for a Gamma(3,1) distribution."
+f_density <- function(x) dgamma(x, shape = 3, rate = 1) # Gamma(3,1)
+log_f <- function(x) log(f_density(x))
+
+x_star <- (3 - 1) / 1
+hessian <- 2 / (x_star^2)
+sd_laplace <- 1 / sqrt(hessian)
+
+x_grid <- seq(-2, 10, length.out = 400)
+
+df <- tibble(
+  x = x_grid,
+  f = f_density(x_grid),
+  laplace = dnorm(x_grid, mean = x_star, sd = sd_laplace),
+) |>
+  pivot_longer(
+    cols = c(f, laplace),
+    names_to = "Density",
+    values_to = "value"
+  ) |>
+  filter(value > 0)
+
+# Plot
+ggplot(df, aes(x = x, y = value, color = Density, linetype = Density)) +
+  geom_line() +
+  scale_color_manual(
+    values = c(f = "black", laplace = "steelblue")
+  ) +
+  scale_linetype_manual(values = c(f = "solid", laplace = "dashed")) +
+  theme(legend.position.inside = c(0.8, 0.8)) +
+  guides(
+    color = guide_legend(position = "inside"),
+    linetype = guide_legend(position = "inside")
+  ) +
+  labs(
+    y = "Density"
+  )
+```
+
+:::
+
+::::
+
+
+## Moment-Matching Importance Sampling
+
+Adaptive importance sampling iteratively refines the importance distribution
+based on the samples obtained.
+
+. . .
+
+### Basic Idea
+
+Start with an initial importance distribution and iteratively refine it based on
+the samples and weights obtained.
+
+. . .
+
+### Steps
+
+1. Choose an initial importance distribution $g_0(x)$.
+2. Draw samples from $g_0$ and compute weights.
+3. Update the importance distribution parameters based on weighted samples.
+4. Repeat steps 2-3 for several iterations.
+
+### Mathematically
+
+At iteration $t$, draw samples $X_1, \ldots, X_n \sim g_t(x)$ and compute
+weights
+$$
+w_i^* = \frac{f(X_i)}{g_t(X_i)}.
+$$  
+
+##
+
+```{r}
+#| echo: false
+library(ggplot2)
+library(tibble)
+
+# Target density: bimodal mixture
+f_density <- function(x) 0.4 * dnorm(x, -2, 1) + 0.6 * dnorm(x, 3, 0.5)
+
+# Adaptive importance sampling function
+adaptive_is <- function(
+  n = 1000,
+  n_iter = 5,
+  q_init_mean = 0,
+  q_init_sd = 1
+) {
+  # Store proposal params and samples
+  proposals <- list()
+  samples <- list()
+  weights <- list()
+
+  mean_q <- q_init_mean
+  sd_q <- q_init_sd
+
+  for (i in 1:n_iter) {
+    # Draw from current proposal
+    x <- rnorm(n, mean = mean_q, sd = sd_q)
+    w <- f_density(x) / dnorm(x, mean = mean_q, sd = sd_q)
+    w_norm <- w / sum(w)
+
+    # Store current step
+    proposals[[i]] <- c(mean = mean_q, sd = sd_q)
+    samples[[i]] <- x
+    weights[[i]] <- w_norm
+
+    # Update proposal using weighted moments
+    mean_q <- sum(w_norm * x)
+    sd_q <- sqrt(sum(w_norm * (x - mean_q)^2))
+  }
+
+  return(list(proposals = proposals, samples = samples, weights = weights))
+}
+
+# Run adaptive importance sampling
+set.seed(123)
+res <- adaptive_is(n = 1000, n_iter = 5)
+
+# Plotting function for a given iteration
+plot_step <- function(iter) {
+  proposal <- res$proposals[[iter]]
+  x_grid <- seq(-6, 6, length.out = 400)
+  df <- tibble(
+    x = x_grid,
+    target = f_density(x_grid),
+    importance = dnorm(x_grid, mean = proposal["mean"], sd = proposal["sd"])
+  ) |>
+    pivot_longer(
+      cols = c(target, importance),
+      names_to = "Density",
+      values_to = "value"
+    )
+
+  # Calculate ESS and CV for current iteration
+  w <- res$weights[[iter]]
+  n <- length(w)
+  ess <- (sum(w))^2 / sum(w^2)
+  cv <- sqrt(mean((w - mean(w))^2)) / mean(w)
+
+  ggplot(df, aes(x = x, y = value, color = Density, linetype = Density)) +
+    geom_line() +
+    scale_color_manual(
+      values = c(target = "black", importance = "steelblue")
+    ) +
+    scale_linetype_manual(values = c(target = "solid", importance = "dashed")) +
+    lims(x = c(-6, 6), y = c(0, 0.6)) +
+    labs(
+      y = "Density",
+      subtitle = sprintf("ESS = %.1f, CV = %.2f", ess, cv)
+    )
+}
+```
+
+```{r}
+#| echo: false
+#| fig-width: 5.4
+#| fig-height: 2.5
+#| fig-cap: "Adaptive importance sampling step 1."
+plot_step(1)
+```
+
+##
+
+```{r}
+#| echo: false
+#| fig-width: 5.4
+#| fig-height: 2.5
+#| fig-cap: "Adaptive importance sampling, step 2."
+plot_step(2)
+```
+
+##
+
+```{r}
+#| echo: false
+#| fig-width: 5.4
+#| fig-height: 2.5
+#| fig-cap: "Adaptive importance sampling, step 3."
+plot_step(3)
+```
+
+##
+
+```{r}
+#| echo: false
+#| fig-width: 5.4
+#| fig-height: 2.5
+#| fig-cap: "Adaptive importance sampling, step 4."
+plot_step(4)
+```
+
+##
+
+```{r}
+#| echo: false
+#| fig-width: 5.4
+#| fig-height: 2.5
+#| fig-cap: "Adaptive importance sampling, step 5."
+plot_step(5)
+```
+
+## Defensive Importance Sampling
+
+
+Defensive importance sampling uses a mixture of a well-chosen importance
+distribution and a broader distribution to ensure coverage of the entire target
+support.
+
+\medskip\pause
+
+Recall the Gamma(8,1) example where we used $g(x) = \mathcal{N}(10, 3^2)$.
+
+\medskip\pause
+
+
+## 
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+#| fig-cap: "Target (black) and importance (blue) densities with samples from
+#|   the importance distribution."
+#| ref-label: gammasim-fig
+#| fig-height: 3
+#| fig-width: 2.7
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+
+```{r gamma-defensive-fig}
+#| fig-height: 3
+#| fig-width: 2.7
+#| fig-cap: "Target (black) and importance (orange) densities with samples from
+#|   the defensive importance mixture distribution."
+#| echo: false
+set.seed(1234)
+B <- 1000
+mix_indicator <- rbinom(B, 1, 0.8)
+x <- rnorm(B, mean = 10, sd = 3)
+x[mix_indicator == 0] <- rnorm(sum(mix_indicator == 0), mean = 0, sd = 6)
+g_mix <- 0.8 * dnorm(x, 10, 3) + 0.2 * dnorm(x, 10, 10)
+w_star <- dgamma(x, 8) / g_mix
+mu_hat_defensive <- cumsum(x * w_star) / (1:B)
+
+z <- seq(-12, 12, length.out = 100) + 10
+f_x <- dgamma(z, 8)
+g_mix <- 0.8 * dnorm(z, 10, 3) + 0.2 * dnorm(z, 10, 10)
+w <- f_x / g_mix
+
+p1 <- tibble(x = z, target = f_x, mixture = g_mix) |>
+  pivot_longer(c(target, mixture)) |>
+  ggplot(aes(x, value, color = name, linetype = name)) +
+  geom_line() +
+  guides(color = guide_legend(position = "inside")) +
+  scale_color_manual(
+    values = c(target = "black", mixture = "darkorange")
+  ) +
+  scale_linetype_manual(
+    values = c(target = "solid", mixture = "dashed")
+  ) +
+  theme(legend.position.inside = c(0.8, 0.8)) +
+  labs(y = "Density", color = "Density", linetype = "Density")
+
+p2 <- tibble(x = z, w) |>
+  ggplot(aes(x, w)) +
+  geom_line()
+
+p1 / p2 + plot_layout(axes = "collect")
+```
+
+:::
+
+::::
+
+## Case Study: Network Failure
 
 ![A network graph. Different edges "fail" independently with probability
 $p$.](../images/networkfig.png){ width=70% }
@@ -930,7 +1405,7 @@ discon <- function(Aup) {
 
 ## Sampling a Graph
 
-```{r simNet, cache = TRUE}
+```{r simNet}
 sim_net <- function(Aup, p) {
   ones <- which(Aup == 1)
   Aup[ones] <- sample(
@@ -945,13 +1420,13 @@ sim_net <- function(Aup, p) {
 
 . . .
 
-```{r sim-bench, cache = TRUE, dependson = "simNet"}
+```{r sim-bench}
 bench::bench_time(replicate(1e5, sim_net(Aup, 0.5)))
 ```
 
 ## Estimating Probability of Nodes 1 and 10 Disconnected
 
-```{r sim, cache = TRUE}
+```{r sim}
 set.seed(27092016)
 n <- 1e5
 tmp <- replicate(n, discon(sim_net(Aup, 0.05)))
@@ -964,7 +1439,7 @@ mu_hat
 
 Estimate with confidence interval using $\sigma^2 = \mu (1 - \mu)$.
 
-```{r sim-confint, dependson = "sim"}
+```{r sim-confint}
 mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
 ```
 
@@ -973,7 +1448,7 @@ mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
 We will simulate with failure probability $p_0$ and compute the importance
 weights.
 
-```{r impw, cache = TRUE}
+```{r impw}
 weights <- function(Aup, Aup0, p0, p) {
   w <- discon(Aup0)
 
@@ -993,7 +1468,8 @@ For the IS estimator the weights will be multiplied by the indicator that 1 and
 
 ## Estimating Probability of Nodes 1 and 10 Disconnected
 
-```{r sim2, cache = TRUE, dependson = "impw"}
+```{r sim2}
+#| cache: true
 tmp <- replicate(n, weights(Aup, sim_net(Aup, 0.2), 0.2, 0.05))
 mu_hat_IS <- mean(tmp)
 mu_hat_IS
@@ -1003,7 +1479,7 @@ mu_hat_IS
 
 Confidence interval using empirical variance estimate $\hat{\sigma}^2$.
 
-```{r, dependson = "sim2"}
+```{r}
 mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
 ```
 
@@ -1041,7 +1517,8 @@ computation.
 There are $2^{18} = 262,144$ different networks with any number of the edges
 failing, so complete enumeration is possible.
 
-```{r enumeration, cache = TRUE}
+```{r enumeration}
+#| cache: true
 ones <- which(Aup == 1)
 Atmp <- Aup
 p <- 0.05
@@ -1096,8 +1573,10 @@ options(digits = old_options$digits)
 
 ## Exercise: Von Mises Importance Sampling
 
-Implement an importance sampling algorithm for computing the mean of the von
-Mises distribution.
+### Step 1
+
+Implement a standard Monte Carlo algorithm for computing the mean of the von
+Mises distribution. Plot the result and check convergence towards the $\mu$.
 
 ```{r vonmises-density}
 dvmises <- function(x, mu = 0, kappa = 2) {
@@ -1105,14 +1584,25 @@ dvmises <- function(x, mu = 0, kappa = 2) {
 }
 ```
 
-Try various importance distributions
+. . .
+
+### Step 2
+
+Implement importance sampling using an importance
+density of your choice. 
 
 \medskip\pause
 
-If you have time, create a function that takes parameters of the von Mises
-distribution and adjusts the proposal distribution based on these.
+Compute the estimate of the mean and its standard error. Compare with the
+standard Monte Carlo estimate.
 
-Plot the result and check convergence.
+. . .
+
+### Step 3
+
+Compute the effective sample size and coefficient of variation of the
+importance weights. Experiment with different importance densities.
+
 
 ```{r vmises-importance}
 #| include: false
@@ -1127,13 +1617,3 @@ plot(x, dvmises(x))
 lines(x, dnorm(x, 0, pi / 2))
 ```
 
-### Exercise
-
-Implement a heuristic stopping rule that stops when the confidence interval is
-0.1 units wide.
-
-```{r excercise-stop, include = FALSE}
-# TO DO
-```
-$$
-$$
