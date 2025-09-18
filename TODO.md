@@ -32,8 +32,13 @@ format: html
 
 ## Lecture 4: Parallelization and Scatterplot Smoothing
 
-- Too much content. Maybe skip futures and just stick with foreach.
-  Or skip some implementation parts of the running mean smoother, for instance.
+- Too much content. Maybe skip futures and just stick with foreach. Or skip some
+  implementation parts of the running mean smoother, for instance.
+
+## Lecture 6: Monte Carlo Simulation
+
+- Remove or simplify variance estimator for the normalized importance sampling
+  estimator. Or at least remove the code for it.
 
 ## Lecture 8: Optimization
 
