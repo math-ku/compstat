@@ -726,14 +726,6 @@ mu_hat_IS[B] # Theoretical value 8
 #|   Gamma(8,1) distribution using normalized weights."
 p <- tibble(x = 1:B, y = mu_hat_IS) |>
   ggplot(aes(x, y)) +
-  geom_ribbon(
-    aes(
-      ymin = mu_hat_IS - 1.96 * sigma_hat_IS / sqrt(1:B),
-      ymax = mu_hat_IS + 1.96 * sigma_hat_IS / sqrt(1:B)
-    ),
-    fill = "dark orange",
-    alpha = 0.4
-  ) +
   geom_line() +
   geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10)) +
