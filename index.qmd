@@ -96,15 +96,15 @@ for you to solve independently at your own pace.
 
 - **Instructions:** [Assignment 1](assignments/assignment1.html)
 
-<!-- ### Week 4 -->
-<!---->
-<!-- #### Lecture 7: Optimization -->
-<!---->
-<!-- - **Slides:** [Optimization](slides/lecture7.pdf) -->
-<!-- - **Reading:** -->
-<!--   - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization) -->
-<!--   - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt) -->
-<!---->
+### Week 4
+
+#### Lecture 7: Optimization
+
+- **Slides:** [Optimization](slides/lecture7.pdf)
+- **Reading:**
+  - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization)
+  - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt)
+
 <!-- #### Lecture 8: Testing and Debugging -->
 <!---->
 <!-- - **Slides:** [Testing and Debugging](slides/lecture8.pdf) -->
