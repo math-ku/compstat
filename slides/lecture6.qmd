@@ -1834,8 +1834,8 @@ improve robustness.
 
 ### Step 1
 
-Implement a standard Monte Carlo algorithm for computing the mean of the von
-Mises distribution. Plot the result and check convergence towards the $\mu$.
+Implement an importance sampler for computing the mean of the von
+Mises distribution. Plot the result and check convergence towards $\mu$.
 
 ```{r vonmises-density}
 dvmises <- function(x, mu = 0, kappa = 2) {
@@ -1847,19 +1847,15 @@ dvmises <- function(x, mu = 0, kappa = 2) {
 
 ### Step 2
 
-Implement importance sampling using an importance density of your choice.
-
-\medskip\pause
-
-Compute the estimate of the mean and its standard error. Compare with the
-standard Monte Carlo estimate.
+Compute the estimate of the mean and its standard error.
 
 . . .
 
 ### Step 3
 
 Compute the effective sample size and coefficient of variation of the importance
-weights. Experiment with different importance densities.
+weights. Experiment with different importance densities to see if you find
+a better one.
 
 
 ```{r vmises-importance}
