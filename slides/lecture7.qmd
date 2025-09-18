@@ -6,6 +6,7 @@ title: "Optimization"
 
 ```{r setup, include=FALSE}
 library(patchwork)
+library(tidyverse)
 
 old_options <- options(digits = 4)
 ```
@@ -26,47 +27,107 @@ vegetables <- read.table(
 )[, c(1, 2, 3)]
 ```
 
+## Recap: Monte Carlo Methods
+
+### Standard Monte Carlo
+
+Estimate $\E h(X)$ with $X \sim f$ by
+$$
+\hat{\mu}_n = \frac{1}{n} \sum_{i=1}^n h(X_i) \quad \text{with } X_i \overset{iid}{\sim} f.
+$$
+with
+
+. . .
+
+### Importance Sampling
+
+Use the "trick" that
+$$
+\mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
+$$
+and estimate
+$$
+\hat{\mu}_n^{IS} = \frac{1}{n} \sum_{i=1}^n h(X_i) w^*(X_i) \quad \text{with } X_i \overset{iid}{\sim} g.
+$$
+
+## Recap: Importance Sampling
+
+### Self-Normalized Importance Sampling
+
+When $f$ is known only up to a normalizing constant, we can still use importance
+sampling by estimating normalized weights.
+
+. . .
+
+### Picking a Good Importance Distribution
+
+Pick a importance distribution $g$ that covers the important parts of $f$, with
+heavy tails, and from which we can easily sample.
+
+
 ## Today
 
 ### Optimization
 
-- What is an optimization problem?
-- Types of optimization problems
-- Zero, first, and second order methods
-- Line search and backtracking
-- Poisson regression example
+What is an optimization problem?
+
+\medskip\pause
+
+We learn about different kinds of optimization problems.
+
+. . .
+
+### Convex Optimization
+
+Convex optimization problems are a special class of optimization problems that
+are easier to solve.
+
+. . .
+
+### Algorithms
+
+We talk about zero, first, and second order methods.
+
+\medskip\pause
+
+We learn about gradient descent and Newton's method.
 
 # Optimization
 
 ## Optimization
 
-- Optimization is the process of trying to optimize an objective function $f$.
-- Typically, we are interested in either **minimizing** or **maximizing** the
-  function.
-- Since minimizing $f$ is equivalent to maximizing $-f$, we will focus on
-  minimization.
+The process of trying to optimize an objective function $f$.
+
+
+\medskip\pause
+
+Typically, we are interested in either **minimizing** or **maximizing** the
+function.
+
+\medskip\pause
+
+Since minimizing $f$ is equivalent to maximizing $-f$, we will focus on
+minimization.
 
 . . .
 
-### Examples
+### Examples {.example}
 
 - Fitting a generalized linear model by minimizing the negative log-likelihood
-- Finding the shortest path in a network
-- Minimizing variance in a portfolio
-- Finding the best hyperparameters for a model
+  \pause
+- Finding the shortest path in a network \pause
+- Minimizing variance in a portfolio of financial assets.
 
 ## Standard Form
 
-An optimization problem is typically written in the form
-
+In _standard form_, an optimization problem is written as
 $$
 \begin{aligned}
-  &\operatorname*{minimize}_x     && f(x) \\
-  &\operatorname{subject to}      && g_i(x) \leq 0, \quad i = 1, \ldots, m \\
-  &                               && h_j(x) = 0, \quad j = 1, \ldots, k.
+  &\operatorname*{minimize}_x  && f(x) \\
+  &\textrm{subject to}         && g_i(x) \leq 0, \quad i = 1, \ldots, m \\
+  &                            && h_j(x) = 0, \quad j = 1, \ldots, k.
   \end{aligned}
 $$
-
 where
 
 - $f$ is the objective function,
@@ -77,33 +138,38 @@ where
 
 ### Solution
 
+We write the solution as
 $$
 x^* = \operatorname{argmin}_x f(x)
 $$
 
-### Example: OLS
+## Example: Ordinary Least Squares Regression (OLS)
 
-Ordinary least squares is an optimization problem.
+OLS regression is an optimization problem.
+
+\medskip\pause
 
 In standard form, it is
-
 $$
 \begin{aligned}
-  &\operatorname*{minimize}_{\beta \in \mathbb{R}^p}     &&f(\beta) = \frac{1}{2} \lVert y - X\beta\rVert_2^2.
-  \end{aligned}
+  &\operatorname*{minimize}_{\beta \in \mathbb{R}^p} &&f(\beta) = \frac{1}{2} \lVert y - X\beta\rVert_2^2.
+\end{aligned}
 $$
+
+. . .
+
+That is, we have no constraints.
 
 . . .
 
 ### Solution
 
+The solution is
 $$
 \beta^* = \operatorname{argmin}_{\beta \in \mathbb{R}^p} f(\beta).
 $$
 
-# Types of Problems
-
-## Taxonomy
+## Types of Optimization Problems
 
 ### Convexity
 
@@ -132,73 +198,186 @@ Standard form:
 $$
 \begin{aligned}
   &\operatorname*{minimize}_x     && f(x) \\
-  &\operatorname{subject to}      && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
+  &\textrm{subject to}            && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
   &                               && a_i^T x = b_i, \quad j = 1, \ldots, k,
   \end{aligned}
 $$
 
 where $f$ and $g_i$ are convex.
 
-### Convex Functions
+## Convex Functions
 
-A function $f$ is convex iff for all $x, y \in \operatorname{dom} f$ and
+A function $f$ is convex iff for all $x_1, x_2 \in \operatorname{dom} f$ and
 $\lambda \in [0, 1]$
 $$
-f(\lambda x + (1 - \lambda) y) \leq \lambda f(x) + (1 - \lambda) f(y).
+f(\lambda x_1 + (1 - \lambda) x_2) \leq \lambda f(x_1) + (1 - \lambda) f(x_2).
+$$
+
+This is known as **Jensen's inequality**.
+
+\medskip\pause
+
+```{r}
+#| echo: false
+#| fig-width: 4
+#| fig-height: 2
+#| fig-cap: "Jensen's inequality for a convex function."
+library(ggplot2)
+
+# Convex function
+f <- function(x) x^2
+
+# Points for Jensen's inequality
+x1 <- -0.5
+x2 <- 1
+lambda <- 0.3
+x_mid <- lambda * x1 + (1 - lambda) * x2
+
+df <- data.frame(
+  x = c(seq(-2, 2, length.out = 100), x1, x2),
+  y = c(f(seq(-2, 2, length.out = 100)), f(x1), f(x2)),
+  type = c(rep("f", 100), rep("chord", 2))
+)
+
+pts <- data.frame(
+  x = c(x1, x2),
+  y = c(f(x1), f(x2))
+)
+
+labels <- c(
+  f = expression(f(x)),
+  chord = expression(lambda * f(x[1]) + (1 - lambda) * f(x[2]))
+)
+
+ggplot(df, aes(x, y)) +
+  geom_line(aes(linetype = type, color = type)) +
+  geom_point(data = pts, aes(x, y)) +
+  scale_linetype_manual(
+    values = c(f = "solid", chord = "dashed"),
+    labels = labels
+  ) +
+  scale_color_manual(
+    values = c(f = "black", chord = "steelblue"),
+    labels = labels
+  ) +
+  geom_text(
+    aes(x, y),
+    data = pts,
+    label = c(expression(x[1]), expression(x[2])),
+    nudge_x = c(-0.3, 0.3)
+  ) +
+  labs(color = NULL, linetype = NULL) +
+  labs(y = expression(f(x)), x = "x")
+```
+
+## First-Order Condition for Convexity
+
+If $f$ is **differentiable**, then the condition is equivalent to
+$$
+f(x_1) \geq f(x_2) + \nabla f(x_2)^T(x_1 - x_2).
 $$
 
 . . .
 
-#### First-Order Conditions
+```{r}
+#| echo: false
+#| fig-width: 4
+#| fig-height: 2
+#| fig-cap: "First-order condition for convexity."
+library(ggplot2)
+# Convex function
+f <- function(x) x^2
+f_prime <- function(x) 2 * x
+# Points for tangent line
+x0 <- 0.2
+x_vals <- seq(-1, 2, length.out = 100)
+df <- data.frame(
+  x = c(x_vals, x0),
+  y = c(f(x_vals), f(x0)),
+  type = c(rep("f", 100), "tangent")
+)
+pts <- data.frame(
+  x = x0,
+  y = f(x0)
+)
 
-If $f$ is **differentiable**, then the condition is equivalent to
+labels <- c(
+  f = expression(f(x)),
+  tangent = expression(f(x[2]) + nabla * f(x[2])^T * (x[1] - x[2]))
+)
+
+ggplot(df, aes(x, y)) +
+  geom_line(aes(linetype = type, color = type)) +
+  geom_abline(
+    slope = f_prime(x0),
+    intercept = f(x0) - f_prime(x0) * x0,
+    linetype = "dashed",
+    color = "steelblue"
+  ) +
+  geom_point(
+    data = pts,
+    aes(x, y),
+    label = expression(x[2]),
+    nudge_y = 0.3
+  ) +
+  scale_linetype_manual(
+    values = c(f = "solid", tangent = "dashed"),
+    labels = labels
+  ) +
+  scale_color_manual(
+    values = c(f = "black", tangent = "steelblue"),
+    labels = labels
+  ) +
+  lims(y = c(-1, 4)) +
+  labs(color = NULL, linetype = NULL) +
+  labs(y = expression(f(x)), x = "x")
+```
+
+
+## Optimality
+
+Any (local) minimum is **global** (but not necessarily unique).
+
+### First-Order Conditions
+
+For differentiable $f$, $x^*$ is optimal iff
 $$
-f(y) \geq f(x) + \nabla f(x)^T(y - x).
-$$
-
-### Optimality
-
-Any (local) minimum is **global** (but not neccessarily unique).
-
-#### First-Order Conditions
-
-For differentiable $f$, $x$ is optimal iff
-$$
-\nabla f(x)^T(y - x) \geq 0\quad\text{for all}\quad y \in C,
+\nabla f(x^*)^T(x - x^*) \geq 0\quad\text{for all}\quad x \in C,
 $$
 where $C$ is the feasible set.
 
 . . .
 
-#### Second-Order Conditions
+### Second-Order Conditions
 
-If $f$ is twice-differentiable, then $x$ is optimal iff
+If $f$ is twice-differentiable, then $x^*$ is optimal iff
 $$
-\nabla^2f(x) \succeq 0.
+\nabla^2f(x^*) \succeq 0.
 $$
 
-### Quasiconvex Optimization Problems
+## Quasiconvex Optimization Problems
 
-Standard form:
+### Standard Form
 
 $$
 \begin{aligned}
-  &\operatorname*{minimize}_x     && f(x) \\
-  &\operatorname{subject to}      && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
+  &\operatorname*{minimize}_x && f(x) \\
+  &\textrm{subject to}        && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
   &                               && A^T x = b,
   \end{aligned}
 $$
-
 where $g_i$ are convex but $f$ is **quasiconvex**.
 
-#### Examples
+. . .
 
-- Utility functions (economics)
+### Examples
+
+- Utility functions (economics) \pause
 - The floor function $f(x) = \lfloor x \rfloor$
 
 . . .
 
-#### Algorithms
+### Algorithms
 
 Won't cover here, but for instance the **bisection** method.
 
@@ -223,11 +402,15 @@ Won't cover here, but for instance the **bisection** method.
 Won't cover here, but typically **stochastic algorithms** (next week) or
 **global optimization methods** (not in this course).
 
-$x^2$ (convex), $\sin(x + \pi)$ (non-convex), and $\sqrt{|x|}$ (quasi-convex).
+##
 
-```{r convexity-types, echo = FALSE, fig.width = 11, fig.height = 7, warning = FALSE }
-library(patchwork)
 
+```{r convexity-types, echo = FALSE }
+#| warning: false
+#| fig-height: 3.4
+#| fig-width: 5.4
+#| fig-cap: "$x^2$ (convex), $\\sin(x + \\pi)$ (non-convex),
+#|   and $\\sqrt{|x|}$ (quasi-convex)."
 convex_function <- function(x) x^2
 non_convex_function <- function(x) sin(x + pi)
 quasi_convex_function <- function(x) sqrt(abs(x))
@@ -310,26 +493,32 @@ p1 /
 
 ## Types of Optimization Methods
 
-### Direct Methods
+### Direct (Exact) Methods
 
-- Solve a system of equations
-- Get solution up to machine precision
-- **Examples:** solving a linear system of equations
+Provides a solution up to machine precision.
+
+\medskip\pause
+
+**Examples:** solving a linear system of equations
 
 . . .
 
 ### Iterative Optimization
 
-- Incrementally update optimization variable
-- Stop after some number of iterations based on convergence criterion. --
+Incrementally update optimization variable until some convergence criterion
+is met.
 
-- **Examples:** gradient descent, hill-climbing
+\medskip\pause
 
-### Direct Methods
+**Examples:** gradient descent, hill-climbing
+
+. . .
+
+## Direct Methods
 
 Analytical solution, up to machine precision.
 
-#### Example: OLS
+### Example: OLS
 
 Solve
 $$
@@ -337,65 +526,92 @@ X^TX \beta = X^Ty
 $$
 for $\beta \in \mathbb{R}^p$.
 
-How do you solve this in practice? In R you simply call
+\medskip\pause
+
+How do you solve this in practice? In R you call
 
 ```r
 solve(crossprod(X), crossprod(X, y))
 ```
 
-but what happens under the hood?
+. . .
+
+but what happens \alert{under the hood}?
+
+
+## Iterative Methods
+
+Update a current best guess iteratively until it is "good enough".
 
 . . .
 
-:::: {.columns}
+### Taxonomy by Order
 
-::: {.column width="47%"}
+Can be categorized by order, in terms of the information used
 
-### Zero-Order Methods
+- **0-order**: only use function value ($f(x)$)
+- **first-order**: also use first derivative ($f'(x)$)
+- **second-order**: also use second derivative ($f''(x)$)
+
+## Zero-Order Methods
 
 Use only the function value.
 
-#### Examples
+### Examples
 
-- Grid search (cross validation)
-- Genetic algorithms
+- Hill climbing
 - Bisection
+- Grid search (cross validation)
 
-:::
-
-::: {.column width="47%"}
-
-### First-Order Methods
+## First-Order Methods
 
 Use the gradient of the function (**first** derivative).
 
-#### Examples
+### Examples
 
 - **Gradient descent**
 - Conjugate gradient
 
-:::
+## Second-Order Methods
 
-::::
+Use the Hessian of the function (**second** derivative).
 
-### Second-Order Methods
-
-Use the gradient of the function (**first** derivative).
-
-#### Examples
+### Examples
 
 - **Newton's Method**
-- Trust-region methods ]
+- Trust-region methods
 
 ## Gradient Descent
 
 The quintessential first-order method
 
-Repeat until convergence:
-$$
-x^{(k+1)} = x^{(k)} - t \nabla f(x^{(k)}).
-$$
-with $t > 0$ being the step size.
+\medskip\pause
+:::: {.columns}
+
+::: {.column width="47%"}
+
+\begin{algorithm}[H]
+  \caption{Gradient descent}
+  \KwData{Step size $t > 0$}
+  \Repeat{convergence}{
+    $x \gets x - t \nabla f(x)$\;
+  }
+  \Return{$x$}
+\end{algorithm}
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+
+```
+
+:::
+
+::::
+
 
 . . .
 
@@ -405,7 +621,7 @@ with $t > 0$ being the step size.
   enough.
 - Requires $f$ to be differentiable and the gradient to be continuous.
 
-### Derivation of Update
+## Derivation of Update
 
 Take the second-order Taylor expansion of $f$ around $x$:
 $$
@@ -435,55 +651,25 @@ But how do we choose $t$?
 
 ::::
 
-### Too Small Step Size
+##
 
-![](../images/gd-stepsize-small.png){width=50%}
+![Step size is too small](../images/gd-stepsize-small.png){width=50%}
 
-### Too Large Step Size
+##
 
-![](../images/gd-stepsize-large.png){width=50%}
+![Step size is too large](../images/gd-stepsize-large.png){width=50%}
 
-### Perfect!
+##
 
-![](../images/gd-stepsize-good.png){width=50%}
+![Step size is well-adjusted!](../images/gd-stepsize-good.png){width=50%}
 
-### Analytical Step Size
-
-#### Theorem
-
-For gradient descent with step size $t \leq 1/L$ and Lipschitz constant of
-$\nabla f$ being $L$, we have
-$$
-f(x^{(k)}) - f(x^*) \leq \frac{1}{2tk} \lVert x^{(0)} - x^*\rVert_2^2.
-$$
-
-. . .
-
-Convergence rate: $O(1/k)$.
-
-. . .
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-#### Lipschitz Constant
+## Lipschitz Constant
 
 If
 $$
 \lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2
 $$
 then $L$ is the Lipschitz constant of $\nabla f$.
-
-:::
-
-::: {.column width="47%"}
-
-<!-- ![](../images/lipschitz.gif){width=50%} -->
-
-:::
-
-::::
 
 ### Example: OLS
 
@@ -497,9 +683,23 @@ $$
 
 In practice, we may not know $L$ or it may be difficult to compute.
 
+## Analytical Step Size
+
+### Theorem
+
+For gradient descent with step size $t \leq 1/L$ and Lipschitz constant of
+$\nabla f$ being $L$, we have
+$$
+f(x^{(k)}) - f(x^*) \leq \frac{1}{2tk} \lVert x^{(0)} - x^*\rVert_2^2.
+$$
+
 . . .
 
-#### Exact Line Search
+Convergence rate: $O(1/k)$.
+
+. . .
+
+## Exact Line Search
 
 It may be tempting to try to solve
 $$
@@ -507,7 +707,7 @@ t^* = \arg_t\min f(x - t\nabla f(x))
 $$
 but this is typically too expensive.
 
-### Backtracking Line Search
+## Backtracking Line Search
 
 Set $\beta \in (0, 1)$ and $\alpha \in (0, 1/2]$. At each iteration, start with
 $t \gets t_0$, and while
@@ -516,35 +716,39 @@ f(x - t \nabla f(x)) > f(x) - \alpha t \lVert \nabla f(x)\rVert_2^2
 $$
 set $t = t \beta.$
 
-![](../images/backtrack-line-search.png){width=65%}
+![Backtracking line search.](../images/backtrack-line-search.png){width=65%}
 
-### Backtracking Line Search Step Size
+##
 
-![](../images/gd-stepsize-linesearch.png){width=50%}
+![Gradient descent with backtracking line
+search.](../images/gd-stepsize-linesearch.png){width=50%}
 
-### Stopping Criteria
+## Stopping Criteria
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-#### Common (ad-hoc) choices
+### Common (ad-hoc) choices
 
-- Small gradient: $$\lVert \nabla f(x) \rVert_r \leq \epsilon$$
-- Small relative change in $x$: $$
-  \frac{\lVert x^{(k+1)} - x^{(k)} \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2}
-  \leq \epsilon$$
+- Small gradient: $$\lVert \nabla f(x) \rVert_r \leq \epsilon$$\pause
+- Small relative change in $x$: $$ \frac{\lVert x^{(k+1)} - x^{(k)}
+  \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2} \leq \epsilon$$\pause
 - Small relative change in $f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
   \leq \epsilon$$
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-#### Duality Gap
+### Duality Gap
 
 If $f$ is **strongly** convex and $x$ optimal, then the duality gap is zero at
 the optimum.
+
+\medskip\pause
 
 Most principled stopping criterion, but not always available.
 
@@ -552,11 +756,10 @@ Most principled stopping criterion, but not always available.
 
 ::::
 
-### Problems with Gradient Descent
+## Problems with Gradient Descent
 
-Sensitive to conditioning.
-
-![](../images/gd-conditioning.png){width=70%}
+![Gradient descent is sensitive to
+conditioning.](../images/gd-conditioning.png){width=70%}
 
 ## Newton's Method
 
@@ -583,13 +786,13 @@ $$
 
 ::: {.column width="47%"}
 
-![](../images/newton-approx.png){width=52%}
+![The Newton method, with approximation.](../images/newton-approx.png){width=52%}
 
 :::
 
 ::::
 
-### Damped Newton
+## Damped Newton
 
 In practice this might not converge, so we use **damped** Newton:
 $$
@@ -597,15 +800,15 @@ x^+ = x - t\nabla^2 f(x)^{-1} \nabla f(x),
 $$
 with $t > 0$ chosen by backtracking line search.
 
-. . .
+\medskip\pause
 
-In practice, this is often just called Newton's method.
+In practice, this is often what people mean with "Newton's method".
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-#### Backtracking Line Search
+### Backtracking Line Search
 
 At each iteration $t \gets 1$ and while
 $$
@@ -620,7 +823,7 @@ $$
 
 ::: {.column width="47%"}
 
-#### Phases
+### Phases
 
 - As long as $t < 1$, we are in the **damped** phase.
 - When $t = 1$, we enter the **pure** phase and $t$ will remain $1$.
@@ -630,7 +833,7 @@ $$
 
 ::::
 
-### Gradient Descent vs Newton
+## Gradient Descent vs Newton
 
 :::: {.columns}
 
@@ -657,7 +860,7 @@ $$
 
 ::::
 
-### Convergence
+## Convergence
 
 :::: {.columns}
 
@@ -683,7 +886,7 @@ Replace $\nabla^2 f(x)$ with an approximation $B_k$.
 
 . . .
 
-#### BFGS
+### BFGS
 
 Complexity: $O(p^2)$, still same memory cost.
 
@@ -695,10 +898,8 @@ Same complexity but lower memory cost.
 
 ## Example: Poisson Regression
 
-## Poisson Regression
-
-Consider observations $y_i \in \mathbb{N}_0$, $x_i \in \mathbb{R}^p$ for
-$i = 1, \ldots, n$, and Poisson point probabilities
+Consider observations $y_i \in \mathbb{N}_0$, $x_i \in \mathbb{R}^p$ for $i = 1,
+\ldots, n$, and Poisson point probabilities
 $$
 f_i(y_i) = e^{-\mu(x_i)} \frac{\mu(x_i)^{y_i}}{y_i!}.
 $$
@@ -706,21 +907,22 @@ $$
 . . .
 
 If $\log(\mu(x_i)) = x_i^T \beta$ we rewrite
-
 $$
 f_i(y_i) = e^{\beta^T x_i y_i - \exp( x_i^T \beta)} \frac{1}{y_i!}.
 $$
 
+\medskip\pause
+
 This is a _Poisson regression model_.
 
-### Example
+## Example
 
 ```{r vegetables-summary}
 summary(vegetables)
 dim(vegetables)
 ```
 
-### Model
+## Model
 
 $$
 \log(E(\text{sale})) = \beta_0 + \beta_1 \log(\text{normalSale}) + \beta_{\text{store}}.
@@ -747,7 +949,7 @@ summary(pois_model) |>
 options(digits = old_options$digits)
 ```
 
-### Exponential Families
+## Exponential Families
 
 Joint density:
 $$
@@ -770,7 +972,7 @@ $$
 \nabla \ell(\theta) = t(\symbf{y}) - \nabla \kappa(\theta).
 $$
 
-### The Poisson Regression model
+## The Poisson Regression model
 
 For the Poisson regression model we find that
 
@@ -789,7 +991,7 @@ $$
 $$
 with $\exp$ applied coordinatewisely.
 
-### Model Matrix and `glm.fit()`
+## Model Matrix and `glm.fit()`
 
 ```{r implement, dependson="data", cache = TRUE}
 X <- model.matrix(
@@ -809,7 +1011,7 @@ bench::bench_time(
 )
 ```
 
-### `glm.fit()`
+## `glm.fit()`
 
 ```{r}
 pois_fit$iter
@@ -818,7 +1020,7 @@ pois_fit$converged
 
 . . .
 
-#### Deviance
+### Deviance
 
 Two times (log-likelihood of null (intercept-only) model minus log-likelihood of
 the full model)
@@ -828,15 +1030,13 @@ pois_fit0 <- glm.fit(X[, 1], y, family = poisson())
 pois_fit0$deviance - pois_fit$deviance
 ```
 
-### `glm.fit()`
+## `glm.fit()`
 
 ```{r glm.fit-trace}
 pois_fit <- glm.fit(X, y, family = poisson(), control = list(trace = TRUE))
 ```
 
---
-
-### Stopping criterion
+## Stopping criterion
 
 $$
 |\mathrm{deviance}_{n-1} - \mathrm{deviance}_n| < \varepsilon (\mathrm{deviance}_n + 0.1)
@@ -844,7 +1044,7 @@ $$
 with the default tolerance parameter $\varepsilon = 10^{-8}$ and with a maximal
 number of iterations set to 25.
 
-### Implementation of Objective Function
+## Implementation of Objective Function
 
 ```{r implement_H, dependson="implement", cache = TRUE}
 t_map <- drop(crossprod(X, y))
@@ -858,7 +1058,7 @@ gradient <- function(beta) {
 }
 ```
 
-. . .
+##
 
 Recomputing the deviance difference,
 
@@ -877,7 +1077,7 @@ and the value of the negative log-likelihood:
 objective(pois_fit$coefficients)
 ```
 
-### Using `optim()` with Conjugate Gradient
+## Using `optim()` with Conjugate Gradient
 
 ```{r CG, dependson="implement_H", cache = TRUE}
 bench::bench_time(
@@ -898,7 +1098,7 @@ pois_CG$value
 pois_CG$counts
 ```
 
-### Using `optim()` with BFGS
+## Using `optim()` with BFGS
 
 ```{r BFGS, dependson="implement_H", cache = TRUE}
 bench::bench_time(
@@ -919,7 +1119,7 @@ pois_BFGS$value
 pois_BFGS$counts
 ```
 
-### Using Sparse Matrices
+## Using Sparse Matrices
 
 ```{r Matrix, message=FALSE, cache=FALSE}
 library(Matrix)
@@ -949,15 +1149,15 @@ bench::bench_time(
 range(pois_BFGS$par - pois_BFGS_sparse$par)
 ```
 
-### Implementation
+## Implementation
 
 ```{r GD, cache = TRUE}
-source(here::here("R/optim_alg.R"))
+source(here::here("R", "optim_alg.R"))
 ```
 
 [Source code](R/optim_alg.R)
 
-### Poisson Regression Problem
+## Poisson Regression Problem
 
 ```{r poisson-def}
 poisson_model <- function(form, data, response) {
@@ -983,14 +1183,23 @@ poisson_model <- function(form, data, response) {
 }
 ```
 
-### Test
+## Test
 
 Gradient descent is very slow for the full Poisson model, so we consider a much
 smaller problem.
 
 ```{r GD-test, dependson=c("Implement", "GD"), cache = TRUE}
-veg_pois <- poisson_model(~ log(normalSale), vegetables, response = "sale")
-pois_gd <- gradient_descent(veg_pois$par, veg_pois$H, veg_pois$grad_H)
+veg_pois <- poisson_model(
+  ~ log(normalSale),
+  vegetables,
+  response = "sale"
+)
+
+pois_gd <- gradient_descent(
+  veg_pois$par,
+  veg_pois$H,
+  veg_pois$grad_H
+)
 ```
 
 . . .
@@ -1002,7 +1211,7 @@ rbind(pois_glm = coefficients(pois_glm), pois_gd)
 options(digits = old_options$digits)
 ```
 
-### Test
+## Test
 
 ```{r GD-object, dependson=c("Implement", "GD-test"), echo=2:3}
 old_options <- options(digits = 15)
@@ -1011,7 +1220,7 @@ veg_pois$H(pois_gd)
 options(digits = old_options$digits)
 ```
 
-### Tracer
+## Tracer
 
 ```{r GD-trace, dependson=c("GD-test", "vegetables-data"), results='hide', echo=-3, cache = TRUE, message = FALSE, warning = FALSE}
 library(CSwR)
@@ -1030,7 +1239,7 @@ pois_gd <- gradient_descent(
 )
 ```
 
-### Trace Information
+## Trace Information
 
 ```{r trace-sum, dependson=c("GD-trace", "pois-trace"), cache = TRUE}
 trace_sum_gd <- summary(gd_tracer)
@@ -1044,7 +1253,7 @@ tail(trace_sum_gd, 3)
 val_min <- veg_pois$H(coefficients(pois_glm))
 ```
 
-### Trace Information
+## Trace Information
 
 ```{r trace-info, warning=FALSE}
 ggplot(trace_sum_gd, aes(.time, value - val_min)) +
@@ -1052,7 +1261,7 @@ ggplot(trace_sum_gd, aes(.time, value - val_min)) +
   scale_y_log10()
 ```
 
-### Trace Information
+## Trace Information
 
 ```{r trace-sum3}
 ggplot(trace_sum_gd, aes(.time, h_prime)) +
@@ -1070,7 +1279,7 @@ profvis(
 )
 ```
 
-### Newton Method
+## Newton Method
 
 ```{r pois2, cache = TRUE}
 veg_pois <- poisson_model(
@@ -1091,7 +1300,7 @@ system.time(
 )
 ```
 
-### Test
+## Test
 
 ```{r Newton-comp, dependson="Newton-test", cache = TRUE}
 pois_glm <- glm(
@@ -1115,7 +1324,7 @@ options(digits = old_options$digits)
 
 `glm()` (and the workhorse `glm.fit()`) uses a Newton-type algorithm.
 
-### Tracing
+## Tracing
 
 ```{r Newton-trace, cache = TRUE}
 newton_tracer <- tracer(
@@ -1140,7 +1349,7 @@ pois_gd <- gradient_descent(
 )
 ```
 
-### Tracing
+## Tracing
 
 ```{r Newton-summary-trace, dependson="Newton-trace", cache = TRUE}
 trace_sum_newton <- summary(newton_tracer)
@@ -1148,9 +1357,12 @@ val_min <- veg_pois$H(pois_newton)
 trace_sum_newton
 ```
 
-### Newton Convergence
+## Newton Convergence
 
-```{r trace-sum-Newton, warning=FALSE, dependson="Newton-summary-trace", fig.width = 11, echo = FALSE}
+```{r trace-sum-Newton, warning=FALSE, dependson="Newton-summary-trace"}
+#| echo: false
+#| fig-width: 5.4
+#| fig-height: 3
 pl1 <- ggplot(trace_sum_newton, aes(.time, value - val_min)) +
   geom_point() +
   geom_line() +
@@ -1176,23 +1388,6 @@ profvis(
 )
 ```
 
-## Exercise
-
-### Step 1
-
-Implement the gradient descent algorithm to solve ridge regression:
-$$
-\operatorname{minmize}_{\beta \in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lambda \lVert \beta \rVert_2^2}{2} \right)
-$$
-
-. . .
-
-### Step 2
-
-Implement a method for solving ridge regression directly.
-
-Explicitly factorize (i.e. don't use `solve()`)
-
 ## Summary
 
 ### Today
@@ -1210,3 +1405,21 @@ Explicitly factorize (i.e. don't use `solve()`)
 - Conjugate gradient
 - Constrained optimization
 - Nonsmooth objectives
+
+## Exercise
+
+### Step 1
+
+Implement the gradient descent algorithm to solve ridge regression:
+$$
+\operatorname{minmize}_{\beta \in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lambda \lVert \beta \rVert_2^2}{2} \right)
+$$
+
+. . .
+
+### Step 2
+
+Implement a method for solving ridge regression directly.
+
+Explicitly factorize (i.e. don't use `solve()`)
+
