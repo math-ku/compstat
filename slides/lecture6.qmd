@@ -974,7 +974,7 @@ improves efficiency.
 
 Suppose that
 $$
-X \sim \mathcal{N}(0, I_{10})
+X \sim \mathcal{N}(0, I_{2})
 $$
 and that we want to estimate $\operatorname{E}[f(X)]$ where $f(X)$ is large near
 the origin.
@@ -983,7 +983,7 @@ the origin.
 
 If we use a importance density $g(x)$ from
 $$
-\mathcal{N}(\mu, I_{10})
+\mathcal{N}(\mu, I_{2})
 $$
 with large $|\mu|$, most samples are far from the origin, so $f(X)$ is nearly
 zero and weights are highly variable.
