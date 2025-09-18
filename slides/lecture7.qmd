@@ -40,11 +40,9 @@ vegetables <- read.table(
 
 ## Optimization
 
-- ## Optimization is the process of trying to optimize an objective function $f$.
-
+- Optimization is the process of trying to optimize an objective function $f$.
 - Typically, we are interested in either **minimizing** or **maximizing** the
-  function. --
-
+  function.
 - Since minimizing $f$ is equivalent to maximizing $-f$, we will focus on
   minimization.
 
@@ -79,7 +77,9 @@ where
 
 ### Solution
 
-$$x^* = \operatorname{argmin}_x f(x)$$
+$$
+x^* = \operatorname{argmin}_x f(x)
+$$
 
 ### Example: OLS
 
@@ -88,7 +88,7 @@ Ordinary least squares is an optimization problem.
 In standard form, it is
 
 $$
-  \begin{aligned}
+\begin{aligned}
   &\operatorname*{minimize}_{\beta \in \mathbb{R}^p}     &&f(\beta) = \frac{1}{2} \lVert y - X\beta\rVert_2^2.
   \end{aligned}
 $$
@@ -97,7 +97,9 @@ $$
 
 ### Solution
 
-$$\beta^* = \operatorname{argmin}_{\beta \in \mathbb{R}^p} f(\beta).$$
+$$
+\beta^* = \operatorname{argmin}_{\beta \in \mathbb{R}^p} f(\beta).
+$$
 
 # Types of Problems
 
@@ -141,14 +143,18 @@ where $f$ and $g_i$ are convex.
 
 A function $f$ is convex iff for all $x, y \in \operatorname{dom} f$ and
 $\lambda \in [0, 1]$
-$$f(\lambda x + (1 - \lambda) y) \leq \lambda f(x) + (1 - \lambda) f(y).$$
+$$
+f(\lambda x + (1 - \lambda) y) \leq \lambda f(x) + (1 - \lambda) f(y).
+$$
 
 . . .
 
 #### First-Order Conditions
 
 If $f$ is **differentiable**, then the condition is equivalent to
-$$f(y) \geq f(x) + \nabla f(x)^T(y - x).$$
+$$
+f(y) \geq f(x) + \nabla f(x)^T(y - x).
+$$
 
 ### Optimality
 
@@ -157,15 +163,19 @@ Any (local) minimum is **global** (but not neccessarily unique).
 #### First-Order Conditions
 
 For differentiable $f$, $x$ is optimal iff
-$$\nabla f(x)^T(y - x) \geq 0\quad\text{for all}\quad y \in C,$$ where $C$ is
-the feasible set.
+$$
+\nabla f(x)^T(y - x) \geq 0\quad\text{for all}\quad y \in C,
+$$
+where $C$ is the feasible set.
 
 . . .
 
 #### Second-Order Conditions
 
 If $f$ is twice-differentiable, then $x$ is optimal iff
-$$\nabla^2f(x) \succeq 0.$$
+$$
+\nabla^2f(x) \succeq 0.
+$$
 
 ### Quasiconvex Optimization Problems
 
@@ -321,7 +331,11 @@ Analytical solution, up to machine precision.
 
 #### Example: OLS
 
-Solve $$X^TX \beta = X^Ty$$ for $\beta \in \mathbb{R}^p$.
+Solve
+$$
+X^TX \beta = X^Ty
+$$
+for $\beta \in \mathbb{R}^p$.
 
 How do you solve this in practice? In R you simply call
 
@@ -377,8 +391,11 @@ Use the gradient of the function (**first** derivative).
 
 The quintessential first-order method
 
-Repeat until convergence: $$x^{(k+1)} = x^{(k)} - t \nabla f(x^{(k)}).$$ with
-$t > 0$ being the step size.
+Repeat until convergence:
+$$
+x^{(k+1)} = x^{(k)} - t \nabla f(x^{(k)}).
+$$
+with $t > 0$ being the step size.
 
 . . .
 
@@ -391,7 +408,9 @@ $t > 0$ being the step size.
 ### Derivation of Update
 
 Take the second-order Taylor expansion of $f$ around $x$:
-$$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).$$
+$$
+f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).
+$$
 
 . . .
 
@@ -400,7 +419,9 @@ $$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \
 ::: {.column width="47%"}
 
 Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize w.r.t $y$ to get
-$$x^+ = x - t\nabla f(x).$$
+$$
+x^+ = x - t\nabla f(x).
+$$
 
 But how do we choose $t$?
 
@@ -432,7 +453,9 @@ But how do we choose $t$?
 
 For gradient descent with step size $t \leq 1/L$ and Lipschitz constant of
 $\nabla f$ being $L$, we have
-$$f(x^{(k)}) - f(x^*) \leq \frac{1}{2tk} \lVert x^{(0)} - x^*\rVert_2^2.$$
+$$
+f(x^{(k)}) - f(x^*) \leq \frac{1}{2tk} \lVert x^{(0)} - x^*\rVert_2^2.
+$$
 
 . . .
 
@@ -446,8 +469,11 @@ Convergence rate: $O(1/k)$.
 
 #### Lipschitz Constant
 
-If $$\lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2$$ then
-$L$ is the Lipschitz constant of $\nabla f$.
+If
+$$
+\lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2
+$$
+then $L$ is the Lipschitz constant of $\nabla f$.
 
 :::
 
@@ -461,7 +487,9 @@ $L$ is the Lipschitz constant of $\nabla f$.
 
 ### Example: OLS
 
-$$L = \lVert X^TX \rVert_2$$
+$$
+L = \lVert X^TX \rVert_2
+$$
 
 . . .
 
@@ -473,15 +501,20 @@ In practice, we may not know $L$ or it may be difficult to compute.
 
 #### Exact Line Search
 
-It may be tempting to try to solve $$t^* = \arg_t\min f(x - t\nabla f(x))$$ but
-this is typically too expensive.
+It may be tempting to try to solve
+$$
+t^* = \arg_t\min f(x - t\nabla f(x))
+$$
+but this is typically too expensive.
 
 ### Backtracking Line Search
 
 Set $\beta \in (0, 1)$ and $\alpha \in (0, 1/2]$. At each iteration, start with
 $t \gets t_0$, and while
-$$f(x - t \nabla f(x)) > f(x) - \alpha t \lVert \nabla f(x)\rVert_2^2$$ set
-$t = t \beta.$
+$$
+f(x - t \nabla f(x)) > f(x) - \alpha t \lVert \nabla f(x)\rVert_2^2
+$$
+set $t = t \beta.$
 
 ![](../images/backtrack-line-search.png){width=65%}
 
@@ -498,10 +531,11 @@ $t = t \beta.$
 #### Common (ad-hoc) choices
 
 - Small gradient: $$\lVert \nabla f(x) \rVert_r \leq \epsilon$$
-- Small relative change in $x$:
-  $$\frac{\lVert x^{(k+1)} - x^{(k)} \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2} \leq \epsilon$$
-- Small relative change in $f$:
-  $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})} \leq \epsilon$$
+- Small relative change in $x$: $$
+  \frac{\lVert x^{(k+1)} - x^{(k)} \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2}
+  \leq \epsilon$$
+- Small relative change in $f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
+  \leq \epsilon$$
 
 :::
 
@@ -527,7 +561,9 @@ Sensitive to conditioning.
 ## Newton's Method
 
 Recall second-order expansion of $f$ around $x$:
-$$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).$$
+$$
+f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).
+$$
 
 . . .
 
@@ -539,7 +575,9 @@ $$f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \
 
 Instead of replacing $\nabla^2 f(x)$ with $\frac{1}{t} I$ (gradient descent
 update), minimize $\hat{f}(y)$ directly:
-$$x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).$$
+$$
+x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).
+$$
 
 :::
 
@@ -554,8 +592,10 @@ $$x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).$$
 ### Damped Newton
 
 In practice this might not converge, so we use **damped** Newton:
-$$x^+ = x - t\nabla^2 f(x)^{-1} \nabla f(x),$$ with $t > 0$ chosen by
-backtracking line search.
+$$
+x^+ = x - t\nabla^2 f(x)^{-1} \nabla f(x),
+$$
+with $t > 0$ chosen by backtracking line search.
 
 . . .
 
@@ -568,8 +608,13 @@ In practice, this is often just called Newton's method.
 #### Backtracking Line Search
 
 At each iteration $t \gets 1$ and while
-$$f(x + t v) > f(x) + \alpha t \nabla f(x)^T v$$ with
-$v = -(\nabla^2 f(x)^{-1} \nabla f(x))$ set $$t \gets \beta t.$$
+$$
+f(x + t v) > f(x) + \alpha t \nabla f(x)^T v
+$$
+with $v = -(\nabla^2 f(x)^{-1} \nabla f(x))$ set
+$$
+t \gets \beta t.
+$$
 
 :::
 
@@ -654,13 +699,17 @@ Same complexity but lower memory cost.
 
 Consider observations $y_i \in \mathbb{N}_0$, $x_i \in \mathbb{R}^p$ for
 $i = 1, \ldots, n$, and Poisson point probabilities
-$$f_i(y_i) = e^{-\mu(x_i)} \frac{\mu(x_i)^{y_i}}{y_i!}.$$
+$$
+f_i(y_i) = e^{-\mu(x_i)} \frac{\mu(x_i)^{y_i}}{y_i!}.
+$$
 
 . . .
 
 If $\log(\mu(x_i)) = x_i^T \beta$ we rewrite
 
-$$f_i(y_i) = e^{\beta^T x_i y_i - \exp( x_i^T \beta)} \frac{1}{y_i!}.$$
+$$
+f_i(y_i) = e^{\beta^T x_i y_i - \exp( x_i^T \beta)} \frac{1}{y_i!}.
+$$
 
 This is a _Poisson regression model_.
 
@@ -673,7 +722,9 @@ dim(vegetables)
 
 ### Model
 
-$$\log(E(\text{sale})) = \beta_0 + \beta_1 \log(\text{normalSale}) + \beta_{\text{store}}.$$
+$$
+\log(E(\text{sale})) = \beta_0 + \beta_1 \log(\text{normalSale}) + \beta_{\text{store}}.
+$$
 
 . . .
 
@@ -699,17 +750,25 @@ options(digits = old_options$digits)
 ### Exponential Families
 
 Joint density:
-$$f(\symbf{y} \mid \theta) = \prod_{i=1}^n \frac{1}{\varphi_i(\theta)} e^{\theta^T t_i(y_i)} = e^{\theta^T \sum_{i=1}^n t_i(y_i) - \sum_{i=1}^n \kappa_i(\theta)}$$
+$$
+f(\symbf{y} \mid \theta) = \prod_{i=1}^n \frac{1}{\varphi_i(\theta)} e^{\theta^T t_i(y_i)} = e^{\theta^T \sum_{i=1}^n t_i(y_i) - \sum_{i=1}^n \kappa_i(\theta)}
+$$
 where $\varphi_i(\theta) = \int e^{\theta^T t_i(u)} \mu_i(\mathrm{d}u)$ and
 $\kappa_i(\theta) = \log(\varphi_i(\theta)).$ The log-likelihood is
-$$\ell(\theta) = \theta^T t(\symbf{y}) - \kappa(\theta)$$ where
+$$
+\ell(\theta) = \theta^T t(\symbf{y}) - \kappa(\theta)
+$$
+where
 
 $$
 t(\symbf{y}) = \sum_{i=1}^m t_i(y_i) \quad \text{and} \quad
 \kappa(\theta) = \sum_{i=1}^m \log \varphi_i(\theta).
 $$
 
-The gradient is $$\nabla \ell(\theta) = t(\symbf{y}) - \nabla \kappa(\theta).$$
+The gradient is
+$$
+\nabla \ell(\theta) = t(\symbf{y}) - \nabla \kappa(\theta).
+$$
 
 ### The Poisson Regression model
 
@@ -721,10 +780,14 @@ t(\symbf{y}) = \sum_{i=1}^n x_i y_i = \symbf{X}^T \symbf{y} \quad \text{and} \qu
 $$
 
 Moreover,
-$$\nabla \kappa(\beta) = \sum_{i=1}^n x_i e^{x_i^T \beta} = \symbf{X}^T \symbf{w}(\beta)$$
-where $$ \symbf{w}(\beta) = \exp(\symbf{X}^T \beta)$$
-with $\exp$ applied
-coordinatewisely.
+$$
+\nabla \kappa(\beta) = \sum_{i=1}^n x_i e^{x_i^T \beta} = \symbf{X}^T \symbf{w}(\beta)
+$$
+where
+$$
+\symbf{w}(\beta) = \exp(\symbf{X}^T \beta)
+$$
+with $\exp$ applied coordinatewisely.
 
 ### Model Matrix and `glm.fit()`
 
@@ -775,7 +838,9 @@ pois_fit <- glm.fit(X, y, family = poisson(), control = list(trace = TRUE))
 
 ### Stopping criterion
 
-$$|\mathrm{deviance}_{n-1} - \mathrm{deviance}_n| < \varepsilon (\mathrm{deviance}_n + 0.1)$$
+$$
+|\mathrm{deviance}_{n-1} - \mathrm{deviance}_n| < \varepsilon (\mathrm{deviance}_n + 0.1)
+$$
 with the default tolerance parameter $\varepsilon = 10^{-8}$ and with a maximal
 number of iterations set to 25.
 
@@ -1116,7 +1181,9 @@ profvis(
 ### Step 1
 
 Implement the gradient descent algorithm to solve ridge regression:
-$$\operatorname{minmize}_{\beta \in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lambda \lVert \beta \rVert_2^2}{2} \right)$$
+$$
+\operatorname{minmize}_{\beta \in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lambda \lVert \beta \rVert_2^2}{2} \right)
+$$
 
 . . .
 
