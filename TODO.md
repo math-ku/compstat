@@ -40,7 +40,7 @@ format: html
 - Remove or simplify variance estimator for the normalized importance sampling
   estimator. Or at least remove the code for it.
 
-## Lecture 8: Optimization
+## Lecture 7: Optimization
 
 - Too much material! Consider making Poisson example simpler.
 - Or maybe move likelihood optimization to lecture 9 instead?
@@ -48,12 +48,12 @@ format: html
   of likelihood
 - Maybe move reading about likelihood optimization to next lecture
 
-## Lecture 9: Debugging and Likelihood Optimization
+## Lecture 8: Debugging and Likelihood Optimization
 
 - Make it easier for them to debug: put required functions and initialization of
   data in a script.
 
-## Lecture 10: The EM Algorithm
+## Lecture 9: The EM Algorithm
 
 - The function that's called the E step for the moth problem is not actually the
   E step, but rather just the expected counts of genotypes.
@@ -65,6 +65,6 @@ format: html
   measure-theoretic stuff and use the unobserved/latent variable assumption
   instead.
 
-## Lecture 11: EM Examples
+## Lecture 10: EM Examples
 
 - First exercise is maybe too difficult. Help them more somehow.
