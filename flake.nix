@@ -43,6 +43,7 @@
             numDeriv
             patchwork
             profvis
+            reshape2
             Rcpp
             RcppArmadillo
             ggbeeswarm
