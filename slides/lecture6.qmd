@@ -211,7 +211,7 @@ functions for Chernoff-based bounds.
 
 \medskip\pause
 
-More commonly, just run until the confidence interval is sufficiently narrow.
+More commonly, just run until the empirical confidence interval is sufficiently narrow.
 
 . . .
 
@@ -405,9 +405,9 @@ p
 
 Again by the LLN
 $$
-\hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1) = \mu,
+\hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1) = \mu  \quad \text{as } n \to \infty.\pause
 $$
-and by the CLT
+And by the CLT
 $$
 \hat{\mu}_{\mathrm{IS}}^* \overset{\mathrm{approx}} \sim
 \mathcal{N}(\mu, \sigma^{*2}_{\mathrm{IS}} / n)
@@ -679,9 +679,8 @@ Note that g is still the normalized density.
 
 An importance sampling estimate of $\mu$ is thus
 $$
-\begin{aligned} \hat{\mu}_{\mathrm{IS}} & = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \\ \pause
-                                        & = \sum_{i=1}^n h(X_i) w(X_i),
-\end{aligned}
+\hat{\mu}_{\mathrm{IS}} = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \pause
+                        = \sum_{i=1}^n h(X_i) w(X_i),
 $$
 where $w^*(X_i) = q(X_i) / g(X_i)$ and
 $$
@@ -696,8 +695,8 @@ an unnormalized $g$ is used.
 
 ## Gamma Sampling with Normalized Weights
 
-Let's pretend that we do not know the normalizing constant of the target (
-$\mathrm{Gamma}(8,1)$) and importance ($\normal(10, 3^2)$) distributions. Then
+Let's pretend that we do not know the normalizing constant of the target
+($\mathrm{Gamma}(8,1)$) and importance ($\normal(10, 3^2)$) distributions. Then
 $$
 w^*(x) = \frac{x^7 \exp(-x)}{\exp{\left(-\frac{(x-10)^2}{18}\right)}}
        = \exp\left(\frac{(x-10)^2}{18} - x + 7 \log(x)\right).
@@ -726,6 +725,14 @@ mu_hat_IS[B] # Theoretical value 8
 #|   Gamma(8,1) distribution using normalized weights."
 p <- tibble(x = 1:B, y = mu_hat_IS) |>
   ggplot(aes(x, y)) +
+  geom_ribbon(
+    aes(
+      ymin = mu_hat_IS - 1.96 * sigma_hat_IS / sqrt(1:B),
+      ymax = mu_hat_IS + 1.96 * sigma_hat_IS / sqrt(1:B)
+    ),
+    fill = "dark orange",
+    alpha = 0.4
+  ) +
   geom_line() +
   geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10)) +
@@ -787,6 +794,10 @@ estimates. For $c \neq 1$ it is necessary to estimate $c$ as
 $$
 \hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)
 $$
+
+\pdfpcnote{
+hat(c) is just the MC estimate of c.
+}
 
 ##
 
@@ -894,7 +905,8 @@ p +
       ymin = mu_hat_IS - 1.96 * sigma_hat_IS_w / sqrt(1:B),
       ymax = mu_hat_IS + 1.96 * sigma_hat_IS_w / sqrt(1:B)
     ),
-    fill = "gray"
+    fill = "darkorange",
+    alpha = 0.4
   ) +
   geom_line() +
   geom_point(size = 0.5)
@@ -1358,6 +1370,10 @@ $$
 \end{aligned}
 $$
 
+\pdfpcnote{
+This can be extended to multivariate targets using weighted covariance.
+}
+
 ##
 
 ```{r}
@@ -1714,7 +1730,7 @@ mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
 . . .
 
 ```{r}
-c(sd(tmp), sqrt(mu_hat * (1 - mu_hat))) # Estimated standard deviations
+c(sd(tmp), sqrt(mu_hat * (1 - mu_hat))) # Est. standard deviations
 ```
 
 ## Comparison
