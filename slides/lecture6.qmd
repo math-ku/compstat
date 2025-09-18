@@ -446,7 +446,7 @@ Choose $g$ so that $|h(x)| w^*(x)$ becomes as constant as possible.
 
 ```{r gamma-IS-sd, echo=TRUE}
 sigma_hat_IS <- sd(x * w_star)
-sigma_hat_IS # Theoretical value?
+sigma_hat_IS
 ```
 
 . . .
@@ -460,7 +460,8 @@ p +
       ymin = mu_hat_IS - 1.96 * sigma_hat_IS / sqrt(1:B),
       ymax = mu_hat_IS + 1.96 * sigma_hat_IS / sqrt(1:B)
     ),
-    fill = "gray"
+    fill = "darkorange",
+    alpha = 0.4
   ) +
   geom_line() +
   geom_point(size = 0.5)
