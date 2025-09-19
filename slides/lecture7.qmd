@@ -452,7 +452,7 @@ add_jensens_line <- function(df, func) {
   x2 <- 0.1
   y1 <- func(x1)
   y2 <- func(x2)
-  df %>%
+  df |>
     mutate(
       jensens_y = ifelse(
         x >= x1 & x <= x2,
@@ -920,8 +920,10 @@ gd_taylor_illustration(
 #| fig-width: 5
 #| fig-height: 3.25
 #| fig-cap: The step size is too small!
-step_size_illustration <- function(t = NULL, maxit = 35) {
-  res <- gd(x, y, t = t, maxit = maxit)
+source(here::here("R", "gradient_descent.R"))
+
+step_size_illustration <- function(t = NULL, maxit = 35, line_search = FALSE) {
+  res <- gd(x, y, t = t, maxit = maxit, line_search = line_search)
   df <- t(res$betas)
   colnames(df) <- c("beta1", "beta2")
 
@@ -933,7 +935,6 @@ step_size_illustration <- function(t = NULL, maxit = 35) {
 step_size_illustration(0.0003)
 ```
 
-
 ##
 
 ```{r}
@@ -943,7 +944,6 @@ step_size_illustration(0.0003)
 #| fig-cap: The step size is too large!
 step_size_illustration(0.0115, maxit = 35)
 ```
-
 
 ##
 
@@ -1001,12 +1001,83 @@ but this is typically too expensive.
 
 ## Backtracking Line Search
 
-Set $\beta \in (0, 1)$ and $\alpha \in (0, 1/2]$. At each iteration, start with
+Set $\gamma \in (0, 1)$ and $\alpha \in (0, 1/2]$. At each iteration, start with
 $t \gets t_0$, and while
 $$
 f(x - t \nabla f(x)) > f(x) - \alpha t \lVert \nabla f(x)\rVert_2^2
 $$
-set $t = t \beta.$
+set $t = t \gamma$
+
+. . .
+
+```{r}
+#| fig-width: 4.5
+#| echo: false
+#| fig-cap: An illustration of backtracking line search.
+# show a illustration of backtracking line search
+# that shows how the check work on a simple one-dimensional function
+# with a tangent line and the next step
+backracking_illustration <- function() {
+  f <- function(x) (x - 2)^2 + 1
+  f_prime <- function(x) 2 * (x - 2)
+
+  x <- 0.5
+  alpha <- 0.3
+  gamma <- 0.5
+  t <- seq(-0.2, 1, length.out = 102)
+
+  df <- data.frame(
+    t = t,
+    f1 = f(x - t * f_prime(x)),
+    f2 = f(x) - t * f_prime(x)^2,
+    f3 = f(x) - alpha * t * f_prime(x)^2
+  )
+
+  labels <- c(
+    f1 = expression(f(x - t * nabla * f(x))),
+    f2 = expression(f(x) - t * nabla * group("||", f(x), "||")[2]^2),
+    f3 = expression(f(x) - t * alpha * nabla * group("||", f(x), "||")[2]^2)
+  )
+
+  df_long <- df |>
+    pivot_longer(
+      cols = c("f1", "f2", "f3"),
+      names_to = "type",
+      values_to = "y"
+    ) |>
+    filter(!(t < 0 & (type == "f2" | type == "f3")))
+
+  ggplot(df_long, aes(t, y)) +
+    geom_line(aes(color = type, linetype = type)) +
+    labs(
+      y = expression(f(t)),
+      x = "t"
+    ) +
+    scale_y_continuous(limits = c(-2, 5)) +
+    scale_color_manual(
+      values = c(f1 = "black", f2 = "grey50", f3 = "steelblue"),
+      labels = labels
+    ) +
+    scale_linetype_manual(
+      values = c(f1 = "solid", f2 = "dotted", f3 = "dotted"),
+      labels = labels
+    ) +
+    labs(color = NULL, linetype = NULL)
+}
+backracking_illustration()
+```
+
+##
+
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.25
+#| fig-cap: "Backtracking line search."
+step_size_illustration(line_search = TRUE)
+```
+
+##
 
 ![Backtracking line search.](../images/backtrack-line-search.png){width=65%}
 

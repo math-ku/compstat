@@ -3,16 +3,20 @@ gd <- function(
   y,
   mu = 0,
   t = NULL,
+  line_search = FALSE,
   maxit = 100
 ) {
   loss <- double(maxit)
 
   p <- ncol(X)
 
-  L <- norm(crossprod(X), "2")
-
   if (is.null(t)) {
+    L <- norm(crossprod(X), "2")
     t <- 1 / L
+  }
+
+  if (line_search) {
+    t <- 1
   }
 
   betas <- matrix(
@@ -21,9 +25,24 @@ gd <- function(
     ncol = maxit
   )
 
+  loss[1] <- 0.5 * norm(y - X %*% betas[, 1], "2")^2
+
   for (k in 2:maxit) {
     eta <- X %*% betas[, k - 1]
     gradient <- crossprod(X, eta - y)
+
+    keep_going <- TRUE
+
+    while (line_search && keep_going) {
+      new_eta <- X %*% (betas[, k - 1] - t * gradient)
+      new_loss <- 0.5 * norm(y - new_eta, "2")^2
+
+      if (new_loss <= loss[k - 1] - (t / 2) * norm(gradient, "2")^2) {
+        keep_going <- FALSE
+      } else {
+        t <- t / 2
+      }
+    }
 
     betas[, k] <- betas[, k - 1] -
       t * gradient +
