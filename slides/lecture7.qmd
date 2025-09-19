@@ -514,6 +514,145 @@ is met.
 
 . . .
 
+## Running Example: OLS
+
+```{r}
+#| echo: false
+source(here::here("R", "gradient_descent.R"))
+
+library(mvtnorm)
+library(plot3D)
+
+set.seed(24)
+
+Sigma <- matrix(c(1, 0.8, 0.8, 1), 2, 2)
+x <- rmvnorm(100, sigma = Sigma)
+
+colnames(x) <- c("x1", "x2")
+
+beta <- c(1, 2)
+
+y <- x %*% beta
+
+beta1_grid <- seq(-1, 4, length.out = 51)
+beta2_grid <- seq(-1, 4, length.out = 51)
+
+beta1_grid_persp <- seq(-1, 4, length.out = 21)
+beta2_grid_persp <- seq(-1, 4, length.out = 21)
+
+x_df <- as_tibble(x)
+
+x_long <- x_df |>
+  tidyr::pivot_longer(everything(), names_to = "parameter")
+
+f <- function(beta, x, y) {
+  norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
+}
+
+f_vals <- outer(
+  beta1_grid,
+  beta2_grid,
+  Vectorize(function(b1, b2) f(c(b1, b2), x, y))
+)
+
+f_vals_persp <- outer(
+  beta1_grid_persp,
+  beta2_grid_persp,
+  Vectorize(function(b1, b2) f(c(b1, b2), x, y))
+)
+
+colnames(f_vals) <- beta1_grid
+rownames(f_vals) <- beta2_grid
+colnames(f_vals_persp) <- beta1_grid_persp
+rownames(f_vals_persp) <- beta2_grid_persp
+
+optimum_df <- tibble(beta1 = beta[1], beta2 = beta[2])
+
+beta_df <- tibble(
+  beta1 = rep(beta1_grid, times = ncol(f_vals)),
+  beta2 = rep(beta1_grid, each = nrow(f_vals)),
+  f = as.vector(f_vals)
+)
+
+beta_df_persp <- tibble(
+  beta1 = rep(beta1_grid_persp, times = ncol(f_vals_persp)),
+  beta2 = rep(beta1_grid_persp, each = nrow(f_vals_persp)),
+  f = as.vector(f_vals_persp)
+)
+```
+
+We are going to use a simple example of OLS as a running example.
+
+\medskip\pause
+
+We will let $p=2$, and generate some data from a multivariate normal
+distribution:
+$$
+\symbf{x} \sim \normal(
+  \symbf{\mu} = \begin{bmatrix}1 \\ 1\end{bmatrix},
+  \symbf{\Sigma} = \begin{bmatrix}1 & 0.8 \\ 0.8 & 1\end{bmatrix}
+)
+$$
+
+##
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r}
+#| fig-width: 4
+#| fig-height: 4
+#| echo: false
+persp3D(
+  beta1_grid,
+  beta2_grid,
+  f_vals,
+  theta = 30,
+  phi = 30,
+  expand = 0.5,
+  border = "black",
+  col = "steelblue1",
+  xlab = "B1",
+  ylab = "B2",
+  zlab = "f"
+)
+```
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+#| fig-height: 2.8
+#| echo: false
+
+contour_scale <- scale_color_gradient(
+  low = "grey50",
+  high = "grey80",
+  guide = NULL
+)
+
+# And a ggplot2 contoour plot
+base_plot <- ggplot(beta_df, aes(beta1, beta2)) +
+  contour_scale +
+  geom_point(
+    data = optimum_df,
+    color = "darkorange",
+    size = 3,
+    pch = 4
+  ) +
+  labs(x = expression(beta[1]), y = expression(beta[2])) +
+  coord_fixed(xlim = c(-1, 4), ylim = c(-1, 4), expand = FALSE) +
+  geom_contour(aes(z = f, color = after_stat(level)), bins = 25)
+
+base_plot
+```
+
+:::
+
+::::
+
 ## Direct Methods
 
 Analytical solution, up to machine precision.
@@ -606,6 +745,57 @@ The quintessential first-order method
 ```{r}
 #| echo: false
 
+# illustration of how gradient descent works,
+# with a simple one-dimensional function, showing the
+# tangent line at say, two steps
+gd_illustration <- function(f, f_prime, x0, t, n_steps) {
+  x_vals <- numeric(n_steps + 1)
+  x_vals[1] <- x0
+
+  for (i in 1:n_steps) {
+    x_vals[i + 1] <- x_vals[i] - t * f_prime(x_vals[i])
+  }
+
+  df <- data.frame(
+    x = seq(min(x_vals) - 0.5, max(x_vals) + 1, length.out = 100),
+    y = f(seq(min(x_vals) - 0.5, max(x_vals) + 1, length.out = 100))
+  )
+
+  points_df <- data.frame(
+    step = 0:n_steps,
+    x = x_vals,
+    y = f(x_vals)
+  )
+
+  ggplot(df, aes(x, y)) +
+    geom_line() +
+    geom_point(data = points_df, aes(x, y)) +
+    geom_segment(
+      data = points_df[-nrow(points_df), ],
+      aes(
+        x = x + 0.1 * f_prime(x),
+        y = y + 0.1 * f_prime(x) * f_prime(x),
+        xend = x - t * f_prime(x),
+        yend = y - t * f_prime(x) * f_prime(x)
+      ),
+      arrow = arrow(length = unit(0.2, "cm")),
+      color = "steelblue"
+    ) +
+    geom_point(
+      aes(x, y),
+      data = tibble(x = 2, y = f(2)),
+      color = "darkorange"
+    ) +
+    labs(y = expression(f(x)), x = "x")
+}
+
+gd_illustration(
+  f = function(x) (x - 2)^2 + 1,
+  f_prime = function(x) 2 * (x - 2),
+  x0 = 0,
+  t = 0.2,
+  n_steps = 3
+)
 ```
 
 :::
@@ -639,13 +829,85 @@ $$
 x^+ = x - t\nabla f(x).
 $$
 
+### Step Size? {.alert}
+
 But how do we choose $t$?
 
 :::
 
 ::: {.column width="47%"}
 
-![](../images/gd-approx.png){width=85%}
+```{r}
+#| echo: false
+# show a illustration of this taylor expansion, and the fact that the
+# gradient descent step is the minimizer of this taylor expansion
+gd_taylor_illustration <- function(f, f_prime, x0, t) {
+  x_vals <- seq(x0 - 0.5, x0 + 1.5, length.out = 100)
+  df <- data.frame(
+    x = x_vals,
+    y = f(x_vals),
+    taylor = f(x0) + f_prime(x0) * (x_vals - x0) + (x_vals - x0)^2 / (2 * t)
+  )
+
+  df_long <- df |>
+    pivot_longer(
+      cols = c("y", "taylor"),
+      names_to = "type",
+      values_to = "value"
+    )
+
+  taylor_min <- tibble(
+    x = df$x[which.min(df$taylor)],
+    y = min(df$taylor)
+  )
+
+  next_step <- tibble(
+    x = c(x0, x0 - t * f_prime(x0)),
+    y = c(f(x0), f(x0 - t * f_prime(x0)))
+  )
+
+  ggplot(df_long, aes(x)) +
+    geom_line(aes(y = value, color = type, linetype = type)) +
+    geom_point(aes(x, y), data = taylor_min, color = "steelblue") +
+    geom_point(aes(x, y), data = next_step, color = "black") +
+    geom_text(
+      aes(x, y),
+      data = next_step,
+      nudge_x = -0.1,
+      nudge_y = -0.35,
+      label = c("x", expression(x^"+"))
+    ) +
+    scale_color_manual(
+      values = c(y = "black", taylor = "steelblue"),
+      labels = c(
+        y = expression(f(x)),
+        taylor = expression(hat(f)(x))
+      )
+    ) +
+    scale_linetype_manual(
+      values = c(y = "solid", taylor = "dashed"),
+      labels = c(
+        y = expression(f(x)),
+        taylor = expression(hat(f)(x))
+      )
+    ) +
+    labs(
+      y = expression(f(x)),
+      x = "x",
+      color = NULL,
+      linetype = NULL
+    ) +
+    theme_void()
+}
+
+gd_taylor_illustration(
+  f = function(x) (x - 2)^2 + 1,
+  f_prime = function(x) 2 * (x - 2),
+  x0 = 0,
+  t = 0.2
+)
+```
+
 
 :::
 
@@ -653,15 +915,45 @@ But how do we choose $t$?
 
 ##
 
-![Step size is too small](../images/gd-stepsize-small.png){width=50%}
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.25
+#| fig-cap: The step size is too small!
+step_size_illustration <- function(t = NULL, maxit = 35) {
+  res <- gd(x, y, t = t, maxit = maxit)
+  df <- t(res$betas)
+  colnames(df) <- c("beta1", "beta2")
+
+  base_plot +
+    geom_point(data = df, size = 0.5) +
+    geom_path(data = df)
+}
+
+step_size_illustration(0.0003)
+```
+
 
 ##
 
-![Step size is too large](../images/gd-stepsize-large.png){width=50%}
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.25
+#| fig-cap: The step size is too large!
+step_size_illustration(0.0115, maxit = 35)
+```
+
 
 ##
 
-![Step size is well-adjusted!](../images/gd-stepsize-good.png){width=50%}
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.25
+#| fig-cap: The step size is well-adjusted!
+step_size_illustration()
+```
 
 ## Lipschitz Constant
 
@@ -721,7 +1013,8 @@ set $t = t \beta.$
 ##
 
 ![Gradient descent with backtracking line
-search.](../images/gd-stepsize-linesearch.png){width=50%}
+search.](../images/gd-stepsize-linesearch.png)
+{width=50%}
 
 ## Stopping Criteria
 
@@ -732,8 +1025,10 @@ search.](../images/gd-stepsize-linesearch.png){width=50%}
 ### Common (ad-hoc) choices
 
 - Small gradient: $$\lVert \nabla f(x) \rVert_r \leq \epsilon$$\pause
-- Small relative change in $x$: $$ \frac{\lVert x^{(k+1)} - x^{(k)}
-  \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2} \leq \epsilon$$\pause
+- Small relative change in $x$: $$
+  \frac{\lVert x^{(k+1)} - x^{(k)}
+  \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2}
+  \leq \epsilon$$\pause
 - Small relative change in $f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
   \leq \epsilon$$
 
@@ -759,7 +1054,8 @@ Most principled stopping criterion, but not always available.
 ## Problems with Gradient Descent
 
 ![Gradient descent is sensitive to
-conditioning.](../images/gd-conditioning.png){width=70%}
+conditioning.](../images/gd-conditioning.png)
+{width=70%}
 
 ## Newton's Method
 
@@ -786,7 +1082,8 @@ $$
 
 ::: {.column width="47%"}
 
-![The Newton method, with approximation.](../images/newton-approx.png){width=52%}
+![The Newton method, with approximation.](../images/newton-approx.png)
+{width=52%}
 
 :::
 
@@ -898,7 +1195,8 @@ Same complexity but lower memory cost.
 
 ## Example: Poisson Regression
 
-Consider observations $y_i \in \mathbb{N}_0$, $x_i \in \mathbb{R}^p$ for $i = 1,
+Consider observations $y_i \in \mathbb{N}_0$, $x_i \in \mathbb{R}^p$ for
+$i = 1,
 \ldots, n$, and Poisson point probabilities
 $$
 f_i(y_i) = e^{-\mu(x_i)} \frac{\mu(x_i)^{y_i}}{y_i!}.

@@ -2,6 +2,7 @@ gd <- function(
   X,
   y,
   mu = 0,
+  t = NULL,
   maxit = 100
 ) {
   loss <- double(maxit)
@@ -9,7 +10,10 @@ gd <- function(
   p <- ncol(X)
 
   L <- norm(crossprod(X), "2")
-  gam <- 1 / L
+
+  if (is.null(t)) {
+    t <- 1 / L
+  }
 
   betas <- matrix(
     0,
@@ -22,7 +26,7 @@ gd <- function(
     gradient <- crossprod(X, eta - y)
 
     betas[, k] <- betas[, k - 1] -
-      gam * gradient +
+      t * gradient +
       mu * (betas[, k - 1] - betas[, max(1, k - 2)])
 
     # Compute the loss for the current iteration
