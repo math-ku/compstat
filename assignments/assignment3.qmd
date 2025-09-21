@@ -49,9 +49,9 @@ Remember the five points:
 - How does the implementation perform (benchmarking)?
 - Where are the bottlenecks (profiling), and what can you do about them?
 
-As for the other assignments, performance tests are important, but remember to
-make correct comparisons. That is, if you benchmark two implementations against
-each other, use exactly the same convergence criterion. Alternatively,
+As for the other assignments, performance tests are important, but remember
+to make correct comparisons. That is, if you benchmark two implementations
+against each other, use exactly the same convergence criterion. Alternatively,
 investigate how the algorithms converge as a function of _real_ time (not
 iterations).
 
@@ -70,12 +70,15 @@ $$
 Then the marginal density of $X$ is the $t$-distribution (why?) with location
 parameter $\mu \in \mathbb{R}$, scale parameter $\sigma > 0$, and shape
 parameter $\nu > 0$. You can initially regard $\nu$ as fixed. Maximize the
-complete data log-likelihood $$\sum_{i=1}^n \log f(y_i, w_i)$$ for i.i.d.
-observations over $(\mu, \sigma^2)$ and implement this as a function. Then
-implement the EM algorithm for estimating $(\mu, \sigma^2)$, compare it to other
-optimization algorithms based on the marginal log-likelihood, and investigate
-how to compute the Fisher information. You can consider generalizing to
-estimating the shape parameter $\nu$ as well, but then the M-step cannot be
+complete data log-likelihood
+$$
+\sum_{i=1}^n \log f(y_i, w_i)
+$$
+for i.i.d. observations over $(\mu, \sigma^2)$ and implement this as a function.
+Then implement the EM algorithm for estimating $(\mu, \sigma^2)$, compare it
+to other optimization algorithms based on the marginal log-likelihood, and
+investigate how to compute the Fisher information. You can consider generalizing
+to estimating the shape parameter $\nu$ as well, but then the M-step cannot be
 computed analytically and you need the digamma function.
 
 ::: {.callout-tip}
@@ -105,10 +108,10 @@ $$
 for the five parameters $p \in (0, 1)$, $\mu_1, \mu_2 \in \mathbb{R}$,
 $\sigma_1, \sigma_2 > 0$. The shape parameters $\nu_1, \nu_2 > 0$ can be fixed.
 
-Implement the $Q$-function and its gradient, and implement a **generalized EM
-algorithm** for estimating the parameters of the two-component mixture of
-$t$-distributions. Compare the algorithm with e.g. gradient descent or another
-optimization algorithm. Finally, implement a computation of the Fisher
+Implement the $Q$-function and its gradient, and implement a **generalized
+EM algorithm** for estimating the parameters of the two-component mixture
+of $t$-distributions. Compare the algorithm with e.g. gradient descent or
+another optimization algorithm. Finally, implement a computation of the Fisher
 information.
 
 Use simulated data to test your implementations. It may be of interest to
