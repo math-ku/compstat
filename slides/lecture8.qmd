@@ -10,12 +10,11 @@ format:
 
 ## Last Time: Optimization
 
+:::: {.columns}
+
+::: {.column width="47%"}
 
 ### Gradient Descent
-
-Iterative algorithm to find a local minimum of a differentiable function
-
-. . .
 
 \begin{algorithm}[H]
   \caption{Gradient descent}
@@ -28,25 +27,33 @@ Iterative algorithm to find a local minimum of a differentiable function
 
 . . .
 
-## Newton Method
+Few assumptions on $f$, cheap iterations, but slow convergence.
 
-Iterative algorithm to find a local minimum of a twice-differentiable function
+:::
 
 . . .
 
+::: {.column width="47%"}
+
+### Newton Method
+
 \begin{algorithm}[H]
   \caption{Newton method}
-  \KwData{Tolerance $\epsilon > 0$}
+  \KwData{Step size $t > 0$}
   \Repeat{convergence}{
-    $d \gets -H_f(x)^{-1} \nabla f(x)$\;
-    $\alpha \gets 1$\;
-    \While{$f(x + \alpha d) > f(x) + 0.1 \alpha \nabla f(x)^T d$}{
-      $\alpha \gets 0.5 \alpha$\;
-    }
-    $x \gets x + \alpha d$\;
+    $x \gets x - t \big(\nabla^2 f(x))^{-1} \nabla f(x)$\;
   }
   \Return{$x$}
 \end{algorithm}
+
+. . .
+
+Requires second derivatives, expensive iterations, but fast convergence.
+
+:::
+
+::::
+
 
 # Testing
 
@@ -210,9 +217,6 @@ the package development workflow.
 Tests are typically organized in files inside the `tests/testthat/` directory of
 an R package.
 
-\medskip\pause
-
-We will learn more about this when we cover package development.
 
 :::
 
@@ -304,53 +308,36 @@ Debugging is the process of finding and fixing bugs.
 
 ![The "first" bug.](../images/first-bug-reduced.jpg){width=75%}
 
-## Poisson Regression
+## Traceback
 
-```{r poisson-regression}
-n <- 1000
-x <- rnorm(n)
-y <- rpois(n, exp(x))
-X <- model.matrix(y ~ x)
+Sometimes it is enough to simply look at the call stack.
+
+```{r}
+# debugging.R
+f <- function() g()
+g <- function() h()
+h <- function() stop("We have a problem!")
 ```
 
 . . .
 
-```{r poisson-implementations}
-Xty <- drop(crossprod(X, y))
-
-objective <- function(beta) {
-  (sum(exp(X %*% beta)) - beta %*% Xty) / nrow(X)
-}
-
-gradient <- function(beta) {
-  (colSums(drop(exp(X %*% beta)) * X) - Xty) / nrow(X)
-}
+```{r}
+#| error: true
+f()
 ```
-
 . . .
 
-Gradient descent and Newton method implementations can be found in
-[`debugging.R`](R/debugging.R).
-
-```{r source-debugging-file, cache=FALSE}
-source(here::here("R/debugging.R"))
+```{r}
+#| eval: false
+traceback()
 ```
 
-## Testing
-
-```{r run-gd}
-gradient_descent(c(0, 0), objective, gradient, t0 = 1, epsilon = 1e-8)
 ```
-
-. . .
-
-```{r run-glm}
-glm(y ~ x, family = "poisson")
+4: stop("We have a problem!") at debugging.R#3
+3: h() at debugging.R#2
+2: g() at debugging.R#1
+1: f()
 ```
-
-### Traceback
-
-- Sometimes enough to simply look at the call stack
 
 ## Entering Debug Mode
 
@@ -365,26 +352,120 @@ Two common ways to enter debug mode:
 
 ::: {.column width="47%"}
 
-### `browser()`
+### Browser
 
-- Can be placed anywhere in the code
-- Stops execution and enters debug mode
+`browser()` can be inserted anywhere in the code.
+
+\medskip\pause
+
+When execution reaches `browser()`, it stops and enters debug mode.
 
 :::
+
+. . .
 
 ::: {.column width="47%"}
 
 ### RStudio Breakpoints
 
-- Visual breakpoints
-- Easy to set and remove (click in the margin)
-- No need to modify the code
-- But cannot be conditionally set
-- Sometimes won't work
+Visual breakpoints can be set in RStudio by clicking in the margin next to the
+line number.
+
+\medskip\pause
+
+When execution reaches a breakpoint, it stops and enters debug mode.
+
+\medskip\pause
+
+No need to modify the code, but cannot be conditionally set.
 
 :::
 
 ::::
+
+## Debugging C++ Code (Rcpp)
+
+- Unfortunately **not** easy.
+- General problem is that C++ code is compiled, so what you see in C++ is not
+  necessarily what is executed.
+- We won't cover it here, but it **is** possible: see
+  [these notes](https://github.com/wch/r-debug/blob/master/debugging-r.md) for
+  instance.
+
+# Worked Example
+
+## Poisson Regression
+
+We are going to fit a Poisson regression model using two different methods:
+gradient descent and Newton's method.
+
+\medskip\pause
+
+The Poisson regression model is given by
+$$
+\E(Y \mid X = x) = \exp(x^T \beta).
+$$
+
+. . .
+
+The problem is to find
+$$
+\hat{\beta} = \argmin_\beta \left( \frac{1}{n} \sum_{i=1}^n \exp(x_i^T \beta) - y_i x_i^T \beta \right).
+$$
+
+. . .
+
+This is a convex optimization problem.
+
+## Data
+
+```{r poisson-regression}
+n <- 1000
+x <- rnorm(n)
+y <- rpois(n, exp(x))
+X <- model.matrix(y ~ x)
+
+head(X, 5)
+```
+
+## Implementation of Objective and Gradient
+
+```{r poisson-implementations}
+Xty <- drop(crossprod(X, y))
+
+objective <- function(beta) {
+  (sum(exp(X %*% beta)) - beta %*% Xty) / nrow(X)
+}
+
+gradient <- function(beta) {
+  (colSums(drop(exp(X %*% beta)) * X) - Xty) / nrow(X)
+}
+```
+
+## Implementations of Optimization Algorithms
+
+Gradient descent and Newton method implementations can be found in
+[`debugging.R`](R/debugging.R).
+
+```{r source-debugging-file, cache=FALSE}
+source(here::here("R/debugging.R"))
+```
+
+## Testing
+
+We can run the gradient descent implementation to see if it works.
+
+```{r run-gd}
+gradient_descent(
+  c(0, 0),
+  objective,
+  gradient,
+  t0 = 1,
+  epsilon = 1e-8
+)
+
+glm(y ~ x, family = "poisson")
+```
 
 ## Buggy Newton Method
 
@@ -413,11 +494,3 @@ newton_method(c(0, 0), objective, gradient, hessian)
 - Debug the code again, using breakpoints or `browser()`. Finally verify that
   `newton_method()` works.
 
-## Debugging C++ Code (Rcpp)
-
-- Unfortunately **not** easy.
-- General problem is that C++ code is compiled, so what you see in C++ is not
-  necessarily what is executed.
-- We won't cover it here, but it **is** possible: see
-  [these notes](https://github.com/wch/r-debug/blob/master/debugging-r.md) for
-  instance.
