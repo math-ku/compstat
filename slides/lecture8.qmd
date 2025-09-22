@@ -4,18 +4,63 @@ title: "Testing And Debugging"
 
 {{< include _common.qmd >}}
 
+## Last Time: Optimization
+
+
+### Gradient Descent
+
+Iterative algorithm to find a local minimum of a differentiable function
+
+. . .
+
+\begin{algorithm}[H]
+  \caption{Gradient descent}
+  \KwData{Step size $t > 0$}
+  \Repeat{convergence}{
+    $x \gets x - t \nabla f(x)$\;
+  }
+  \Return{$x$}
+\end{algorithm}
+
+. . .
+
+## Newton Method
+
+Iterative algorithm to find a local minimum of a twice-differentiable function
+
+. . .
+
+\begin{algorithm}[H]
+  \caption{Newton method}
+  \KwData{Tolerance $\epsilon > 0$}
+  \Repeat{convergence}{
+    $d \gets -H_f(x)^{-1} \nabla f(x)$\;
+    $\alpha \gets 1$\;
+    \While{$f(x + \alpha d) > f(x) + 0.1 \alpha \nabla f(x)^T d$}{
+      $\alpha \gets 0.5 \alpha$\;
+    }
+    $x \gets x + \alpha d$\;
+  }
+  \Return{$x$}
+
 # Testing
 
 ## Testing
+
+Testing is the process of executing a program with the intent of finding
+bugs.
+
+. . .
 
 # Debugging
 
 ## Debugging
 
-- Bugs are common (inevitable)
-- The more complex the code, the more bugs (and the harder to find them)
-- Debugging is the process of finding and fixing bugs.
-- Complemetary to **testing**, which is about identifying existence of bugs.
+Bugs are common, maybe inevitable.
+
+\medskip\pause
+
+Debugging is the process of finding and fixing bugs.
 
 ![Down the rabbit hole.](../images/xkcd-debugging.png){width=80%}
 
@@ -71,7 +116,7 @@ glm(y ~ x, family = "poisson")
 
 - Sometimes enough to simply look at the call stack
 
-### Entering Debug Mode
+## Entering Debug Mode
 
 Two common ways to enter debug mode:
 
@@ -84,7 +129,7 @@ Two common ways to enter debug mode:
 
 ::: {.column width="47%"}
 
-#### `browser()`
+### `browser()`
 
 - Can be placed anywhere in the code
 - Stops execution and enters debug mode
@@ -93,7 +138,7 @@ Two common ways to enter debug mode:
 
 ::: {.column width="47%"}
 
-#### RStudio Breakpoints
+### RStudio Breakpoints
 
 - Visual breakpoints
 - Easy to set and remove (click in the margin)
@@ -117,18 +162,16 @@ hessian <- function(beta) {
 newton_method(c(0, 0), objective, gradient, hessian)
 ```
 
-### Exercise: Debugging `newton_method()`
+## Exercise: Debugging `newton_method()`
 
 - Download and open [`debugging.R`](R/debugging.R) in RStudio.
 - Create another script and define `objective()`, `gradient()`, and `hessian()`
-  by copying from these slides. --
-
+  by copying from these slides.
 - Source `debugging.R` and test that `gradient_descent()` works. Now try
   `newton_method()`. Oh no, there's an error!
 - Insert a breakpoint before the `while` loop and inspect the values of
   `objective(x_new)`, `values`, `alpha`, `beta` and `grad_d_prod` from within
-  the browser. --
-
+  the browser.
 - Explain and fix the bug. Remove the breakpoint.
 - Source the fixed code and try calling `newton_method()`. What happens?
 - Debug the code again, using breakpoints or `browser()`. Finally verify that
@@ -138,8 +181,7 @@ newton_method(c(0, 0), objective, gradient, hessian)
 
 - Unfortunately **not** easy.
 - General problem is that C++ code is compiled, so what you see in C++ is not
-  necessarily what is executed. --
-
+  necessarily what is executed.
 - We won't cover it here, but it **is** possible: see
   [these notes](https://github.com/wch/r-debug/blob/master/debugging-r.md) for
   instance.
