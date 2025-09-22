@@ -5,6 +5,10 @@ tasks:
     cmds:
       - quarto preview
 
+  preview-refresh:
+    cmds:
+      - quarto preview --cache-refresh
+
   render:
     cmds:
       - "quarto render --profile present"
