@@ -104,7 +104,6 @@ the two-component mixture of $t$-distributions, that is, the density is
 $$
 p f(x \mid \mu_1, \sigma_1^2, \nu_1) + (1 - p) f(x \mid \mu_2, \sigma_2^2, \nu_2)
 $$
-
 for the five parameters $p \in (0, 1)$, $\mu_1, \mu_2 \in \mathbb{R}$,
 $\sigma_1, \sigma_2 > 0$. The shape parameters $\nu_1, \nu_2 > 0$ can be fixed.
 

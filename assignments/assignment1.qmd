@@ -60,7 +60,6 @@ Implement a kernel density estimator using the Epanechnikov kernel,
 $$
 K(x) = \frac{3}{4}(1 - x^2) 1_{[-1, 1]}(x),
 $$
-
 and implement one or more bandwidth selection algorithms using either AMISE
 plug-in methods or cross-validation methods. Test the implementation and compare
 the results with the results of using `density()` in R.

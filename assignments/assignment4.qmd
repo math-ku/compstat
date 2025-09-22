@@ -75,7 +75,6 @@ minimizing the _penalized_ negative log-likelihood
 $$
 H(\beta) = - \frac{1}{N} \sum_{i=1}^N \Big(y_i \log p_i(\beta) + (1 - y_i) \log (1 - p_i(\beta)) \Big)+ \lambda \| f_{\beta}'' \|_2^2
 $$
-
 over the basis coefficients $\beta \in \mathbb{R}^p$. Implement stochastic
 optimization algorithms for estimating $\beta$ for fixed $\lambda$. Use e.g.
 polynomial or B-spline basis functions, and test the regression model using the
