@@ -1,5 +1,9 @@
 ---
 title: "Testing And Debugging"
+format:
+  beamer:
+    mermaid:
+      theme: neutral
 ---
 
 {{< include _common.qmd >}}
@@ -42,15 +46,247 @@ Iterative algorithm to find a local minimum of a twice-differentiable function
     $x \gets x + \alpha d$\;
   }
   \Return{$x$}
+\end{algorithm}
 
 # Testing
 
 ## Testing
 
-Testing is the process of executing a program with the intent of finding
-bugs.
+Testing is the process of executing a program with the intent of finding bugs.
+
+\medskip\pause
+
+We have already done testing using plots and `all.equal()`.
+
+\medskip\pause
+
+But this is slightly ad-hoc. We can do better!
+
+\medskip\pause
+
+We want automatic and reproducible testing that we can run as part of our
+workflow.
+
+## What is a Test?
+
+A test is a function that checks that some property holds.
+
+\medskip\pause
+
+Typically, we have output from some function and want to check that it meets
+our expectations.
+
+## Automated Testing
+
+:::: {.columns align="center"}
+
+::: {.column width="53%"}
+
+So far, we have been testing manually.
+
+\medskip\pause
+
+But what we want is automated testing, which we can make part of our workflow.
+
+\medskip
+
+We also want to do this **effortlessly**.
+
+:::
+
+::: {.column width="40%"}
+
+
+```{mermaid}
+%%| echo: false
+%%| fig-height: 3.2
+graph TD;
+  A[Write code] --> B[Write tests];
+  B --> C[Run tests];
+  C --> D{Tests pass?};
+  D -- Yes --> A;
+  D -- No --> F[Fix code];
+  F --> B;
+```
+
+
+:::
+
+::::
+
+
+## The testthat Package
+
+:::: {.columns}
+
+::: {.column width="70%"}
+
+The `testthat` package makes it easy to write and run tests in R.
+
+\medskip\pause
+
+It provides a simple syntax for writing tests and integrates well with RStudio.
+
+\medskip\pause
+
+It is also the standard testing framework for R packages.
+
+:::
+
+::: {.column width="20%"}
+
+![](../images/testthat.png){width=100%}
+:::
+
+::::
+
+## Writing Tests with testthat
+
+Tests in **testthat** are written using the `test_that()` function.
+
+\medskip\pause
+
+Inside the `test_that()` function, we use `expect_*()` functions to check that
+certain conditions hold.
+
+```{r}
+library(testthat)
+
+test_that("sum works", {
+  expect_identical(sum(1, 2), 3)
+  expect_identical(sum(-1, 1), 0)
+})
+```
+
+## Test Failures
+
+If a test fails, `testthat` will throw an error and provide information about
+the failure.
 
 . . .
+
+```{r}
+#| error: true
+test_that("sum works", {
+  expect_identical(sum(1, 2), 4) # This will fail
+})
+```
+
+## Organizing Tests
+
+In your test directory, you can organize tests into multiple files.
+
+\medskip\pause
+
+\dirtree{%
+  .1 tests/.
+  .2 test-sum.R.
+  .2 test-mean.R.
+}
+
+. . .
+
+## `test_dir()`
+
+`testthat::test_dir()` runs all the tests in a specified directory.
+
+. . .
+
+```{r}
+testthat::test_dir(here::here("tests"))
+```
+
+## Inside Packages
+
+:::: {.columns}
+
+::: {.column width="46%"}
+
+testthat was designed to be used inside R packages, and it integrates well with
+the package development workflow.
+
+\medskip\pause
+
+Tests are typically organized in files inside the `tests/testthat/` directory of
+an R package.
+
+\medskip\pause
+
+We will learn more about this when we cover package development.
+
+:::
+
+::: {.column width="46%"}
+
+\dirtree{%
+  .1 mypkg/.
+  .2 R/.
+  .2 tests/.
+  .3 testthat/.
+  .4 test-sum.R.
+  .4 test-mean.R.
+}
+
+:::
+
+::::
+
+
+## Test Coverage
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+We want to test as many parts of our code as possible.
+
+\medskip\pause
+
+This is called test coverage.
+
+\medskip\pause
+
+We can measure tes coverage using the `covr` package, which tracks which lines
+of code are executed when we run our tests.
+
+\medskip\pause
+
+:::
+
+::: {.column width="47%"}
+
+![Test coverage report.](../images/code-coverage.png){width=100%}
+
+:::
+
+::::
+
+## Reproducibility
+
+We want our tests to be reproducible.
+
+\medskip\pause
+
+This means that they should give the same result every time we run them.
+
+\medskip\pause
+
+This is especially important for tests that involve randomness.
+
+\medskip\pause
+
+We can achieve this by setting a random seed using `set.seed()`.
+
+## Numerical Tolerance
+
+When comparing numerical values, we need to account for floating-point
+precision.
+
+\medskip\pause
+
+We've seen this before when comparing kernel density estimates.
+
+\medskip\pause
 
 # Debugging
 
@@ -66,7 +302,7 @@ Debugging is the process of finding and fixing bugs.
 
 ---
 
-![The "first" bug.](../images/first-bug-reduced.jpg){width=80%}
+![The "first" bug.](../images/first-bug-reduced.jpg){width=75%}
 
 ## Poisson Regression
 
