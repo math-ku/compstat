@@ -15,9 +15,7 @@ gd <- function(
     t <- 1 / L
   }
 
-  if (line_search) {
-    t <- 1
-  }
+  t0 <- t
 
   betas <- matrix(
     0,
@@ -32,6 +30,7 @@ gd <- function(
     gradient <- crossprod(X, eta - y)
 
     keep_going <- TRUE
+    t <- t0
 
     while (line_search && keep_going) {
       new_eta <- X %*% (betas[, k - 1] - t * gradient)
@@ -50,6 +49,58 @@ gd <- function(
 
     # Compute the loss for the current iteration
     loss[k] <- 0.5 * norm(y - eta, "2")^2
+  }
+
+  list(coefficients = betas[, maxit], loss = loss, betas = betas)
+}
+
+newton <- function(
+  X,
+  y,
+  maxit = 100,
+  t = NULL,
+  line_search = TRUE
+) {
+  loss <- double(maxit)
+  p <- ncol(X)
+  betas <- matrix(0, nrow = p, ncol = maxit)
+  loss[1] <- 0.5 * norm(y - X %*% betas[, 1], "2")^2
+
+  if (is.null(t)) {
+    t <- 1
+  }
+
+  t0 <- t
+
+  H <- crossprod(X) # Hessian: X^T X
+
+  for (k in 2:maxit) {
+    eta <- X %*% betas[, k - 1]
+    gradient <- crossprod(X, eta - y)
+    direction <- -solve(H, gradient) # Newton direction
+
+    keep_going <- TRUE
+    t <- t0
+
+    while (line_search && keep_going) {
+      new_eta <- X %*% (betas[, k - 1] + t * direction)
+      new_loss <- 0.5 * norm(y - new_eta, "2")^2
+
+      if (
+        new_loss <=
+          loss[k - 1] +
+            t * sum(gradient * direction) +
+            (t^2 / 2) * sum(direction * (H %*% direction))
+      ) {
+        keep_going <- FALSE
+      } else {
+        t <- t / 2
+      }
+    }
+
+    betas[, k] <- betas[, k - 1] + t * direction
+
+    loss[k] <- 0.5 * norm(y - X %*% betas[, k], "2")^2
   }
 
   list(coefficients = betas[, maxit], loss = loss, betas = betas)

@@ -540,11 +540,6 @@ beta2_grid <- seq(-1, 4, length.out = 51)
 beta1_grid_persp <- seq(-1, 4, length.out = 21)
 beta2_grid_persp <- seq(-1, 4, length.out = 21)
 
-x_df <- as_tibble(x)
-
-x_long <- x_df |>
-  tidyr::pivot_longer(everything(), names_to = "parameter")
-
 f <- function(beta, x, y) {
   norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
 }
@@ -626,6 +621,7 @@ persp3D(
 ```{r}
 #| fig-height: 2.8
 #| echo: false
+source(here::here("R", "gradient_descent.R"))
 
 contour_scale <- scale_color_gradient(
   low = "grey50",
@@ -633,20 +629,134 @@ contour_scale <- scale_color_gradient(
   guide = NULL
 )
 
-# And a ggplot2 contoour plot
-base_plot <- ggplot(beta_df, aes(beta1, beta2)) +
-  contour_scale +
-  geom_point(
-    data = optimum_df,
-    color = "darkorange",
-    size = 3,
-    pch = 4
-  ) +
-  labs(x = expression(beta[1]), y = expression(beta[2])) +
-  coord_fixed(xlim = c(-1, 4), ylim = c(-1, 4), expand = FALSE) +
-  geom_contour(aes(z = f, color = after_stat(level)), bins = 25)
+step_size_illustration <- function(
+  x,
+  y,
+  t = NULL,
+  maxit = 35,
+  line_search = FALSE,
+  plot_convergence = TRUE,
+  plot_approx = FALSE,
+  method = c("gd", "newton")
+) {
+  method <- match.arg(method)
 
-base_plot
+  optimizer <- switch(
+    method,
+    gd = gd,
+    newton = newton
+  )
+
+  res <- optimizer(x, y, t = t, maxit = maxit, line_search = line_search)
+
+  L <- norm(t(x) %*% x, "2") / nrow(x)
+
+  if (is.null(t)) {
+    if (method == "newton") {
+      t <- 1
+    } else {
+      t <- 1 / L
+    }
+  }
+
+  df <- t(res$betas)
+  colnames(df) <- c("beta1", "beta2")
+
+  beta1_grid <- seq(-1, 4, length.out = 51)
+  beta2_grid <- seq(-1, 4, length.out = 51)
+
+  f <- function(beta, x, y) {
+    norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
+  }
+
+  f_grad <- function(beta, x, y) {
+    -t(x) %*% (y - x %*% beta) / nrow(x)
+  }
+
+  taylor_approx <- function(beta, beta0, x, y, t) {
+    f(beta, x, y) +
+      t(f_grad(beta0, x, y)) %*% (beta - beta0) +
+      (1 / (2 * t)) * sum((beta - beta0)^2)
+  }
+
+  hessian_approx <- function(beta, beta0, x, y, t) {
+    H <- t(x) %*% x / (nrow(x))
+    f(beta, x, y) +
+      (1 / (2 * t)) * t(f_grad(beta0, x, y)) %*% (beta - beta0) +
+      t(beta - beta0) %*% H %*% (beta - beta0)
+  }
+
+  f_vals <- outer(
+    beta1_grid,
+    beta2_grid,
+    Vectorize(function(b1, b2) f(c(b1, b2), x, y))
+  )
+
+  colnames(f_vals) <- beta1_grid
+  rownames(f_vals) <- beta2_grid
+
+  optimum_df <- tibble(beta1 = beta[1], beta2 = beta[2])
+
+  beta_df <- tibble(
+    beta1 = rep(beta1_grid, times = ncol(f_vals)),
+    beta2 = rep(beta2_grid, each = nrow(f_vals)),
+    f = as.vector(f_vals)
+  )
+
+  res <- ggplot(beta_df, aes(beta1, beta2)) +
+    contour_scale +
+    geom_point(
+      data = optimum_df,
+      color = "darkorange",
+      size = 3,
+      pch = 4
+    ) +
+    labs(x = expression(beta[1]), y = expression(beta[2])) +
+    coord_fixed(xlim = c(-1, 4), ylim = c(-1, 4), expand = FALSE) +
+    geom_contour(aes(z = f, color = after_stat(level)), bins = 25)
+
+  if (plot_approx) {
+    approx_fun <- if (method == "gd") {
+      taylor_approx
+    } else {
+      hessian_approx
+    }
+
+    approx_vals <- outer(
+      beta1_grid,
+      beta2_grid,
+      Vectorize(function(b1, b2) approx_fun(c(b1, b2), c(0, 0), x, y, t))
+    )
+
+    colnames(approx_vals) <- beta1_grid
+    rownames(approx_vals) <- beta2_grid
+
+    approx_df <- tibble(
+      beta1 = rep(beta1_grid, times = ncol(approx_vals)),
+      beta2 = rep(beta2_grid, each = nrow(approx_vals)),
+      f = as.vector(approx_vals)
+    )
+
+    res <- res +
+      geom_contour(
+        data = approx_df,
+        aes(beta1, beta2, z = f),
+        color = "steelblue",
+        linetype = "dashed",
+        bins = 15
+      )
+  }
+
+  if (plot_convergence) {
+    res <- res +
+      geom_point(data = df, size = 0.5) +
+      geom_path(data = df)
+  }
+
+  res
+}
+
+step_size_illustration(x, y, plot_convergence = FALSE)
 ```
 
 :::
@@ -722,7 +832,7 @@ Use the Hessian of the function (**second** derivative).
 
 ## Gradient Descent
 
-The quintessential first-order method
+The quintessential first-order method!
 
 \medskip\pause
 :::: {.columns}
@@ -737,6 +847,15 @@ The quintessential first-order method
   }
   \Return{$x$}
 \end{algorithm}
+
+\medskip
+
+Converges to a local minimum if $f$ is convex and differentiable and $t$ small
+enough.
+
+### Step Size {.alert}
+
+But how do we choose $t$?
 
 :::
 
@@ -803,13 +922,26 @@ gd_illustration(
 ::::
 
 
-. . .
+##
 
-### Properties
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.25
+#| fig-cap: The step size is too small!
 
-- Converges to a local minimum if $f$ is convex and differentiable and $t$ small
-  enough.
-- Requires $f$ to be differentiable and the gradient to be continuous.
+step_size_illustration(x, y, 0.0003)
+```
+
+##
+
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.25
+#| fig-cap: The step size is too large!
+step_size_illustration(x, y, 0.0115, maxit = 35)
+```
 
 ## Derivation of Update
 
@@ -829,9 +961,9 @@ $$
 x^+ = x - t\nabla f(x).
 $$
 
-### Step Size? {.alert}
+### Step Size {.alert}
 
-But how do we choose $t$?
+But we still need to choose $t$!
 
 :::
 
@@ -908,110 +1040,239 @@ gd_taylor_illustration(
 )
 ```
 
+:::
+
+::::
+
+## The Descent Lemma (from Taylor's Theorem)
+
+### Taylor's Theorem
+
+For any $x, y$ in the domain of $f$, there exists a $c$ on the line segment
+between $x$ and $y$ such that
+$$
+f(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(c) (y - x).
+$$
+
+. . .
+
+### Descent Lemma
+
+Suppose we know that the Hessian is bounded above by $L I$, i.e.,
+$$
+\nabla^2 f(x) \preceq L I \quad \text{for all } x.
+$$
+
+. . .
+
+Then
+$$
+f(y) \leq f(x) + \nabla f(x)^T (y - x) + \frac{L}{2} \lVert y - x\rVert_2^2.
+$$
+
+
+## Lipschitz Constant
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+The bound that we used in the descent lemma, $L$, is known as the **Lipschitz
+constant** of $\nabla f$.
+
+\medskip\pause
+
+It is defined as follows.
+$$
+\lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2.
+$$
+
+. . .
+
+It measures how fast the gradient of $f$ can change, relative to the change in
+$x$.
+
+### Twice-Differentiable Case
+
+If $f$ is twice-differentiable, then the Lipschitz constant is the smallest $L$
+such that
+$$
+\nabla^2 f(x) \preceq L I \quad \text{for all } x.
+$$
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+# For a Lipschitz continuous function, there exists a double cone (white) whose
+# origin can be moved along the graph so that the whole graph always stays
+# outside the double cone
+# Let's plot this for a one-dimensional function.
+
+lipschitz_illustration <- function(f, f_prime, L, x0) {
+  x_vals <- seq(x0 - 2, x0 + 2, length.out = 200)
+
+  df <- data.frame(
+    x = x_vals,
+    y = f_prime(x_vals)
+  )
+
+  ggplot(df, aes(x, y)) +
+    geom_ribbon(
+      aes(
+        ymin = f_prime(x0) - L * abs(x - x0),
+        ymax = f_prime(x0) + L * abs(x - x0)
+      ),
+      fill = "grey40",
+      alpha = 0.5
+    ) +
+    geom_line() +
+    geom_point(
+      aes(x, y),
+      data = tibble(x = x0, y = f_prime(x0)),
+      color = "darkorange"
+    ) +
+    labs(y = expression(nabla * f(x)), x = "x")
+}
+
+f <- function(x) {
+  ifelse(x < 0, x^4 - x, -log(1 + x))
+}
+
+f_prime <- function(x) {
+  ifelse(x < 0, 2 * x - 1, -1 / (1 + x))
+}
+
+p1 <- lipschitz_illustration(
+  f = f,
+  f_prime = f_prime,
+  L = 2,
+  x0 = 0
+)
+
+
+f <- function(x) {
+  ifelse(
+    x < 1,
+    12.5 * x^2,
+    ifelse(
+      1 <= x & x < 2,
+      0.5 * x^2 + 24 * x - 12,
+      12.5 * x^2 - 24 * x + 36
+    )
+  )
+}
+
+f_prime <- function(x) {
+  ifelse(
+    x < 1,
+    25 * x,
+    ifelse(
+      1 <= x & x < 2,
+      x + 24,
+      25 * x - 24
+    )
+  )
+}
+
+
+p2 <- lipschitz_illustration(
+  f = f,
+  f_prime = f_prime,
+  L = 25,
+  x0 = 0
+)
+
+p1 / p2 + plot_layout(axes = "collect")
+```
 
 :::
 
 ::::
 
-##
+## The Connection to Gradient Descent
 
-```{r}
-#| echo: false
-#| fig-width: 5
-#| fig-height: 3.25
-#| fig-cap: The step size is too small!
-source(here::here("R", "gradient_descent.R"))
-
-step_size_illustration <- function(t = NULL, maxit = 35, line_search = FALSE) {
-  res <- gd(x, y, t = t, maxit = maxit, line_search = line_search)
-  df <- t(res$betas)
-  colnames(df) <- c("beta1", "beta2")
-
-  base_plot +
-    geom_point(data = df, size = 0.5) +
-    geom_path(data = df)
-}
-
-step_size_illustration(0.0003)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5
-#| fig-height: 3.25
-#| fig-cap: The step size is too large!
-step_size_illustration(0.0115, maxit = 35)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5
-#| fig-height: 3.25
-#| fig-cap: The step size is well-adjusted!
-step_size_illustration()
-```
-
-## Lipschitz Constant
-
-If
+If we apply the descent lemma with $y = x - t \nabla f(x)$, we get
 $$
-\lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2
-$$
-then $L$ is the Lipschitz constant of $\nabla f$.
-
-### Example: OLS
-
-$$
-L = \lVert X^TX \rVert_2
+f(x - t \nabla f(x)) \leq f(x) - t \Vert \nabla f(x)\rVert_2^2 + \frac{L t^2}{2} \lVert \nabla f(x)\rVert_2^2.
 $$
 
 . . .
 
-### Line Searching
+This means that if $t \leq 1/L$, then
+$$
+f(x - t \nabla f(x)) \leq f(x) - \frac{t}{2} \lVert \nabla f(x)\rVert_2^2.
+$$
+
+. . .
+
+In other words, the function value decreases at each step.
+
+##
+
+```{r}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.25
+#| fig-cap: The step size is just right ($t = 1/L$)!
+step_size_illustration(x, y)
+```
+
+## Line Searching
 
 In practice, we may not know $L$ or it may be difficult to compute.
 
-## Analytical Step Size
-
-### Theorem
-
-For gradient descent with step size $t \leq 1/L$ and Lipschitz constant of
-$\nabla f$ being $L$, we have
-$$
-f(x^{(k)}) - f(x^*) \leq \frac{1}{2tk} \lVert x^{(0)} - x^*\rVert_2^2.
-$$
-
 . . .
 
-Convergence rate: $O(1/k)$.
-
-. . .
-
-## Exact Line Search
+### Exact Line Search
 
 It may be tempting to try to solve
 $$
-t^* = \arg_t\min f(x - t\nabla f(x))
+t^* = \arg_t\min f(x - t\nabla f(x)).
 $$
-but this is typically too expensive.
-
-## Backtracking Line Search
-
-Set $\gamma \in (0, 1)$ and $\alpha \in (0, 1/2]$. At each iteration, start with
-$t \gets t_0$, and while
-$$
-f(x - t \nabla f(x)) > f(x) - \alpha t \lVert \nabla f(x)\rVert_2^2
-$$
-set $t = t \gamma$
 
 . . .
 
+But this is typically too expensive. Instead, we typically use an inexact line
+search, like **backtracking line search**.
+
+## Backtracking Line Search
+
+:::: {.columns}
+
+::: {.column width="53%"}
+
+\begin{algorithm}[H]
+  \caption{Backtracking line search}
+  \KwData{Initial step size $t_0 > 0$, parameters $\alpha \in (0, 1/2]$ and $\gamma \in (0, 1)$}
+  $t \gets t_0$\;
+  \While{$f(x - t \nabla f(x)) > f(x) - \alpha t \lVert \nabla f(x)\rVert_2^2$}{
+    $t \gets t \gamma$\;
+  }
+  \Return{$t$}
+\end{algorithm}
+
+\bigskip\pause
+
+Guarantees that the step size is not too large, and that the function value
+decreases sufficiently.
+
+\medskip\pause
+
+Adapts to local curvature of the function.
+
+:::
+
+::: {.column width="41%"}
+
 ```{r}
-#| fig-width: 4.5
+#| fig-height: 2.9
+#| fig-width: 2.6
 #| echo: false
 #| fig-cap: An illustration of backtracking line search.
 # show a illustration of backtracking line search
@@ -1035,8 +1296,8 @@ backracking_illustration <- function() {
 
   labels <- c(
     f1 = expression(f(x - t * nabla * f(x))),
-    f2 = expression(f(x) - t * nabla * group("||", f(x), "||")[2]^2),
-    f3 = expression(f(x) - t * alpha * nabla * group("||", f(x), "||")[2]^2)
+    f2 = expression(f(x) - t * nabla * f(x)^2),
+    f3 = expression(f(x) - alpha * t * nabla * f(x)^2)
   )
 
   df_long <- df |>
@@ -1055,17 +1316,28 @@ backracking_illustration <- function() {
     ) +
     scale_y_continuous(limits = c(-2, 5)) +
     scale_color_manual(
-      values = c(f1 = "black", f2 = "grey50", f3 = "steelblue"),
+      values = c(f1 = "black", f2 = "darkorange", f3 = "steelblue"),
       labels = labels
     ) +
     scale_linetype_manual(
-      values = c(f1 = "solid", f2 = "dotted", f3 = "dotted"),
+      values = c(f1 = "solid", f2 = "dashed", f3 = "dashed"),
       labels = labels
     ) +
-    labs(color = NULL, linetype = NULL)
+    labs(color = NULL, linetype = NULL) +
+    guides(
+      color = guide_legend(position = "inside"),
+      linetype = guide_legend(position = "inside")
+    ) +
+    theme(legend.position.inside = c(0.6, 0.85))
 }
 backracking_illustration()
 ```
+
+:::
+
+::::
+
+
 
 ##
 
@@ -1074,34 +1346,110 @@ backracking_illustration()
 #| fig-width: 5
 #| fig-height: 3.25
 #| fig-cap: "Backtracking line search."
-step_size_illustration(line_search = TRUE)
+step_size_illustration(x, y, line_search = TRUE)
 ```
 
-##
+## Conditioning
 
-![Backtracking line search.](../images/backtrack-line-search.png){width=65%}
+:::: {.columns}
 
-##
+::: {.column width="46%"}
 
-![Gradient descent with backtracking line
-search.](../images/gd-stepsize-linesearch.png)
-{width=50%}
+So, $L$ decides how large step size we can take.
 
-## Stopping Criteria
+\medskip\pause
+
+But $L$ is based on the largest \alert{eigenvalue} of $\nabla^2 f(x)$, which
+means that it may be pessimistic in some directions.
+
+. . .
+
+### Condition Number
+
+The **condition number** of $f$ is defined as
+$$
+\kappa = \frac{\lambda_{\max}}{\lambda_{\min}} = \frac{L}{\lambda_{\min}}.
+$$
+
+. . .
+
+If $\kappa$ is large, we say that $f$ is **ill-conditioned**. If $\kappa$ is
+small, we say that $f$ is **well-conditioned**.
+
+:::
+
+::: {.column width="46%"}
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+well_conditioned <- function(x) {
+  0.5 * ((x[1] - beta[1])^2 + (x[2] - beta[2])^2)
+}
+
+ill_conditioned <- function(x) {
+  0.5 * ((x[1] - beta[1])^2 + 5 * (x[2] - beta[2])^2)
+}
+
+conditioned_df <- function(f, beta1_grid, beta2_grid) {
+  f_vals <- outer(
+    beta1_grid,
+    beta2_grid,
+    Vectorize(function(b1, b2) f(c(b1, b2)))
+  )
+
+  colnames(f_vals) <- beta1_grid
+  rownames(f_vals) <- beta2_grid
+
+  tibble(
+    beta1 = rep(beta1_grid, times = ncol(f_vals)),
+    beta2 = rep(beta1_grid, each = nrow(f_vals)),
+    f = as.vector(f_vals)
+  )
+}
+
+well_df <- conditioned_df(well_conditioned, beta1_grid, beta2_grid) |>
+  mutate(type = "Well-conditioned (L = 1)")
+ill_df <- conditioned_df(ill_conditioned, beta1_grid, beta2_grid) |>
+  mutate(type = "Ill-conditioned (L = 5)")
+
+conditioned_df <- bind_rows(well_df, ill_df)
+
+p1 <- ggplot(conditioned_df, aes(beta1, beta2)) +
+  contour_scale +
+  geom_point(
+    data = optimum_df,
+    color = "darkorange",
+    size = 3,
+    pch = 4
+  ) +
+  labs(x = expression(beta[1]), y = expression(beta[2])) +
+  coord_fixed(xlim = c(-1, 4), ylim = c(0.5, 3.5), expand = FALSE) +
+  geom_contour(aes(z = f, color = after_stat(level)), bins = 35) +
+  facet_wrap(~type, ncol = 1)
+p1
+```
+
+:::
+
+::::
+
+## Convergence and Conditioning
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-### Common (ad-hoc) choices
+```{r}
+#| fig-height: 2.5
+#| echo: false
+#| fig-cap: "Gradient descent on a well-conditioned problem."
 
-- Small gradient: $$\lVert \nabla f(x) \rVert_r \leq \epsilon$$\pause
-- Small relative change in $x$: $$
-  \frac{\lVert x^{(k+1)} - x^{(k)}
-  \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2}
-  \leq \epsilon$$\pause
-- Small relative change in $f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
-  \leq \epsilon$$
+x_well <- rmvnorm(100, sigma = diag(2))
+y_well <- x_well %*% beta
+
+step_size_illustration(x_well, y_well)
+```
 
 :::
 
@@ -1109,24 +1457,44 @@ search.](../images/gd-stepsize-linesearch.png)
 
 ::: {.column width="47%"}
 
-### Duality Gap
+```{r}
+#| fig-height: 2.5
+#| echo: false
+#| fig-cap: "Gradient descent on an ill-conditioned problem."
+x_ill <- rmvnorm(100, sigma = matrix(c(1, 0.8, 0.8, 1), 2, 2))
+y_ill <- x_ill %*% beta
 
-If $f$ is **strongly** convex and $x$ optimal, then the duality gap is zero at
-the optimum.
-
-\medskip\pause
-
-Most principled stopping criterion, but not always available.
+step_size_illustration(x_ill, y_ill)
+```
 
 :::
 
 ::::
 
-## Problems with Gradient Descent
+## Gradient Descent and Conditioning
 
-![Gradient descent is sensitive to
-conditioning.](../images/gd-conditioning.png)
-{width=70%}
+:::: {.columns align=center}
+
+::: {.column width="47%"}
+
+The problem with gradient descent is that it is sensitive to this kind of
+conditioning.
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+#| fig-height: 2.8
+#| fig-cap: "Gradient descent on an ill-conditioned problem, showing the local
+#|   approximation."
+step_size_illustration(x_ill, y_ill, t = 0.001, plot_approx = TRUE)
+```
+
+:::
+
+::::
 
 ## Newton's Method
 
@@ -1141,20 +1509,37 @@ $$
 
 ::: {.column width="47%"}
 
+### Gradient Descent Update
+
+Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize.
+
+. . .
+
 ### Newton Update
 
-Instead of replacing $\nabla^2 f(x)$ with $\frac{1}{t} I$ (gradient descent
-update), minimize $\hat{f}(y)$ directly:
+Instead, minimize $\hat{f}(y)$ directly:
 $$
 x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).
 $$
+
+\pause\bigskip
 
 :::
 
 ::: {.column width="47%"}
 
-![The Newton method, with approximation.](../images/newton-approx.png)
-{width=52%}
+```{r}
+#| echo: false
+#| fig-height: 2.4
+step_size_illustration(
+  x,
+  y,
+  plot_convergence = TRUE,
+  method = "newton",
+  plot_approx = TRUE,
+  t = 0.8,
+)
+```
 
 :::
 
@@ -1162,73 +1547,48 @@ $$
 
 ## Damped Newton
 
-In practice this might not converge, so we use **damped** Newton:
+This might actually not converge, so instead we use **damped** Newton:
 $$
 x^+ = x - t\nabla^2 f(x)^{-1} \nabla f(x),
 $$
 with $t > 0$ chosen by backtracking line search.
 
-\medskip\pause
-
-In practice, this is often what people mean with "Newton's method".
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-### Backtracking Line Search
-
-At each iteration $t \gets 1$ and while
-$$
-f(x + t v) > f(x) + \alpha t \nabla f(x)^T v
-$$
-with $v = -(\nabla^2 f(x)^{-1} \nabla f(x))$ set
-$$
-t \gets \beta t.
-$$
-
-:::
-
-::: {.column width="47%"}
+. . .
 
 ### Phases
 
-- As long as $t < 1$, we are in the **damped** phase.
-- When $t = 1$, we enter the **pure** phase and $t$ will remain $1$.
+- As long as $t < 1$, we are in the **damped** phase. \pause
+- When $t = 1$, we enter the **pure** phase and $t$ will remain $1$.\pause
 - In pure phase, we have quadratic convergence.
 
-:::
+##
 
-::::
+```{r}
+#| echo: false
+#| fig-width: 5.4
+#| fig-height: 2.8
+#| fig-cap: "Gradient descent vs Newton's method on the ill-conditioned problem."
+pl_gd <- step_size_illustration(
+  x_ill,
+  y_ill,
+  method = "gd",
+  plot_convergence = TRUE
+) +
+  ggtitle("Gradient Descent")
+pl_newton <- step_size_illustration(
+  x_ill,
+  y_ill,
+  method = "newton",
+  t = 1,
+  line_search = TRUE,
+  plot_convergence = TRUE
+) +
+  ggtitle("Newton's Method")
 
-## Gradient Descent vs Newton
+pl_gd + pl_newton + plot_layout(guides = "collect")
+```
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-#### Pros
-
-- Faster convergence: quadratic (eventually)
-- Independent of conditioning
-
-#### Cons
-
-- Higher memory cost
-- Higher computational cost $O(p^3)$ vs $O(p)$ for GD
-- Needs twice differentiable $f$.
-
-:::
-
-::: {.column width="47%"}
-
-![](../images/newton-gd-comp.png){width=100%}
-
-:::
-
-::::
-
-## Convergence
+## Convergence in Time and Iterations
 
 :::: {.columns}
 
@@ -1246,7 +1606,39 @@ $$
 
 ::::
 
+\bigskip
+
 In practice, results depend on the problem.
+
+## Gradient Descent vs Newton's Method
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Gradient Descent
+
+- Cheap iterations: $O(p)$
+- Sensitive to conditioning
+- Linear convergence ($O(1/k)$)
+- Few assumptions on $f$
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### Newton's Method
+
+- Expensive iterations: $O(p^3)$
+- Insensitive to conditioning
+- Quadratic convergence ($O(\log \log(1/k))$)
+- Requires $f$ to be twice-differentiable and Hessian to be positive definite
+
+:::
+
+::::
 
 ## Quasi-Newton Methods
 
@@ -1264,498 +1656,44 @@ Complexity: $O(p^2)$, still same memory cost.
 
 Same complexity but lower memory cost.
 
-## Example: Poisson Regression
+## Stopping Criteria
 
-Consider observations $y_i \in \mathbb{N}_0$, $x_i \in \mathbb{R}^p$ for
-$i = 1,
-\ldots, n$, and Poisson point probabilities
-$$
-f_i(y_i) = e^{-\mu(x_i)} \frac{\mu(x_i)^{y_i}}{y_i!}.
-$$
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Common (ad-hoc) choices
+
+- Small gradient: $$ \lVert \nabla f(x) \rVert_r \leq \epsilon $$\pause
+- Small relative change in $ x$: $$
+  \frac{\lVert x^{(k+1)} - x^{(k)}
+  \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2}
+  \leq \epsilon$$\pause
+- Small relative change in $ f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
+  \leq \epsilon$$
+
+:::
 
 . . .
 
-If $\log(\mu(x_i)) = x_i^T \beta$ we rewrite
-$$
-f_i(y_i) = e^{\beta^T x_i y_i - \exp( x_i^T \beta)} \frac{1}{y_i!}.
-$$
+::: {.column width="47%"}
+
+### Duality Gap
+
+If $f$ is **strongly** convex and $x$ optimal, then the duality gap is zero at
+the optimum.
 
 \medskip\pause
 
-This is a _Poisson regression model_.
+Most principled stopping criterion, but not always available.
 
-## Example
+\medskip\pause
 
-```{r vegetables-summary}
-summary(vegetables)
-dim(vegetables)
-```
+\alert{Out of scope for this course!}
 
-## Model
+:::
 
-$$
-\log(E(\text{sale})) = \beta_0 + \beta_1 \log(\text{normalSale}) + \beta_{\text{store}}.
-$$
-
-. . .
-
-```{r pois-model, dependson="data", cache = TRUE}
-## Note, variable store is a factor with 352 levels!
-pois_model <- glm(
-  sale ~ log(normalSale) + store,
-  data = vegetables,
-  family = poisson()
-)
-```
-
-. . .
-
-```{r pois-sum, echo=2, dependson="pois-model"}
-old_options <- options(digits = 2)
-summary(pois_model) |>
-  coefficients() |>
-  head()
-options(digits = old_options$digits)
-```
-
-## Exponential Families
-
-Joint density:
-$$
-f(\symbf{y} \mid \theta) = \prod_{i=1}^n \frac{1}{\varphi_i(\theta)} e^{\theta^T t_i(y_i)} = e^{\theta^T \sum_{i=1}^n t_i(y_i) - \sum_{i=1}^n \kappa_i(\theta)}
-$$
-where $\varphi_i(\theta) = \int e^{\theta^T t_i(u)} \mu_i(\mathrm{d}u)$ and
-$\kappa_i(\theta) = \log(\varphi_i(\theta)).$ The log-likelihood is
-$$
-\ell(\theta) = \theta^T t(\symbf{y}) - \kappa(\theta)
-$$
-where
-
-$$
-t(\symbf{y}) = \sum_{i=1}^m t_i(y_i) \quad \text{and} \quad
-\kappa(\theta) = \sum_{i=1}^m \log \varphi_i(\theta).
-$$
-
-The gradient is
-$$
-\nabla \ell(\theta) = t(\symbf{y}) - \nabla \kappa(\theta).
-$$
-
-## The Poisson Regression model
-
-For the Poisson regression model we find that
-
-$$
-t(\symbf{y}) = \sum_{i=1}^n x_i y_i = \symbf{X}^T \symbf{y} \quad \text{and} \quad
-\kappa(\beta) = \sum_{i=1}^n e^{x_i^T \beta}.
-$$
-
-Moreover,
-$$
-\nabla \kappa(\beta) = \sum_{i=1}^n x_i e^{x_i^T \beta} = \symbf{X}^T \symbf{w}(\beta)
-$$
-where
-$$
-\symbf{w}(\beta) = \exp(\symbf{X}^T \beta)
-$$
-with $\exp$ applied coordinatewisely.
-
-## Model Matrix and `glm.fit()`
-
-```{r implement, dependson="data", cache = TRUE}
-X <- model.matrix(
-  sale ~ log(normalSale) + store,
-  data = vegetables
-)
-y <- vegetables$sale
-
-dim(X)
-```
-
-. . .
-
-```{r glm.fit}
-bench::bench_time(
-  pois_fit <- glm.fit(X, y, family = poisson())
-)
-```
-
-## `glm.fit()`
-
-```{r}
-pois_fit$iter
-pois_fit$converged
-```
-
-. . .
-
-### Deviance
-
-Two times (log-likelihood of null (intercept-only) model minus log-likelihood of
-the full model)
-
-```{r}
-pois_fit0 <- glm.fit(X[, 1], y, family = poisson())
-pois_fit0$deviance - pois_fit$deviance
-```
-
-## `glm.fit()`
-
-```{r glm.fit-trace}
-pois_fit <- glm.fit(X, y, family = poisson(), control = list(trace = TRUE))
-```
-
-## Stopping criterion
-
-$$
-|\mathrm{deviance}_{n-1} - \mathrm{deviance}_n| < \varepsilon (\mathrm{deviance}_n + 0.1)
-$$
-with the default tolerance parameter $\varepsilon = 10^{-8}$ and with a maximal
-number of iterations set to 25.
-
-## Implementation of Objective Function
-
-```{r implement_H, dependson="implement", cache = TRUE}
-t_map <- drop(crossprod(X, y))
-
-objective <- function(beta) {
-  drop(sum(exp(X %*% beta)) - beta %*% t_map) / nrow(X)
-}
-
-gradient <- function(beta) {
-  (drop(crossprod(X, exp(X %*% beta))) - t_map) / nrow(X)
-}
-```
-
-##
-
-Recomputing the deviance difference,
-
-```{r objective-value-deviance}
-2 *
-  nrow(X) *
-  (objective(c(pois_fit0$coefficients, rep(0, 352))) -
-    objective(pois_fit$coefficients))
-```
-
-. . .
-
-and the value of the negative log-likelihood:
-
-```{r objective-value}
-objective(pois_fit$coefficients)
-```
-
-## Using `optim()` with Conjugate Gradient
-
-```{r CG, dependson="implement_H", cache = TRUE}
-bench::bench_time(
-  pois_CG <- optim(
-    rep(0, length = ncol(X)),
-    objective,
-    gradient,
-    method = "CG",
-    control = list(maxit = 10000)
-  )
-)
-```
-
-. . .
-
-```{r CG-results, dependson="CG"}
-pois_CG$value
-pois_CG$counts
-```
-
-## Using `optim()` with BFGS
-
-```{r BFGS, dependson="implement_H", cache = TRUE}
-bench::bench_time(
-  pois_BFGS <- optim(
-    rep(0, length = ncol(X)),
-    objective,
-    gradient,
-    method = "BFGS",
-    control = list(maxit = 10000)
-  )
-)
-```
-
-. . .
-
-```{r BFGS-results, dependson="BFGS"}
-pois_BFGS$value
-pois_BFGS$counts
-```
-
-## Using Sparse Matrices
-
-```{r Matrix, message=FALSE, cache=FALSE}
-library(Matrix)
-```
-
-```{r sparse, dependson="implement", cache = TRUE}
-X <- Matrix(X)
-```
-
-. . .
-
-```{r BFGS-sparse, dependson=c("implement_H", "sparse"), cache = TRUE}
-bench::bench_time(
-  pois_BFGS_sparse <- optim(
-    rep(0, length = ncol(X)),
-    objective,
-    gradient,
-    method = "BFGS",
-    control = list(maxit = 10000)
-  )
-)
-```
-
-. . .
-
-```{r BFGS-sparse-results, dependson="BFGS-sparse"}
-range(pois_BFGS$par - pois_BFGS_sparse$par)
-```
-
-## Implementation
-
-```{r GD, cache = TRUE}
-source(here::here("R", "optim_alg.R"))
-```
-
-[Source code](R/optim_alg.R)
-
-## Poisson Regression Problem
-
-```{r poisson-def}
-poisson_model <- function(form, data, response) {
-  X <- model.matrix(form, data)
-  y <- data[[response]]
-  t_map <- drop(crossprod(X, y))
-  n <- nrow(X)
-  p <- ncol(X)
-
-  objective <- function(beta) {
-    drop(sum(exp(X %*% beta)) - beta %*% t_map) / n
-  }
-
-  gradient <- function(beta) {
-    (drop(crossprod(X, exp(X %*% beta))) - t_map) / n
-  }
-
-  hessian <- function(beta) {
-    crossprod(X, drop(exp(X %*% beta)) * X) / n
-  }
-
-  list(par = rep(0, p), H = objective, grad_H = gradient, Hessian_H = hessian)
-}
-```
-
-## Test
-
-Gradient descent is very slow for the full Poisson model, so we consider a much
-smaller problem.
-
-```{r GD-test, dependson=c("Implement", "GD"), cache = TRUE}
-veg_pois <- poisson_model(
-  ~ log(normalSale),
-  vegetables,
-  response = "sale"
-)
-
-pois_gd <- gradient_descent(
-  veg_pois$par,
-  veg_pois$H,
-  veg_pois$grad_H
-)
-```
-
-. . .
-
-```{r GD-comp, dependson="GD-test", echo=2:3, cache = TRUE}
-old_options <- options(digits = 5)
-pois_glm <- glm(sale ~ log(normalSale), data = vegetables, family = poisson())
-rbind(pois_glm = coefficients(pois_glm), pois_gd)
-options(digits = old_options$digits)
-```
-
-## Test
-
-```{r GD-object, dependson=c("Implement", "GD-test"), echo=2:3}
-old_options <- options(digits = 15)
-veg_pois$H(coefficients(pois_glm))
-veg_pois$H(pois_gd)
-options(digits = old_options$digits)
-```
-
-## Tracer
-
-```{r GD-trace, dependson=c("GD-test", "vegetables-data"), results='hide', echo=-3, cache = TRUE, message = FALSE, warning = FALSE}
-library(CSwR)
-gd_tracer <- tracer(c("value", "h_prime", "gamma"), N = 50)
-gc() # Garbage collection
-```
-
-. . .
-
-```{r pois-trace, dependson=c("GD-trace", "GD-test", "vegetables-data"), cache = TRUE}
-pois_gd <- gradient_descent(
-  veg_pois$par,
-  veg_pois$H,
-  veg_pois$grad_H,
-  cb = gd_tracer$tracer
-)
-```
-
-## Trace Information
-
-```{r trace-sum, dependson=c("GD-trace", "pois-trace"), cache = TRUE}
-trace_sum_gd <- summary(gd_tracer)
-head(trace_sum_gd, 3)
-```
-
-. . .
-
-```{r trace-sum2, dependson="trace-sum"}
-tail(trace_sum_gd, 3)
-val_min <- veg_pois$H(coefficients(pois_glm))
-```
-
-## Trace Information
-
-```{r trace-info, warning=FALSE}
-ggplot(trace_sum_gd, aes(.time, value - val_min)) +
-  geom_line() +
-  scale_y_log10()
-```
-
-## Trace Information
-
-```{r trace-sum3}
-ggplot(trace_sum_gd, aes(.time, h_prime)) +
-  geom_line() +
-  scale_y_log10()
-```
-
-```{r prof1, eval=FALSE, echo=FALSE}
-library(profvis)
-profvis(
-  replicate(40, {
-    gradient_descent(veg_pois$par, veg_pois$H, veg_pois$grad_H, epsilon = 1e-10)
-    NULL
-  })
-)
-```
-
-## Newton Method
-
-```{r pois2, cache = TRUE}
-veg_pois <- poisson_model(
-  ~ store + log(normalSale) - 1,
-  vegetables,
-  response = "sale"
-)
-```
-
-```{r Newton-test, dependson=c("Implement", "GD-test", "pois2"), cache = TRUE}
-system.time(
-  pois_newton <- newton(
-    veg_pois$par,
-    veg_pois$H,
-    veg_pois$grad_H,
-    veg_pois$Hessian_H
-  )
-)
-```
-
-## Test
-
-```{r Newton-comp, dependson="Newton-test", cache = TRUE}
-pois_glm <- glm(
-  sale ~ store + log(normalSale) - 1,
-  data = vegetables,
-  family = poisson()
-)
-range(pois_newton - pois_glm$coefficients)
-```
-
---
-
-```{r Newton-object, dependson=c("Implement", "Newton-test"), echo=2:3, results='hold'}
-old_options <- options(digits = 20)
-veg_pois$H(pois_newton)
-veg_pois$H(pois_glm$coefficients)
-options(digits = old_options$digits)
-```
-
-. . .
-
-`glm()` (and the workhorse `glm.fit()`) uses a Newton-type algorithm.
-
-## Tracing
-
-```{r Newton-trace, cache = TRUE}
-newton_tracer <- tracer(
-  c("value", "grad_norm_sq"),
-  N = 0,
-  expr = expression(grad_norm_sq <- sum(grad^2))
-)
-pois_newton <- newton(
-  veg_pois$par,
-  veg_pois$H,
-  veg_pois$grad_H,
-  veg_pois$Hessian_H,
-  epsilon = 8e-28,
-  cb = newton_tracer$tracer
-)
-
-gd_tracer <- tracer(c("value"), N = 0)
-pois_gd <- gradient_descent(
-  veg_pois$par,
-  veg_pois$H,
-  veg_pois$grad_H
-)
-```
-
-## Tracing
-
-```{r Newton-summary-trace, dependson="Newton-trace", cache = TRUE}
-trace_sum_newton <- summary(newton_tracer)
-val_min <- veg_pois$H(pois_newton)
-trace_sum_newton
-```
-
-## Newton Convergence
-
-```{r trace-sum-Newton, warning=FALSE, dependson="Newton-summary-trace"}
-#| echo: false
-#| fig-width: 5.4
-#| fig-height: 3
-pl1 <- ggplot(trace_sum_newton, aes(.time, value - val_min)) +
-  geom_point() +
-  geom_line() +
-  scale_y_log10()
-
-pl2 <- ggplot(trace_sum_newton, aes(.time, grad_norm_sq)) +
-  geom_point() +
-  geom_line() +
-  scale_y_log10()
-
-pl1 + pl2
-```
-
-```{r prof2, eval=FALSE, echo=FALSE}
-library(profvis)
-profvis(
-  newton(
-    veg_pois$par,
-    veg_pois$H,
-    veg_pois$grad_H,
-    veg_pois$Hessian_H
-  )
-)
-```
+::::
 
 ## Summary
 
