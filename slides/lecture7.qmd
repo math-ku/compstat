@@ -662,6 +662,8 @@ step_size_illustration <- function(
   df <- t(res$betas)
   colnames(df) <- c("beta1", "beta2")
 
+  approx_point <- df[2, ]
+
   beta1_grid <- seq(-1, 4, length.out = 51)
   beta2_grid <- seq(-1, 4, length.out = 51)
 
@@ -725,7 +727,7 @@ step_size_illustration <- function(
     approx_vals <- outer(
       beta1_grid,
       beta2_grid,
-      Vectorize(function(b1, b2) approx_fun(c(b1, b2), c(0, 0), x, y, t))
+      Vectorize(function(b1, b2) approx_fun(c(b1, b2), approx_point, x, y, t))
     )
 
     colnames(approx_vals) <- beta1_grid
@@ -744,6 +746,11 @@ step_size_illustration <- function(
         color = "steelblue",
         linetype = "dashed",
         bins = 15
+      ) +
+      geom_point(
+        aes(x = approx_point[1], y = approx_point[2]),
+        color = "steelblue",
+        size = 2
       )
   }
 
@@ -1089,8 +1096,8 @@ $$
 
 . . .
 
-It measures how fast the gradient of $f$ can change, relative to the change in
-$x$.
+It measures how fast the gradient of $f$ can change, relative to the change
+in $x$.
 
 ### Twice-Differentiable Case
 
@@ -1487,8 +1494,7 @@ conditioning.
 ```{r}
 #| echo: false
 #| fig-height: 2.8
-#| fig-cap: "Gradient descent on an ill-conditioned problem, showing the local
-#|   approximation."
+#| fig-cap: "The gradient descent approximation."
 step_size_illustration(x_ill, y_ill, t = 0.001, plot_approx = TRUE)
 ```
 
@@ -1715,18 +1721,41 @@ Most principled stopping criterion, but not always available.
 
 ## Exercise
 
+We will attempt to minimize the following function:
+$$
+f(x) = \log(1 + e^x) + \frac{1}{2}(x - 2)^2.
+$$
+
+. . .
+
+```{r}
+#| echo: false
+#| include: false
+f <- function(x) {
+  log(1 + exp(x)) + 0.5 * (x - 2)^2
+}
+
+curve(f, from = -2, to = 5)
+
+f_prime <- function(x) {
+  exp(x) / (1 + exp(x)) + (x - 2)
+}
+```
+
 ### Step 1
 
-Implement the gradient descent algorithm to solve ridge regression:
-$$
-\operatorname{minmize}_{\beta \in \mathbb{R}^p}\left( \frac{1}{2} \lVert X\beta - y\rVert_2^2 + \frac{\lambda \lVert \beta \rVert_2^2}{2} \right)
-$$
+Implement a gradient descent method for solving this problem. Plot convergence
+in terms of iterations and time. Implement a stopping criterion based on the
+gradient norm.
 
 . . .
 
 ### Step 2
 
-Implement a method for solving ridge regression directly.
+Test and benchmark your implementation against R's built-in `optmize()`.
 
-Explicitly factorize (i.e. don't use `solve()`)
+. . .
 
+### Step 3
+
+Implement Newton's method for solving this problem and repeat the analysis.
