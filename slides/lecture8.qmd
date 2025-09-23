@@ -1,9 +1,5 @@
 ---
 title: "Testing And Debugging"
-format:
-  beamer:
-    mermaid:
-      theme: neutral
 ---
 
 {{< include _common.qmd >}}
@@ -433,13 +429,13 @@ head(X, 5)
 ## Implementation of Objective and Gradient
 
 ```{r poisson-implementations}
-Xty <- drop(crossprod(X, y))
-
-objective <- function(beta) {
+objective <- function(beta, X, y) {
+  Xty <- drop(crossprod(X, y))
   (sum(exp(X %*% beta)) - beta %*% Xty) / nrow(X)
 }
 
-gradient <- function(beta) {
+gradient <- function(beta, X, y) {
+  Xty <- drop(crossprod(X, y))
   (colSums(drop(exp(X %*% beta)) * X) - Xty) / nrow(X)
 }
 ```
@@ -458,41 +454,65 @@ source(here::here("R/debugging.R"))
 We can run the gradient descent implementation to see if it works.
 
 ```{r run-gd}
-gradient_descent(
+res_gd <- gradient_descent(
   c(0, 0),
   objective,
   gradient,
   t0 = 1,
-  epsilon = 1e-8
+  epsilon = 1e-8,
+  X = X,
+  y = y
 )
 
-glm(y ~ x, family = "poisson")
+res_glm <- glm(y ~ x, family = "poisson")
+```
+
+##
+
+```{r}
+res_gd$par
+coef(res_glm)
 ```
 
 ## Buggy Newton Method
 
 ```{r def-hessian}
-hessian <- function(beta) {
+hessian <- function(beta, X, y) {
   (crossprod(X, drop(exp(X %*% beta)) * X)) / nrow(X)
 }
 ```
 
-```{r run-newton, error=TRUE, linewidth = 80}
-newton_method(c(0, 0), objective, gradient, hessian)
+```{r run-newton, linewidth = 80}
+#| error: true
+newton_method(c(0, 0), objective, gradient, hessian, X = X, y = y)
 ```
 
 ## Exercise: Debugging `newton_method()`
 
-- Download and open [`debugging.R`](R/debugging.R) in RStudio.
-- Create another script and define `objective()`, `gradient()`, and `hessian()`
-  by copying from these slides.
-- Source `debugging.R` and test that `gradient_descent()` works. Now try
-  `newton_method()`. Oh no, there's an error!
-- Insert a breakpoint before the `while` loop and inspect the values of
-  `objective(x_new)`, `values`, `alpha`, `beta` and `grad_d_prod` from within
-  the browser.
-- Explain and fix the bug. Remove the breakpoint.
-- Source the fixed code and try calling `newton_method()`. What happens?
-- Debug the code again, using breakpoints or `browser()`. Finally verify that
-  `newton_method()` works.
+1. Download and open [`debugging.R`](R/debugging.R) in RStudio. \pause
+2. Create another script, and place some code for generating data there.\pause
+3. Source `debugging.R` and test that `gradient_descent()` works. Now try
+   `newton_method()`. What happens?\pause
+4. Create a test for the `newton_method()` function using the `testthat` package
+   that fails.\pause
+4. Start debugging by setting some breakpoints in `newton_method()`.\pause
+5. Run `newton_method()` again. Execution should stop at the first breakpoint.
+   Use the RStudio interface to step through the code and inspect variables.
+   What do you see?\pause
+6. There are two bugs in `newton_method()`. Can you find and fix them?
 
+## Next Time
+
+### Likelihood Optimization
+
+We continue exploring different aspects of optimization.
+
+\medskip\pause
+
+We focus
+on likelihood-based methods.
+
+\medskip\pause
+
+And also introduce algorithms for solving
+constrained optimization problems.
