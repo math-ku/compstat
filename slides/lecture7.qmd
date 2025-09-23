@@ -60,7 +60,7 @@ sampling by estimating normalized weights.
 
 ### Picking a Good Importance Distribution
 
-Pick a importance distribution $g$ that covers the important parts of $f$, with
+Pick an importance distribution $g$ that covers the important parts of $f$, with
 heavy tails, and from which we can easily sample.
 
 
@@ -84,10 +84,6 @@ are easier to solve.
 . . .
 
 ### Algorithms
-
-We talk about zero, first, and second order methods.
-
-\medskip\pause
 
 We learn about gradient descent and Newton's method.
 
@@ -235,7 +231,7 @@ $$
 \begin{aligned}
   &\operatorname*{minimize}_x     && f(x) \\
   &\textrm{subject to}            && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
-  &                               && a_i^T x = b_i, \quad j = 1, \ldots, k,
+  &                               && a_j^T x = b_j, \quad j = 1, \ldots, k,
   \end{aligned}
 $$
 
@@ -1707,9 +1703,8 @@ Same complexity but lower memory cost.
 ### Common (ad-hoc) choices
 
 - Small gradient: $$ \lVert \nabla f(x) \rVert_r \leq \epsilon $$\pause
-- Small relative change in $ x$: $$
-  \frac{\lVert x^{(k+1)} - x^{(k)}
-  \rVert_r}{\lVert x^{(k)} + 10^{-q}\rVert_2}
+- Small relative change in $x$: $$
+  \frac{\lVert x^{(k+1)} - x^{(k)} \rVert_2}{\lVert x^{(k)} + 10^{-q}\rVert_2}
   \leq \epsilon$$\pause
 - Small relative change in $ f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
   \leq \epsilon$$
@@ -1781,14 +1776,13 @@ f_prime <- function(x) {
 ### Step 1
 
 Implement a gradient descent method for solving this problem. Plot convergence
-in terms of iterations and time. Implement a stopping criterion based on the
-gradient norm.
+in terms of iterations and time. Implement a stopping criterion.
 
 . . .
 
 ### Step 2
 
-Test and benchmark your implementation against R's built-in `optmize()`.
+Test and benchmark your implementation against R's built-in `optimize()`.
 
 . . .
 
