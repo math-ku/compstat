@@ -1706,7 +1706,7 @@ Same complexity but lower memory cost.
 - Small relative change in $x$: $$
   \frac{\lVert x^{(k+1)} - x^{(k)} \rVert_2}{\lVert x^{(k)} + 10^{-q}\rVert_2}
   \leq \epsilon$$\pause
-- Small relative change in $ f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
+- Small relative change in $f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
   \leq \epsilon$$
 
 :::
