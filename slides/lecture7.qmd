@@ -35,7 +35,6 @@ Estimate $\E h(X)$ with $X \sim f$ by
 $$
 \hat{\mu}_n = \frac{1}{n} \sum_{i=1}^n h(X_i) \quad \text{with } X_i \overset{iid}{\sim} f.
 $$
-with
 
 . . .
 
