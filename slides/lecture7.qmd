@@ -115,7 +115,7 @@ minimization.
 - Fitting a generalized linear model by minimizing the negative log-likelihood
   \pause
 - Finding the shortest path in a network \pause
-- Minimizing variance in a portfolio of financial assets.
+- Minimizing variance in a portfolio of financial assets
 
 ## Standard Form
 
