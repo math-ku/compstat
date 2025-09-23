@@ -1,4 +1,4 @@
-source("R/debugging_example_source.R")
+source(here::here("R", "debugging_example_source.R"))
 
 x <- c()
 
