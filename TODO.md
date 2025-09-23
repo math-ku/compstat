@@ -8,12 +8,19 @@ format: html
 - Harmonize notation with book
 - Tone down emphasis on object oriented programming.
 - Reconsider reading instructions; maybe not aligned properly.
+- Start each lecture with a recap of the previous lecture.
+- End each lecture with a summary of what was covered and a preview of the next
+  lecture.
+- Talk about computational complexity, maybe in first lecture (since it's
+  central).
 
 ### Interesting Topics that Could Be Covered
 
 - Gibbs sampling
 - Autodifferentiation
 - Two-dimensional kernel density estimation
+- GPU computing
+- High-performance computing clusters
 
 ## Lecture 1: Introduction
 
@@ -42,16 +49,13 @@ format: html
 
 ## Lecture 7: Optimization
 
-- Too much material! Consider making Poisson example simpler.
-- Or maybe move likelihood optimization to lecture 9 instead?
 - Discuss compositions of convex functions, or at least motivate why we take log
-  of likelihood
-- Maybe move reading about likelihood optimization to next lecture
+  of likelihood (not sure)
 
 ## Lecture 8: Debugging and Likelihood Optimization
 
 - Make it easier for them to debug: put required functions and initialization of
-  data in a script.
+  data in one script.
 
 ## Lecture 9: The EM Algorithm
 
