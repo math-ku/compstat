@@ -8,7 +8,8 @@ title: "Likelihood Optimization"
 
 error_hook <- knitr::knit_hooks$get("error")
 knitr::knit_hooks$set(error = function(x, options) {
-  if (!is.null(n <- options$linewidth)) {
+  n <- options$linewidth
+  if (!is.null(n)) {
     x <- knitr:::split_lines(x)
     if (any(nchar(x) > n)) {
       x <- strwrap(x, width = n)
@@ -22,6 +23,18 @@ library(patchwork)
 
 old_options <- options(digits = 4)
 ```
+
+## Last Time
+
+### Testing
+
+Systematic approach to find errors in code.
+
+. . .
+
+### Debugging
+
+Finding and fixing bugs in code.
 
 ## Today
 
@@ -130,8 +143,7 @@ $$X = M(Y) \sim \textrm{Mult}(M(p), n).$$
 
 For the peppered moths, $K = 6$ corresponding to the six genotypes, $K_0 = 3$
 and the partition corresponding to the phenotypes is
-$$\{1, 2, 3\} \cup \{4, 5\} \cup \{6\} = \{1, \ldots, 6\},$$ --
-
+$$\{1, 2, 3\} \cup \{4, 5\} \cup \{6\} = \{1, \ldots, 6\},$$
 and $$M(n_1, \ldots, n_6) = (n_1 + n_2 + n_3, n_4 + n_5, n_6).$$
 
 ### Cell Collapsing
