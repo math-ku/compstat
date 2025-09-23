@@ -337,7 +337,7 @@ ggplot(df, aes(x, y)) +
 
 Any (local) minimum is **global** (but not necessarily unique).
 
-### First-Order Conditions
+### First-Order Condition
 
 For differentiable $f$, $x^*$ is optimal iff
 $$
@@ -347,7 +347,7 @@ where $C$ is the feasible set.
 
 . . .
 
-### Second-Order Conditions
+### Second-Order Condition
 
 If $f$ is twice-differentiable, then $x^*$ is optimal iff
 $$
