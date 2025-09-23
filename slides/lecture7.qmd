@@ -1095,8 +1095,8 @@ $$
 
 . . .
 
-It measures how fast the gradient of $f$ can change, relative to the change
-in $x$.
+It measures how fast the gradient of $f$ can change, relative to the change in
+$x$.
 
 ### Twice-Differentiable Case
 
