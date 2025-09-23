@@ -142,22 +142,59 @@ $$
 x^* = \operatorname{argmin}_x f(x)
 $$
 
-## Example: Ordinary Least Squares Regression (OLS)
+## Examples of Optimization Problems
 
-OLS regression is an optimization problem.
+### Smoothing Splines
 
-\medskip\pause
+$$
+\operatorname*{minimize}_{\symbf{\beta}} \left(
+  (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
+\right)
+$$
 
-In standard form, it is
+. . .
+
+### Finding the Hyperparameter for Smoothing Splines
+
+$$
+\begin{aligned}
+  &\operatorname*{minimize}_\lambda  && \left( (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta} \right) \\
+  &\textrm{subject to}               && \lambda \geq 0.
+\end{aligned}
+$$
+
+## Examples of Optimization Problems
+
+### Maximum Likelihood
+
+$$
+\operatorname*{minimize}_{\theta}\big( - \log f(x \mid \theta)\big),
+$$
+where $f(x \mid \theta)$ is the likelihood function.
+
+. . .
+
+### Minimum-Variance Portfolio
+
+$$
+\begin{aligned}
+  &\operatorname*{minimize}_w  &&  w^T \Sigma w\\
+  &\textrm{subject to}         && \bar{p}^T w \geq r_\mathrm{min},\\
+  &                            && \symbf{1}^T w = 1,
+\end{aligned}
+$$
+where $w$ are the asset weights, $\Sigma$ is the covariance matrix of asset
+returns, $\bar{p}$ is the vector of expected returns, and $r_\mathrm{min}$ is
+the minimum acceptable return.
+
+## Example: Ordinary Least Squares (OLS) Regression
+
+The problem is to
 $$
 \begin{aligned}
   &\operatorname*{minimize}_{\beta \in \mathbb{R}^p} &&f(\beta) = \frac{1}{2} \lVert y - X\beta\rVert_2^2.
 \end{aligned}
 $$
-
-. . .
-
-That is, we have no constraints.
 
 . . .
 
@@ -564,13 +601,13 @@ optimum_df <- tibble(beta1 = beta[1], beta2 = beta[2])
 
 beta_df <- tibble(
   beta1 = rep(beta1_grid, times = ncol(f_vals)),
-  beta2 = rep(beta1_grid, each = nrow(f_vals)),
+  beta2 = rep(beta2_grid, each = nrow(f_vals)),
   f = as.vector(f_vals)
 )
 
 beta_df_persp <- tibble(
   beta1 = rep(beta1_grid_persp, times = ncol(f_vals_persp)),
-  beta2 = rep(beta1_grid_persp, each = nrow(f_vals_persp)),
+  beta2 = rep(beta2_grid_persp, each = nrow(f_vals_persp)),
   f = as.vector(f_vals_persp)
 )
 ```
@@ -1147,7 +1184,7 @@ lipschitz_illustration <- function(f, f_prime, L, x0) {
 }
 
 f <- function(x) {
-  ifelse(x < 0, x^4 - x, -log(1 + x))
+  ifelse(x < 0, x^2 - x, -log(1 + x))
 }
 
 f_prime <- function(x) {
@@ -1284,7 +1321,7 @@ Adapts to local curvature of the function.
 # show a illustration of backtracking line search
 # that shows how the check work on a simple one-dimensional function
 # with a tangent line and the next step
-backracking_illustration <- function() {
+backtracking_illustration <- function() {
   f <- function(x) (x - 2)^2 + 1
   f_prime <- function(x) 2 * (x - 2)
 
@@ -1336,7 +1373,7 @@ backracking_illustration <- function() {
     ) +
     theme(legend.position.inside = c(0.6, 0.85))
 }
-backracking_illustration()
+backtracking_illustration()
 ```
 
 :::
@@ -1374,7 +1411,7 @@ means that it may be pessimistic in some directions.
 
 The **condition number** of $f$ is defined as
 $$
-\kappa = \frac{\lambda_{\max}}{\lambda_{\min}} = \frac{L}{\lambda_{\min}}.
+\kappa = \frac{\lambda_{\max}}{\lambda_{\min}}.
 $$
 
 . . .
@@ -1409,7 +1446,7 @@ conditioned_df <- function(f, beta1_grid, beta2_grid) {
 
   tibble(
     beta1 = rep(beta1_grid, times = ncol(f_vals)),
-    beta2 = rep(beta1_grid, each = nrow(f_vals)),
+    beta2 = rep(beta2_grid, each = nrow(f_vals)),
     f = as.vector(f_vals)
   )
 }
