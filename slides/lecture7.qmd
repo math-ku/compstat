@@ -51,7 +51,7 @@ $$
 
 ## Recap: Importance Sampling
 
-### Self-Normalized Importance Sampling
+### Normalized Weights
 
 When $f$ is known only up to a normalizing constant, we can still use importance
 sampling by estimating normalized weights.
@@ -1789,3 +1789,19 @@ Test and benchmark your implementation against R's built-in `optimize()`.
 ### Step 3
 
 Implement Newton's method for solving this problem and repeat the analysis.
+
+## Next Time
+
+### Testing
+
+We will cover how to \alert{systematically} test your code using **testthat**.
+
+. . .
+
+### Debugging
+
+We will cover how fix bugs in your code using debugging tools in R.
+
+\medskip\pause
+
+This part will mostly be a hands-on sessions, so bring your laptop!
