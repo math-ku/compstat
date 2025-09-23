@@ -16,6 +16,10 @@ format:
 
 ### Gradient Descent
 
+Few assumptions on $f$, cheap iterations, but slow convergence.
+
+\medskip\pause
+
 \begin{algorithm}[H]
   \caption{Gradient descent}
   \KwData{Step size $t > 0$}
@@ -25,10 +29,6 @@ format:
   \Return{$x$}
 \end{algorithm}
 
-. . .
-
-Few assumptions on $f$, cheap iterations, but slow convergence.
-
 :::
 
 . . .
@@ -36,6 +36,10 @@ Few assumptions on $f$, cheap iterations, but slow convergence.
 ::: {.column width="47%"}
 
 ### Newton Method
+
+Requires second derivatives, expensive iterations, but fast convergence.
+
+\medskip\pause
 
 \begin{algorithm}[H]
   \caption{Newton method}
@@ -46,14 +50,21 @@ Few assumptions on $f$, cheap iterations, but slow convergence.
   \Return{$x$}
 \end{algorithm}
 
-. . .
-
-Requires second derivatives, expensive iterations, but fast convergence.
-
 :::
 
 ::::
 
+## Today
+
+### Testing
+
+How do we know our code is correct?
+
+. . .
+
+### Debugging
+
+How do we find and fix bugs in our code?
 
 # Testing
 
@@ -85,10 +96,6 @@ our expectations.
 
 ## Automated Testing
 
-:::: {.columns align="center"}
-
-::: {.column width="53%"}
-
 So far, we have been testing manually.
 
 \medskip\pause
@@ -99,27 +106,22 @@ But what we want is automated testing, which we can make part of our workflow.
 
 We also want to do this **effortlessly**.
 
-:::
+\begin{center}
+  \begin{tikzpicture}[node distance=2cm,>=stealth,rounded corners]
+    \node (A) [draw, rectangle] {Write code};
+    \node (B) [draw, rectangle, right of=A, node distance=3.5cm] {Write tests};
+    \node (C) [draw, rectangle, right of=B, node distance=3.5cm] {Run tests};
+    \node (D) [draw, diamond, aspect=2, below of=C, node distance=2.5cm] {Tests pass?};
+    \node (F) [draw, rectangle, left of=D, node distance=3.5cm] {Fix code};
 
-::: {.column width="40%"}
-
-
-```{mermaid}
-%%| echo: false
-%%| fig-height: 3.2
-graph TD;
-  A[Write code] --> B[Write tests];
-  B --> C[Run tests];
-  C --> D{Tests pass?};
-  D -- Yes --> A;
-  D -- No --> F[Fix code];
-  F --> B;
-```
-
-
-:::
-
-::::
+    \draw[->] (A) -- (B);
+    \draw[->] (B) -- (C);
+    \draw[->] (C) -- (D);
+    \draw[->] (D) -- ++(0,-1) node[pos=0.8, below] {Yes} -| (A);
+    \draw[->] (D) -- node[above] {No} (F);
+    \draw[->] (F) -- (B);
+  \end{tikzpicture}
+\end{center}
 
 
 ## The testthat Package
