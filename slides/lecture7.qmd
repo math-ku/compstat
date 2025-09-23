@@ -164,9 +164,9 @@ $$
 ### Maximum Likelihood
 
 $$
-\operatorname*{minimize}_{\theta}\big( - \log f(x \mid \theta)\big),
+\operatorname*{minimize}_{\theta}\big( - \log f(\theta \mid x)\big),
 $$
-where $f(x \mid \theta)$ is the likelihood function.
+where $f(\theta \mid x)$ is the likelihood function.
 
 . . .
 
