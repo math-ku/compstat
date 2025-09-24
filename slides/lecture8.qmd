@@ -556,16 +556,17 @@ coef(res_glm)
 
 ## Buggy Newton Method
 
+First, we define the Hessian function.
+
 ```{r def-hessian}
 hessian <- function(beta, X, y) {
   (crossprod(X, drop(exp(X %*% beta)) * X)) / nrow(X)
 }
 ```
 
-```{r run-newton, linewidth = 80}
-#| error: true
-newton_method(c(0, 0), objective, gradient, hessian, X = X, y = y)
-```
+. . .
+
+Then, we can run the Newton method implementation: `newton_method()`.
 
 ## Exercise: Debugging `newton_method()`
 
