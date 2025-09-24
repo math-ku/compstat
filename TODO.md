@@ -13,6 +13,7 @@ format: html
   lecture.
 - Talk about computational complexity, maybe in first lecture (since it's
   central).
+- Talk about exponential tilting for rejection and importance sampling.
 
 ### Interesting Topics that Could Be Covered
 
