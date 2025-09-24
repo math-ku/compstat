@@ -109,6 +109,12 @@ for you to solve independently at your own pace.
   - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization)
   - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt)
 
+#### Exercise Session 4
+
+- **Main topic**: Currying and decorators
+- **In class walkthrough:** Exercises 25.2.6.1, 25.2.6.2, 25.4.5.1, 25.4.5.2(AdvR) + Bonus Example
+- **Solutions**: TBA
+
 #### Lecture 8: Testing and Debugging
 
 This lecture will be mostly a hands-on session. Please bring your laptop. We
