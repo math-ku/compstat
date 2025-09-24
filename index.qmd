@@ -111,6 +111,10 @@ for you to solve independently at your own pace.
 
 #### Lecture 8: Testing and Debugging
 
+This lecture will be mostly a hands-on session. Please bring your laptop. We
+will work on debugging a piece of code together. You can find the code here:
+[debugging.R](R/debugging.R).
+
 - **Slides:** [Testing and Debugging](slides/lecture8.pdf)
 - **Reading:**
   [Chapter 22 (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging)
