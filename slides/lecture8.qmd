@@ -98,9 +98,9 @@ So far, we have been testing manually.
 
 But what we want is automated testing, which we can make part of our workflow.
 
-\medskip
+\medskip\pause
 
-We also want to do this **effortlessly**.
+### Suggested Workflow
 
 \begin{center}
   \begin{tikzpicture}[node distance=2cm,>=stealth,rounded corners]
@@ -134,7 +134,7 @@ It provides a simple syntax for writing tests and integrates well with RStudio.
 
 \medskip\pause
 
-It is also the standard testing framework for R packages.
+It is also the most common testing framework for R packages.
 
 :::
 
@@ -191,6 +191,11 @@ In your test directory, you can organize tests into multiple files.
 
 . . .
 
+### Convention
+
+Test files should be named `test-*.R` (or `test_*.R`), where `*` is a
+descriptive name for the tests in that file.
+
 ## `test_dir()`
 
 `testthat::test_dir()` runs all the tests in a specified directory.
@@ -207,14 +212,12 @@ testthat::test_dir(here::here("tests"))
 
 ::: {.column width="46%"}
 
-testthat was designed to be used inside R packages, and it integrates well with
-the package development workflow.
+**testthat** was designed to be used inside R packages.
 
 \medskip\pause
 
-Tests are typically organized in files inside the `tests/testthat/` directory of
-an R package.
-
+Tests are organized in files inside the `tests/testthat/` directory of an
+R package.
 
 :::
 
@@ -233,6 +236,9 @@ an R package.
 
 ::::
 
+\bigskip\pause
+
+We will see more about package development later in the course.
 
 ## Test Coverage
 
@@ -248,10 +254,15 @@ This is called test coverage.
 
 \medskip\pause
 
-We can measure tes coverage using the `covr` package, which tracks which lines
-of code are executed when we run our tests.
+### covr
 
-\medskip\pause
+We can measure test coverage using the **covr** package, which tracks which
+lines of code are executed when we run our tests.
+
+\medskip
+
+This is somewhat out of scope for this course, but you can read more about it in
+the [covr documentation](https://covr.r-lib.org/).
 
 :::
 
@@ -286,9 +297,22 @@ precision.
 
 \medskip\pause
 
-We've seen this before when comparing kernel density estimates.
+```{r}
+#| error: true
+test_that("numerical equality", {
+  expect_identical(sqrt(2)^2, 2)
+})
+```
 
-\medskip\pause
+\pause
+
+Use `expect_equal()` with a specified tolerance to handle this.
+
+```{r}
+test_that("numerical equality with tolerance", {
+  expect_equal(sqrt(2)^2, 2, tolerance = 1e-8)
+})
+```
 
 # Debugging
 
@@ -339,10 +363,7 @@ traceback()
 
 ## Entering Debug Mode
 
-Two common ways to enter debug mode:
-
-- `browser()`: Stops execution and enters debug mode
-- Set a breakpoint in RStudio.
+There are two common ways to debug code interactively in R.
 
 . . .
 
