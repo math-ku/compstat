@@ -462,14 +462,14 @@ gradient descent and Newton's method.
 
 The Poisson regression model is given by
 $$
-\E(Y \mid X = x) = \exp(x^T \beta).
+\E(\symbf{Y} \mid \symbf{X}) = \exp(\symbf{X} \symbf{\beta}).
 $$
 
 . . .
 
 The problem is to find
 $$
-\hat{\beta} = \argmin_\beta \left( \frac{1}{n} \sum_{i=1}^n \exp(x_i^T \beta) - y_i x_i^T \beta \right).
+\hat{\symbf{\beta}} = \argmin_{\symbf{\beta}} \left( \frac{1}{n} \sum_{i=1}^n \exp(\symbf{x}_i^T \symbf{\beta}) - y_i \symbf{x}_i^T \symbf{\beta} \right).
 $$
 
 . . .
@@ -477,6 +477,9 @@ $$
 This is a convex optimization problem.
 
 ## Data
+
+Here, we will generate some synthetic data, for a simple Poisson regression
+model with one predictor.
 
 ```{r poisson-regression}
 n <- 1000
@@ -507,12 +510,16 @@ Gradient descent and Newton method implementations can be found in
 [`debugging.R`](R/debugging.R).
 
 ```{r source-debugging-file, cache=FALSE}
-source(here::here("R/debugging.R"))
+source(here::here("R", "debugging.R"))
 ```
 
 ## Testing
 
-We can run the gradient descent implementation to see if it works.
+Let's run the gradient descent implementation to see if it works.
+
+:::: {.columns}
+
+::: {.column width="47%"}
 
 ```{r run-gd}
 res_gd <- gradient_descent(
@@ -525,15 +532,27 @@ res_gd <- gradient_descent(
   y = y
 )
 
-res_glm <- glm(y ~ x, family = "poisson")
+res_glm <- glm(
+  y ~ x,
+  family = "poisson"
+)
 ```
 
-##
+:::
+
+. . .
+
+::: {.column width="47%"}
 
 ```{r}
 res_gd$par
 coef(res_glm)
 ```
+
+:::
+
+::::
+
 
 ## Buggy Newton Method
 

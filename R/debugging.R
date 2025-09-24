@@ -87,14 +87,14 @@ newton_method <- function(
     obj_history[i] <- obj
     grad <- gradient(par, ...)
 
-    if (norm(grad, "2") <= epsilon) {
+    if (norm(grad, "2") >= epsilon) {
       break
     }
 
     hess <- hessian(par, ...)
     d <- -drop(solve(hess, grad))
     t1 <- t0
-    par_new <- par + t1 * d
+    par_new <- par - t1 * d
     grad_d_prod <- crossprod(grad, d)
 
     while (
@@ -105,7 +105,7 @@ newton_method <- function(
       }
 
       t1 <- gamma * t1
-      par_new <- par + t1 * d
+      par_new <- par - t1 * d
     }
 
     par <- par_new
@@ -117,4 +117,3 @@ newton_method <- function(
 
   list(par = par, obj = obj_history[1:i])
 }
-
