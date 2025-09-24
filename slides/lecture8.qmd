@@ -381,14 +381,54 @@ No need to modify the code, but cannot be conditionally set.
 
 ::::
 
+## Rubber Duck Debugging
+
+When stuck, a good strategy is to explain the code line-by-line to someone else.
+
+\medskip\pause
+
+:::: {.columns align="center"}
+
+::: {.column width="54%"}
+
+If you don't have anyone around, why not try explaining it to a rubber duck?!
+
+
+:::
+
+::: {.column width="40%"}
+
+\begin{figure}
+  \begin{tikzpicture}
+    \duck[stethoscope=gray!80!black]
+  \end{tikzpicture}
+\end{figure}
+
+:::
+
+::::
+
+
+\bigskip\pause
+
+The idea is that explaining the code out loud helps you see it from a different
+perspective.
+
+
 ## Debugging C++ Code (Rcpp)
 
-- Unfortunately **not** easy.
-- General problem is that C++ code is compiled, so what you see in C++ is not
-  necessarily what is executed.
-- We won't cover it here, but it **is** possible: see
-  [these notes](https://github.com/wch/r-debug/blob/master/debugging-r.md) for
-  instance.
+Debugging C++ code is **not** easy.
+
+\medskip\pause
+
+General problem is that C++ code is compiled, so what you see in C++ is not
+necessarily what is executed.
+
+\medskip\pause
+
+We won't cover it here (or even later), but it **is** possible: see
+[these notes](https://github.com/wch/r-debug/blob/master/debugging-r.md) for
+instance.
 
 # Worked Example
 
