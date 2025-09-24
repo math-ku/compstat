@@ -509,10 +509,8 @@ We continue exploring different aspects of optimization.
 
 \medskip\pause
 
-We focus
-on likelihood-based methods.
+We focus on likelihood-based methods.
 
 \medskip\pause
 
-And also introduce algorithms for solving
-constrained optimization problems.
+And also introduce algorithms for solving constrained optimization problems.
