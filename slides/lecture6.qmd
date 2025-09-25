@@ -272,7 +272,7 @@ It has mean $\mu$.
 
 ```{r}
 #| echo: false
-#| fig-cap: "Target (dashed blue) and importance (orange) densities
+#| fig-cap: "Target and importance densities
 #|  with corresponding importance weights."
 #| fig-width: 5
 #| fig-height: 3
