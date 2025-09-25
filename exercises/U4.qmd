@@ -203,7 +203,7 @@ var_cpp(rnorm(1e5))
 **Question**: Rewrite any of the functions from the first exercise of Section 25.2.6 to deal with missing values. If na.rm is true, ignore the missing values. If na.rm is false, return a missing value if the input contains any missing values. Some good functions to practice with are `min()`, `max()`, `range()`, `mean()`, and `var()`.
 
 **Answer**:
-Use the singlemost powerful programming technique (currying). This is also called the decorator design pattern, 
+Use the **decorator** design pattern, 
 ```{r}
 .na.rm_decorator <- function(fun) {
   function(x, na.rm = FALSE, ...) {
@@ -268,7 +268,7 @@ diff_decorated(test_vec, lag = 1, na.rm = TRUE)   # Should work on non-NA values
 
 ## Bonus Example: Currying with Kernel Density Estimation (AI generated)
 
-**Question**: How can we use currying (function composition and partial application) to create flexible and reusable kernel density estimation functions?
+**Question**: How can we use **currying (function composition and partial application)** to create flexible and reusable kernel density estimation functions?
 
 **A**:
 In U2.qmd, we implemented kernel density estimation with the Epanechnikov kernel. Now let's see how currying can make our code more modular and elegant.
