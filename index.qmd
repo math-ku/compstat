@@ -113,7 +113,7 @@ for you to solve independently at your own pace.
 
 - **Main topic**: Currying and decorators
 - **In class walkthrough:** Exercises 25.2.6.1, 25.2.6.2, 25.4.5.1, 25.4.5.2(AdvR) + Bonus Example
-- **Solutions**: TBA
+- **Solutions**: [Exercise 4 Solutions](exercises/U4.qmd)
 
 #### Lecture 8: Testing and Debugging
 
