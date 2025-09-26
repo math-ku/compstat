@@ -14,6 +14,8 @@ format: html
 - Talk about computational complexity, maybe in first lecture (since it's
   central).
 - Talk about exponential tilting for rejection and importance sampling.
+- Overall time is skewed towards the optimization topic. Maybe cut some material
+  and add another lecture on kernel density estimation or MCMC.
 
 ### Interesting Topics that Could Be Covered
 
