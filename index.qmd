@@ -112,8 +112,16 @@ for you to solve independently at your own pace.
 #### Exercise Session 4
 
 - **Main topic**: Currying and decorators
-- **In class walkthrough:** Exercises 25.2.6.1, 25.2.6.2, 25.4.5.1, 25.4.5.2(AdvR) + Bonus Example
+- **In class walkthrough:** Exercises 25.2.6.1, 25.2.6.2, 25.4.5.1,
+  25.4.5.2(AdvR) + Bonus Example
 - **Solutions**: [Exercise 4 Solutions](exercises/U4.qmd)
+
+
+#### Presentation of Assignment 2
+
+- **Instructions:** [Assignment 2](assignments/assignment2.html)
+
+### Week 5
 
 #### Lecture 8: Testing and Debugging
 
@@ -125,12 +133,6 @@ will work on debugging a piece of code together. You can find the code here:
 - **Reading:**
   [Chapter 22 (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging)
 
-#### Presentation of Assignment 2
-
-- **Instructions:** [Assignment 2](assignments/assignment2.html)
-
-<!-- ### Week 5 -->
-<!---->
 <!-- #### Lecture 9: Likelihood Optimization -->
 <!---->
 <!-- - **Slides:** [Likelihood Optimization](slides/lecture9.pdf) -->
