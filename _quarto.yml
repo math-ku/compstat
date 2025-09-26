@@ -3,7 +3,6 @@ project:
   render:
     - "*.qmd"
     - "*.md"
-    - "!slides/lecture9.qmd"
     - "!slides/lecture10.qmd"
     - "!slides/lecture11.qmd"
     - "!slides/lecture12.qmd"

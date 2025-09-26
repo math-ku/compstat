@@ -40,8 +40,15 @@ Finding and fixing bugs in code.
 
 ### Optimization for Multinomial Models
 
-- Likelihood optimization
-- Intro to constrained optimization
+We will look at optimization for multinomial models, using an
+example on Peppered Moths.
+
+\medskip\pause
+
+We will introduce two different optimization methods for constrained problems:
+
+- General optimization using extended-value functions and zero-order methods.
+- Constrained optimization using the barrier method.
 
 # Multinomial Models
 
@@ -53,7 +60,10 @@ Finding and fixing bugs in code.
 
 ### Alleles
 
-C, Ci, T with frequencies $p_C$, $p_I$, $p_T$ and $p_C + p_I + p_T = 1.$
+C, Ci, T with frequencies $p_C$, $p_I$, $p_T$ and 
+$$
+p_C + p_I + p_T = 1.
+$$
 
 ### Genotypes
 
@@ -69,7 +79,10 @@ Black, mottled, light-colored
 
 ![](../images/peppered-moth.jpg){width=100%}
 
-|       | C     | I       | T             |
+
+: Genotype to Phenotype Map
+
+|       | **C** | **I**   | **T**         |
 | ----- | ----- | ------- | ------------- |
 | **C** | Black | Black   | Black         |
 | **I** | Black | Mottled | Mottled       |
@@ -96,23 +109,28 @@ https://en.wikipedia.org/wiki/Peppered_moth_evolution
 
 :::
 
-### Hardy–Weinberg Equilibrium
+## The Hardy–Weinberg Equilibrium
 
 According to the
 [Hardy–Weinberg equilibrium](https://en.wikipedia.org/wiki/Hardy%E2%80%93Weinberg_principle),
 the genotype frequencies are
-$$p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2.$$
+$$
+p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2.
+$$
 
 . . .
 
-The complete multinomial log-likelihood is $$ \begin{aligned} &2n*{CC}
-\log(p_C) + n*{CI} \log (2 p*C p_I) + n*{CT} \log(2 p*C p_I) \\ &+ 2 n*{II}
-\log(p*I) + n*{IT} \log(2p*I p_T) + 2 n*{TT} \log(p_T), \end{aligned}$$
+The complete multinomial log-likelihood is 
+$$
+\begin{aligned}
+  & 2n_{CC} \log(p_C) + n_{CI} \log (2 p_C p_I) + n_{CT} \log(2 p_C p_I) \\ 
+  & + 2 n_{II} \log(p*I) + n_{IT} \log(2p_I p_T) + 2 n_{TT} \log(p_T),
+\end{aligned}
+$$
 
 . . .
 
 We only observe $(n_C, n_I, n_T)$, where
-
 $$
 n = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{= n_C} +
 \underbrace{n_{IT} + n_{II}}_{=n_I} + \underbrace{n_{TT}}_{=n_T}.
@@ -123,21 +141,29 @@ $$
 As a specific data example we have the observation $n_C= 85$, $n_I = 196$, and
 $n_T = 341.$
 
-### Multinomial Cell Collapsing
+## Multinomial Cell Collapsing
 
 The Peppered Moth example is an example of _cell collapsing_ in a multinomial
 model.
 
-. . .
+\medskip\pause
 
 In general, let $A_1 \cup \ldots \cup A_{K_0} = \{1, \ldots, K\}$ be a partition
-and let $$M : \mathbb{N}_0^K \to \mathbb{N}_0^{K_0}$$ be the map given by
-$$M((n_1, \ldots, n_K))_j = \sum_{i \in A_j} n_i.$$
+and let
+$$
+M : \mathbb{N}_0^K \to \mathbb{N}_0^{K_0}
+$$
+be the map given by
+$$
+M((n_1, \ldots, n_K))_j = \sum_{i \in A_j} n_i.
+$$
 
-### Multinomial Distribution
+## Multinomial Distribution
 
 If $Y \sim \textrm{Mult}(p, n)$ with $p = (p_1, \ldots, p_K)$ then
-$$X = M(Y) \sim \textrm{Mult}(M(p), n).$$
+$$
+X = M(Y) \sim \textrm{Mult}(M(p), n).
+$$
 
 . . .
 
@@ -146,7 +172,7 @@ and the partition corresponding to the phenotypes is
 $$\{1, 2, 3\} \cup \{4, 5\} \cup \{6\} = \{1, \ldots, 6\},$$
 and $$M(n_1, \ldots, n_6) = (n_1 + n_2 + n_3, n_4 + n_5, n_6).$$
 
-### Cell Collapsing
+## Cell Collapsing
 
 In terms of the $(p_C, p_I)$ parametrization, $p_T = 1 - p_C - p_I$ and
 $$p = (p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2).$$
@@ -165,37 +191,37 @@ $$
 (p_T^2) \end{aligned}
 $$
 
-### Standard Form
+## Standard Form
 
 This is an optimization problem of the following standard form:
 
 $$
 \begin{aligned}&\operatorname*{minimize}_{p_C,p_I} && -\ell(p_C, p_I) \\
-&\operatorname*{subject to} && p_C + p_C - 1 \leq 0\\
-&                           && -p_C \leq 0\\
-&                           && -p_I \leq 0\\
-&                           && p_I - 1 \leq 0\\
-&                           && p_C -1 \leq 0.
+  &\textrm{subject to} && p_C + p_C - 1 \leq 0\\
+  &                    && -p_C \leq 0\\
+  &                    && -p_I \leq 0\\
+  &                    && p_I - 1 \leq 0\\
+  &                    && p_C -1 \leq 0.
 \end{aligned}
 $$
 
 . . .
 
-#### Convex?
+### Convex?
 
 . . .
 
 **Yes**, because the negative log-likelihood is convex and so are the
 constraints (affine).
 
-#### Can We Solve it Using Gradient Descent or Newton's Method?
+### Can We Solve it Using Gradient Descent or Newton's Method?
 
 . . .
 
 **No** (not directly), since the problem is constrained.
 
-```{r likelihood, include = FALSE}
-# x is the data vector of length 3 of counts
+```{r likelihood}
+#| echo: false
 neg_loglik_pep <- function(par, x) {
   pC <- par[1]
   pI <- par[2]
@@ -205,17 +231,22 @@ neg_loglik_pep <- function(par, x) {
     return(Inf)
   }
 
-  p_dark <- pC^2 + 2 * pC * pI + 2 * pC * pT
-  p_mottled <- pI^2 + 2 * pI * pT
-  p_light <- pT^2
+  p_dar <- pC^2 + 2 * pC * pI + 2 * pC * pT
+  p_mot <- pI^2 + 2 * pI * pT
+  p_lig <- pT^2
 
-  -(x[1] * log(p_dark) + x[2] * log(p_mottled) + x[3] * log(p_light))
+  -(x[1] * log(p_dar) + x[2] * log(p_mot) + x[3] * log(p_lig))
 }
 ```
 
-### Objective Surface
+##
 
-```{r surface, echo = FALSE, fig.width = 7.5, fig.height = 8, warning = FALSE}
+```{r surface, echo = FALSE}
+#| fig-width: 3.9
+#| fig-height: 3.9
+#| fig-cap: "Contour plot of the negative log-likelihood for the peppered moths
+#|   example."
+#| warning: false
 n <- 100
 
 pC <- seq(0, 1, length.out = n)
@@ -238,19 +269,21 @@ levels <- exp(seq(log(min_z), log(3000), length.out = 25))
 contour(pC, pI, z, levels = levels, col = pal(30), asp = 1, drawlabels = FALSE)
 ```
 
-### Change of Variables?
-
-Let $$p_j = \frac{\exp{(\theta_j)}}{\sum_{i = 1}^K \exp(\theta_i)}.$$
-
-. . .
+## Change of Variables
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
+Let $$p_j = \frac{\exp{(\theta_j)}}{\sum_{i = 1}^K \exp(\theta_i)}.$$
+
+\medskip\pause
+
 Seems like a good idea! Constraints are automatically satisfied.
 
-#### But... Convex?
+. . .
+
+### But is it Convex?
 
 **No**, $f$ is no longer convex.
 
@@ -258,7 +291,8 @@ Seems like a good idea! Constraints are automatically satisfied.
 
 ::: {.column width="47%"}
 
-```{r, echo = FALSE, fig.width = 5, fig.height = 5.4, warning = FALSE}
+```{r, echo = FALSE, warning = FALSE}
+#| fig-height: 3
 other_negloglik <- function(theta, x) {
   theta <- c(theta, 0)
 
@@ -301,54 +335,59 @@ lines(x1, x2, lty = "dotted", lwd = 2)
 
 ::::
 
-### Optimization
+## Optimization
 
 So, we cannot use our existing toolbox. What to do?
 
-. . .
+\medskip\pause
 
 We will try two different options.
 
-#### General Optimization
+. . .
 
-- Define **extended-value** function, and use general (zero-order) optimization
+### General Optimization
+
+Define **extended-value** function, and use general (zero-order) optimization
 
 . . .
 
-#### Constrained Optimization (Barrier Method)
+### Constrained Optimization (Barrier Method)
 
 Use the barrier method to directly solve the **constrained** optimization
 problem.
 
-### Negative Log-Likelihood
+##
 
 We can code a problem-specific (extended-value) version of the negative
 log-likelihood.
 
-```{r likelihood-again, ref.label="likelihood"}
-
+```{r likelihood-again}
+#| ref-label: likelihood
 ```
 
-### Zero-Order Nelder-Mead
+## Zero-Order Nelder-Mead
 
-:::: {.columns}
+:::: {.columns align="center"}
 
 ::: {.column width="47%"}
 
 ```{r moth-optim-NM}
 x <- c(85, 196, 341)
 x0 <- c(1 / 3, 1 / 3)
-
 optim(x0, neg_loglik_pep, x = x)
 ```
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-#### Feasible Starting Point
+### Feasible Starting Point
 
 Some thought has to go into the initial parameter choice.
+
+. . .
 
 ```{r moth-error, error = TRUE, linewidth = 38}
 optim(
@@ -362,7 +401,7 @@ optim(
 
 ::::
 
-### Log-Likelihood Function Factory
+## Log-Likelihood Function Factory
 
 `M()` sums the cells that are collapsed, which we specify in `group` argument.
 
@@ -372,10 +411,18 @@ M <- function(y, group) {
 }
 ```
 
-. . .
+##
+
+Compute the negative log-likelihood for general multinomial cell collapsing
+problems.
 
 ```{r mult-likelihood-factory}
-mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
+mult_likelihood <- function(
+  x,
+  group,
+  prob,
+  constraint = function(par) TRUE
+) {
   force(x)
   force(group)
   force(prob)
@@ -390,15 +437,13 @@ mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
 }
 ```
 
-### Peppered Moths Specifics
-
-Problem-specific functions
+## Peppered Moths Specifics
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-#### Multinomial Probabilities
+### Multinomial Probabilities
 
 `prob()` maps parameters to the multinomial probability vector.
 
@@ -418,9 +463,11 @@ prob <- function(p) {
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-#### Constraints
+### Constraints
 
 Check of constraints.
 
@@ -438,11 +485,7 @@ constraint <- function(par) {
 
 ::::
 
-### Putting it All Together
-
-:::: {.columns}
-
-::: {.column width="47%"}
+## Putting it All Together
 
 ```{r moth_likelihood}
 neg_mult_loglik <- mult_likelihood(
@@ -453,62 +496,212 @@ neg_mult_loglik <- mult_likelihood(
 )
 ```
 
+. . .
+
+```{r moth-optim}
+moth_optim <- optim(x0, neg_mult_loglik)
+moth_optim
+```
+
+
+## Barrier Function
+
+Another option is to use the \alert{barrier method}.
+ 
+\medskip\pause
+
+Transform
+$$
+\begin{aligned}
+  & \textrm{minimize}   &  & f(x)                                 \\
+  & \textrm{subject to} &  & g_i(x) \leq 0, & \quad i =1,\dots,m. \\
+\end{aligned}
+$$ \pause
+into
+$$
+\begin{aligned}
+  \textrm{minimize}   &  & tf(x) + \phi(x)
+\end{aligned}
+$$
+with the barrier function
+$$
+\phi(z) = -\sum_{i=1}^m \log(-g_i(z)).
+$$
+
+\medskip\pause
+
+For $t$ small, the barrier term dominates and the solution is far from
+the boundary.
+
+\medskip\pause
+
+Increasing $t$ puts more weight on the original objective and the solution
+approaches the constrained optimum.
+
+
+```{r}
+#| echo: false
+#| include: false
+f <- function(x1, x2) {
+  ((x1 - 2)^2 + (x2 - 1)^2)
+}
+
+g <- function(x1, x2) {
+  x1 - 1
+}
+
+
+log_barrier <- function(x1, x2) {
+  out <- -(log(-g(x1, x2)))
+  out[!is.finite(out)] <- Inf
+  out[is.nan(out)] <- Inf
+  out
+}
+
+x1_grid <- seq(-1.5, 1.2, length.out = 101)
+x2_grid <- seq(-0.5, 2.5, length.out = 101)
+z1 <- outer(x1_grid, x2_grid, f)
+z2 <- outer(x1_grid, x2_grid, log_barrier)
+
+plot_barrier <- function(t) {
+  z <- t * z1 + z2
+  min_z <- min(z, na.rm = TRUE)
+  levels <- exp(seq(log(min_z), log(20 + min_z), length.out = 25))
+  cols <- hcl.colors(30, "viridis", rev = FALSE)
+  argmin <- which(z == min_z, arr.ind = TRUE)
+  contour(
+    x1_grid,
+    x2_grid,
+    z,
+    levels = levels,
+    drawlabels = FALSE,
+    col = cols,
+    asp = 1,
+    xlab = expression(x[1]),
+    ylab = expression(x[2])
+  )
+  abline(v = 1, lty = "dashed", col = "black", lwd = 2)
+  points(
+    x1_grid[argmin[1, 1]],
+    x2_grid[argmin[1, 2]],
+    pch = 4,
+    col = "darkorange",
+    cex = 1.5
+  )
+  legend(
+    "topleft",
+    legend = c("Constraint", "Optimum", paste0("t = ", t)),
+    col = c("black", "darkorange", NA),
+    lty = c("dashed", NA, NA),
+    pch = c(NA, 4, NA),
+    bg = "white"
+  )
+}
+plot_barrier(0.085)
+```
+
+## Example
+
+:::: {.columns align="center"}
+
+::: {.column width="47%"}
+
+Let's assume we are solving
+$$
+\begin{aligned}
+  &\operatorname*{minimize}_{x}              && f(x) = (x_1 - 2)^2 + (x_2 - 1)^2 \\
+  &\textrm{subject to} && x_1 - 1 \leq 0.
+\end{aligned}
+$$\pause\bigskip
+
+The \alert{unconstrained} optimum would be at $(2, 1)$, but this is not feasible.
+
+\medskip\pause
+
+Using the barrier method, we solve a sequence of unconstrained problems
+$$
+\begin{aligned}
+  &\operatorname*{minimize}_{x}              && tf(x) - \log(1 - x_1)
+\end{aligned}
+$$
+
 :::
 
 ::: {.column width="47%"}
 
-```{r moth-optim}
-moth_optim <- optim(
-  x0,
-  neg_mult_loglik
-)
-moth_optim
+```{r}
+#| echo: false
+#| fig-cap: "Contour plots of the barrier-penalized objective."
+#| fig-height: 3.6
+#| fig-width: 3.2
+plot_barrier(0.085)
 ```
 
 :::
 
 ::::
 
-### Barrier Function
+## 
 
-Second (and better) option is to use the barrier method.
+```{r}
+#| echo: false
+#| fig-cap: "Contour plots of the barrier-penalized objective."
+#| fig-height: 3.6
+#| fig-width: 3.2
+plot_barrier(0.1)
+```
 
-Transform
+## 
 
-$$
-\begin{aligned}
-      & \text{minimize}   &  & f(x)                               \\
-      & \text{subject to} &  & g_i(x) \leq 0, & \quad i =1,\dots,m. \\
-  \end{aligned}
-$$
+```{r}
+#| echo: false
+#| fig-cap: "Contour plots of the barrier-penalized objective."
+#| fig-height: 3.6
+#| fig-width: 3.2
+plot_barrier(0.2)
+```
 
-. . .
+## 
 
-:::: {.columns}
+```{r}
+#| echo: false
+#| fig-cap: "Contour plots of the barrier-penalized objective."
+#| fig-height: 3.6
+#| fig-width: 3.2
+plot_barrier(0.5)
+```
 
-::: {.column width="47%"}
+## 
 
-into
+```{r}
+#| echo: false
+#| fig-cap: "Contour plots of the barrier-penalized objective."
+#| fig-height: 3.6
+#| fig-width: 3.2
+plot_barrier(10)
+```
 
-$$
-\begin{aligned}
-       \text{minimize}   &  & tf(x) + \phi(x)
-  \end{aligned}
-$$
+## Barrier Method Algorithm
 
-with the barrier function $$\phi(z) = -\sum_{i=1}^m \log(-g_i(z)).$$
+\begin{algorithm}[H]
+  \caption{Barrier Method}
+  \KwData{$t > 0$, $x$ strictly feasible, $\mu > 1$,, $\varepsilon > 0$, $m$ number of constraints}
+  \Repeat{$m/t < \varepsilon$ }{
+    $x \gets \operatorname*{argmin}_x tf(x) + \phi(x)$\;
+    $t \gets \mu t$\;
+  }
+  \Return{$x$}
+\end{algorithm}
 
-:::
+\medskip\pause
 
-::: {.column width="47%"}
+Guarantees convergence to a $\varepsilon$-suboptimal solution.
 
-![](../images/central-path.png){width=100%}
+## `constrOptim()`
 
-:::
+The barrier method can be used via `constrOptim()`.
 
-::::
-
-### `constrOptim()`
+\medskip\pause
 
 Solves problems with affine/linear inequality constraints of the form
 $$Ax \succeq b$$ or, in terms of arguments: `ui %*% theta >= ci`.
@@ -519,25 +712,33 @@ $$Ax \succeq b$$ or, in terms of arguments: `ui %*% theta >= ci`.
 
 ::: {.column width="47%"}
 
-#### Moths Example
+### Moths Example
 
 $$
-A = \begin{bmatrix}1 & 0\\-1 & 0\\0 & 1\\0 & -1\\ -1 & -1\end{bmatrix},
-\quad b = \begin{bmatrix}0\\-1\\0\\-1\\-1\end{bmatrix}.
+A = 
+\begin{bmatrix}
+  1 & 0\\-1 & 0\\0 & 1\\0 & -1\\ -1 & -1
+\end{bmatrix},
+\quad b = 
+\begin{bmatrix}
+  0\\-1\\0\\-1\\-1
+\end{bmatrix}.
 $$
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-#### Optimization Problem
+### Optimization Problem
 
 $$
-\begin{aligned}&\operatorname*{minimize}_{p} && -\ell(p) \\
-&\operatorname*{subject to} && Ap  \succeq b.
+\begin{aligned}
+  &\operatorname*{minimize}_{p} && -\ell(p)       \\
+  &\textrm{subject to}          && Ap  \succeq b.
 \end{aligned}
 $$
-
 with $p = (p_C, p_I)$.
 
 :::
@@ -546,9 +747,9 @@ with $p = (p_C, p_I)$.
 
 . . .
 
-**Not** standard form, but what `constrOptim()` expects.
+**Not** standard form---but what `constrOptim()` expects.
 
-### `constrOptim()`
+## `constrOptim()`
 
 ```{r constr-optim-ex}
 A <- rbind(
@@ -566,13 +767,24 @@ constrOptim(x0, neg_loglik_pep, NULL, ui = A, ci = b, x = x)$par
 
 . . .
 
-#### Still Requires Feasible Initial Point
+## Still Requires Feasible Initial Point
 
 ```{r const-error, error = TRUE, linewidth = 80}
-constrOptim(c(0.0, 0.3), neg_loglik_pep, NULL, ui = A, ci = b, x = x)
+constrOptim(
+  c(0.0, 0.3),
+  neg_loglik_pep,
+  NULL,
+  ui = A,
+  ci = b,
+  x = x
+)
 ```
 
 ## Interior-Point Method
+
+The barrier method is the basis of the interior-point method.
+
+. . .
 
 ### Phase I: Initialization
 
@@ -580,14 +792,14 @@ Find a feasible point $x^{(0)}$ by solving the optimization problem
 
 $$
 \begin{aligned}&\operatorname*{minimize}_{(x,s)} && s \\
-&\operatorname*{subject to} && g_i(x) \leq s, & \quad i = 1, \dots, m.\end{aligned}
+&\textrm{subject to} && g_i(x) \leq s, & \quad i = 1, \dots, m.\end{aligned}
 $$
 
 . . .
 
 If $s^* \leq 0$, then $x^* = x^{(0)}$ is feasible.
 
-. . .
+\medskip\pause
 
 Easy in the peppered moths case! But this is not always the case.
 
@@ -626,26 +838,24 @@ options(digits = old_options$digits)
   can easily be computed.
 - Constrained optmimization can be solved using the barrier method.
 - `optim()` in R is general interface to optimization methods.
-- `constOptim()` is used for linearly constrained optimization.
+- `constrOptim()` is used for linearly constrained optimization.
 
 ## Exercise: Absolute-Value Constraints
 
 Solve the following optimization problem:
-
 $$
 \begin{aligned}
   &\operatorname*{minimize}_{x}              && \frac{1}{2}(x - 2)^2 \\
-  &\operatorname{subject to} && |x| \leq 1.
+  &\textrm{subject to} && |x| \leq 1.
 \end{aligned}
 $$
 
 ### Steps
 
-- First rewrite the problem in standard form.
-- Then use `constrOptim()` with `ui` and `ci` arguments to specify the
-  constraints.
-- If you have time, try implementing the barrier method yourself on top of a
-  gradient descent method.
+1. Rewrite the problem in standard form.
+2. Write up the constraints in the form `ui %*% theta >= ci`.
+3. Use `constrOptim()` with `ui` and `ci` to solve the problem. You need
+   to provide the objective and gradient functions too.
 
 ```{r exercise-optim, include = FALSE}
 a <- 2
