@@ -136,7 +136,6 @@ will work on debugging a piece of code together. You can find the code here:
 #### Lecture 9: Likelihood Optimization
 
 - **Slides:** [Likelihood Optimization](slides/lecture9.pdf)
-- **Reading:**
 
 <!-- ### Week 6 -->
 <!---->
