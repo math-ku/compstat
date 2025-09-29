@@ -96,7 +96,7 @@ for you to solve independently at your own pace.
 - **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf)
 - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci)
 
-#### Presentation of Assignment 1
+#### Presentations of Assignment 1
 
 - **Instructions:** [Assignment 1](assignments/assignment1.html)
 
@@ -117,7 +117,7 @@ for you to solve independently at your own pace.
 - **Solutions**: [Exercise 4 Solutions](exercises/U4.qmd)
 
 
-#### Presentation of Assignment 2
+#### Presentations of Assignment 2
 
 - **Instructions:** [Assignment 2](assignments/assignment2.html)
 
@@ -137,15 +137,15 @@ will work on debugging a piece of code together. You can find the code here:
 
 - **Slides:** [Likelihood Optimization](slides/lecture9.pdf)
 
-<!-- ### Week 6 -->
-<!---->
-<!-- #### Lecture 10: The EM Algorithm -->
-<!---->
+### Week 6
+
+#### Lecture 10: The EM Algorithm
+
 <!-- - **Slides:** [The EM Algorithm](slides/lecture10.pdf) -->
 <!-- - **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em) -->
-<!---->
-<!-- #### Lecture 11: Rcpp -->
-<!---->
+
+#### Lecture 11: Rcpp
+
 <!-- Prior to this lecture, you should have Rcpp installed. You can follow the -->
 <!-- instructions in -->
 <!-- [Rcpp for Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html#install-rcpp) -->
@@ -159,38 +159,40 @@ will work on debugging a piece of code together. You can find the code here:
 <!--   - If you have time over, try the -->
 <!--     [exercises in 25.5.7 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74) -->
 <!--     too -->
-<!-- #### Presentation of Assignment 3 -->
-<!---->
-<!-- - **Instructions:** [Assignment 3](assignments/assignment3.html) -->
-<!---->
 
-<!-- #### OLD: Lecture 11: Gaussian Mixtures and Mixed Models -->
-<!---->
-<!-- - **Slides:** [Gaussian Mixtures and Mixed Models](slides/lecture11.pdf) -->
-<!-- - **Reading:** -->
-<!--   - [Section 10.4](https://cswr.nrhstat.org/em#revisiting-gaussian-mixtures) -->
-<!--   - [Section 8.5](https://cswr.nrhstat.org/likelihood-and-optimization#mixed-models) -->
+#### Presentations of Assignment 3
 
-<!-- ### Week 7 -->
-<!---->
-<!-- #### Lecture 12: Stochastic Gradient Descent -->
-<!---->
+- **Instructions:** [Assignment 3](assignments/assignment3.html)
+
+### Autumn Holiday Week
+
+Enjoy your break!
+
+### Week 7
+
+#### Lecture 12: Stochastic Gradient Descent
+
 <!-- - **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf) -->
 <!-- - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt) -->
-<!---->
-<!-- #### Lecture 13: Variations on Stochastic Gradient Descent -->
-<!---->
+
+#### Lecture 13: Variations on Stochastic Gradient Descent
+
 <!-- - **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf) -->
 <!-- - **Reading:** -->
 <!--   [Sections 11.2-11.3 (CSwR)](https://cswr.nrhstat.org/stochopt#beyond-basic-stochastic-gradient-algorithms) -->
-<!---->
-<!-- #### Presentation of Assignment 4 -->
-<!---->
-<!-- - **Instructions:** [Assignment 4](assignments/assignment4.html) -->
-<!---->
-<!-- ### Week 8 -->
+
+#### Presentations of Assignment 4
+
+- **Instructions:** [Assignment 4](assignments/assignment4.html)
+
+### Week 8
+
 <!---->
 <!-- #### Lecture 14: R Packages and Wrap-Up -->
 <!---->
 <!-- - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf) -->
 <!---->
+
+### Week 9
+
+Examinations
