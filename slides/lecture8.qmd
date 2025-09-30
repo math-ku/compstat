@@ -388,7 +388,7 @@ time in the long run.
 
 ## Returning Diagnostics
 
-For more complex functions, adding a `debug`/`diagnotics` flag, which if `TRUE`
+For more complex functions, adding a `debug`/`diagnostics` flag, which if `TRUE`
 returns some extra output.
 
 \medskip\pause
@@ -437,7 +437,7 @@ When execution reaches `browser()`, it stops and enters debug mode.
 
 ### RStudio Breakpoints
 
-Visual breakpoints can be set in RStudio by clicking in the margin next to the
+Visual breakpoints can be set in RStudio by clicking in the margin next to a
 line number.
 
 \medskip\pause
@@ -464,7 +464,7 @@ Make sure to provide context, especially when working with statistical topics.
 \medskip\pause
 
 AIs are typically good at finding syntax errors, but not so good at finding
-algorithmical errors.
+algorithmic errors.
 
 \medskip\pause
 
@@ -643,11 +643,11 @@ Then, we can run the Newton method implementation: `newton_method()`.
    `newton_method()`. What happens?\pause
 4. Create a test for the `newton_method()` function using the `testthat` package
    that fails.\pause
-4. Start debugging by setting some breakpoints in `newton_method()`.\pause
-5. Run `newton_method()` again. Execution should stop at the first breakpoint.
+5. Start debugging by setting some breakpoints in `newton_method()`.\pause
+6. Run `newton_method()` again. Execution should stop at the first breakpoint.
    Use the RStudio interface to step through the code and inspect variables.
    What do you see?\pause
-6. There are two bugs in `newton_method()`. Can you find and fix them?
+7. There are two bugs in `newton_method()`. Can you find and fix them?
 
 ## Next Time
 
