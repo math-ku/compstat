@@ -133,13 +133,14 @@ will work on debugging a piece of code together. You can find the code here:
 - **Reading:**
   [Chapter 22 (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging)
 
-#### Lecture 9: Likelihood Optimization
+#### Lecture 9: Likelihood Optimization and the EM Algorithm
 
-- **Slides:** [Likelihood Optimization](slides/lecture9.pdf)
+- **Slides:** [Likelihood Optimization and the EM Algorithm](slides/lecture9.pdf)
+- **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em)
 
 ### Week 6
 
-#### Lecture 10: The EM Algorithm
+#### Lecture 10: More on the EM Algorithm
 
 <!-- - **Slides:** [The EM Algorithm](slides/lecture10.pdf) -->
 <!-- - **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em) -->
