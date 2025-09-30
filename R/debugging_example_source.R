@@ -1,11 +1,7 @@
 my_sum <- function(x) {
   total <- 0
 
-  for (i in seq_along(x)) {
-    if (is.na(x[i])) {
-      next
-    }
-
+  for (i in 1:length(x)) {
     total <- total + x[i]
   }
 
