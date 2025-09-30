@@ -375,7 +375,7 @@ f <- function(x, y) {
   z <- g(x, y)
 
   cat("z:\n")
-  print(x)
+  print(z)
 
   list(sum_z = sum(z))
 }
