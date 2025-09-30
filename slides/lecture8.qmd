@@ -1,5 +1,5 @@
 ---
-title: "Testing And Debugging"
+title: "Testing and Debugging"
 ---
 
 {{< include _common.qmd >}}
@@ -31,7 +31,7 @@ Few assumptions on $f$, cheap iterations, but slow convergence.
 
 ::: {.column width="47%"}
 
-### Newton Method
+### Newton's Method
 
 Requires second derivatives, expensive iterations, but fast convergence.
 
@@ -102,13 +102,15 @@ But what we want is automated testing, which we can make part of our workflow.
 
 ### Suggested Workflow
 
+\medskip
+
 \begin{center}
   \begin{tikzpicture}[node distance=2cm,>=stealth,rounded corners]
     \node (A) [draw, rectangle] {Write code};
-    \node (B) [draw, rectangle, right of=A, node distance=3.5cm] {Write tests};
-    \node (C) [draw, rectangle, right of=B, node distance=3.5cm] {Run tests};
+    \node (B) [draw, rectangle, right of=A, node distance=4.5cm] {Write tests};
+    \node (C) [draw, rectangle, right of=B, node distance=4.5cm] {Run tests};
     \node (D) [draw, diamond, aspect=2, below of=C, node distance=2.5cm] {Tests pass?};
-    \node (F) [draw, rectangle, left of=D, node distance=3.5cm] {Fix code};
+    \node (F) [draw, rectangle, left of=D, node distance=4.5cm] {Fix code (debug)};
 
     \draw[->] (A) -- (B);
     \draw[->] (B) -- (C);
@@ -184,9 +186,10 @@ In your test directory, you can organize tests into multiple files.
 \medskip\pause
 
 \dirtree{%
-  .1 tests/.
-  .2 test-sum.R.
-  .2 test-mean.R.
+  .1 ./.
+  .2 tests/.
+  .3 test-sum.R.
+  .3 test-mean.R.
 }
 
 . . .
@@ -256,13 +259,12 @@ This is called test coverage.
 
 ### covr
 
-We can measure test coverage using the **covr** package, which tracks which
-lines of code are executed when we run our tests.
+Tracks which lines of code are executed when we run our tests.
 
 \medskip
 
-This is somewhat out of scope for this course, but you can read more about it in
-the [covr documentation](https://covr.r-lib.org/).
+\alert{Out of scope} for this course, but you can read more about it in the
+[covr documentation](https://covr.r-lib.org/).
 
 :::
 
@@ -361,7 +363,55 @@ traceback()
 1: f()
 ```
 
-## Entering Debug Mode
+## Poor Man's Debugging
+
+Sprinkle print statements throughout your code:
+
+```r
+f <- function(x, y) {
+  cat("x:\n")
+  print(x)
+
+  z <- g(x, y)
+
+  cat("z:\n")
+  print(x)
+
+  list(sum_z = sum(z))
+}
+```
+
+. . .
+
+Okay in the simplest of cases and easy to get going with, but will cost you more
+time in the long run.
+
+## Returning Diagnostics
+
+For more complex functions, adding a `debug`/`diagnotics` flag, which if `TRUE`
+returns some extra output.
+
+\medskip\pause
+
+```{r}
+f <- function(x, y, debug = FALSE) {
+  z <- g(x, y)
+
+  out <- list(sum_z = sum(z), diagnostics = NULL)
+
+  if (debug) {
+    out$diagnostics <- list(z = z)
+  }
+
+  out
+}
+```
+
+## Interactive Debugging
+
+For more complex problems, you typically need to debug interactively.
+
+\medskip\pause
 
 There are two common ways to debug code interactively in R.
 
@@ -402,18 +452,48 @@ No need to modify the code, but cannot be conditionally set.
 
 ::::
 
-## Rubber Duck Debugging
+## AI Debugging
 
-When stuck, a good strategy is to explain the code line-by-line to someone else.
+Debugging with AI (Copilot, Claude, Gemini etc.) is a quick and easy way to
+debug.
 
 \medskip\pause
+
+Make sure to provide context, especially when working with statistical topics.
+
+\medskip\pause
+
+AIs are typically good at finding syntax errors, but not so good at finding
+algorithmical errors.
+
+\medskip\pause
+
+Will almost always try to be helpful, so may provide incorrect answers and find
+bugs that are not there.
+
+## Pair Debugging
+
+Pair debugging is a collaborative debugging technique where you work in a pair
+to find and fix bugs.
+
+\medskip\pause
+
+One person walks through the code, explaining it line-by-line, while the other
+listens and asks questions.
+
+\medskip\pause
+
+This can help you see the code from a different perspective and find bugs that
+you might have missed.
+
+## Rubber Duck Debugging
 
 :::: {.columns align="center"}
 
 ::: {.column width="54%"}
 
-If you don't have anyone around, why not try explaining it to a rubber duck?!
-
+If you don't have anyone around to pair up with, you can always team up with a
+rubber duck!
 
 :::
 
@@ -436,21 +516,6 @@ The idea is that explaining the code out loud helps you see it from a different
 perspective.
 
 
-## Debugging C++ Code (Rcpp)
-
-Debugging C++ code is **not** easy.
-
-\medskip\pause
-
-General problem is that C++ code is compiled, so what you see in C++ is not
-necessarily what is executed.
-
-\medskip\pause
-
-We won't cover it here (or even later), but it **is** possible: see
-[these notes](https://github.com/wch/r-debug/blob/master/debugging-r.md) for
-instance.
-
 # Worked Example
 
 ## Poisson Regression
@@ -462,10 +527,12 @@ gradient descent and Newton's method.
 
 The Poisson regression model is given by
 $$
-\E(\symbf{Y} \mid \symbf{X}) = \exp(\symbf{X} \symbf{\beta}).
+\E(\symbf{y} \mid \symbf{X}) = \exp(\symbf{X} \symbf{\beta}),
 $$
+where $\symbf{X}$ is a $n \times p$ matrix of predictors and $\symbf{y}$ is
+our response.
 
-. . .
+\medskip\pause
 
 The problem is to find
 $$
@@ -586,12 +653,8 @@ Then, we can run the Newton method implementation: `newton_method()`.
 
 ### Likelihood Optimization
 
-We continue exploring different aspects of optimization.
+We study a practical example of optimizing a multinomial likelihood.
 
 \medskip\pause
 
-We focus on likelihood-based methods.
-
-\medskip\pause
-
-And also introduce algorithms for solving constrained optimization problems.
+We will introduce algorithms for solving constrained optimization problems.
