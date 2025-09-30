@@ -330,7 +330,7 @@ Debugging is the process of finding and fixing bugs.
 
 ---
 
-![The "first" bug.](../images/first-bug-reduced.jpg){width=75%}
+![The "first" bug report.](../images/first-bug-reduced.jpg){width=75%}
 
 ## Traceback
 
