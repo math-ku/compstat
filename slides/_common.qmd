@@ -18,11 +18,14 @@ options(width = 60)
 
 \DeclareMathOperator{\E}{\textrm{E}}
 
+\DeclareMathOperator{\kl}{KL}
+
 \DeclareMathOperator{\var}{Var}
 
 \DeclareMathOperator{\cov}{Cov}
 
 \DeclareMathOperator{\normal}{\mathcal{N}}
+\DeclareMathOperator{\binomial}{Bin}
 
 \DeclareMathOperator{\uniform}{\mathcal{U}}
 

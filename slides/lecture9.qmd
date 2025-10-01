@@ -24,6 +24,51 @@ library(patchwork)
 old_options <- options(digits = 4)
 ```
 
+```{r moth_likelihood2, echo = FALSE}
+M <- function(y, group) {
+  as.vector(tapply(y, group, sum))
+}
+
+mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
+  function(par) {
+    pr <- prob(par)
+    if (!constraint(par) || any(pr > 1) || any(pr < 0)) {
+      return(Inf)
+    }
+    -sum(x * log(M(pr, group)))
+  }
+}
+
+prob <- function(p) {
+  p[3] <- 1 - p[1] - p[2]
+  c(
+    p[1]^2,
+    2 * p[1] * p[2],
+    2 * p[1] * p[3],
+    p[2]^2,
+    2 * p[2] * p[3],
+    p[3]^2
+  )
+}
+
+constraint <- function(par) {
+  par[1] <= 1 &&
+    par[1] >= 0 &&
+    par[2] <= 1 &&
+    par[2] >= 0 &&
+    1 - par[1] - par[2] >= 0
+}
+
+loglik <- mult_likelihood(
+  x = c(85, 196, 341),
+  group = c(1, 1, 1, 2, 2, 3),
+  prob = prob,
+  constraint = constraint
+)
+
+moth_optim <- optim(c(0.3, 0.3), loglik)
+```
+
 ## Last Time
 
 ### Testing
@@ -130,8 +175,8 @@ $$
 The complete multinomial log-likelihood is
 $$
 \begin{aligned}
-  & 2n_{CC} \log(p_C) + n_{CI} \log (2 p_C p_I) + n_{CT} \log(2 p_C p_I) \\
-  & + 2 n_{II} \log(p*I) + n_{IT} \log(2p_I p_T) + 2 n_{TT} \log(p_T),
+  & 2n_{CC} \log(p_C) + n_{CI} \log (2 p_C p_I) + n_{CT} \log(2 p_C p_T) \\
+  & + 2 n_{II} \log(p_I) + n_{IT} \log(2p_I p_T) + 2 n_{TT} \log(p_T),
 \end{aligned}
 $$
 
@@ -365,7 +410,7 @@ We will try two different options.
 
 ### General Optimization
 
-Define **extended-value** function, and use general (zero-order) optimization
+Define **extended-value extension**, and use general (zero-order) optimization.
 
 . . .
 
@@ -374,6 +419,69 @@ Define **extended-value** function, and use general (zero-order) optimization
 Use the barrier method to directly solve the **constrained** optimization
 problem.
 
+## Extended-Value Extension
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+If $f$ is convex, its extended-value extension is
+$$
+\tilde{f}(x) =
+  \begin{cases}
+    f(x), & x \in \operatorname{dom} f, \\
+    +\infty, & \text{otherwise}.
+  \end{cases}
+$$
+
+. . .
+
+### Example {.example}
+
+Consider the function
+$$
+f(p) = p (p - 1), \quad p \in [0, 1].
+$$
+
+. . .
+
+Its extended-value extension is
+$$
+\tilde{f}(p) =
+  \begin{cases}
+    p (p - 1), & p \in [0, 1], \\
+    +\infty, & \text{otherwise}.
+  \end{cases}
+$$
+
+:::
+
+::: {.column width="47%"}
+
+
+```{r}
+#| echo: false
+#| fig-height: 3.4
+#| fig-cap: Extended-value extension of a simple function.
+p <- seq(-0.5, 1.5, length.out = 101)
+f <- function(p) {
+  ifelse(p < 0 | p > 1, 10, p * (p - 1))
+}
+plot(
+  p,
+  f(p),
+  type = "l",
+  ylim = c(-0.3, 0.1),
+  xlab = "p",
+  ylab = expression(tilde(f)(p))
+)
+```
+
+:::
+
+::::
+
+
 ##
 
 We can code a problem-specific (extended-value) version of the negative
@@ -381,6 +489,33 @@ log-likelihood.
 
 ```{r likelihood-again}
 #| ref-label: likelihood
+```
+
+## `optim()`
+
+R provides a general-purpose optimization function `optim()`.
+
+\medskip\pause
+
+Supports several optimization methods, including:
+
+- Nelder-Mead (default)
+- BFGS (quasi-Newton)
+- CG (conjugate gradient)
+- L-BFGS-B (box-constrained quasi-Newton)
+- SANN (simulated annealing)
+
+\medskip\pause
+
+Can supply gradient, but also compute it numerically (default).
+
+## `optim()` Example
+
+```{r optim-ex}
+obj <- function(x) {
+  (x[1] - 1)^2 + (x[2] - 2.5)^2
+}
+optim(c(0, 0), obj, method = "BFGS")
 ```
 
 ## Zero-Order Nelder-Mead
@@ -418,109 +553,6 @@ optim(
 :::
 
 ::::
-
-## Log-Likelihood Function Factory
-
-`M()` sums the cells that are collapsed, which we specify in `group` argument.
-
-```{r M-collapse}
-M <- function(y, group) {
-  as.vector(tapply(y, group, sum))
-}
-```
-
-##
-
-Compute the negative log-likelihood for general multinomial cell collapsing
-problems.
-
-```{r mult-likelihood-factory}
-mult_likelihood <- function(
-  x,
-  group,
-  prob,
-  constraint = function(par) TRUE
-) {
-  force(x)
-  force(group)
-  force(prob)
-
-  function(params) {
-    pr <- prob(params)
-    if (!constraint(params) || any(pr > 1) || any(pr < 0)) {
-      return(Inf)
-    }
-    -sum(x * log(M(pr, group)))
-  }
-}
-```
-
-## Peppered Moths Specifics
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-### Multinomial Probabilities
-
-`prob()` maps parameters to the multinomial probability vector.
-
-```{r prob}
-prob <- function(p) {
-  p[3] <- 1 - p[1] - p[2]
-  c(
-    p[1]^2,
-    2 * p[1] * p[2],
-    2 * p[1] * p[3],
-    p[2]^2,
-    2 * p[2] * p[3],
-    p[3]^2
-  )
-}
-```
-
-:::
-
-. . .
-
-::: {.column width="47%"}
-
-### Constraints
-
-Check of constraints.
-
-```{r constraint}
-constraint <- function(par) {
-  par[1] <= 1 &&
-    par[1] >= 0 &&
-    par[2] <= 1 &&
-    par[2] >= 0 &&
-    1 - par[1] - par[2] >= 0
-}
-```
-
-:::
-
-::::
-
-## Putting it All Together
-
-```{r moth_likelihood}
-neg_mult_loglik <- mult_likelihood(
-  x = x,
-  group = c(1, 1, 1, 2, 2, 3),
-  prob = prob,
-  constraint = constraint
-)
-```
-
-. . .
-
-```{r moth-optim}
-moth_optim <- optim(x0, neg_mult_loglik)
-moth_optim
-```
-
 
 ## Barrier Function
 
@@ -857,488 +889,328 @@ x[group] * p / M(p, group)[group]
 options(digits = old_options$digits)
 ```
 
-## Summary
-
-- Peppered moths example is simple and the log-likelihood for the observed data
-  can easily be computed.
-- Constrained optmimization can be solved using the barrier method.
-- `optim()` in R is general interface to optimization methods.
-- `constrOptim()` is used for linearly constrained optimization.
-
 # The EM Algorithm
 
-```{r moth_likelihood2, echo = FALSE}
-M <- function(y, group) {
-  as.vector(tapply(y, group, sum))
-}
-
-mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
-  function(par) {
-    pr <- prob(par)
-    if (!constraint(par) || any(pr > 1) || any(pr < 0)) {
-      return(Inf)
-    }
-    -sum(x * log(M(pr, group)))
-  }
-}
-
-prob <- function(p) {
-  p[3] <- 1 - p[1] - p[2]
-  c(
-    p[1]^2,
-    2 * p[1] * p[2],
-    2 * p[1] * p[3],
-    p[2]^2,
-    2 * p[2] * p[3],
-    p[3]^2
-  )
-}
-
-constraint <- function(par) {
-  par[1] <= 1 &&
-    par[1] >= 0 &&
-    par[2] <= 1 &&
-    par[2] >= 0 &&
-    1 - par[1] - par[2] >= 0
-}
-
-loglik <- mult_likelihood(
-  x = c(85, 196, 341),
-  group = c(1, 1, 1, 2, 2, 3),
-  prob = prob,
-  constraint = constraint
-)
-
-moth_optim <- optim(c(0.3, 0.3), loglik)
-```
-
-## Incomplete Data Likelihood
-
-We observe data $X$ but imagine (unobserved) complete data $Y = (X, Z)$ where $Z$ are latent / missing variables.
-
-\medskip\pause
-
-Let the joint density/pmf be
-$$
-f(x, z \mid \theta) = p(z \mid \theta)\, p(x \mid z, \theta).
-$$
-
-\medskip\pause
-
-The (observed) or marginal likelihood is
-$$
-g(x \mid \theta) =
-\begin{cases}
-\sum_z f(x, z \mid \theta), & \text{(discrete } Z)\\[4pt]
-\int f(x, z \mid \theta)\, \mathrm{d}z, & \text{(continuous } Z).
-\end{cases}
-$$
-
-Often this sum/integral is \alert{hard} to maximize directly.
-
-## Complete vs Observed Log-Likelihood
-
-Complete log-likelihood:
-$$
-\ell_c(\theta; x, z) = \log f(x, z \mid \theta).
-$$
-
-Observed (incomplete) log-likelihood:
-$$
-\ell(\theta) = \log g(x \mid \theta) = \log \sum_z f(x, z \mid \theta).
-$$
-
-Strategy: Replace the unobserved $z$ by its conditional distribution given the observed $x$ and current parameter iterate.
-
-## The Q Function
-
-Define
-$$
-Q(\theta \mid \theta') :=
-\operatorname{E}_{Z \mid X = x,\, \theta'}\big[\ell_c(\theta; X, Z)\big]
-= \sum_z \big(\log f(x, z \mid \theta)\big)\, \Pr(Z = z \mid X = x, \theta')
-$$
-(discrete case; integral analog in continuous case).
-
-\medskip\pause
-
-We can compute $Q$ if:
-
-1. We can evaluate the complete log-likelihood.
-2. We can compute (or at least work with) the conditional distribution $Z \mid X = x, \theta'$.
-
-## EM Algorithm (Definition)
-
-Given an initial $\theta^{(0)}$:
-
-- E-step: Compute (or update a representation of) $Q(\theta \mid \theta^{(n)})$.
-- M-step: $\theta^{(n+1)} = \arg\max_{\theta} Q(\theta \mid \theta^{(n)})$.
-
-Repeat until convergence.
-
-## Monotonicity (Sketch)
-
-Key inequality:
-$$
-\ell(\theta) - \ell(\theta') \;\ge\; Q(\theta \mid \theta') - Q(\theta' \mid \theta).
-$$
-
-Reason (discrete case sketch): Write
-$$
-\ell(\theta) = \log \sum_z f(x, z \mid \theta') \frac{f(x, z \mid \theta)}{f(x, z \mid \theta')}
-= \log \operatorname{E}_{Z \mid X=x,\theta'}\!\left[\frac{f(x, Z \mid \theta)}{f(x, Z \mid \theta')}\right]
-\ge \operatorname{E}_{Z \mid X=x,\theta'}\!\left[\log \frac{f(x, Z \mid \theta)}{f(x, Z \mid \theta')}\right],
-$$
-(Jensen) which rearranges to the inequality above. Thus maximizing $Q(\theta \mid \theta^{(n)})$ gives $\ell(\theta^{(n+1)}) \ge \ell(\theta^{(n)})$. Strict increase if $Q$ increases strictly.
-
-## Practical Pattern
-
-1. Specify latent structure $Z$.
-2. Write complete log-likelihood $\ell_c$.
-3. Derive conditional expectations needed for $Q$ (E-step).
-4. Maximize $Q$ in $\theta$ (M-step) — often closed form.
-5. Iterate until parameter change or log-likelihood change is small.
-
-## Conditional Distribution (Needed for E-Step)
-
-We only need $\Pr(Z = z \mid X = x, \theta^{(n)}) \propto f(x, z \mid \theta^{(n)})$ (normalize over $z$). Use it to compute required conditional expectations.
-
-## EM Iterations (Illustration)
-
-![Four iterations of the EM algorithm.](../images/em-iterations.png){width=87%}
-
-## Multinomial Complete Data Likelihood
-
-If $Y \sim \textrm{Mult}(p, n)$ the complete data log-likelihood is
-$$
-\ell_{\textrm{complete}}(p) = \sum_{i=1}^K Y_i \log(p_i).
-$$
-
-. . .
-
-Thus
-$$
-Q(p \mid p') = \operatorname{E}_{p'}( \ell_{\textrm{complete}}(p) \mid X = x) = \sum_{i=1}^K \operatorname{E}_{p'}( Y_i \mid X = x) \log(p_i)
-$$
-for any $X = M(Y)$.
-
-## E-step for Multinomial Model
-
-For the multinomial model with $M : \mathbb{N}_0^K \to \mathbb{N}_0^{K_0}$
-the cell collapsing map corresponding to the partition
-$A_1 \cup \ldots \cup A_{K_0} = \{1, \ldots, K \}$,
-$$
-\operatorname{E}_p (Y_k \mid X = x) = \frac{x_j p_k}{M(p)_j}.
-$$
-for $k \in A_j$.
-
-. . .
-
-### Abstract E-Step Implementation
-
-```{r}
-EStep_mult <- function(p, x, group) {
-  x[group] * p / M(p, group)[group]
-}
-```
-
-## Multinomial MLE for Moths
-
-With $y = (n_{CC}, n_{CI}, n_{CT}, n_{II}, n_{IT}, n_{TT})^T$ a complete
-observation, it can be shown that the MLE is
-$$
-\begin{aligned}
-  \hat{p}_C & = (n_{CC} + (n_{CI} + n_{CT}) / 2) / n \\
-  \hat{p}_I & = ((n_{CI} + n_{IT}) / 2 + n_{II}) / n
-\end{aligned}
-$$
-where $n = n_{CC} + n_{CI} + n_{CT} + n_{II} + n_{IT} + n_{TT}$.
-
-\medskip\pause
-
-For us $\hat{p} = \frac{1}{n} \symbf{X} y$.
+## The Expectation-Maximization (EM) Algorithm
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-```{r x-matrix}
-X <- matrix(
-  c(2, 1, 1, 0, 0, 0, 0, 1, 0, 2, 1, 0) / 2,
-  2,
-  6,
-  byrow = TRUE
-)
-```
+### Goal
+
+What we want is the MLE
+$$
+\hat{\theta} = \arg\max_\theta \ell(\theta \mid X)
+$$
+with $\ell(\theta \mid X) = \log p(X \mid \theta)$.
+
+. . .
+
+### Problem {.alert}
+
+The likelihood requires summing/integrating over unobserved variables Z:
+$$
+p(X \mid \theta) = \sum_Z p(X, Z \mid \theta).
+$$
+
+\medskip\pause
+
+This is often computationally infeasible.
 
 :::
 
 ::: {.column width="47%"}
 
-```{r x-matrix-eval}
-X
-```
+### Key Idea {.example}
+
+Work instead with the complete-data likelihood:
+$$
+p(X, Z \mid \theta),
+$$
+which is often easier to handle.
 
 :::
 
 ::::
 
-## Abstract M-Step
+## The Algorithm
 
-MLE of complete log-likelihood is linear estimator in $y / n$
+### E-step
 
-```{r mstep-mult}
-MStep_mult <- function(n, X) {
-  as.vector(X %*% n / (sum(n)))
-}
-```
-
-\medskip\pause
-
-`EStep_mult()` and `MStep_mult()` are abstract implementations. Requires
-arguments `group` and `X`.
+Compute expected complete log-likelihood:
+$$
+Q(\theta\mid\theta^{(t)})=\E_{Z \mid X,\theta^{(t)}}\left( \log p(X, Z \mid \theta) \right)
+$$
 
 \medskip\pause
 
-M-step only implemented when complete-data MLE is _linear estimator_.
+### M-Step
 
-## EM Factory for Multinomial Models
+Maximize expected complete log-likelihood:
+$$
+\theta^{(t+1)}=\arg\max_\theta Q(\theta\mid\theta^{(t)}).
+$$
 
-```{r EM-factory}
-EM_multinomial <- function(x, group, prob, X) {
-  force(x)
-  force(group)
-  force(prob)
-  force(X)
+### Repeat
 
-  EStep <- function(p) EStep_mult(prob(p), x, group)
-  MStep <- function(n) MStep_mult(n, X)
+Until convergence.
 
-  function(par, epsilon = 1e-6, maxit = 20, cb = NULL) {
-    for (i in seq_len(maxit)) {
-      par0 <- par
-      par <- MStep(EStep(par))
-      if (!is.null(cb)) {
-        cb()
-      }
-      if (sum((par - par0)^2) <= epsilon * (sum(par^2) + epsilon)) {
-        break
-      }
-    }
-    par
-  }
-}
-```
+## Why EM Works
 
-## Peppered Moths EM Algorithm
+### Key Inequality
 
-```{r, results='hold'}
-EM <- EM_multinomial(
-  x = c(85, 196, 341),
-  group = c(1, 1, 1, 2, 2, 3),
-  prob = prob,
-  X = matrix(
-    c(2, 1, 1, 0, 0, 0, 0, 1, 0, 2, 1, 0) / 2,
-    2,
-    6,
-    byrow = TRUE
-  )
-)
+$$
+\ell(\theta) = \log p(X \mid \theta) \geq \E_{q(Z)}[\log p(X,Z \mid \theta)] - \E_{q(Z)}[\log q(Z)].
+$$
 
-EM(c(0.3, 0.3))
-moth_optim$par
-```
+. . .
 
-## Inside the EM Algorithm
+### E-Step
+
+Choose
+$$
+q^{(t)}(Z) = p(Z \mid X, \theta^{(t)}).
+$$
+
+\medskip\pause
+
+Then inequality is tight, since
+$$
+\kl(q^{(t)} || p(Z \mid X, \theta^{(t)})) = 0.
+$$
+
+. . .
+
+### M-Step
+
+Update $\theta$ by maximizing the bound. This guarantees non-decreasing
+log-likelihood:
+$$
+\ell(\theta^{(t+1)}) \geq \ell(\theta^{(t)}).
+$$
+
+## From the Lower Bound to $Q$
+
+### Variational Bound
+
+$$
+F(q,\theta) = \E_q\big(\log p(X,Z \mid \theta)\big) - \E_q\big[\log q(Z)\big].
+$$
+
+\medskip\pause
+
+With
+$$
+q^{(t)}(Z) = p(Z \mid X, \theta^{(t)})
+$$
+we have
+$$
+F(q^{(t)},\theta) = Q(\theta \mid \theta^{(t)}) + H(q^{(t)}),
+$$
+where $H(q^{(t)})$ is entropy, independent of $\theta$.
+
+\medskip\pause
+
+### Consequence
+
+M-step:
+$$
+\theta^{(t+1)} = \arg\max_\theta Q(\theta \mid \theta^{(t)}).
+$$
+
+. . .
+
+So EM maximizes the variational lower bound.
+
+##
+
+![Four iterations of the EM algorithm.](../images/em-iterations.png){width=87%}
+
+## EM Example: Two Hidden Coins
+
+### Setup
+
+- Two coins, A and B, unknown biases $\theta_A$ and $\theta_B$.\pause
+- Each experiment: pick a coin at random (latent variable $Z_i$) and flip it
+  10 times.\pause
+- Observed data: $X_i$: number of heads in each experiment.\pause
+
+. . .
+
+### Goal
+
+Estimate $\theta_A$ and $\theta_B$ (MLE) using EM.
+
+## E-Step: Compute Probabilities of Each Coin
+
+For each experiment $i$, compute
+$$
+\begin{aligned}
+\gamma_i^{(t)} &= \Pr(Z_i = A \mid X_i, \theta_A^{(t)}, \theta_B^{(t)} )\\
+               &= \frac{\text{Binomial}(X_i \mid 10, \theta_A^{(t)})}{\text{Binomial}(X_i \mid 10, \theta_A^{(t)}) + \text{Binomial}(X_i \mid 10, \theta_B^{(t)})},
+\end{aligned}
+$$
+the **responsibility** of coin A for experiment $i$.
+
+. . .
+
+### Example Table
+
+| Experiment | Heads | $\gamma$ | 
+|------------|-------|----------|
+| 1          |     7 |     0.78 |
+| 2          |     4 |     0.35 |
+| 3          |     9 |     0.90 |
+
+## M-Step: Update Coin Biases
+
+Update parameters using weighted averages:
+$$
+\theta_A^{(t+1)} = \frac{\sum_i \gamma_{i}^{(t)} X_i}{\sum_i 10 \cdot \gamma_{i}^{(t)}}, \quad
+\theta_B^{(t+1)} = \frac{\sum_i (1 - \gamma_{i}^{(t)}) X_i}{\sum_i 10 \cdot (1 - \gamma_{i}^{(t)})}.
+$$
+
+. . .
+
+### Intuition
+
+Compute expected # of heads for each coin and divide by expected #
+of flips.
+
+\medskip\pause
+
+### Example Table After One Iteration
+
+| Coin | Updated $\theta$ |
+|------|------------------|
+| A    |             0.80 |
+| B    |             0.42 |
+
+##
 
 ```{r}
-library(CSwR)
-EM_tracer <- tracer("par")
-EM(c(0.3, 0.3), cb = EM_tracer$tracer)
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.9
+#| fig-cap: "EM algorithm iterations for the two-coin example."
+set.seed(1)
+n <- 1000
+heads <- {
+  ind <- sample(c(TRUE,FALSE), n, TRUE)
+  rbinom(n, 10, ifelse(ind, 0.8, 0.4))
+}
+maxit <- 20
+theta <- c(0.6, 0.5)   # start
+theta_hist <- matrix(NA, nrow=maxit, ncol=2)
+colnames(theta_hist) <- c("thetaA","thetaB")
+loglik <- numeric(maxit)
 
-summary(EM_tracer)
-```
+for(t in 1:maxit){
+  # record before update
+  theta_hist[t,] <- theta
+  pA <- dbinom(heads, 10, theta[1])
+  pB <- dbinom(heads, 10, theta[2])
+  mix <- 0.5*pA + 0.5*pB
+  loglik[t] <- sum(log(mix))
+  if(t == maxit) break
+  gamma <- pA / (pA + pB)   # responsibilities
+  theta[1] <- sum(gamma * heads) / (10 * sum(gamma))
+  theta[2] <- sum((1-gamma) * heads) / (10 * sum(1-gamma))
+}
 
-## Tracing the EM Algorithm
-
-```{r em-tracer}
-EM_tracer <- tracer(c("par0", "par"), Delta = 0)
-phat <- EM(c(0.3, 0.3), epsilon = 0, cb = EM_tracer$tracer)
-phat
-EM_trace <- summary(EM_tracer)
-tail(EM_trace)
-```
-
-## Adding Computed Values
-
-```{r}
-loglik_pep <- Vectorize(function(p1, p2) loglik(c(p1, p2)))
-EM_trace <- transform(
-  EM_trace,
-  n = seq_len(nrow(EM_trace)),
-  par_norm_diff = sqrt((par0.1 - par.1)^2 + (par0.2 - par.2)^2),
-  loglik = loglik_pep(par.1, par.2)
+matplot(
+  1:maxit,
+  theta_hist,
+  type="b",
+  pch=19,
+  col=c("blue", "red"),
+  lty=1,
+  xlab="Iteration",
+  ylab=expression(hat(theta)),
+  ylim=c(0, 1)
+)
+abline(
+  h=c(0.8,0.4),
+  col=c("blue","red"),
+  lty=2
+)
+legend(
+  "bottomright",
+  legend=c(expression(hat(theta)[A]), expression(hat(theta)[B])),
+  col=c("blue", "red"),
+  lty=c(1, 1),
+  pch=c(19, 19)
 )
 ```
 
-##
+## 
 
-```{r plot-curves, echo = FALSE, warning = FALSE}
-#| fig-width: 5.4
-#| fig-height: 4.5
-loglik_pep <- Vectorize(function(p1, p2) loglik(c(p1, p2)))
-
-group <- c(1, 1, 1, 2, 2, 3)
-
-EStep <- function(p) EStep_mult(prob(p), x, group)
-MStep <- function(n) MStep_mult(n, X)
-
-epsilon <- 1e-6
-maxit <- 5
-
-exp_vals <- matrix(NA, nrow = maxit, ncol = length(group))
-
-par <- c(0.3, 0.3)
-
-level_curves <- vector("list", length = maxit)
-
-ll <- double(maxit)
-x <- c(85, 196, 341)
-
-n_mat <- 100
-pC <- seq(0, 1, length.out = n_mat)
-pI <- seq(0, 1, length.out = n_mat)
-
-pars <- vector("list", length = maxit)
-
-for (i in seq_len(maxit)) {
-  par0 <- par
-  y <- EStep(par)
-
-  x_new <- M(y, group)
-  z <- matrix(NA, n_mat, n_mat)
-
-  x <- c(85, 196, 341)
-
-  for (k in seq_len(n_mat)) {
-    for (j in seq_len(n_mat)) {
-      # z[k, j] <- neg_loglik_pep(c(pC[k], pI[j]), x)
-      val <- -sum(y * log(prob(c(pC[k], pI[j]))))
-      if (is.finite(val)) {
-        z[k, j] <- val
-      } else {
-        z[k, j] <- -Inf
-      }
-    }
-  }
-
-  level_curves[[i]] <- z
-
-  ll[i] <- -sum(y * log(prob(par)))
-
-  exp_vals[i, ] <- y
-  par <- MStep(y)
-  pars[[i]] <- par
-}
-
-# min_z <- min(sapply(level_curves, min))
-# levels <- exp(seq(log(min_z), log(3000), length.out = 25))
-
-pal <- function(n) hcl.colors(n, "viridis", rev = FALSE)
-
-par_optim <- c(0.07084, 0.18874)
-
-old_par <- par(no.readonly = TRUE)
-
-par(mfrow = c(2, 2), mai = c(0.5, 0.5, 0.1, 0.1))
-for (i in 1:4) {
-  contour(
-    pC,
-    pI,
-    level_curves[[i]],
-    nlevels = 25,
-    col = pal(25),
-    asp = 1,
-    drawlabels = FALSE
-  )
-  text(0.9, 0.9, labels = paste0("k = ", i))
-
-  points(par_optim[1], par_optim[2], pch = 19, col = "dark orange")
-  points(pars[[i]][1], pars[[i]][2], pch = 19)
-}
-par(old_par)
-```
-
-##
-
-```{r tracer-plot1, echo = FALSE, fig.height = 5.5}
-ggplot(EM_trace, aes(n, par_norm_diff)) +
-  geom_point() +
-  geom_line() +
-  labs(
-    y = expression(paste(
-      "||",
-      theta^{
-        (n)
-      } -
-        theta^{
-          (n - 1)
-        },
-      "||"
-    ))
-  ) +
-  scale_y_log10()
-```
-
-Note the log-axis. The EM-algorithm converges linearly.
-
-## Linear Convergence
-
-The log-rate of the convergence can be estimated by least-squares.
-
-```{r linear-convergence}
-log_lm <- lm(log(par_norm_diff) ~ n, data = EM_trace)
-exp(coefficients(log_lm)["n"])
-```
-
-\medskip\pause
-
-It is very small in this case implying fast convergence.
-
-\medskip\pause
-
-This is not always the case. If the log-likelihood is flat, the EM-algorithm can
-become quite slow with a rate close to 1.
-
-##
-
-```{r loglikelihood-convergence, warning=FALSE, echo = FALSE, fig.cap="Log-likelihood convergence"}
+```{r}
+#| echo: false
 #| fig-width: 4
-mutate(EM_trace, diff_loglik = loglik - min(loglik)) |>
-  ggplot(aes(n, diff_loglik)) +
-  labs(y = expression(l[theta] - min(l))) +
-  geom_point() +
-  geom_line() +
-  scale_y_log10()
+#| fig-height: 3.5
+#| fig-cap: "Convergence of the log-likelihood in the two-coin EM example."
+plot(
+  1:maxit,
+  max(loglik) - loglik + 1e-10,
+  type="b",
+  pch=19,
+  xlab="Iteration",
+  ylab=expression(max(l) - l),
+  log = "y"
+)
 ```
 
-## Optimization and Statistics
+## Connection to $Q$-Function
 
-The EM-algorithm is a general algorithm for numerical optimization of a
-log-likelihood function. It works by iteratively optimizing
+Recall: 
 $$
-Q(\theta \mid \theta^{(n)}) = E_{\theta^{(n)}}(\log f(Y \mid \theta) \mid X = x).
+Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X, \theta^{(t)}}[\log p(X,Z \mid \theta)]
 $$
 
 \medskip\pause
 
-For numerical optimization of $Q$ or variants of EM (generalized EM algorithms)
-the gradient and Hessian of $Q$ can be useful.
+In the coin-flip example:
+$$
+Q(\theta_A, \theta_B \mid \theta^{(t)}_A, \theta^{(t)}_B)
+= \sum_i \gamma_{i}^{(t)} \log \text{Bin}(X_i \mid 10, \theta_A)
++ \sum_i (1 - \gamma_{i}^{(t)}) \log \text{Bin}(X_i \mid 10, \theta_B)
+$$
+
+. . .
+
+- **E-step:** compute $\gamma_{i}^{(t)}$, the expected values
+  (responsibilities) of the latent variables.
+- **M-step:** maximize $Q$ with respect to $\theta_A$ and $\theta_B$: weighted
+  averages of heads.
 
 \medskip\pause
 
-For statistics we need the observed Fisher information (Hessian of the negative
-log-likelihood for the observed data).
+Intuition: $Q$ is the expected complete-data log-likelihood; EM alternates between **expectation** (filling in latent variables) and **maximization** (updating parameters).
+
+## Summary
+
+### Likelihood Optimizaton
+
+Peppered moths example is simple and the log-likelihood for the observed data
+can easily be computed.
+
+\medskip\pause
+
+Constrained optimization can be solved using the barrier method.
+
+. . .
+
+### The EM Algorith
+
+The EM algorithm is a general approach to likelihood optimization in the
+presence of missing data or latent variables.
+
+\medskip\pause
+
+Each iteration is guaranteed to increase the observed data log-likelihood.
+
 
 ## Exercise: Absolute-Value Constraints
 
