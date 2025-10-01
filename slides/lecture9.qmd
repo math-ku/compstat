@@ -1248,3 +1248,11 @@ b <- c(-1, -1)
 
 constrOptim(c(0.5), f, g, ui = A, ci = b, a = a)
 ```
+
+## Next Time
+
+We will continue with more examples of the EM algorithm.
+
+\medskip\pause
+
+We will show how to solve the peppered moths example using EM.
