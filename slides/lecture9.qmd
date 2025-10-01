@@ -1194,7 +1194,7 @@ between **expectation** (filling in latent variables) and **maximization**
 
 ## Summary
 
-### Likelihood Optimizaton
+### Likelihood Optimization
 
 Peppered moths example is simple and the log-likelihood for the observed data
 can easily be computed.
@@ -1205,7 +1205,7 @@ Constrained optimization can be solved using the barrier method.
 
 . . .
 
-### The EM Algorith
+### The EM Algorithm
 
 The EM algorithm is a general approach to likelihood optimization in the
 presence of missing data or latent variables.
