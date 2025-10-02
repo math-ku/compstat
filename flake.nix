@@ -54,7 +54,6 @@
             knitr
             doParallel
             rmarkdown
-            animate
             here
             dqrng
             usethis

@@ -1,5 +1,4 @@
 library(ggplot2)
-# library(gganimate)
 
 # Set seed for reproducibility
 set.seed(123)

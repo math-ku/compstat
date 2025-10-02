@@ -6,7 +6,6 @@ title: "Stochastic Gradient Descent"
 
 ```{r setup, include=FALSE}
 
-library(animate)
 library(patchwork)
 
 set.seed(1422)

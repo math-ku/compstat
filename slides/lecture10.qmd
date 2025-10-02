@@ -6,7 +6,6 @@ title: "The EM-Algorithm"
 
 ```{r setup, include=FALSE}
 
-library(animate)
 library(patchwork)
 
 old_options <- options(digits = 4)
