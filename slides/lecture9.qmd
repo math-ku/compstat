@@ -153,7 +153,7 @@ Moths with genotype TT are light colored. Moths with genotypes II and IT are
 mottled.
 
 The peppered moth provided an early demonstration of evolution in the 19th
-centure England, where the light colored moth was outnumered by the dark colored
+century England, where the light colored moth was outnumered by the dark colored
 variety. The dark color became advantageous due to the increased polution, where
 trees were darkened by soot.
 
@@ -517,6 +517,16 @@ obj <- function(x) {
 }
 optim(c(0, 0), obj, method = "BFGS")
 ```
+
+. . .
+
+### Alternatives
+
+- `nlm()` for unconstrained optimization\pause
+- The **optimx** package for more methods\pause
+
+See the
+[CRAN task view on optimization](https://cran.r-project.org/web/views/Optimization.html)
 
 ## Zero-Order Nelder-Mead
 
@@ -1042,20 +1052,50 @@ So EM maximizes the variational lower bound.
 
 Estimate $\theta_A$ and $\theta_B$ (MLE) using EM.
 
-## E-Step: Compute Probabilities of Each Coin
-
-For each experiment $i$, compute
-$$
-\begin{aligned}
-\gamma_i^{(t)} &= \Pr(Z_i = A \mid X_i, \theta_A^{(t)}, \theta_B^{(t)} )\\
-               &= \frac{\text{Binomial}(X_i \mid 10, \theta_A^{(t)})}{\text{Binomial}(X_i \mid 10, \theta_A^{(t)}) + \text{Binomial}(X_i \mid 10, \theta_B^{(t)})},
-\end{aligned}
-$$
-the **responsibility** of coin A for experiment $i$.
-
 . . .
 
-### Example Table
+### Complete Likelihood
+
+If we knew which coin was used in each experiment, the complete-data
+likelihood would be
+$$
+p(X,Z \mid \theta) = \sum_i \left( \symbf{1}_{Z_i = A} \text{Binomial}(X_i \mid 10, \theta_A)
++ \symbf{1}_{Z_i = B} \text{Binomial}(X_i \mid 10, \theta_B) \right).
+$$
+
+## The E-Step: The Q-Function
+
+The log-likelihood of the complete data (for a single experiment) is
+$$
+\log p(X_i, Z_i \mid \theta) =
+\symbf{1}_{Z_i = A} \log \text{Bin}(X_i \mid 10, \theta_A)
++ \symbf{1}_{Z_i = B} \log \text{Bin}(X_i \mid 10, \theta_B).
+$$
+
+\medskip\pause
+
+Take expection over $Z_i$ given $X_i$ and current parameters:
+$$
+Q(\theta \mid \theta^{(t)}) = \sum_i \gamma_{i}^{(t)} \log \text{Bin}(X_i \mid 10, \theta_A)  + \sum_i (1 - \gamma_{i}^{(t)}) \log \text{Bin}(X_i \mid 10, \theta_B).
+$$
+
+\medskip\pause
+
+$$
+\begin{aligned}
+\gamma_i^{(t)} &= \E_Z\left(\symbf{1}_{Z_i = A} \mid X_i, \theta_A^{(t)}, \theta_B^{(t)}\right) \\
+               &= \Pr(Z_i = A \mid X_i, \theta_A^{(t)}, \theta_B^{(t)} )\\
+               &= \frac{\text{Binomial}(X_i \mid 10, \theta_A^{(t)})}{\text{Binomial}(X_i \mid 10, \theta_A^{(t)}) + \text{Binomial}(X_i \mid 10, \theta_B^{(t)})}.
+\end{aligned}
+$$
+
+\medskip\pause
+
+This called the **responsibility** of coin $A$ for experiment $i$.
+
+##
+
+: Example After One Iteration
 
 | Experiment | Heads | $\gamma$ | 
 |------------|-------|----------|
@@ -1065,7 +1105,7 @@ the **responsibility** of coin A for experiment $i$.
 
 ## M-Step: Update Coin Biases
 
-Update parameters using weighted averages:
+Maximizing $Q$ with respect to $\theta_A$ and $\theta_B$ gives
 $$
 \theta_A^{(t+1)} = \frac{\sum_i \gamma_{i}^{(t)} X_i}{\sum_i 10 \cdot \gamma_{i}^{(t)}}, \quad
 \theta_B^{(t+1)} = \frac{\sum_i (1 - \gamma_{i}^{(t)}) X_i}{\sum_i 10 \cdot (1 - \gamma_{i}^{(t)})}.
@@ -1079,7 +1119,7 @@ Compute expected # of heads for each coin and divide by expected # of flips.
 
 \medskip\pause
 
-### Example Table After One Iteration
+: Example After One Iteration
 
 | Coin | Updated $\theta$ |
 |------|------------------|
@@ -1256,3 +1296,7 @@ We will continue with more examples of the EM algorithm.
 \medskip\pause
 
 We will show how to solve the peppered moths example using EM.
+
+\medskip\pause
+
+We will also talk about convergence and the **generalized** EM algorithm.
