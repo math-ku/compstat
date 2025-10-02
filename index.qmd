@@ -149,21 +149,10 @@ will work on debugging a piece of code together. You can find the code here:
 <!-- - **Slides:** [The EM Algorithm](slides/lecture10.pdf) -->
 <!-- - **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em) -->
 
-#### Lecture 11: Rcpp
+#### Lecture 12: Stochastic Gradient Descent
 
-<!-- Prior to this lecture, you should have Rcpp installed. You can follow the -->
-<!-- instructions in -->
-<!-- [Rcpp for Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html#install-rcpp) -->
-<!-- to get started. -->
-<!---->
-<!-- - **Slides:** [Rcpp](slides/lecture11.pdf) -->
-<!-- - **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp) -->
-<!-- - **Exercises:** -->
-<!--   - [1 and 2 from 25.2.6 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started) -->
-<!--   - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73) -->
-<!--   - If you have time over, try the -->
-<!--     [exercises in 25.5.7 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74) -->
-<!--     too -->
+<!-- - **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf) -->
+<!-- - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt) -->
 
 #### Presentations of Assignment 3
 
@@ -175,10 +164,21 @@ Enjoy your break!
 
 ### Week 7
 
-#### Lecture 12: Stochastic Gradient Descent
+#### Lecture 12: Rcpp
 
-<!-- - **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf) -->
-<!-- - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt) -->
+Prior to this lecture, you should have Rcpp
+installed. You can follow the instructions in
+[Rcpp for Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html)
+to get started.
+
+<!-- - **Slides:** [Rcpp](slides/lecture12.pdf) -->
+- **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp)
+- **Exercises:**
+  - [1 and 2 from 25.2.6 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started)
+  - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73)
+  - If you have time over, try the
+    [exercises in 25.5.7 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74)
+    too
 
 #### Lecture 13: Variations on Stochastic Gradient Descent
 
