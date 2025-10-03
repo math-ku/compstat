@@ -7,8 +7,9 @@ execute:
 {{< include _common.qmd >}}
 
 ```{r setup, include=FALSE}
-
+set.seed(1618)
 library(patchwork)
+library(testthat)
 
 old_options <- options(digits = 4)
 ```
@@ -80,7 +81,11 @@ optimization when the likelihood is complicated.
 
 The EM-algorithm iteratively optimizes
 $$
-\theta^{(t+1)} = \argmin_\theta Q(\theta \mid \theta^{(n)}) = E_{Z \mid X, \theta^{(t)}}(\log f(X \mid \theta) \mid Z).
+\theta^{(t+1)} = \argmax_\theta Q(\theta \mid \theta^{(t)}),
+$$
+with
+$$
+Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X,\theta^{(t)}}\big(\log p(X, Z \mid \theta)\big).
 $$
 
 \medskip\pause
@@ -107,42 +112,177 @@ the MLE.
 
 Example of a finite mixture model where the EM-algorithm is useful.
 
-## Multinomial Complete Data Likelihood
+## Recap: The Peppered Moth
 
-If $Y \sim \textrm{Mult}(p, n)$ the complete data log-likelihood is
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Alleles
+
+C, Ci, T with frequencies $p_C$, $p_I$, $p_T$ and
 $$
-\ell_{\textrm{complete}}(p) = \sum_{i=1}^K Y_i \log(p_i).
+p_C + p_I + p_T = 1.
+$$
+
+### Genotypes
+
+CC, CI, CT, II, IT, TT
+
+### Phenotypes
+
+Black, mottled, light-colored
+
+:::
+
+::: {.column width="47%"}
+
+![](../images/peppered-moth.jpg){width=100%}
+
+
+: Genotype to Phenotype Map
+
+|       | **C** | **I**   | **T**         |
+| ----- | ----- | ------- | ------------- |
+| **C** | Black | Black   | Black         |
+| **I** | Black | Mottled | Mottled       |
+| **T** | Black | Mottled | Light-colored |
+
+:::
+
+::::
+
+## Latent Variables
+
+### Genotype Lables
+
+Let each moth $i=1,\ldots,n$ have an (unobserved) genotype label
+$$
+Z_i \in \{1,2,3,4,5,6\} \quad\text{(CC, CI, CT, II, IT, TT)}.
 $$
 
 . . .
 
-Thus
+Via the Hardy--Weinberg principle, the **genotype** probabilities are
 $$
-Q(p \mid p') = \operatorname{E}_{p'}( \ell_{\textrm{complete}}(p) \mid X = x) = \sum_{i=1}^K \operatorname{E}_{p'}( Y_i \mid X = x) \log(p_i)
+p = (p_C^2,\ 2p_Cp_I,\ 2p_Cp_T,\ p_I^2,\ 2p_Ip_T,\ p_T^2).
 $$
-for any $X = M(Y)$.
+
+. . .
+
+### Genotype Counts
+
+The genotype counts $Y_k$ are the sufficient statistics for the complete data,
+and also latent, with
+$$
+Y_k = \sum_{i=1}^n \mathbf{1}(Z_i = k), \quad Y = (Y_1,\ldots,Y_6), \quad \sum_k Y_k = n.
+$$
+
+## Observed Data
+
+What we actually observe are the **phenotype** counts
+$$
+X_j = \sum_{k \in A_j} Y_k,\quad X = M(Y).
+$$
+with partitions
+$$
+A_1=\{1,2,3\}\ (\text{Black}),\quad A_2=\{4,5\}\ (\text{Mottled}),\quad A_3=\{6\}\ (\text{Light}),
+$$
+
+. . .
+
+Here, $M : \mathbb{N}_0^6 \to \mathbb{N}_0^3$ is the cell collapsing map
+$$
+M(y) = (y_1 + y_2 + y_3,\ y_4 + y_5,\ y_6).
+$$
+
+### Multinomial Distribution
+
+If $Y \sim \operatorname{Mult}(p, n)$ with $p = (p_1, \ldots, p_K)$ then
+$$
+X = M(Y) \sim \operatorname{Mult}(M(p), n).
+$$
+
+## Complete-Data Log-Likelihood
+
+Using the genotype counts $Y$, the complete-data log-likelihood is
+$$
+\ell(p \mid Y) = \sum_{k=1}^6 Y_k \log p_k.
+$$
+
+## Optimization Variable
+
+For our EM algorithm, we will optimize over the **allele frequencies**
+$$
+\theta = (p_C, p_I)
+$$
+with $p_T = 1 - p_C - p_I$.
+
+\medskip\pause
+
+Let's define the function $\pi$, that maps $\theta$ to the genotype probabilities
+$$
+\pi(\theta) = 
+  \begin{bmatrix}
+    p_C^2 \\
+    2 p_C p_I \\
+    2 p_C (1 - p_C - p_I) \\
+    p_I^2 \\
+    2 p_I (1 - p_C - p_I) \\
+    (1 - p_C - p_I)^2
+  \end{bmatrix}
+$$
+
+## The Q Function
+
+EM $Q$-function:
+$$
+\begin{aligned}
+Q(\theta \mid \theta')
+  &= \E_{Y \mid X, \theta'} \log p (Y \mid \theta) \\
+  &= \sum_{k=1}^6 \E_{Y \mid X, \theta'}(Y_k) \log \pi_k(\theta) \\
+  &= \sum_{k=1}^6 \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \log \pi_k(\theta) \quad \text{where } k \in A_{j(k)}.
+\end{aligned}
+$$
+
+. . .
+
+Note that 
+$$
+\E_{Y \mid X, \theta'}(Y_k) = \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}}
+$$
+since $Y \mid X, \theta' \sim \operatorname{Mult}(X_{j(k)}, ( \pi_k(\theta') / M(\pi(\theta'))_{j(k)} )_{k \in A_{j(k)}})$.
 
 ## E-step for Multinomial Model
 
-For the multinomial model with $M : \mathbb{N}_0^K \to \mathbb{N}_0^{K_0}$
-the cell collapsing map corresponding to the partition
-$A_1 \cup \ldots \cup A_{K_0} = \{1, \ldots, K \}$,
-$$
-\operatorname{E}_p (Y_k \mid X = x) = \frac{x_j p_k}{M(p)_j}.
-$$
-for $k \in A_j$.
-
-. . .
-
-### Abstract E-Step Implementation
-
 ```{r}
-e_step_mult <- function(p, x, group) {
+e_step_mult <- function(theta, x, group) {
+  p <- pi_map(theta)
   x[group] * p / M(p, group)[group]
 }
 ```
 
-## Multinomial MLE for Moths
+. . .
+
+```{r}
+pi_map <- function(p) {
+  p[3] <- 1 - p[1] - p[2]
+  c(
+    p[1]^2,
+    2 * p[1] * p[2],
+    2 * p[1] * p[3],
+    p[2]^2,
+    2 * p[2] * p[3],
+    p[3]^2
+  )
+}
+```
+
+## M-Step for the Multinomial Model
+
+We need to maximize $Q(\theta \mid \theta')$ w.r.t. $\theta$.
+
+\medskip\pause
 
 With $y = (n_{CC}, n_{CI}, n_{CT}, n_{II}, n_{IT}, n_{TT})^T$ a complete
 observation, it can be shown that the MLE is
@@ -154,62 +294,37 @@ $$
 $$
 where $n = n_{CC} + n_{CI} + n_{CT} + n_{II} + n_{IT} + n_{TT}$.
 
-\medskip\pause
+## M-Step Implementation
 
-For us $\hat{p} = \frac{1}{n} \symbf{X} y$.
-
-##
-
-For us $\hat{p} = \frac{1}{n} \symbf{X} y$.
-
-```{r x-matrix}
-X <- matrix(
-  c(2, 1, 1, 0, 0, 0, 0, 1, 0, 2, 1, 0) / 2,
-  2,
-  6,
-  byrow = TRUE
-)
-```
-
-
-```{r x-matrix-eval}
-X
-```
-
-## Abstract M-Step
-
-MLE of complete log-likelihood is linear estimator in $y / n$
+MLE of complete log-likelihood:
 
 ```{r mstep-mult}
-m_step_mult <- function(n, X) {
-  as.vector(X %*% n / (sum(n)))
+m_step_mult <- function(y) {
+  n <- sum(y)
+  pC <- (y[1] + (y[2] + y[3]) / 2) / n
+  pI <- (y[4] + (y[2] + y[5]) / 2) / n
+  c(pC, pI)
 }
 ```
 
-\medskip\pause
+## Factory for the EM Step
 
-`EStep_mult()` and `MStep_mult()` are abstract implementations. Requires
-arguments `group` and `X`.
+A function factory returns 
 
-\medskip\pause
-
-M-step only implemented when complete-data MLE is _linear estimator_.
-
-## EM Factory for Multinomial Models
 
 ```{r}
-create_em_mult_step <- function(x, group, prob, X) {
+create_em_mult_step <- function(x, group) {
   force(x)
   force(group)
-  force(prob)
-  force(X)
 
-  e_step <- function(p) e_step_mult(prob(p), x, group)
-  m_step <- function(n) m_step_mult(n, X)
+  e_step <- function(theta) e_step_mult(theta, x, group)
+  m_step <- function(y) m_step_mult(y)
 
   function(par) m_step(e_step(par))
 }
 ```
+
+## EM Algorithm Implementation
 
 ```{r EM-factory}
 em <- function(par, em_step, epsilon = 1e-6, maxit = 20, cb = NULL) {
@@ -230,28 +345,9 @@ em <- function(par, em_step, epsilon = 1e-6, maxit = 20, cb = NULL) {
 ## Peppered Moths EM Algorithm
 
 ```{r, results='hold'}
-# EM <- EM_multinomial(
-# x = c(85, 196, 341),
-# group = c(1, 1, 1, 2, 2, 3),
-# prob = prob,
-# X = matrix(
-# c(2, 1, 1, 0, 0, 0, 0, 1, 0, 2, 1, 0) / 2,
-# 2,
-# 6,
-# byrow = TRUE
-# )
-# )
-
 em_mult_step <- create_em_mult_step(
   x = c(85, 196, 341),
-  group = c(1, 1, 1, 2, 2, 3),
-  prob = prob,
-  X = matrix(
-    c(2, 1, 1, 0, 0, 0, 0, 1, 0, 2, 1, 0) / 2,
-    2,
-    6,
-    byrow = TRUE
-  )
+  group = c(1, 1, 1, 2, 2, 3)
 )
 
 em(c(0.3, 0.3), em_mult_step)
@@ -260,11 +356,33 @@ moth_optim$par
 
 ## Inside the EM Algorithm
 
+The `tracer()` function in the `CSwR` package can be used to trace
+the iterations of an algorithm.
+
+. . .
+
 ```{r}
 library(CSwR)
-em_tracer <- tracer("par")
-em(c(0.3, 0.3), em_mult_step, cb = em_tracer$tracer)
+em_tracer <- tracer("par", Delta = 0)
+```
 
+. . .
+
+Each call to `tracer()` returns a S3 object of class tracer. The 
+object has a field `tracer`, which is a function that will
+record the current value of given parameters each time it is called.
+
+. . .
+
+```{r}
+em(c(0.3, 0.3), em_mult_step, cb = em_tracer$tracer)
+```
+
+##
+
+You can then summarize the collected values using `summary()`.
+
+```{r}
 summary(em_tracer)
 ```
 
@@ -278,30 +396,25 @@ em_trace <- summary(em_tracer)
 tail(em_trace)
 ```
 
-## Adding Computed Values
+##
 
-```{r}
+```{r plot-curves, echo = FALSE, warning = FALSE}
+#| fig-width: 5
+#| fig-height: 3.4
+#| fig-cap: "EM algorithm iterations shown as points on the log-likelihood contour plot"
 loglik_pep <- Vectorize(function(p1, p2) loglik(c(p1, p2)))
+
 em_trace <- transform(
   em_trace,
   n = seq_len(nrow(em_trace)),
   par_norm_diff = sqrt((par0.1 - par.1)^2 + (par0.2 - par.2)^2),
   loglik = loglik_pep(par.1, par.2)
 )
-```
-
-##
-
-```{r plot-curves, echo = FALSE, warning = FALSE}
-#| fig-width: 5
-#| fig-height: 3.1
-#| fig-cap: "EM algorithm iterations shown as points on the log-likelihood contour plot"
-loglik_pep <- Vectorize(function(p1, p2) loglik(c(p1, p2)))
 
 group <- c(1, 1, 1, 2, 2, 3)
 
-EStep <- function(p) e_step_mult(prob(p), x, group)
-MStep <- function(n) m_step_mult(n, X)
+EStep <- function(theta) e_step_mult(theta, x, group)
+MStep <- function(y) m_step_mult(y)
 
 epsilon <- 1e-6
 maxit <- 5
@@ -452,44 +565,53 @@ mutate(em_trace, diff_loglik = 1e-12 + loglik - min(loglik)) |>
 
 ## Pitfalls
 
-Bad initialization, degeneracy, label switching
+### Local Maxima
+
+$Q$ is not typically convex, so no guarantee that the EM-algorithm converges
+to the global maximum.
+
+\medskip\pause
+
+For this reason, the EM-algorithm is also sensitive to starting values.
+
+. . .
+
+### Bad Initialization
+
+The EM-algorithm can be sensitive to starting values.
+
+
+. . .
+
+### Label Switching
+
+In mixture models, the components can be permuted without changing the
+likelihood.
 
 ## Multi-Start
 
-## Optimization and Statistics
-
-The EM-algorithm is a general algorithm for numerical optimization of a
-log-likelihood function. It works by iteratively optimizing
-$$
-Q(\theta \mid \theta^{(n)}) = E_{\theta^{(n)}}(\log f(Y \mid \theta) \mid X = x).
-$$
+One way to deal with local maxima is to use multiple starting values.
 
 \medskip\pause
 
-For numerical optimization of $Q$ or variants of EM (generalized EM algorithms)
-the gradient and Hessian of $Q$ can be useful.
-
-\medskip\pause
-
-For statistics we need the observed Fisher information (Hessian of the negative
-log-likelihood for the observed data).
-
-## Local Maxima
-
-- $Q$ is not typically convex, so no guarantee that the EM-algorithm converges
-  to the global maximum.
-- How to deal with this?
-- Random starting values.
-- Global optimization (e.g. simulated annealing, genetic algorithms).
+For the moths, we can use a grid of starting values.
 
 # Fisher Information
 
+## Statistics
+
+When doing statistical inference, we need to measure the uncertainty of
+estimates.
+
+\medskip\pause
+
+The Fisher information is a key quantity for this.
+
 ## Gradient of $Q$ for the Multinomial Model
 
-Note that with $p = p(\theta)$ in some parametrization of the cell
-probabilities,
+Recall that
 $$
-Q(\theta \mid \theta') = \sum_{i} \frac{x_{j(i)} p_i(\theta')}{M(p(\theta'))_{j(i)}} \log p_i(\theta),
+Q(\theta \mid \theta') = \sum_{k} \frac{x_{j(i)} p_i(\theta')}{M(\pi(\theta'))_{j(i)}} \log \pi_i(\theta),
 $$
 where $j(i)$ is defined by $i \in A_{j(i)}$.
 
@@ -510,6 +632,7 @@ $$
 ## Gradient Implementation
 
 ```{r}
+#| echo: false
 Dprob <- function(p) {
   matrix(
     c(
@@ -539,9 +662,9 @@ grad_Q <- function(p, x = c(85, 196, 341)) {
 }
 ```
 
-## Gradient Identity
+## Gradient at the MLE
 
-Though computed as the gradient of $Q$,
+The EM algorithm is a fixed-point algorithm. The limit $\hat{\theta}$ satisfies
 $$
 \nabla_{\theta} Q(\theta' \mid \theta') = \nabla_{\theta} \ell(\theta')
 $$
@@ -550,13 +673,9 @@ $$
 \theta' = \arg\max_{\theta} \left(Q(\theta \mid \theta') -  \ell(\theta)\right).
 $$
 
-\medskip\pause
+. . .
 
-Can also be verified by direct computation.
-
-\medskip\pause
-
-The gradient is effectively zero in the limit.
+### Emprical Verification
 
 ```{r p-hat-call}
 p_hat <- em(c(0.3, 0.3), em_mult_step, epsilon = 1e-20)
@@ -658,22 +777,19 @@ Different estimates of same quantity. Should be close but not identical.
 
 ## Measuring Variance
 
-- Fisher information can be used to compute standard errors of MLEs
-- Empirical Fisher information can be computed for i.i.d. observations using the
+Fisher information can be used to compute standard errors of MLEs
+
+\medskip\pause
+
+Empirical Fisher information can be computed for i.i.d. observations using the
   gradients $\nabla_{\theta} Q_i(\bar{\theta} \mid \hat{\theta})$ evaluated in
   $\bar{\theta} = \hat{\theta}$.
-- Observed Fisher information can be computed by numerical differentiation of
+
+\medskip\pause
+
+Observed Fisher information can be computed by numerical differentiation of
   the gradient $-\nabla_{\theta} Q(\bar{\theta} \mid \bar{\theta})$ evaluated in
   $\bar{\theta} = \hat{\theta}$.
-
-. . .
-
-### Bootstrap
-
-- Another alternative is to use the bootstrap to compute standard errors.
-- Can be done nonparametrically
-- Or parametrically using the model assumptions.
-- Computationally more expensive
 
 ## Second Way: The Information Identity
 
@@ -763,26 +879,49 @@ grad_Q <- function(p, pp, x = c(85, 196, 341)) {
 
 ## Numerical Differentiation of $Q$
 
-We use numDeriv functions `jacobian()` and `hessian()` to differentiate
+We use **numDeriv** functions `jacobian()` and `hessian()` to differentiate
 numerically.
 
+:::: {.columns}
+
+::: {.column width="47%"}
+
 ```{r q-hess}
-iY <- -hessian(Q, p_hat, pp = p_hat)
+iY <- -hessian(
+  Q,
+  p_hat,
+  pp = p_hat
+)
 iY
-```
-
-\medskip\pause
-
-```{r q-jacobian}
--jacobian(grad_Q, p_hat, pp = p_hat) # This should be the same as iY
 ```
 
 . . .
 
-```{r iyx-jacobian}
-iYX <- jacobian(function(pp) grad_Q(p_hat, pp), p_hat)
-iY - iYX # same as `emp_Fisher(p_hat)`
+```{r q-jacobian}
+-jacobian(
+  grad_Q,
+  p_hat,
+  pp = p_hat
+)
 ```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+```{r iyx-jacobian}
+iYX <- jacobian(function(
+  pp
+) grad_Q(p_hat, pp), p_hat)
+
+iY - iYX
+```
+
+:::
+
+::::
 
 ## Third Way: The EM-Mapping
 
@@ -820,9 +959,18 @@ $D_{\theta} \Phi(\hat{\theta})$ can be computed via numerical differentiation.
 ## EM Step
 
 ```{r}
-Phi <- create_em_mult_step(c(85, 196, 341), c(1, 1, 1, 2, 2, 3), prob, X)
+Phi <- create_em_mult_step(c(85, 196, 341), c(1, 1, 1, 2, 2, 3))
 p_hat
-Phi(p_hat) # The limit is a fixed point
+```
+
+. . .
+
+Let's test it!
+
+```{r}
+test_that("Fixed point", {
+  expect_equal(Phi(p_hat), p_hat, tol = 1e-8)
+})
 ```
 
 ## Differentiating the EM Map
@@ -880,7 +1028,7 @@ $$
 
 :::: {.columns}
 
-::: {.column width="47%"}
+::: {.column width="50%"}
 
 ```{r mixture-gaus-sim}
 sigma1 <- 1
@@ -888,7 +1036,6 @@ sigma2 <- 2
 mu1 <- -0.5
 mu2 <- 4
 p <- 0.5
-
 n <- 5000
 z <- sample(
   c(TRUE, FALSE),
@@ -904,39 +1051,49 @@ x[!z] <- rnorm(n - n1, mu2, sigma2)
 
 :::
 
-::: {.column width="47%"}
+::: {.column width="44%"}
 
 ```{r, echo=FALSE}
-gausdens <- function(x) {
+#| fig-cap: "Histogram of simulated data from a two-component Gaussian mixture model."
+gausdens <- function(x, mu1, mu2, sigma1, sigma2) {
   (p *
     exp(-(x - mu1)^2 / (2 * sigma1^2)) /
     sigma1 +
     (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) /
     sqrt(2 * pi)
 }
+
 xx <- seq(-3, 11, 0.1)
-hist(x, freq = FALSE, ylim = c(0, 0.25), main = "")
-lines(xx, gausdens(xx), col = "red", lwd = 2)
+
+pl <- ggplot(data.frame(x), aes(x)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 40, fill = "lightgray") +
+  geom_line(
+    aes(x, gausdens(x, mu1, mu2, sigma1, sigma2)),
+    color = "black",
+    linewidth = 1
+  ) +
+  labs(y = "Density", x = "x")
+
+pl
 ```
 
 :::
 
 ::::
 
-## Log-likelihood
+## Log-likelihood ua
 
 We assume $\sigma_1$ and $\sigma_2$ known.
 
-```{r gaus-mix-loglik, cache = TRUE}
+```{r gaus-mix-loglik}
 loglik <- function(par, x) {
   p <- par[1]
+  mu1 <- par[2]
+  mu2 <- par[3]
 
   if (p < 0 || p > 1) {
     return(Inf)
   }
-
-  mu1 <- par[2]
-  mu2 <- par[3]
 
   -sum(log(
     p *
@@ -950,7 +1107,7 @@ loglik <- function(par, x) {
 ## Optimizing
 
 ```{r gaus-mix-example, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
-optim(c(0.5, -0.5, 4), loglik, x = x)[c(1, 2)]
+optim(c(0.5, -0.5, 4), loglik, x = x)[1:2]
 ```
 
 . . .
@@ -958,7 +1115,7 @@ optim(c(0.5, -0.5, 4), loglik, x = x)[c(1, 2)]
 Again, however, initialization matters!
 
 ```{r gaus-mix-example-bad, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
-optim(c(0.9, 3, 1), loglik, x = x)[c(1, 2)]
+optim(c(0.9, 3, 1), loglik, x = x)[1:2]
 ```
 
 ## The $Q$-Function
@@ -1011,39 +1168,7 @@ implementation.
 source(here::here("R", "em_gauss_mix.R"))
 ```
 
-## EM
-
-```{r run-em-gauss-mix}
-e_step_gauss <- function(par, x, sigma1 = 1, sigma2 = sigma1) {
-  p <- par[1]
-  mu1 <- par[2]
-  mu2 <- par[3]
-  a <- p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1
-  b <- (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2
-  a / (a + b)
-}
-
-m_step_gauss <- function(p_hat, x) {
-  n <- length(x)
-  N1 <- sum(p_hat)
-  N2 <- n - N1
-  c(N1 / n, sum(p_hat * x) / N1, sum((1 - p_hat) * x) / N2)
-}
-
-EM_gauss_mix_step <- function(x, sigma1 = 1, sigma2 = sigma1) {
-  force(x)
-  force(sigma1)
-  force(sigma2)
-
-  function(par) m_step_gauss(e_step_gauss(par, x, sigma1, sigma2), x)
-}
-
-em_gauss_step <- EM_gauss_mix_step(x, sigma1, sigma2)
-```
-
-. . .
-
-And testing
+## Testing
 
 ```{r test-em-gauss-mix}
 em(c(0.5, -0.5, 4), em_gauss_step)
@@ -1161,29 +1286,29 @@ gaussdens2 <- function(x, p, mu1, mu2) {
 }
 
 em_gauss_illustration <- function(i, em_trace) {
-  hist(x, freq = FALSE, ylim = c(0, 0.25), main = "", border = "transparent")
-  lines(xx, gausdens(xx), col = "steelblue3", lwd = 2)
   p_i <- em_trace$par0.1[i]
   mu1_i <- em_trace$par0.2[i]
   mu2_i <- em_trace$par0.3[i]
-  lines(xx, gaussdens2(xx, p_i, mu1_i, mu2_i), col = "dark orange", lwd = 2)
-  text(9, 0.20, labels = paste0("k = ", i))
+
+  pl +
+    geom_line(aes(y = gaussdens2(x, p_i, mu1_i, mu2_i)), color = "darkorange", size = 1) +
+    labs(title = paste0("k = ", i))
 }
 ```
 
 ## 
 
 ```{r}
-#| fig-width: 4.4
-#| fig-height: 3.7
+#| fig-width: 4
+#| fig-height: 3.2
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
 em_gauss_illustration(1, em_trace)
 ```
 
 ```{r}
-#| fig-width: 4.4
-#| fig-height: 3.7
+#| fig-width: 4
+#| fig-height: 3.2
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
 em_gauss_illustration(2, em_trace)

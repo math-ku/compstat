@@ -10,13 +10,11 @@ options(width = 60)
 
 ::: {.content-hidden when-format="beamer"}
 
-\DeclareMathOperator*{\argmin}{\arg\!\min}
+\DeclareMathOperator*{\argmin}{\arg\,\min}
 
-\DeclareMathOperator*{\argmax}{\arg\!\min}
+\DeclareMathOperator*{\argmax}{\arg\,\min}
 
 \DeclareMathOperator*{\minimize}{minimize}
-
-\DeclareMathOperator{\E}{\textrm{E}}
 
 \DeclareMathOperator{\kl}{KL}
 
@@ -28,5 +26,7 @@ options(width = 60)
 \DeclareMathOperator{\binomial}{Bin}
 
 \DeclareMathOperator{\uniform}{\mathcal{U}}
+
+\newcommand{\E}{\operatorname{E}}
 
 :::
