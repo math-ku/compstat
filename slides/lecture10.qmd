@@ -1,5 +1,7 @@
 ---
 title: "The EM-Algorithm"
+execute:
+  cache: false
 ---
 
 {{< include _common.qmd >}}
@@ -10,26 +12,6 @@ library(patchwork)
 
 old_options <- options(digits = 4)
 ```
-
-## Today
-
-### The EM Algorithm
-
-Useful method for likelihood optimization in the presence of missing data or
-latet variables.
-
-. . .
-
-### Fisher Information
-
-When the likelihood is optimized, the Fisher information gives the variance of
-the MLE.
-
-. . .
-
-### Gaussian Mixtures
-
-Example of a finite mixture model where the EM-algorithm is useful.
 
 ```{r moth_likelihood, echo = FALSE}
 M <- function(y, group) {
@@ -76,121 +58,54 @@ loglik <- mult_likelihood(
 moth_optim <- optim(c(0.3, 0.3), loglik)
 ```
 
-# The EM Algorithm
+## Last Time
 
-## Incomplete Data Likelihood
+### Likelihood Optimization
 
-Suppose that $Y$ is a random variable and $X = M(Y)$. Suppose that $Y$
-has density $f(\cdot \mid \theta)$ and that $X$ has marginal density
-$g(x \mid \theta)$.
-
-\medskip\pause
-
-The marginal density is typically of the form
-$$
-g(x \mid \theta) = \int_{\{y: M(y) = x\}} f(y \mid \theta) \ \mu_x(\mathrm{d} y)
-$$
-for a suitable measure $\mu_x$ depending on $M$ and $x$ but not $\theta$.
+We introduced the Peppered Moths problem and solved the full likelihood using
+general-purpose and constrained optimization.
 
 \medskip\pause
 
-If $Y = (X, Z)$, then
-$$
-g(x \mid \theta) = \int f(x, z \mid \theta) \, \mathrm{d} z = \int f(x \mid z, \theta) h(z \mid \theta) \, \mathrm{d}z.
-$$
+We talked about the barrier methods for constrained optimization.
 
 . . .
 
-### Problem
+### The EM Algorithm
 
-$g(x \mid \theta)$ typically impossible (or difficult) to compute.
+We introduced the EM-algorithm as a general algorithm for likelihood
+optimization when the likelihood is complicated.
 
-::: {.notes}
+## Recap: The EM Algorithm
 
-The general argument for the marginal density relies on the coarea formula.
-
-:::
-
-## Conditional Expectation
-
-The complete log-likelihood, $\log f(y \mid \theta)$, **is** often easy to
-compute, but we don't know $Y$, only that $M(Y) = x$.
+The EM-algorithm iteratively optimizes
+$$
+\theta^{(t+1)} = \argmin_\theta Q(\theta \mid \theta^{(n)}) = E_{Z \mid X, \theta^{(t)}}(\log f(X \mid \theta) \mid Z).
+$$
 
 \medskip\pause
 
-In some cases it is possible to compute
-$$
-Q(\theta \mid \theta') := \operatorname{E}_{\theta'}(\log f(Y \mid \theta) \mid X = x),
-$$
-which is the _conditional expectation of the complete log-likelihood given the
-observed data and under the probability measure given by $\theta'$._
+The algorithm monotonically increases the observed data log-likelihood at each
+step.
 
-## The EM Algorithm
+## Today
 
-### Idea
+### More on the EM Algorithm
 
-With an initial guess of $\theta' = \theta^{(n)}$, iteratively compute
-$$
-\theta^{(n + 1)} = \textrm{arg max} \ Q(\theta \mid \theta^{(n)})
-$$
-for $n = 0, 1, 2, \ldots$.
+Examples on Gaussian mixtures and the multinomial model.
 
 . . .
 
-### Steps
+### Fisher Information
 
-- **E-step**: Compute the conditional expectation $Q(\theta \mid \theta^{(n)})$.
-- **M-step**: Maximize $Q(\theta \mid \theta^{(n)})$ in $\theta$.
+When the likelihood is optimized, the Fisher information gives the variance of
+the MLE.
 
-## Conditional Distributions
+. . .
 
-Generally, conditional distribution of $Y$ given $X = x$ has density
-$$
-h(y \mid x, \theta) = \frac{f(y \mid \theta)}{g(x \mid \theta)}
-$$
-w.r.t. a suitable measure $\mu_x$ that does not depend upon $\theta$.
+### Gaussian Mixtures
 
-\medskip\pause
-
-$Y = (Z, X)$ with joint density w.r.t. a product measure $\mu \otimes \nu$ that
-does not depend upon $\theta$.
-
-\medskip\pause
-
-In the latter case, $f(y \mid \theta) = f(z, x \mid \theta)$ and
-$$
-g(x \mid \theta) = \int f(z, x \mid \theta) \ \mathrm{d} z.
-$$
-
-## The Central Identity
-
-In general
-$$
-\ell(\theta) = \log g(x \mid \theta) = \log f(y \mid \theta) - \log h(y \mid x, \theta),
-$$
-and under some integrability conditions, this decomposition is used to show
-that the EM-algorithm increases the log-likelihood, $\ell(\theta)$, in each
-iteration.
-
-## An Ascent Method
-
-It can be shown that
-$$
-\log g(x \mid \theta) - \log g(x \mid \theta') \geq Q(\theta \mid \theta') - Q(\theta' \mid \theta)
-$$
-
-\medskip\pause
-
-In other words, the marginal likelihood **weakly** increases in each iteration.
-
-\medskip\pause
-
-If $Q(\theta^{(n+1)} \mid \theta) > Q(\theta^{(n)} \mid \theta)$ then the
-algorithm **strictly** increases the likelihood.
-
-##
-
-![Four iterations of the EM algorithm.](../images/em-iterations.png){width=87%}
+Example of a finite mixture model where the EM-algorithm is useful.
 
 ## Multinomial Complete Data Likelihood
 
@@ -222,7 +137,7 @@ for $k \in A_j$.
 ### Abstract E-Step Implementation
 
 ```{r}
-EStep_mult <- function(p, x, group) {
+e_step_mult <- function(p, x, group) {
   x[group] * p / M(p, group)[group]
 }
 ```
@@ -233,8 +148,8 @@ With $y = (n_{CC}, n_{CI}, n_{CT}, n_{II}, n_{IT}, n_{TT})^T$ a complete
 observation, it can be shown that the MLE is
 $$
 \begin{aligned}
-  \hat{p}_C & = (n_{CC} + (n_{CI} + n_{CT}) / 2) / n \\
-  \hat{p}_I & = ((n_{CI} + n_{IT}) / 2 + n_{II}) / n
+  \hat{p}_C & = \frac{n_{CC} + (n_{CI} + n_{CT}) / 2}{n} \\
+  \hat{p}_I & = \frac{n_{II} + (n_{CI} + n_{IT}) / 2}{n}
 \end{aligned}
 $$
 where $n = n_{CC} + n_{CI} + n_{CT} + n_{II} + n_{IT} + n_{TT}$.
@@ -243,9 +158,9 @@ where $n = n_{CC} + n_{CI} + n_{CT} + n_{II} + n_{IT} + n_{TT}$.
 
 For us $\hat{p} = \frac{1}{n} \symbf{X} y$.
 
-:::: {.columns}
+##
 
-::: {.column width="47%"}
+For us $\hat{p} = \frac{1}{n} \symbf{X} y$.
 
 ```{r x-matrix}
 X <- matrix(
@@ -256,24 +171,17 @@ X <- matrix(
 )
 ```
 
-:::
-
-::: {.column width="47%"}
 
 ```{r x-matrix-eval}
 X
 ```
-
-:::
-
-::::
 
 ## Abstract M-Step
 
 MLE of complete log-likelihood is linear estimator in $y / n$
 
 ```{r mstep-mult}
-MStep_mult <- function(n, X) {
+m_step_mult <- function(n, X) {
   as.vector(X %*% n / (sum(n)))
 }
 ```
@@ -289,36 +197,52 @@ M-step only implemented when complete-data MLE is _linear estimator_.
 
 ## EM Factory for Multinomial Models
 
-```{r EM-factory}
-EM_multinomial <- function(x, group, prob, X) {
+```{r}
+create_em_mult_step <- function(x, group, prob, X) {
   force(x)
   force(group)
   force(prob)
   force(X)
 
-  EStep <- function(p) EStep_mult(prob(p), x, group)
-  MStep <- function(n) MStep_mult(n, X)
+  e_step <- function(p) e_step_mult(prob(p), x, group)
+  m_step <- function(n) m_step_mult(n, X)
 
-  function(par, epsilon = 1e-6, maxit = 20, cb = NULL) {
-    for (i in seq_len(maxit)) {
-      par0 <- par
-      par <- MStep(EStep(par))
-      if (!is.null(cb)) {
-        cb()
-      }
-      if (sum((par - par0)^2) <= epsilon * (sum(par^2) + epsilon)) {
-        break
-      }
+  function(par) m_step(e_step(par))
+}
+```
+
+```{r EM-factory}
+em <- function(par, em_step, epsilon = 1e-6, maxit = 20, cb = NULL) {
+  for (i in seq_len(maxit)) {
+    par0 <- par
+    par <- em_step(par)
+    if (!is.null(cb)) {
+      cb()
     }
-    par
+    if (sum((par - par0)^2) <= epsilon * (sum(par^2) + epsilon)) {
+      break
+    }
   }
+  par
 }
 ```
 
 ## Peppered Moths EM Algorithm
 
 ```{r, results='hold'}
-EM <- EM_multinomial(
+# EM <- EM_multinomial(
+# x = c(85, 196, 341),
+# group = c(1, 1, 1, 2, 2, 3),
+# prob = prob,
+# X = matrix(
+# c(2, 1, 1, 0, 0, 0, 0, 1, 0, 2, 1, 0) / 2,
+# 2,
+# 6,
+# byrow = TRUE
+# )
+# )
+
+em_mult_step <- create_em_mult_step(
   x = c(85, 196, 341),
   group = c(1, 1, 1, 2, 2, 3),
   prob = prob,
@@ -330,7 +254,7 @@ EM <- EM_multinomial(
   )
 )
 
-EM(c(0.3, 0.3))
+em(c(0.3, 0.3), em_mult_step)
 moth_optim$par
 ```
 
@@ -338,29 +262,29 @@ moth_optim$par
 
 ```{r}
 library(CSwR)
-EM_tracer <- tracer("par")
-EM(c(0.3, 0.3), cb = EM_tracer$tracer)
+em_tracer <- tracer("par")
+em(c(0.3, 0.3), em_mult_step, cb = em_tracer$tracer)
 
-summary(EM_tracer)
+summary(em_tracer)
 ```
 
 ## Tracing the EM Algorithm
 
 ```{r em-tracer}
-EM_tracer <- tracer(c("par0", "par"), Delta = 0)
-phat <- EM(c(0.3, 0.3), epsilon = 0, cb = EM_tracer$tracer)
+em_tracer <- tracer(c("par0", "par"), Delta = 0)
+phat <- em(c(0.3, 0.3), em_mult_step, epsilon = 0, cb = em_tracer$tracer)
 phat
-EM_trace <- summary(EM_tracer)
-tail(EM_trace)
+em_trace <- summary(em_tracer)
+tail(em_trace)
 ```
 
 ## Adding Computed Values
 
 ```{r}
 loglik_pep <- Vectorize(function(p1, p2) loglik(c(p1, p2)))
-EM_trace <- transform(
-  EM_trace,
-  n = seq_len(nrow(EM_trace)),
+em_trace <- transform(
+  em_trace,
+  n = seq_len(nrow(em_trace)),
   par_norm_diff = sqrt((par0.1 - par.1)^2 + (par0.2 - par.2)^2),
   loglik = loglik_pep(par.1, par.2)
 )
@@ -369,14 +293,15 @@ EM_trace <- transform(
 ##
 
 ```{r plot-curves, echo = FALSE, warning = FALSE}
-#| fig-width: 5.4
-#| fig-height: 3
+#| fig-width: 5
+#| fig-height: 3.1
+#| fig-cap: "EM algorithm iterations shown as points on the log-likelihood contour plot"
 loglik_pep <- Vectorize(function(p1, p2) loglik(c(p1, p2)))
 
 group <- c(1, 1, 1, 2, 2, 3)
 
-EStep <- function(p) EStep_mult(prob(p), x, group)
-MStep <- function(n) MStep_mult(n, X)
+EStep <- function(p) e_step_mult(prob(p), x, group)
+MStep <- function(n) m_step_mult(n, X)
 
 epsilon <- 1e-6
 maxit <- 5
@@ -407,7 +332,6 @@ for (i in seq_len(maxit)) {
 
   for (k in seq_len(n_mat)) {
     for (j in seq_len(n_mat)) {
-      # z[k, j] <- neg_loglik_pep(c(pC[k], pI[j]), x)
       val <- -sum(y * log(prob(c(pC[k], pI[j]))))
       if (is.finite(val)) {
         z[k, j] <- val
@@ -426,36 +350,58 @@ for (i in seq_len(maxit)) {
   pars[[i]] <- par
 }
 
-# min_z <- min(sapply(level_curves, min))
-# levels <- exp(seq(log(min_z), log(3000), length.out = 25))
-
-pal <- function(n) hcl.colors(n, "viridis", rev = FALSE)
-
 par_optim <- c(0.07084, 0.18874)
 
-old_par <- par(no.readonly = TRUE)
-
-par(mfrow = c(2, 2), mai = c(0.5, 0.5, 0.1, 0.1))
-for (i in 1:4) {
-  contour(
-    pC,
-    pI,
-    level_curves[[i]],
-    nlevels = 25,
-    col = pal(25),
-    asp = 1,
-    drawlabels = FALSE
+# Build long data frame for first 4 iterations
+build_df <- function(z_mat, iter) {
+  out <- data.frame(
+    pC = rep(pC, times = length(pI)),
+    pI = rep(pI, each = length(pC)),
+    z = as.vector(z_mat),
+    iter = iter
   )
-  text(0.9, 0.9, labels = paste0("k = ", i))
-
-  points(par_optim[1], par_optim[2], pch = 19, col = "dark orange")
-  points(pars[[i]][1], pars[[i]][2], pch = 19)
+  out
 }
-par(old_par)
+
+plot_iters <- 1:4
+df_all <- do.call(
+  rbind,
+  lapply(plot_iters, function(i) build_df(level_curves[[i]], i))
+)
+
+# Points (current parameter in each iteration)
+iter_points <- data.frame(
+  pC = sapply(pars[plot_iters], `[[`, 1),
+  pI = sapply(pars[plot_iters], `[[`, 2),
+  iter = plot_iters
+)
+
+mle_point <- data.frame(
+  pC = par_optim[1],
+  pI = par_optim[2]
+)
+
+ggplot(df_all, aes(pC, pI)) +
+  geom_contour(
+    aes(z = z, color = after_stat(level)),
+    breaks = seq(800, 3000, by = 200)
+  ) +
+  geom_point(data = mle_point, colour = "darkorange", size = 3, pch = 4) +
+  geom_point(data = iter_points, colour = "black", size = 2) +
+  facet_wrap(~iter, labeller = labeller(iter = function(i) paste0("k = ", i))) +
+  coord_equal() +
+  guides(color = "none") +
+  labs(x = expression(p[C]), y = expression(p[I])) +
+  theme(panel.spacing = unit(0.8, "lines"))
 ```
 
-```{r tracer-plot1, echo = FALSE, fig.height = 5.5}
-ggplot(EM_trace, aes(n, par_norm_diff)) +
+##
+
+```{r tracer-plot1, echo = FALSE}
+#| fig-height: 2.7
+#| fig-width: 3.5
+#| fig-cap: "Parameter convergence of the EM algorithm applied to the Peppered moths problem."
+ggplot(em_trace, aes(n, par_norm_diff)) +
   geom_point() +
   geom_line() +
   labs(
@@ -473,14 +419,12 @@ ggplot(EM_trace, aes(n, par_norm_diff)) +
   scale_y_log10()
 ```
 
-Note the log-axis. The EM-algorithm converges linearly.
-
 ## Linear Convergence
 
 The log-rate of the convergence can be estimated by least-squares.
 
 ```{r linear-convergence}
-log_lm <- lm(log(par_norm_diff) ~ n, data = EM_trace)
+log_lm <- lm(log(par_norm_diff) ~ n, data = em_trace)
 exp(coefficients(log_lm)["n"])
 ```
 
@@ -491,19 +435,26 @@ It is very small in this case implying fast convergence.
 \medskip\pause
 
 This is not always the case. If the log-likelihood is flat, the EM-algorithm can
-become quite slow with a rate close to 1.
+become arbitrarily slow with a rate close to 1.
 
 ##
 
 ```{r loglikelihood-convergence, warning=FALSE, echo = FALSE, fig.cap="Log-likelihood convergence"}
 #| fig-width: 4
-mutate(EM_trace, diff_loglik = loglik - min(loglik)) |>
+#| fig-height: 2.5
+mutate(em_trace, diff_loglik = 1e-12 + loglik - min(loglik)) |>
   ggplot(aes(n, diff_loglik)) +
   labs(y = expression(l[theta] - min(l))) +
   geom_point() +
   geom_line() +
   scale_y_log10()
 ```
+
+## Pitfalls
+
+Bad initialization, degeneracy, label switching
+
+## Multi-Start
 
 ## Optimization and Statistics
 
@@ -608,7 +559,7 @@ Can also be verified by direct computation.
 The gradient is effectively zero in the limit.
 
 ```{r p-hat-call}
-p_hat <- EM(c(0.3, 0.3), epsilon = 1e-20)
+p_hat <- em(c(0.3, 0.3), em_mult_step, epsilon = 1e-20)
 ```
 
 :::: {.columns}
@@ -650,7 +601,7 @@ holding for each observation, we can compute the empirical variance.
 Can think of the moths as i.i.d. observations.
 
 ```{r}
-emp_Fisher <- function(p, x = c(85, 196, 341)) {
+emp_fisher <- function(p, x = c(85, 196, 341)) {
   grad1 <- grad_Q(p, c(1, 0, 0))
   grad2 <- grad_Q(p, c(0, 1, 0))
   grad3 <- grad_Q(p, c(0, 0, 1))
@@ -661,10 +612,10 @@ emp_Fisher <- function(p, x = c(85, 196, 341)) {
 }
 ```
 
---
+. . .
 
 ```{r}
-emp_Fisher(p_hat)
+emp_fisher(p_hat)
 ```
 
 ## Numerical Fisher information
@@ -676,10 +627,16 @@ emp_Fisher(p_hat)
 ### `stats::optimHess()`
 
 ```{r}
--optimHess(p_hat, loglik, grad_Q)
+-optimHess(
+  p_hat,
+  loglik,
+  grad_Q
+)
 ```
 
 :::
+
+. . .
 
 ::: {.column width="47%"}
 
@@ -695,8 +652,9 @@ ihat
 
 ::::
 
-- Different estimates of same quantity
-- Should be close but not identical
+. . .
+
+Different estimates of same quantity. Should be close but not identical.
 
 ## Measuring Variance
 
@@ -859,27 +817,10 @@ $$
 
 $D_{\theta} \Phi(\hat{\theta})$ can be computed via numerical differentiation.
 
-## EM Step Implementation
+## EM Step
 
 ```{r}
-EM_multinomial_step <- function(x, group, prob, X) {
-  force(x)
-  force(group)
-  force(prob)
-  force(X)
-
-  EStep <- function(p) EStep_mult(prob(p), x, group)
-
-  MStep <- function(n) MStep_mult(n, X)
-
-  function(par) MStep(EStep(par))
-}
-```
-
-. . .
-
-```{r}
-Phi <- EM_multinomial_step(c(85, 196, 341), c(1, 1, 1, 2, 2, 3), prob, X)
+Phi <- create_em_mult_step(c(85, 196, 341), c(1, 1, 1, 2, 2, 3), prob, X)
 p_hat
 Phi(p_hat) # The limit is a fixed point
 ```
@@ -1067,19 +1008,45 @@ See [`em_gauss_mix.R`](R/em_gauss_mix.R) for the source file of the
 implementation.
 
 ```{r source-em-mix}
-source(here::here("R/em_gauss_mix.R"))
+source(here::here("R", "em_gauss_mix.R"))
 ```
 
 ## EM
 
 ```{r run-em-gauss-mix}
-EM <- EM_gauss_mix(x)
+e_step_gauss <- function(par, x, sigma1 = 1, sigma2 = sigma1) {
+  p <- par[1]
+  mu1 <- par[2]
+  mu2 <- par[3]
+  a <- p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1
+  b <- (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2
+  a / (a + b)
+}
+
+m_step_gauss <- function(p_hat, x) {
+  n <- length(x)
+  N1 <- sum(p_hat)
+  N2 <- n - N1
+  c(N1 / n, sum(p_hat * x) / N1, sum((1 - p_hat) * x) / N2)
+}
+
+EM_gauss_mix_step <- function(x, sigma1 = 1, sigma2 = sigma1) {
+  force(x)
+  force(sigma1)
+  force(sigma2)
+
+  function(par) m_step_gauss(e_step_gauss(par, x, sigma1, sigma2), x)
+}
+
+em_gauss_step <- EM_gauss_mix_step(x, sigma1, sigma2)
 ```
 
--- and testing
+. . .
+
+And testing
 
 ```{r test-em-gauss-mix}
-EM(c(0.5, -0.5, 4))
+em(c(0.5, -0.5, 4), em_gauss_step)
 ```
 
 . . .
@@ -1091,7 +1058,7 @@ optim(c(0.5, -0.5, 4), loglik, x = x)[c(1, 2)]
 . . .
 
 ```{r run-em-gauss-mix-again}
-EM(c(0.9, 3, 1)) # Starting value still matters
+em(c(0.9, 3, 1), em_gauss_step) # Starting value still matters
 ```
 
 ## Gradients and Numerical Differentiation
@@ -1104,9 +1071,8 @@ grad1 <- function(par) grad(function(par) loglik(par, x), par)
 . . .
 
 ```{r numderiv-grad2}
-EStep <- environment(EM)$EStep
 Q <- function(par, par_prime) {
-  phat <- EStep(par_prime)
+  phat <- e_step_gauss(par_prime, x, sigma1, sigma2)
   p <- par[1]
   mu1 <- par[2]
   mu2 <- par[3]
@@ -1129,7 +1095,7 @@ grad2(c(0.5, 0, 4))
 . . .
 
 ```{r gradient-identities2}
-par_hat <- EM(c(0.5, 0, 4))
+par_hat <- em(c(0.5, 0, 4), em_gauss_step)
 grad1(par_hat)
 grad2(par_hat)
 ```
@@ -1139,7 +1105,7 @@ grad2(par_hat)
 ```{r tracing-convergence}
 library(CSwR)
 
-EM_tracer <- tracer(
+em_tracer <- tracer(
   c("par0", "par", "loglik", "h_prime"),
   Delta = 0,
   expr = quote({
@@ -1147,31 +1113,33 @@ EM_tracer <- tracer(
     h_prime <- sum(grad2(par)^2)
   })
 )
-
-par_hat <- EM(c(0.2, 2, 2), cb = EM_tracer$tracer)
-
-EM_trace <- summary(EM_tracer)
-tail(EM_trace, 4)
+par_hat <- em(c(0.2, 2, 2), em_gauss_step, cb = em_tracer$tracer)
+em_trace <- summary(em_tracer)
+tail(em_trace, 4)
 ```
+
+##
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-```{r convergence-plots-1, warning=FALSE, fig.width = 5.5}
+```{r convergence-plots-1, warning=FALSE}
 autoplot(
-  EM_trace,
+  em_trace,
   y = loglik - min(loglik)
 )
 ```
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
-```{r convergence-plots-2, warning=FALSE, fig.width = 5.5}
+```{r convergence-plots-2, warning=FALSE}
 autoplot(
-  EM_trace,
+  em_trace,
   y = h_prime
 )
 ```
@@ -1180,7 +1148,10 @@ autoplot(
 
 ::::
 
-```{r mixture-convergence, echo = FALSE, fig.width = 10, fig.height = 8, fig.show = "animate", cache = TRUE}
+##
+
+```{r mixture-convergence}
+#| echo: false
 gaussdens2 <- function(x, p, mu1, mu2) {
   (p *
     exp(-(x - mu1)^2 / (2 * sigma1^2)) /
@@ -1189,21 +1160,33 @@ gaussdens2 <- function(x, p, mu1, mu2) {
     sqrt(2 * pi)
 }
 
-old_par <- par(no.readonly = TRUE)
-
-# par(mfrow = c(2, 3), mai = c(0.5, 0.5, 0.1, 0.1))
-
-for (i in seq_len(20)) {
+em_gauss_illustration <- function(i, em_trace) {
   hist(x, freq = FALSE, ylim = c(0, 0.25), main = "", border = "transparent")
-  lines(xx, gausdens(xx), col = "steelblue4", lwd = 2)
-  p_i <- EM_trace$par0.1[i]
-  mu1_i <- EM_trace$par0.2[i]
-  mu2_i <- EM_trace$par0.3[i]
+  lines(xx, gausdens(xx), col = "steelblue3", lwd = 2)
+  p_i <- em_trace$par0.1[i]
+  mu1_i <- em_trace$par0.2[i]
+  mu2_i <- em_trace$par0.3[i]
   lines(xx, gaussdens2(xx, p_i, mu1_i, mu2_i), col = "dark orange", lwd = 2)
   text(9, 0.20, labels = paste0("k = ", i))
 }
+```
 
-# par(old_par)
+## 
+
+```{r}
+#| fig-width: 4.4
+#| fig-height: 3.7
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(1, em_trace)
+```
+
+```{r}
+#| fig-width: 4.4
+#| fig-height: 3.7
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(2, em_trace)
 ```
 
 ## Summary
