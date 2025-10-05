@@ -146,13 +146,12 @@ will work on debugging a piece of code together. You can find the code here:
 
 #### Lecture 10: More on the EM Algorithm
 
-<!-- - **Slides:** [The EM Algorithm](slides/lecture10.pdf) -->
-<!-- - **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em) -->
+- **Slides:** [The EM Algorithm](slides/lecture10.pdf)
 
-#### Lecture 12: Stochastic Gradient Descent
+#### Lecture 11: Stochastic Gradient Descent
 
-<!-- - **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf) -->
-<!-- - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt) -->
+- **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf)
+- **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt)
 
 #### Presentations of Assignment 3
 
@@ -171,7 +170,7 @@ installed. You can follow the instructions in
 [Rcpp for Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html)
 to get started.
 
-<!-- - **Slides:** [Rcpp](slides/lecture12.pdf) -->
+- **Slides:** [Rcpp](slides/lecture12.pdf)
 - **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp)
 - **Exercises:**
   - [1 and 2 from 25.2.6 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started)
