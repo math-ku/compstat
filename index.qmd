@@ -191,11 +191,10 @@ to get started.
 
 ### Week 8
 
-<!---->
-<!-- #### Lecture 14: R Packages and Wrap-Up -->
-<!---->
+#### Lecture 14: R Packages and Wrap-Up
+
 <!-- - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf) -->
-<!---->
+
 
 ### Week 9
 
