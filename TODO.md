@@ -60,18 +60,20 @@ format: html
 - Make it easier for them to debug: put required functions and initialization of
   data in one script.
 
-## Lecture 9: The EM Algorithm
+## Lecture 9: Likelihood Optimization and the EM algorithm
 
-- The function that's called the E step for the moth problem is not actually the
-  E step, but rather just the expected counts of genotypes.
-- People are confused by the notation where expected value is taken over
-  $\theta'$. Maybe use Wikipedia notation instead, which is
-  $\theta \sim p(\cdot
-| X, \theta')$. Or just say that that is what's meant.
-- Maybe just avoid the very general notation for the likelihood, involving the
-  measure-theoretic stuff and use the unobserved/latent variable assumption
-  instead.
+- Make it easier for them to debug: put required functions and initialization of
+  data in one script.
+- Make connection between EM algorithm and Gradient Descent and Newton's method
+  clearer.
 
-## Lecture 10: EM Examples
+## Lecture 10: The EM Algorithm continued
 
-- First exercise is maybe too difficult. Help them more somehow.
+## Lecture 11: Stochastic Gradient Descent
+
+## Lecture 12: Rcpp
+
+## Lecture 13: SGD continued
+
+## Lecture 14: Wrap up and R packages
+
