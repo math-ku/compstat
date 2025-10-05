@@ -1,38 +1,36 @@
 ---
-title: "Stochastic Gradient Descent"
-execute:
-  cache: false
+title: "Rcpp"
 ---
 
 {{< include _common.qmd >}}
 
 ```{r setup, include=FALSE}
-
 library(patchwork)
 
-set.seed(1422)
+old_options <- options(digits = 4)
 ```
 
-## Last Time
+```{Rcpp source-rcpp, ref.label=knitr::all_rcpp_labels(), include=FALSE}
 
-### The Expectation-Maximization (EM) Algorithm
+```
+
+```{Rcpp namespace, include = FALSE}
+#include <Rcpp.h>
+using namespace Rcpp;
+```
 
 ## Today
 
-### Stochastic Gradient Descent
+### C++ and Rcpp
 
-Useful stochastic method for optimization
+- Why do we want to use C++?
+- What is **compiled** code?
+- How do we use Rcpp to connect R to C++?
+- What are the pitfalls and benefits of using Rcpp?
 
-. . .
+## Why R?
 
-Can be used in a **mini-batch** version.
-
-## Minimizing Sums
-
-Many of the functions we are trying to minimize are of the form
-$$
-\frac{1}{n} \sum_{i=1}^n f_i(x).
-$$
+Why are we even using R?
 
 . . .
 
@@ -40,875 +38,847 @@ $$
 
 ::: {.column width="47%"}
 
-### Gradient Descent
+Because R lets us
 
-Since $\nabla \left(\sum_{i=1}^n f_i(x)\right) = \sum_{i=1}^n \nabla f_i(x)$, GD
-steps are
-$$
-x_{k+1} = x_k - t \sum_{i=1}^n \nabla f_i(x_k).
-$$
+- work interactively,
+- explore and visualize data via a rich toolset,
+- easily retrieve or generate data,
+- summarize and report (via RMarkdown/Quarto), and
+- make use of a comprehensive ecosystem of packages.
 
 :::
 
-. . .
-
 ::: {.column width="47%"}
 
-### Stochastic Gradient Descent
-
-SGD instead takes steps
-$$
-x_{k+1} = x_k - t \nabla f_{i}(x_k)
-$$
-where $i$ is an index in $\{1, \ldots, n\}$ drawn at random.
+![](../images/r-logo.svg)
 
 :::
 
 ::::
 
-## Unbiasedness
+## Why _Not_ R?
 
-If $i$ is drawn uniformly at random from $\{1, \ldots, n\}$ then
-$$
-\operatorname{E}(\nabla f_i(x)) = \nabla f(x).
-$$
-
-So SGD gradients are **unbiased** estimates of the full gradient.
-
-. . .
-
-### Motivation
-
-Why consider SGD?
-
-- Iteration cost is lower: $O(p)$ vs. $O(np)$.
-- Can be more robust to local minima.
-
-## Example: Logistic Regression
+It is often slow due to being an **interpreted** language.
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-We have
-$$
-f_i(\beta) = \log(1 + e^{-y_i x^T_i \beta})
-$$
-and
-$$
-\nabla f_i(\beta) = - \frac{y_i x_i}{1 + e^{y_i x^T_i \beta}}.
-$$
+### Interpreted Languages
 
-SGD typically converges quickly at the start but slows down as it approaches
-the minimum.
+- Execution of code happens line by line.
+- Many functions are written in C, but you still have to call them from R.
+- **Examples:** R, Python, Matlab, Javascript.
 
 :::
 
 ::: {.column width="47%"}
 
-![](../images/lecture12-gd-vs-sgd.png)
+### Compiled Languages
+
+- Code is translated into machine code before execution.
+- This makes it faster.
+- **Examples:** C, C++, Fortran, Java
 
 :::
 
 ::::
 
-##
+## Compiled vs Interpreted Languages
 
-![](../images/lecture12-gd-sgd-convergence1.png)
+![](../images/chatgpt-compiled-interpreted.png){width=63%}
 
-##
+## Compiled Code
 
-![](../images/lecture12-gd-sgd-convergence2.png)
+### C++ Code
 
-## The Robbins–Monro Convergence Theorem
+```cpp
+int add(int a, int b) { return a + b; }
 
-Suppose $f$ is strongly convex and
-$$
-\operatorname{E}\big(\rVert \nabla f(x)\lVert_2^2)\big) \leq A + B \lVert x\rVert_2^2
-$$
-for some constants $A$ and $B$. If $x^*$ is the global minimizer of $f$
-then $x_n$ converges almost surely toward $x^*$ if
-$$
-\sum_{k=1}^{\infty} t_k^2 < \infty \quad \text{and} \quad
-\sum_{k=1}^{\infty} t_k = \infty.
-$$
+int main() {
+  std::cout << add(2, 3) << std::endl;
+  return 0;
+}
+```
 
 . . .
 
-The theorem applies to learning rates satisfying
-$$
-t_k \propto \frac{1}{k}.
-$$
+### Assembly Representation
 
-## Diminishing Step Sizes
+```assembly
+0000000000401130 <main>:
+  401130:       55                      push   %rbp
+  401131:       48 89 e5                mov    %rsp,%rbp
+  401134:       48 83 ec 10             sub    $0x10,%rsp
+  ···           ···                     ···    ···
+  401149:       8b 45 f8                mov    -0x8(%rbp),%eax
+  401165:       c9                      leaveq
+  401166:       c3                      retq
+```
 
-Assume cyclic rule and set $t_k = t$ for $n$ updates. We get
-$$
-x_{k + n} = x_k - t \sum_{i=1}^n \nabla f_i(x_{k + i - 1}).
-$$
+## Why C++?
 
-. . .
-
-Meanwhile, **full** gradient descent with step size $nt$ would give
-$$
-x_{k + 1} = x_k - t \sum_{i=1}^n \nabla f_i(x_k).
-$$
-
-. . .
-
-Difference between the two is
-$$
-t \sum_{i=1}^n \left( \nabla f_i(x_{k + i - 1}) - \nabla f_i(x_k) \right)
-$$
-which does not tend to zero if $t$ is constant.
-
-## Convergence Rates
-
-### Gradient Descent
-
-For convex $f$, GD with diminishing step sizes converges at rate
-$$
-f(x_n) - f^* = O(1/\sqrt{k}).
-$$
+- C++ generates machine code: no longer have to be scared of loops!
+- Pass by reference: no need to copy large objects.
+- Access to external C++ libraries
+- Wrap and reuse C++ code with other languages
+- Compilation catches bugs early.
 
 . . .
 
-When $f$ is differentiable with Lipschitz gradient, we get
-$$
-f(x_n) - f^* = O(1/k).
-$$
+:::: {.columns}
+
+::: {.column width="47%"}
+
+## Why _Not_ C++?
+
+- Compiling adds overhead.
+- Debugging is more complicated.
+- Distributing code is more involved.
+
+:::
+
+::: {.column width="47%"}
+
+![](../images/compiling.png){width=80%}
+
+:::
+
+::::
+
+## R Can Be Extended
+
+But we can extend R by coupling it to a compiled language, like
+
+- C,
+- C++,
+- Fortran, and
+- Java.
 
 . . .
 
-### SGD
+### Problem
 
-For convex $f$ with diminishing step sizes, SGD converges at rate
-$$
-\operatorname{E}f(x_n) - f^* = O(1/\sqrt{k}).
-$$
+Doing so has historically been **tedious** and **error-prone**.
 
-. . .
+### Basic C++ Version of `sum()`
 
-But this **does not improve** when $f$ is differentiable with Lipschitz
-gradient.
+```{c sum-c, eval=FALSE}
+// foo.c
+#include <R.h>
+#include <Rinternals.h>
 
-## Rates for Strongly Convex Functions
+extern "C++"
+{
+  SEXP sum_c(SEXP x)
+  {
+    x = PROTECT(coerceVector(x, REALSXP));
+    SEXP s = PROTECT(allocVector(REALSXP, 1));
+    double* x_ref = REAL(x);
+    double* s_ref = REAL(s);
 
-When $f$ is strongly convex and has Lipschitz gradient, GD satisfies
-$$
-f(x_n) - f^* = O(\delta^k), \qquad \delta \in (0, 1).
-$$
+    for (int i = 0; i < length(x); i++)
+      s_ref[0] += x_ref[i];
 
-. . .
+    UNPROTECT(2);
 
-Under same conditions, SGD gives us
-$$
-\operatorname{E}(f(x_n) - f^*) = O(1/k).
-$$
+    return s;
+  }
+}
+```
 
-. . .
+### C++ Example (Continued)
 
-So SGD does **not** enjoy linear convergence rates under strong convexity.
+Next, we need to compile this into a binary file by calling:
 
-## Mini-Batch Gradient Descent
-
-Idea: take mini-batch $A_k$ of size $b$ of the data and iterate through
-$$
-x_{k+1} = x_k - \frac{t}{b} \sum_{i \in A_k} \nabla f_i(x_k).
-$$
-
-. . .
-
-Estimates are still unbiased,
-$$
-\operatorname{E}\frac{1}{b}\sum_{i \in A_k}\nabla f_i(x) = \nabla f(x),
-$$
-but variance is reduced by a factor of
-$1/b$.
-
-\medskip\pause
-
-Under Lipschitz gradient, rate goes from $O(1/\sqrt{k})$ to
-$O(1/\sqrt{bk} + 1/k)$.
-
-\medskip\pause
-
-Typically more efficient than standard SGD for various computational reasons,
-but somewhat **less** robust to local minima.
-
-##
-
-![](../images/lecture12-batch-sizes.png)
-
-## So, Why Use SGD?
-
-- If $n \gg p$, then we can pick a batch size that is reasonably accurate but
-  still much smaller than $n$.
-- In many applications (e.g. deep learning), we don't care about optimizing to
-  high accuracy.
-- Stochastic gradients help us escape local minima.
-
-## Learning Rate
-
-The learning rate $t$ is crucial for SGD, but hard to set.
-
-\medskip\pause
-
-Convergence theorem does not give much of a hint.
+```{sh shlib, eval = FALSE}
+R CMD SHLIB foo.c
+```
 
 . . .
 
-### A Class of Decay Schedules
+Then, in R, we would call this:
 
-$$t_k = \frac{t_0 K}{K + k^a} = \frac{t_0 }{1 + K^{-1} k^{a}}$$
-with initial learning rate $t_0
-> 0$ and constants $K, a >
-0$.
+```{r foo-so, eval = FALSE}
+dyn.load("foo.so") # or `foo.dll` if on Windows
+```
 
-\medskip\pause
+. . .
 
-Convergence is ensured by Robbins–Monro if $a \in (0.5, 1]$.
+Finally, access function by calling this:
 
-\medskip\pause
+```{r foo-r, eval = FALSE}
+x <- c(1.0, 1.5, -0.2, 0.1, 0.0)
+.Call("sum_c", x = x)
+```
 
-Fixing the exponent $a$ and picking a target rate, $t_1$, to be reached
-after $k_1$ steps, we can solve for $K$ and get
-$$K = \frac{k_1^a t_1}{t_0 - t_1}.$$
+```{r, echo = FALSE}
+sum(c(1.0, 1.5, -0.2, 0.1, 0.0))
+```
 
-##
+## Rcpp
 
-```{r decay, cache = TRUE}
-decay_scheduler <- function(
-  t0 = 1,
-  a = 1,
-  K = 1,
-  t1 = NULL,
-  n1 = NULL
-) {
-  force(a)
+Rcpp simplifies this process **considerably**.
 
-  if (!is.null(t1) && !is.null(n1)) {
-    K <- n1^a * t1 / (t0 - t1)
+```{Rcpp rcpp-sum, eval = FALSE}
+// [[Rcpp::export]]
+double sum_cpp(Rcpp::NumericVector x) {
+  double total = 0;
+  const int n = x.size();
+
+  for (int i = 0; i < n; ++i) {
+    total += x[i];
   }
 
-  b <- t0 * K
-
-  function(n) b / (K + n^a)
+  return total;
 }
 ```
 
-##
+### Exporting C++ Functions
 
-```{r decay-fig, echo=FALSE, dependson="decay", fig.cap="Examples of learning rate schedules."}
-#| fig-height: 3.2
-#| fig-width: 5.2
-grid_par <- expand.grid(
-  n = seq(0, 1000, 2),
-  K = c(25, 50, 100),
-  a = c(0.6, 1),
-  t0 = 1
-)
+Automizes the process of compiling, linking, and exporting.
 
-grid_par <- dplyr::mutate(grid_par, rate = t0 * K / (K + n^a))
+. . .
 
-p1 <- ggplot(grid_par, aes(n, rate, color = factor(K), linetype = factor(a))) +
-  geom_line() +
-  scale_color_discrete("K") +
-  scale_linetype_discrete("a") +
-  guides(color = guide_legend(order = 1), linetype = guide_legend(order = 2))
+### R Interface
 
-grid_par <- expand.grid(
-  n = seq(0, 1000, 2),
-  K = c(1e4, 1e5, 1e6),
-  a = c(2, 2.5),
-  t0 = 1
-)
+- Provides collection of classes to represent R objects
+  - `Rcpp::NumericalVector`
+  - `Rcpp::DataFrame`
+- Adds a number of functions, often vectorized, to manipulate these objects
+  - `Rcpp::sum()`
+  - `Rcpp::runif()`
+- Seamless transformation between R and C++ objects.
 
-grid_par <- dplyr::mutate(grid_par, rate = t0 * K / (K + n^a))
+## Installing Rcpp
 
-p2 <- ggplot(grid_par, aes(n, rate, color = factor(K), linetype = factor(a))) +
-  geom_line() +
-  scale_color_discrete("K", labels = c(quote(10^4), quote(10^5), quote(10^6))) +
-  scale_linetype_discrete("a") +
-  guides(color = guide_legend(order = 1), linetype = guide_legend(order = 2))
+### Linux
 
-p1 + p2 + plot_layout(axes = "collect_y")
+Depends on distro, but on Ubuntu call this:
+
+```r
+sudo
+apt
+install
+r - base - dev
 ```
 
-## So, Is The Problem of Setting Learning Rate Solved?
+### OSX
 
-No, unfortunately not
+You need Xcode. Open up a terminal and call this:
+
+```sh
+xcode-select --install
+```
+
+### Windows
+
+Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
+
+## Side-By-Side Comparison
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-![](../images/lecture12-lrdecay-fast.png)
-
-:::
-
-. . .
-
-::: {.column width="47%"}
-
-![](../images/lecture12-lrdecay-slow.png)
-
-:::
-
-::::
-
-## Example: Least Squares Loss
-
-Consider an objective of the type
-$$f(\beta) = \frac{1}{2n} \sum_{i=1}^n  (y_i - \mu(x_i, \beta))^2.$$
-
-. . .
-
-Gives us gradient
-
-$$\nabla f_i(\beta) = -\nabla_{\beta} \mu(x_i, \beta) (y_i - \mu(x_i, \beta) ).$$
-
-. . .
-
-For a linear model, $\mu(x_i, \beta) = x_i^T \beta$, and
-$\nabla_{\beta} \mu(x_i, \beta) = x_i$ so
-$$\nabla f_i(\beta) = - x_i (y_i - x_i^T \beta).$$
-
-## A Poisson Regression Model
-
-$$
-Y_i \mid Z_i = z_i \sim \mathrm{Poisson}(e^{\beta_0 + \beta_1 z_i})
-$$ for
-$\beta = (\beta_0, \beta_1)^T$ and $Z_i$ uniformly distributed in $(-1, 1)$.
-
-\medskip\pause
-
-The conditional mean of $Y_i$ given $Z_i = z_i$ is thus
-$$
-\mu(z_i, \beta) = e^{\beta_0 + \beta_1 z_i}.
-$$
-
-## Least Squares for the Poisson Model
-
-```{r online-poisson-SG-SE0, echo=-1, cache = TRUE}
-set.seed(13102020)
-n <- 5000
-beta_true <- c(2, 3)
-mu <- function(z, beta) exp(beta[1] + beta[2] * z)
-beta <- vector("list", n)
-```
-
-. . .
-
-```{r online-poisson-SG-SE1}
-rate <- decay_scheduler(t0 = 0.0004, K = 100)
-beta[[1]] <- c(beta0 = 1, beta1 = 1)
-```
-
-##
-
-```{r online-poisson-SG-SE, cache = TRUE}
-for (i in 2:n) {
-  # Simulating a new data point
-  z <- runif(1, -1, 1)
-  y <- rpois(1, mu(z, beta_true))
-  # Update via squared error gradient
-  mu_old <- mu(z, beta[[i - 1]])
-  beta[[i]] <- beta[[i - 1]] - rate(i) * mu_old * (mu_old - y) * c(1, z)
-}
-beta[[n]] # Compare this to beta_true
-```
-
-### Log-Likelihood Loss
-
-```{r online-poisson-SG-LL0, echo=-c(1, 2), dependson="online-poisson-SG-SE", cache = TRUE}
-set.seed(13102020)
-beta_se <- cbind(
-  as.data.frame(do.call(rbind, beta)),
-  data.frame(iteration = 1:n, loss = "squared error")
-)
-
-rate <- decay_scheduler(t0 = 0.01, K = 100)
-beta[[1]] <- c(beta0 = 1, beta1 = 1)
-```
-
-##
-
-```{r online-poisson-SG-LL, dependson=c("online-poisson-SG-SE", "online-poisson-SG-LL0"), cache = TRUE}
-for (i in 2:n) {
-  # Simulating a new data point
-  z <- runif(1, -1, 1)
-  y <- rpois(1, mu(z, beta_true))
-  # Update via log-likelihood gradient
-  mu_old <- mu(z, beta[[i - 1]])
-  beta[[i]] <- beta[[i - 1]] - rate(i) * (mu_old - y) * c(1, z)
-}
-beta[[n]] # Compare this to beta_true
-```
-
-##
-
-```{r pois-sgd, echo=FALSE, dependson="online_poisson_SG", warning=FALSE, fig.height=3, fig.width=5.1, fig.cap = "Convergence for Poisson regression model."}
-beta_all <- rbind(
-  cbind(
-    as.data.frame(do.call(rbind, beta)),
-    data.frame(iteration = 1:n, loss = "log-likelihood")
-  ),
-  beta_se
-) |>
-  tidyr::pivot_longer(cols = c("beta0", "beta1"), names_to = "Parameter") |>
-  dplyr::filter(iteration %% 50 == 0)
-
-ggplot(beta_all, aes(iteration, value, color = Parameter)) +
-  geom_hline(yintercept = beta_true[1], color = "blue") +
-  geom_hline(yintercept = beta_true[2], color = "red") +
-  geom_point(alpha = 0.5, shape = 16, size = 2) +
-  ylim(c(1.75, 3.25)) +
-  ylab("Parameter value") +
-  xlab("Number of data points") +
-  facet_wrap("loss") +
-  scale_color_manual(values = c("blue", "red"))
-```
-
-## Implementation
-
-```{r SG, cache = TRUE}
-sgd <- function(
-  par,
-  grad, # Function of parameter and observation index
-  n, # Sample size
-  t, # Decay schedule or a fixed learning rate
-  maxiter = 100, # Max epoch iterations
-  sampler = sample, # How data is resampled. Default is a random permutation
-  cb = NULL,
-  ...
-) {
-  t <- if (is.function(t)) t(1:maxiter) else rep(t, maxiter)
-  for (k in 1:maxiter) {
-    if (!is.null(cb)) {
-      cb()
-    }
-    samp <- sampler(n)
-    for (j in 1:n) {
-      i <- samp[j]
-      par <- par - t[k] * grad(par, i, ...)
-    }
-  }
-  par
-}
-```
-
-## Poisson Regression Model, Mini-Batch Learning
-
-```{r pois-gradient, dependson="SG", echo=-1, cache = TRUE}
-set.seed(17102020)
-n <- 50 # Small sample size
-z <- runif(n, -1, 1)
-y <- rpois(n, mu(z, beta_true))
-grad_pois <- function(par, i) (mu(z[i], par) - y[i]) * c(1, z[i])
-```
-
-. . .
-
-```{r batch-poisson-SG, dependson="pois-gradient"}
-library(CSwR)
-pois_SG_tracer <- tracer("par", Delta = 0)
-rate <- decay_scheduler(t0 = 0.02, t1 = 0.001, n1 = 1000)
-sgd(c(0, 0), grad_pois, n, rate, 1000, cb = pois_SG_tracer$tracer)
-```
-
-. . .
-
-### Test
-
-```{r pois-beta-hat, dependson="pois-gradient", echo=1}
-beta_hat <- coefficients(glm(y ~ z, family = poisson))
-cat("beta_hat:", beta_hat)
-```
-
-## Poisson Regression Model, Batch Learning
-
-```{r batch-poisson-SG-2, dependson="pois-gradient", echo=-1, cache = TRUE}
-set.seed(17102020)
-n <- 500 # Larger sample size
-z <- runif(n, -1, 1)
-y <- rpois(n, mu(z, beta_true))
-pois_SG_tracer_2 <- tracer("par", Delta = 0)
-rate <- decay_scheduler(t0 = 0.02, t1 = 0.001, n1 = 100)
-sgd(c(0, 0), grad_pois, n = n, t = rate, cb = pois_SG_tracer_2$tracer)
-```
-
-. . .
-
-### Test
-
-```{r pois-beta-hat-2, dependson="batch-poisson-SG-2", echo=1}
-beta_hat_2 <- coefficients(glm(y ~ z, family = poisson))
-cat("beta_hat_2:", beta_hat_2)
-```
-
-##
-
-```{r batch-pois-sgd-fig, echo=FALSE, dependson="online_poisson_SG", warning=FALSE, fig.height=3, fig.width=5.1, fig.cap = "Convergence for the Poisson regression problem using different batch sizes."}
-hline_data <- data.frame(
-  beta0 = c(beta_hat[1], beta_hat_2[1]),
-  beta1 = c(beta_hat[2], beta_hat_2[2]),
-  n = c("n = 50", "n = 500")
-)
-
-dplyr::bind_rows(
-  small = summary(pois_SG_tracer)[seq(10, 1000, 10), ],
-  large = summary(pois_SG_tracer_2),
-  .id = "n"
-) %>%
-  dplyr::mutate(
-    n = ifelse(n == "small", "n = 50", "n = 500"),
-    it = rep(5 * seq(10, 1000, 10), 2)
-  ) %>%
-  dplyr::rename(beta0 = par.1, beta1 = par.2) %>%
-  tidyr::pivot_longer(cols = c("beta0", "beta1"), names_to = "Parameter") %>%
-  ggplot(aes(it, value, color = Parameter)) +
-  geom_hline(data = hline_data, aes(yintercept = beta0), color = "blue") +
-  geom_hline(data = hline_data, aes(yintercept = beta1), color = "red") +
-  geom_hline(yintercept = beta_true[1], linetype = 2, alpha = 0.5) +
-  geom_hline(yintercept = beta_true[2], linetype = 2, alpha = 0.5) +
-  geom_point(alpha = 0.5, shape = 16, size = 2) +
-  ylim(c(1.5, 3.5)) +
-  ylab("Parameter value") +
-  facet_wrap("n") +
-  scale_color_manual(values = c("blue", "red"))
-```
-
-## A Linear Model
-
-```{r ls-model, cache = TRUE}
-ls_model <- function(X, y) {
-  n <- length(y)
-  X <- unname(X) # Strips X of names
-  list(
-    # Initial parameter value
-    par0 = rep(0, ncol(X)),
-    # Objective function
-    f = function(beta) {
-      norm(y - X %*% beta, "2")^2 / (2 * n)
-    },
-    # Gradient in a single observation
-    grad = function(beta, i) {
-      xi <- X[i, ]
-      xi * drop(xi %*% beta - y[i])
-    }
-  )
-}
-```
-
-## Data Example
-
-```{r news-data, message=FALSE, cache = TRUE}
-news <- readr::read_csv(
-  here::here("data", "online_news_popularity.csv")
-)
-dim(news)
-```
-
-##
-
-```{r news-X-y, dependson="news-data", cache = TRUE}
-news <- dplyr::select(
-  news,
-  -url,
-  -timedelta,
-  -is_weekend,
-  -n_non_stop_words,
-  -n_non_stop_unique_tokens,
-  -self_reference_max_shares,
-  -kw_min_max
-)
-# The model matrix without an explicit intercept is constructed using
-# all variables remaining in the data set but the target variable 'shares'
-X <- model.matrix(shares ~ . - 1, data = news)
-y <- log(news$shares)
-```
-
-## Implementation
-
-```{r LS-model, dependson=c("ls-model", "news-X-y")}
-X_raw <- X
-# Standardization
-X <- scale(X, center = FALSE)
-library(zeallot)
-# The '%<-%' unpacking operator is from the zeallot package
-c(par0, f, grad_obs) %<-% ls_model(X, y)
-```
-
-. . .
-
-For the linear model it's straightforward to compute the solution
-
-```{r lm-News, dependson="news-X-y"}
-system.time(lm_news <- lm.fit(X, y))
-par_hat <- coefficients(lm_news)
-```
-
-## Objective and Gradient Values
+### R
 
 ```{r}
-f(par_hat)
-```
+library(Rcpp)
 
-. . .
-
-```{r}
-range(grad_obs(rep(0, ncol(X)), 100))
-range(grad_obs(par_hat, 100))
-```
-
-## Running the SGD Algorithm
-
-```{r SG-tracer, cache = TRUE, results = "hide"}
-sgd_tracer <- tracer(
-  "value",
-  expr = quote(value <- f(par)),
-  Delta = 0
-)
-
-sgd(
-  par0,
-  grad = grad_obs,
-  n = nrow(X),
-  t = 1e-5,
-  maxiter = 50,
-  cb = sgd_tracer$tracer
-)
-
-sgd_trace_low <- summary(sgd_tracer)
-```
-
-##
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r SG-tracer-sum, dependson="SG-tracer"}
-tail(sgd_trace_low)
+sum_r <- function(x) {
+  total <- 0
+  for (i in seq_along(x)) {
+    total <- total + x[i]
+  }
+  total
+}
 ```
 
 :::
 
 ::: {.column width="47%"}
 
-```{r SG-tracer-parhat, dependson="SG-tracer"}
-f(par_hat)
+### C++
+
+```cpp
+#include <Rcpp.h>
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+double sum_cpp(NumericVector x) {
+  double total = 0;
+  const int n = x.size();
+  for (int i = 0; i < n; ++i) {
+    total += x[i];
+  }
+  return total;
+}
 ```
 
 :::
 
 ::::
 
-## Three Additional Variants
+## Writing Code in R and Rcpp
 
-```{r GD, echo = FALSE}
-gd <- function(
-  par,
-  f,
-  gr,
-  d = 0.8,
-  c = 0.1,
-  t0 = 0.01,
-  epsilon = 1e-4,
-  maxiter = 1000,
-  cb = NULL
-) {
-  t <- t0
-  for (i in 1:maxiter) {
-    value <- f(par)
-    grad <- gr(par)
-    h_prime <- sum(grad^2)
-    if (!is.null(cb)) {
-      cb()
-    }
-    # Convergence criterion based on gradient norm
-    if (h_prime <= epsilon) {
-      break
-    }
-    # Proposed descent step
-    par1 <- par - t * grad
-    # Backtracking while descent is insufficient
-    while (f(par1) > value - c * t * h_prime) {
-      t <- d * t
-      par1 <- par - t * grad
-    }
-    par <- par1
-  }
-  if (i == maxiter) {
-    warning("Maximal number, ", maxiter, ", of iterations reached")
-  }
-  par
-}
+### Notable Differences
+
+- **Vectors are indexed from 0**
+- Statements end with a semicolon (**`;`**)
+- The assignment operator is **`=`**
+- Input and output types need to be declared
+- Class methods have a different syntax (e.g. `x.size()` not `size(x)`)
+- An explicit `return` statement is required to return a value
+- For loops have a different syntax: `for (<init>; <check>; <increment>)`
+- You don't assign to create functions.
+
+. . .
+
+### Similarities
+
+- Rcpp classes, like `NumericVector` and `List`, unify data structures in R and
+  C++
+- Rcpp implements vectorized arithmetic (as in R)
+- Rcpp implements a long list of vectorized R-like functions
+
+## Including C++ Code in R
+
+```{r}
+library(Rcpp)
 ```
 
-### Fixed but higher learning rate
+--
 
-```{r SG-tracer-2, results="hide"}
-sgd_tracer$clear()
-sgd(
-  par0,
-  grad_obs,
-  n = nrow(X),
-  t = 5e-5,
-  maxiter = 50,
-  cb = sgd_tracer$tracer
+The C++ code can be passed directly to the `cppFunction()` as a text string for
+compilation and setting up an R interface.
+
+```{r}
+cppFunction(
+  "int one() {return 1;}"
 )
-sgd_trace_high <- summary(sgd_tracer)
 ```
 
-## Decay Schedule
+. . .
 
-```{r SG-tracer-3, results="hide"}
-sgd_tracer$clear()
-rate <- decay_scheduler(
-  t0 = 1e-3,
-  t1 = 1e-5,
-  a = 0.6,
-  n1 = 50
-)
-sgd(
-  par0,
-  grad_obs,
-  n = nrow(X),
-  t = rate,
-  maxiter = 50,
-  cb = sgd_tracer$tracer
-)
-sgd_trace_decay <- summary(sgd_tracer)
+And then the function can be called from R.
+
+```{r}
+one()
 ```
 
-## Full-Batch Gradient Descent with Line Search
+## Source Files
 
-```{r News-GD, warning=FALSE, results='hide', dependson="GD"}
-grad_f <- function(beta) crossprod(X, X %*% beta - y) / nrow(X)
-gd_tracer <- tracer("value", Delta = 10)
-gd(par0, f, grad_f, t = 1, maxiter = 800, cb = gd_tracer$tracer)
-gd_trace <- summary(gd_tracer)
+Better to put C++ code in an `.cpp` file (for instance in `src/` folder) and use
+`sourceCpp()` (or RStudio's UI tool) to compile the code and set up the R
+interface.
+
+. . .
+
+In `R/my_r_experiment.R` (or similar), call
+
+```r
+sourceCpp(here::here("src/my_cpp_functions.cpp"))
 ```
 
-##
+```
+my_project/
+├── scripts/
+│   └── my_r_experiment.R    # R script
+├── src/
+│   └── my_cpp_functions.cpp # Source for C++ functions
+└── my_rproject.Rproj        # RStudio project file
+```
 
-```{r news-trace-plot, echo=FALSE, dependson=c("News-GD", "SG-tracer-2", "SG-tracer-sum"), fig.width=5.2, fig.height=3, fig.cap = "A comparison of the four algorithms"}
-dplyr::bind_rows(
-  low = sgd_trace_low,
-  high = sgd_trace_high,
-  decay = sgd_trace_decay,
-  gd = gd_trace[seq(1, 800, 20), ],
-  .id = "Algorithm"
-) |>
-  dplyr::filter(.time < 10) |>
-  autoplot(y = value - f(par_hat)) +
-  aes(color = Algorithm, shape = Algorithm) +
-  geom_line() +
-  scale_color_brewer(
-    limits = c(
-      "low",
-      "high",
-      "decay",
-      "gd",
-      "mini",
-      "moment",
-      "adam",
-      "adam_decay"
-    ),
-    breaks = c("low", "high", "decay", "gd"),
-    type = "qual",
-    palette = 2
-  ) +
-  scale_shape_manual(
-    limits = c(
-      "low",
-      "high",
-      "decay",
-      "gd",
-      "mini",
-      "moment",
-      "adam",
-      "adam_decay"
-    ),
-    breaks = c("low", "high", "decay", "gd"),
-    values = c(0, 1, 2, 5, 15, 16, 17, 19)
-  )
+. . .
+
+Each file should start with
+
+```cpp
+#include <Rcpp.h>
+using namespace Rcpp; // Optional
+```
+
+## Sum Functions
+
+Let's see if we can beat R's own `sum()` (See
+[here](https://github.com/wch/r-source/blob/3b69aff4083ee81d6c4fe7177eb2b2a2ca41a240/src/main/summary.c#L152)
+for the implementation.)
+
+```{r bench-sum, cache = TRUE, fig.width = 10, fig.height = 4}
+x <- runif(1e5)
+bench::mark(sum(x), sum_cpp(x), sum_r(x)) |>
+  plot()
 ```
 
 ## Exercise
 
-We will attempt to minimize the following function:^[This is actually ridge
-regression with a single predictor.]
-$$
-F(\beta; x, y, \lambda) = \frac{1}{n} f_i(\beta; x, y, \lambda) = \frac{1}{2n} \sum_{i=1}^n (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2
-$$
+Write a C++ function `cpp_mean()` that computes the arithmetic mean of a numeric
+input vector.
 
-. . .
+Benchmark your function against `mean()`.
 
-```{r}
-#| echo: false
-#| include: false
-f <- function(beta, xx, yy, lambda) {
-  sum(0.5 * (xx * beta - yy)^2 + 0.5 * lambda * beta^2)
-}
+## Constants
 
-f_grad <- function(beta, i, xx, yy, lambda) {
-  (xx[i] * beta - yy[i]) * xx[i] + 2 * lambda * beta
-}
+- In C++, we can use `const` to declare constants.
+- After declaration, the value cannot be changed.
+- Can lead to _marginal_ performance improvements.
 
-beta <- 3
-
-x <- rnorm(100)
-y <- x * beta + rnorm(100)
-
-beta_grid <- seq(-2, 5, length.out = 200)
-
-f_vec <- Vectorize(f, vectorize.args = "beta")
-
-plot(beta_grid, f_vec(beta_grid, x, y, 0.6), type = "l")
+```cpp
+const double pi = 3.14159;
+pi = 3.14; // Error!
 ```
 
-### Step 1
+### `Const` Correctness
 
-Implement a stochastic gradient descent method for solving this problem. Plot convergence
-in terms of epochs and time. 
+- Enforce immutability wherever appropriate.
+- Can help avoid bugs.
+- Up to you
 
-. . .
+## Passing by Reference
 
-### Step 2
+- Useful to avoid copying large objects or when we want to modify the input.
+- Post-fix `&` to the type.
 
-Test and benchmark your implementation against R's built-in `optimize()`.
+```{Rcpp rcpp-sum-ref, eval = FALSE}
+// [[Rcpp::export]]
+double sum_cpp_ref(Rcpp::NumericVector& x) {
+  double total = 0.0;
+  const int n = x.size();
 
-. . .
+  for (int i = 0; i < n; ++i) {
+    total += x[i];
+  }
 
-### Step 3
-
-Try different learning rates and, if you have time, implement mini-batch SGD.
-
-## Summary
-
- Stochastic gradient descent is a popular optimization method for large-scale
-optimization
-
-\medskip\pause
-
-Convergence results are relatively weak, but for many applications this does
-not matter.
-
-\medskip\pause
-
-In practice, most implementations use mini-batches.
+  return total;
+}
+```
 
 . . .
 
-## Next Time
+### Rcpp Objects Reference R Objects
 
-### Rcpp
+- Modifing the Rcpp object modifies the original object.
+- Little point in using `&` in **exported** functions.
 
-We will look at how to use Rcpp to speed up R code.
+## Const Reference
 
-\medskip\pause
+- If you don't want to modify the input, you can pass by const reference.
+- Pre-fix `const` to the type.
 
-This will be very useful for implementing optimization algorithms later on.
+```{Rcpp rcpp-sum-constref, eval = FALSE}
+// [[Rcpp::export]]
+double sum_cpp_const_ref(const Rcpp::NumericVector& x) {
+  double total = 0.0;
+  const int n = x.size();
+
+  for (int i = 0; i < n; ++i) {
+    total += x[i];
+  }
+
+  return total;
+}
+```
+
+- In C++, this can make a big difference.
+- But with Rcpp, it makes little difference.
+- Sometimes no difference with standard C++ too.
+
+### Value of Constant References
+
+```{Rcpp constref-ex, eval = FALSE}
+NumericVector f_copy(NumericVector x) {
+  return pow(x, 2);
+}
+
+NumericVector f_constref(const NumericVector& x) {
+  return pow(x, 2);
+}
+
+// [[Rcpp::export]]
+NumericVector f_copyref(const bool copy) {
+  NumericVector x = runif(100000);
+  if (copy) {
+    return f_copy(x);
+  } else {
+    return f_constref(x);
+  }
+}
+```
+
+### Benchmark
+
+```{r constref-bench, cache = TRUE}
+bench::mark(
+  f_copyref(TRUE),
+  f_copyref(FALSE),
+  check = FALSE
+)
+```
+
+## Sugar
+
+- Rcpp contains a wealth of syntactic **sugar**
+- Often versions of R's vectorized functions
+
+```{Rcpp rcpp-sum-sugar, eval = FALSE}
+// [[Rcpp::export]]
+double sum_cpp_sugar(const Rcpp::NumericVector& x) {
+  return Rcpp::sum(x);
+}
+```
+
+## Premature Optimization
+
+- Most C++ compilers will optimize the code for you.
+- What you see in the source code is **not** what you get.
+- Temporary variables are often optimized away.
+- Copy elisions
+
+## Exercise
+
+- Implement `cpp_sd()` using Rcpp that computes the standard deviation of a
+  (numeric) vector. Benchmark against `sd()`.
+- Remember to test your functions.
+- Don't use `Rcpp:sd()`, please ☺
+- If you have time over, try a different algorithm for computing the standard
+  deviation.
+
+```{Rcpp rcpp-sd, eval = FALSE, echo = FALSE}
+// [[Rcpp::export]]
+double cpp_sd(NumericVector x) {
+  double out = 0.0;
+  double x_mean = 0.0;
+
+  int n = x.size();
+
+  for (int i = 0; i < n; ++i) {
+    out += x[i] / n;
+  }
+
+  for (int i = 0; i < n; ++i) {
+     out += std::pow(x[i] - x_mean, 2);
+  }
+
+  return std::sqrt(out / (n - 1));
+}
+```
+
+. . .
+
+```{r sd-bench, echo = FALSE, cache = TRUE}
+x <- rnorm(1e5)
+bench::mark(cpp_sd(x), sd(x), check = FALSE) |> plot()
+```
+
+## Von Mises Rejection Sampling
+
+### For-Loop Version
+
+```{r vM-rejection, cache = TRUE}
+rvonmises <- function(n, kappa) {
+  y <- numeric(n)
+  for (i in 1:n) {
+    reject <- TRUE
+    while (reject) {
+      y0 <- runif(1, -pi, pi)
+      u <- runif(1)
+      reject <- u > exp(kappa * (cos(y0) - 1))
+    }
+    y[i] <- y0
+  }
+  y
+}
+```
+
+### Vectorized Version
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r vM-rejection-fast, cache = TRUE}
+new_sampler <- function(generator) {
+  alpha <- 1
+  function(n, ...) {
+    y <- list()
+    j <- 1
+    l <- 0
+    while (l < n) {
+      m <- ceiling((n - l) / alpha)
+      y[[j]] <- generator(m, ...)
+      l <- l + length(y[[j]])
+      if (j == 1) {
+        alpha <<- (l + 1) / (m + 1)
+      }
+      j <- j + 1
+    }
+    unlist(y)[1:n]
+  }
+}
+```
+
+:::
+
+::: {.column width="47%"}
+
+```{r vM-rejection-vec-ran, cache = TRUE}
+vonmises_generator <- function(m, kappa) {
+  y <- runif(m, -pi, pi)
+  u <- runif(m)
+  accept <- u <= exp(kappa * (cos(y) - 1))
+  y[accept]
+}
+```
+
+```{r vM-rejection-vec, cache = TRUE}
+rvonmises_vec <-
+  new_sampler(vonmises_generator)
+```
+
+:::
+
+::::
+
+### Rcpp Implementation
+
+```{Rcpp vMsim-cpp, eval = FALSE}
+// [[Rcpp::export]]
+NumericVector rvonmises_cpp(const int n, const double kappa) {
+  NumericVector y(n);
+  int i = 0;
+
+  while (i < n) {
+    double y0 = R::runif(-M_PI, M_PI);
+    bool accept = R::runif(0, 1) <= exp(kappa * (cos(y0) - 1));
+    if (accept) {
+      y[i] = y0;
+      i++;
+    }
+  }
+
+  return y;
+}
+```
+
+```{r vMsim3, dependson="vMsim-cpp", fig.width = 12, echo = FALSE}
+par(mfrow = c(1, 2))
+f <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
+x <- rvonmises_cpp(100000, 0.5)
+hist(x, breaks = seq(-pi, pi, length.out = 20), prob = TRUE)
+curve(f(x, 0.5), -pi, pi, col = "blue", lwd = 2, add = TRUE)
+x <- rvonmises_cpp(100000, 2)
+hist(x, breaks = seq(-pi, pi, length.out = 20), prob = TRUE)
+curve(f(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
+par(mfrow = c(1, 1))
+```
+
+```{r vMsim-cpp-runtime, dependson=c("vMsim-cpp", "vM-rejection-vec", "vM-rejection"), echo = FALSE, fig.width = 11}
+bench::mark(
+  rvonmises(1000, kappa = 5),
+  rvonmises_vec(1000, kappa = 5),
+  rvonmises_cpp(1000, kappa = 5),
+  check = FALSE
+) |>
+  plot()
+```
+
+## The Standard Template Library (STL)
+
+- A library of generic algorithms, data structures, and iterators for C++. --
+
+- Accessed via the `std` namespace.
+- Provides a number of useful functions for working with vectors and other
+  containers.
+
+. . .
+
+### Efficiently Growing Vectors
+
+Unlike R and Rcpp vector, `std::vector()` grows efficiently.
+
+```cpp
+std::vector<int> x;
+
+for (int i = 0; i < 10; ++i) {
+  x.emplace_back(i)
+}
+```
+
+## Linear Algebra
+
+### RcppArmadillo
+
+```cpp
+#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+arma::mat armaMatrixMultiply(const arma::mat &A, const arma::mat &B) {
+  return A * B;
+}
+```
+
+. . .
+
+### RppEigen
+
+```cpp
+#include <RcppEigen.h>
+// [[Rcpp::depends(RcppEigen)]]
+// [[Rcpp::export]]
+Eigen::MatrixXd eigenMatrixMultiply(const Eigen::MatrixXd &A,
+                                    const Eigen::MatrixXd &B) {
+  return A * B;
+}
+```
+
+## R Markdown
+
+Can put the code in Rcpp chunks, which will be automatically compiled and
+exported.
+
+```{Rcpp rcpp-odd-ex, echo = FALSE}
+#include <Rcpp.h>
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+bool is_odd_cpp(int num = 10) {
+   bool result = (num % 2 == 1);
+   return result;
+}
+```
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+<!-- prettier-ignore-start -->
+
+```{Rcpp}`r ''`
+#include <Rcpp.h>
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+bool is_odd_cpp(int num = 10) {
+   bool result = (num % 2 == 1);
+   return result;
+}
+```
+````
+
+<!-- prettier-ignore-end -->
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+is_odd_cpp(7)
+```
+
+:::
+
+::::
+
+## Packages
+
+- Best practice for Rcpp code is actually to write a package.
+- Not as complicated as you might think!
+- Facilitates reproducibility
+- If we have time, we might cover in course.
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### R Packages
+
+Great book to get started; free and available online at <https://r-pkgs.org>.
+
+:::
+
+::: {.column width="47%"}
+
+![](../images/r-pkgs.png)
+
+:::
+
+::::
+
+## Exercise
+
+Recall the running mean implementation:
+
+```{r run-mean}
+run_mean <- function(y, k) {
+  n <- length(y)
+  m <- floor((k - 1) / 2)
+  k <- 2 * m + 1
+  y <- y / k
+  s <- rep(NA, n)
+  s[m + 1] <- sum(y[1:k])
+  for (i in (m + 1):(n - m - 1)) {
+    s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m]
+  }
+  s
+}
+```
+
+- Rewrite this in Rcpp and compare the performance.
+- Test your implementation
+- Benchmark it against `run_mean()`
+
+```{Rcpp rcpp-runmean, echo = FALSE, eval=FALSE}
+// [[Rcpp::export]]
+NumericVector run_mean_cpp(NumericVector y, int k) {
+  int n = y.size();
+  int m = floor((k - 1) / 2);
+  int kk = 2 * m + 1;
+  NumericVector s = rep(NA_REAL, n);
+  s[m] = 0;
+  for(int i = 0; i < kk; ++i)
+    s[m] += y[i] / kk;
+  for(int i = m; i < (n - m - 1); ++i)
+    s[i + 1] = s[i] - y[i - m] / kk + y[i + 1 + m] / kk;
+  return s;
+}
+```
+
+### Testing
+
+```{r runmean-test}
+library(testthat)
+
+test_that("R and C++ running mean functions are equivalent", {
+  y <- rnorm(7)
+  expect_equal(run_mean(y, k = 3), run_mean_cpp(y, k = 3))
+})
+```
+
+### Benchmarking
+
+```{r runmean-bench, message = FALSE, cache = TRUE}
+y <- rnorm(4096)
+run_bench <- bench::press(
+  n = c(512, 1024, 2048, 4096),
+  {
+    y <- rnorm(n)
+    bench::mark(
+      run_mean(y, k = 11),
+      run_mean_cpp(y, k = 11),
+      check = FALSE
+    )
+  }
+)
+```
+
+```{r plot-bench, fig.width = 12, fig.height = 6, echo = FALSE}
+plot(run_bench)
+```
+
+## Getting Help
+
+- [The unofficial Rcpp API documentation](https://thecoatlessprofessor.com/programming/cpp/unofficial-rcpp-api-documentation/)
+- [The many official vignettes](https://cran.r-project.org/web/packages/Rcpp/index.html)
+- [Rcpp For Everyone](https://teuder.github.io/rcpp4everyone_en/) by Masaki E.
+  Tsuda
