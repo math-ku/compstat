@@ -1,20 +1,21 @@
 decay_scheduler <- function(
-    gamma0 = 1,
-    a = 1,
-    K = 1,
-    gamma1,
-    n1) {
+  gamma0 = 1,
+  a = 1,
+  K = 1,
+  gamma1 = NULL,
+  n1 = NULL
+) {
   force(a)
 
-  if (!missing(gamma1) && !missing(n1)) {
-    K <- n1^a * gamma1 /
-      (gamma0 - gamma1)
+  if (!is.null(gamma1) && !is.null(n1)) {
+    K <- n1^a * gamma1 / (gamma0 - gamma1)
   }
 
   b <- gamma0 * K
 
   function(n) b / (K + n^a)
 }
+
 
 logreg_sgd <- function(
     X,
