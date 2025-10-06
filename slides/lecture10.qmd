@@ -1274,7 +1274,7 @@ optim(c(0.9, 3, 1), neg_loglik, x = x)[1:2]
 
 The complete data log-likelihood is
 $$
-\sum_{i=1}^n 1(z_i = 1) \left(\log(p) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + 1(z_i = 2)\left( \log(1-p) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
+\sum_{i=1}^n \symbf{1}_{z_i = 1} \left(\log(p) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + \symbf{1}_{z_i = 2}\left( \log(1-p) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
 $$
 
 . . .
