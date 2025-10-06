@@ -1,16 +1,17 @@
 ---
 title: "Stochastic Gradient Descent"
-execute:
-  cache: false
 ---
 
 {{< include _common.qmd >}}
 
 ```{r setup, include=FALSE}
-
+library(tidyverse)
 library(patchwork)
+library(mvtnorm)
 
 set.seed(1422)
+
+source(here::here("R", "sgd.R"))
 ```
 
 ## Last Time
@@ -23,7 +24,7 @@ set.seed(1422)
 
 Useful stochastic method for optimization
 
-. . .
+\medskip\pause
 
 Can be used in a **mini-batch** version.
 
@@ -77,12 +78,20 @@ So SGD gradients are **unbiased** estimates of the full gradient.
 
 . . .
 
-### Motivation
+### Iteration Cost
 
-Why consider SGD?
+The main benefit of this is that the cost of each iteration is much lower:
+$O(p)$ vs. $O(np)$ (for full gradient descent).
 
-- Iteration cost is lower: $O(p)$ vs. $O(np)$.
-- Can be more robust to local minima.
+. . .
+
+### Epoch
+
+When discussing SGD, we often refer to an **epoch** as $n$ iterations of SGD.
+
+\medskip\pause
+
+A full pass over the data.
 
 ## Example: Logistic Regression
 
@@ -99,6 +108,8 @@ $$
 \nabla f_i(\beta) = - \frac{y_i x_i}{1 + e^{y_i x^T_i \beta}}.
 $$
 
+. . .
+
 SGD typically converges quickly at the start but slows down as it approaches
 the minimum.
 
@@ -106,25 +117,270 @@ the minimum.
 
 ::: {.column width="47%"}
 
-![](../images/lecture12-gd-vs-sgd.png)
+```{r}
+#| echo: false
+#| fig-height: 3.6
+#| fig-width: 3.2
+set.seed(123)
+
+n <- 1000
+p <- 2
+Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
+mu <- c(0, 0)
+
+X <- rmvnorm(n, mean = mu, sigma = Sigma)
+beta <- c(1, 2)
+y <- rbinom(n, 1, plogis(X %*% beta))
+
+res_glm <- glm.fit(X, y, family = binomial())
+
+loss_2d <- function(beta1, beta2, X, y) {
+  beta <- c(beta1, beta2)
+  z <- X %*% beta
+  p_hat <- 1 / (1 + exp(-z))
+  -mean(y * log(p_hat) + (1 - y) * log(1 - p_hat))
+}
+
+beta1 <- seq(-1, 3, length = 100)
+beta2 <- seq(-1, 3, length = 100)
+
+loss_2d_vectorized <- Vectorize(function(b1, b2) loss_2d(b1, b2, X, y))
+
+z <- outer(beta1, beta2, loss_2d_vectorized)
+
+res_sgd <- logreg_sgd(X, y, max_epochs = 100, batch_size = 1)
+res_sgd2 <- logreg_sgd(X, y, max_epochs = 100, batch_size = 1, K = 5, a = 0.5)
+res_gd <- logreg_sgd(X, y, max_epochs = 100, batch_size = n)
+
+pal <- palette.colors(palette = "Okabe-Ito")
+
+contour(
+  beta1,
+  beta2,
+  z,
+  col = "dark grey",
+  drawlabels = FALSE,
+  asp = 1
+)
+
+lines(
+  res_sgd$beta_history[1, ],
+  res_sgd$beta_history[2, ],
+  col = pal[3]
+)
+points(
+  res_sgd$beta_history[1, ],
+  res_sgd$beta_history[2, ],
+  col = pal[3],
+  pch = 19,
+  cex = 0.5
+)
+
+lines(
+  res_gd$beta_history[1, ],
+  res_gd$beta_history[2, ],
+  col = pal[1]
+)
+points(
+  res_gd$beta_history[1, ],
+  res_gd$beta_history[2, ],
+  col = pal[1],
+  pch = 19,
+  cex = 0.5
+)
+
+points(
+  res_glm$coefficients[1],
+  res_glm$coefficients[2],
+  col = pal[2],
+  pch = 19,
+  cex = 1
+)
+
+legend(
+  "bottomright",
+  legend = c("SGD", "GD"),
+  col = pal[c(3, 1)],
+  pch = 19,
+  cex = 0.8
+)
+```
+
 
 :::
 
 ::::
 
-##
+## Convergence in Epochs and Iterations
 
-![](../images/lecture12-gd-sgd-convergence1.png)
+In terms of iterations, gradient descent converges much more quickly than SGD.
+But in terms of epochs, SGD can be faster.
 
-##
+\medskip\pause
 
-![](../images/lecture12-gd-sgd-convergence2.png)
+```{r}
+#| fig-width: 5
+#| fig-height: 2.5
+#| fig-cap: "Convergence of gradient descent (GD) and stochastic gradient descent (SGD) for logistic regression i
+#|   terms of iterations and epochs."
+#| echo: false
+loss_optim <- loss_2d(res_glm$coefficients[1], res_glm$coefficients[2], X, y)
+loss1 <- loss_2d_vectorized(res_gd$beta_history[1, ], res_gd$beta_history[2, ])
+loss2 <- loss_2d_vectorized(
+  res_sgd$beta_history[1, ],
+  res_sgd$beta_history[2, ]
+)
+loss3 <- loss_2d_vectorized(
+  res_sgd2$beta_history[1, ],
+  res_sgd2$beta_history[2, ]
+)
 
-## The Robbins–Monro Convergence Theorem
+n1 <- length(loss1)
+n2 <- length(loss2)
+n3 <- length(loss3)
+
+conv_data <- tibble(
+  method = rep(c("GD", "SGD"), times = c(length(loss1), length(loss2))),
+  epoch = c(seq_len(n1), seq_len(n2) / n),
+  loss = c(loss1 - loss_optim, loss2 - loss_optim),
+  iteration = c(seq_len(n1), seq_len(n2))
+)
+
+epochs_plot <- ggplot(conv_data, aes(epoch, loss, col = method)) +
+  geom_line() +
+  scale_y_log10() +
+  labs(y = "Suboptimality", color = NULL)
+
+iteration_plot <- ggplot(conv_data, aes(iteration, loss, col = method)) +
+  geom_line() +
+  scale_y_log10() +
+  labs(y = "Suboptimality", color = NULL)
+
+ggpl <- epochs_plot +
+  iteration_plot +
+  plot_layout(axes = "collect_y", guides = "collect")
+
+ggpl
+```
+
+## Step Size (Learning Rate)
+
+:::: {.columns align = "center"}
+
+::: {.column width="47%"}
+
+For gradient descent, we could use a fixed step size (learning rate), and
+guarantee convergence.
+
+\medskip\pause
+
+But this is **not** the case for SGD.
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+#| fig-cap: "Convergence of SGD for logistic regression with a fixed step size."
+#| echo: false
+res_sgd <- logreg_sgd(X, y, max_epochs = 200, batch_size = 1, gamma0 = 5)
+pal <- palette.colors(palette = "Okabe-Ito")
+
+loss <- loss_2d_vectorized(
+  res_sgd$beta_history[1, ],
+  res_sgd$beta_history[2, ]
+)
+
+ggplot(
+  tibble(iteration = seq_along(loss), loss = loss - loss_optim),
+  aes(iteration, loss)
+) +
+  geom_line() +
+  scale_y_log10() +
+  labs(y = "Suboptimality")
+```
+
+:::
+
+::::
+
+## Strong Convexity
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+Can we find conditions on the step sizes $t_k$ that ensure convergence of SGD? Yes!
+
+\medskip\pause
+
+But first, we need to introduce the concept of **strong convexity**.
+
+
+\medskip\pause
+
+A differentiable function $f: \mathbb{R}^p \to \mathbb{R}$ is **strongly convex** if
+$$
+f(y) \geq f(x) + \nabla f(x)^T (y - x) + \frac{m}{2} \lVert y - x\rVert_2^2
+$$
+
+\medskip\pause
+
+:::
+
+::: {.column width="47%"}
+
+```{r}
+#| echo: false
+f <- function(x) x^2 # strongly convex function
+df <- function(x) 2 * x # gradient
+mu <- 1 # strong convexity parameter
+x0 <- 1 # point of tangent
+
+x <- seq(-2, 2, length.out = 400)
+
+# Tangent line at x0
+tangent <- df(x0) * (x - x0) + f(x0)
+
+# Strong convexity lower bound
+sc_bound <- tangent + 0.5 * mu * (x - x0)^2
+
+plot(
+  x,
+  f(x),
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  ylim = c(-0.5, 4),
+  ylab = "f(x)",
+  xlab = "x",
+  main = "Strong Convexity Visualization"
+)
+lines(x, tangent, col = "red", lwd = 2, lty = 2)
+lines(x, sc_bound, col = "green", lwd = 2, lty = 3)
+points(x0, f(x0), pch = 19)
+legend(
+  "topright",
+  legend = c("f(x)", "Tangent at x0", "Tangent + mu/2 (x-x0)^2"),
+  col = c("blue", "red", "green"),
+  lwd = 2,
+  lty = c(1, 2, 3)
+)
+```
+
+:::
+
+::::
+
+
+## The Robbins--Monro Convergence Theorem
+
+
+\medskip\pause
 
 Suppose $f$ is strongly convex and
 $$
-\operatorname{E}\big(\rVert \nabla f(x)\lVert_2^2)\big) \leq A + B \lVert x\rVert_2^2
+\operatorname{E}\big(\rVert \nabla f(x)\lVert_2^2\big) \leq A + B \lVert x\rVert_2^2
 $$
 for some constants $A$ and $B$. If $x^*$ is the global minimizer of $f$
 then $x_n$ converges almost surely toward $x^*$ if
@@ -842,7 +1098,7 @@ dplyr::bind_rows(
 We will attempt to minimize the following function:^[This is actually ridge
 regression with a single predictor.]
 $$
-F(\beta; x, y, \lambda) = \frac{1}{n} f_i(\beta; x, y, \lambda) = \frac{1}{2n} \sum_{i=1}^n (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2
+F(\beta; x, y, \lambda) = \sum_{i=1}^n f_i(\beta; x, y, \lambda) = \frac{1}{2} \sum_{i=1}^n (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2
 $$
 
 . . .
