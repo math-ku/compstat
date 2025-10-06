@@ -1060,17 +1060,14 @@ Estimate $\theta_A$ and $\theta_B$ (MLE) using EM.
 If we knew which coin was used in each experiment, the complete-data
 likelihood would be
 $$
-p(X,Z \mid \theta) = \sum_i \left( \symbf{1}_{Z_i = A} \text{Binomial}(X_i \mid 10, \theta_A)
-+ \symbf{1}_{Z_i = B} \text{Binomial}(X_i \mid 10, \theta_B) \right).
+p(X,Z \mid \theta) = \sum_i \left( \symbf{1}_{Z_i = A} \text{Binomial}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \text{Binomial}(X_i \mid 10, \theta_B) \right).
 $$
 
 ## The E-Step: The Q-Function
 
 The log-likelihood of the complete data (for a single experiment) is
 $$
-\log p(X_i, Z_i \mid \theta) =
-\symbf{1}_{Z_i = A} \log \text{Bin}(X_i \mid 10, \theta_A)
-+ \symbf{1}_{Z_i = B} \log \text{Bin}(X_i \mid 10, \theta_B).
+\log p(X_i, Z_i \mid \theta) = \symbf{1}_{Z_i = A} \log \text{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \log \text{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
