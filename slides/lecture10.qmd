@@ -210,13 +210,14 @@ $$
 \ell(p \mid Y) = \sum_{k=1}^6 Y_k \log p_k.
 $$
 
-## Optimization Variable
+. . .
+
+### Optimization Variable
 
 For our EM algorithm, we will optimize over the **allele frequencies**
 $$
-\theta = (p_C, p_I)
+\theta = (p_C, p_I), \qquad p_T = 1 - p_C - p_I.
 $$
-with $p_T = 1 - p_C - p_I$.
 
 \medskip\pause
 
@@ -254,6 +255,11 @@ $$
 $$
 since
 $Y \mid X, \theta' \sim \operatorname{Mult}\left(X_{j(k)}, \left( \frac{\pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \right)_{k \in A_{j(k)}}\right)$.
+
+\pdfpcnote{
+Intuition: If we know the phenotype counts X and the allele frequencies
+theta', we can compute the expected genotype counts Y.
+}
 
 ## E-step for Multinomial Model
 
@@ -552,7 +558,7 @@ ggplot(em_trace, aes(n, par_norm_diff)) +
 ```{r loglikelihood-convergence, warning=FALSE, echo = FALSE, fig.cap="Log-likelihood convergence"}
 #| fig-width: 4
 #| fig-height: 2.5
-mutate(em_trace, diff_nll = 1e-12 + nll - min(nll)) |>
+mutate(em_trace, diff_nll = 1e-14 + nll - min(nll)) |>
   ggplot(aes(n, diff_nll)) +
   labs(y = expression(l[theta] - min(l))) +
   geom_point() +
@@ -560,34 +566,10 @@ mutate(em_trace, diff_nll = 1e-12 + nll - min(nll)) |>
   scale_y_log10()
 ```
 
-## Pitfalls
-
-### Local Maxima
-
-$Q$ is not typically convex, so no guarantee that the EM algorithm converges to
-the global maximum.
-
-\medskip\pause
-
-For this reason, the EM algorithm is also sensitive to starting values.
-
-. . .
-
-### Bad Initialization
-
-The EM algorithm can be sensitive to starting values.
-
-
-. . .
-
-### Label Switching
-
-In mixture models, the components can be permuted without changing the
-likelihood.
-
 ## Multi-Start
 
-One way to deal with local maxima is to use multiple starting values.
+One pitfall with the EM algorithm is local maxima. One way to address this is
+to use multiple starting values.
 
 \medskip\pause
 
@@ -770,6 +752,11 @@ score(theta_hat)
 
 ## Numerical Fisher information
 
+We could differentiate analytically, but a simpler way is to use numerical
+differentiation.
+
+. . .
+
 :::: {.columns}
 
 ::: {.column width="47%"}
@@ -805,10 +792,6 @@ ihat
 
 ::::
 
-. . .
-
-Different estimates of same quantity. Should be close but not identical.
-
 ## Second Way: The Information Identity
 
 Recall that with $\theta'=\theta$,
@@ -826,7 +809,7 @@ $$
 . . .
 
 At $\theta'=\theta$, using $\log p(X, Y \mid \theta) = \log p(X \mid \theta) +
-\log p(Y \mid X, \theta)$, we can decompose this as
+\log p(Y \mid X, \theta)$, we have
 $$
 -\nabla_\theta^2 Q(\theta \mid \theta) = -\nabla_\theta^2 \log p(X\mid \theta) - \E_{Y \mid X,\theta}\nabla_\theta^2 \log p(Y \mid X,\theta).
 $$
@@ -862,7 +845,7 @@ $$
 \hat{i}_X = \hat{i}_Y - \hat{i}_{Y \mid X}.
 $$
 
-. .
+. . .
 
 ### Interpretation
 
@@ -1013,6 +996,80 @@ test_that("Methods 1, 2, and 3 are equivalent", {
 })
 ```
 
+## 
+
+```{r fisher-ellipses, warning=FALSE, message=FALSE}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-cap: "95% Fisher information ellipses for the observed data (solid) and
+#|   complete data (dashed) for the Peppered moths example. The MLE is
+#|   indicated by the cross."
+# Requires: theta_hat, iY, iX already computed above
+theta_hat <- em(c(0.3, 0.3), em_mult_step, eps = 1e-12)
+iY <- -hessian(Q, theta_hat, theta0 = theta_hat)
+iYX <- jacobian(function(theta) Q_grad(theta_hat, theta), theta_hat)
+iX <- iY - iYX
+
+alpha <- 0.05
+
+ellipse_points <- function(I, center, level = 0.95, n = 200) {
+  Sigma <- solve(I)
+  eig <- eigen(Sigma, symmetric = TRUE)
+  A <- eig$vectors %*% diag(sqrt(pmax(eig$values, 0)))
+  r <- sqrt(qchisq(level, df = 2))
+  t <- seq(0, 2 * pi, length.out = n)
+  pts <- t(sapply(t, function(phi) center + r * A %*% c(cos(phi), sin(phi))))
+  colnames(pts) <- c("pC", "pI")
+  as.data.frame(pts)
+}
+
+clip_simplex <- function(df) {
+  subset(df, pC >= 0 & pI >= 0 & pC + pI <= 1)
+}
+
+df_obs <- clip_simplex(transform(
+  ellipse_points(iX, theta_hat, 1 - alpha / 2),
+  Type = "Observed (i_X)"
+))
+df_comp <- clip_simplex(transform(
+  ellipse_points(iY, theta_hat, 1 - alpha / 2),
+  Type = "Complete (i_Y)"
+))
+
+simplex_boundary <- data.frame(
+  pC = c(0, 1, 0, 0),
+  pI = c(0, 0, 1, 0)
+)
+
+theta_df <- data.frame(pC = theta_hat[1], pI = theta_hat[2])
+
+ggplot() +
+  geom_path(data = df_obs, aes(pC, pI, color = Type)) +
+  geom_path(
+    data = df_comp,
+    aes(pC, pI, color = Type),
+    linetype = 2
+  ) +
+  geom_point(
+    data = theta_df,
+    aes(pC, pI),
+    color = "darkorange",
+    pch = 4,
+    size = 3
+  ) +
+  coord_equal() +
+  lims(x = c(0, 0.15), y = c(0.1, 0.25)) +
+  scale_color_manual(
+    values = c("Observed (i_X)" = "#1b6ca8", "Complete (i_Y)" = "#d95f02"),
+    labels = c(expression(hat(i)[X]), expression(hat(i)[Y]))
+  ) +
+  labs(
+    x = expression(p[C]),
+    y = expression(p[I]),
+    color = "Ellipse"
+  )
+```
 
 ## Convergence of the EM Algorithm
 
@@ -1042,7 +1099,7 @@ $$
 So the error at step $t+1$ is approximately a linear transformation of the error at
 step $t$.
 
-. . .
+\medskip\pause
 
 And the rate of convergence is determined by the matrix $\nabla \Phi(\hat{\theta})$.
 
@@ -1072,31 +1129,40 @@ quickly.
 
 ## Convergence Estimation
 
-The log-rate of convergence can be estimated by least-squares.
+The EM algorithm converges linearly near the optimum:  
+$$
+\lVert\theta^{(t+1)} - \hat{\theta}\rVert \approx \rho \lVert\theta^{(t)} - \hat{\theta}\rVert, \qquad 0 < \rho < 1.
+$$
+
+\medskip\pause
+
+Rate can be estimated by fitting a linear model to the log of the parameter differences:
+$$
+\log \lVert\theta^{(t+1)} - \hat{\theta}\rVert \approx \log \rho + \log \lVert \theta^{(t)} - \hat{\theta}\rVert
+\implies \log \lVert \theta^{(t)} - \hat{\theta}\rVert \approx t \log \rho + \text{constant}.
+$$
+
+. . .
 
 ```{r linear-convergence}
 log_lm <- lm(log(par_norm_diff) ~ n, data = em_trace)
-exp(coefficients(log_lm)["n"])
+exp(coefficients(log_lm)["n"]) # n: iteration (t above)
 ```
 
 \medskip\pause
 
-It is very small in this case implying fast convergence.
-
-\medskip\pause
-
-This is not always the case. If the log-likelihood is flat, the EM algorithm can
-become arbitrarily slow with a rate close to 1.
+It is small in this case, implying fast convergence.
 
 ## The Generalized EM Algorithm
+
+:::: {.columns}
+
+::: {.column width="47%"}
 
 ### Key Idea
 
 Relax the M-step: instead of fully maximizing
-$$
-Q(\theta \mid \theta^{(t)}),
-$$
-we just require an **increase**:
+$ Q(\theta \mid \theta^{(t)}),$ we just require an **increase**:
 $$
 Q(\theta^{(t+1)} \mid \theta^{(t)}) \ge Q(\theta^{(t)} \mid \theta^{(t)}).
 $$
@@ -1107,6 +1173,10 @@ Full maximization may be **hard or computationally expensive**. GEM allows
 **simpler updates** (e.g., gradient step, coordinate-wise update).
 
 . . .
+
+:::
+
+::: {.column width="47%"}
 
 ### Properties
 
@@ -1125,6 +1195,10 @@ Still converges to a **stationary point** of the likelihood.
 
 - One gradient step on $Q$ instead of full maximization.\pause
 - Useful for **complex mixture models** or latent structures.
+
+:::
+
+::::
 
 # Gaussian Mixtures
 
@@ -1553,7 +1627,7 @@ sigma1 <- 1
 sigma2 <- 1
 mu1 <- -0.5
 mu2 <- 4
-p <- 0.5
+p <- 0.8
 n <- 5000
 z <- sample(
   c(TRUE, FALSE),
@@ -1578,12 +1652,12 @@ em(c(0.2, 3, -0.5), em_gauss_step_alt)
 . . .
 
 ```{r}
-em(c(0.2, -3, -0.5), em_gauss_step_alt)
+em(c(0.8, -3, -0.5), em_gauss_step_alt)
 ```
 
 . . .
 
-Notice that the solutions have switched the labels of the mean components.
+In this example, we generated data with $p = 0.8$ and $\sigma_1 = \sigma_2$.
 
 ## Exercise
 
