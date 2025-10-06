@@ -19,9 +19,9 @@ M <- function(y, group) {
   as.vector(tapply(y, group, sum))
 }
 
-mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
+mult_likelihood <- function(x, group, pi_map, constraint = function(par) TRUE) {
   function(par) {
-    pr <- prob(par)
+    pr <- pi_map(par)
     if (!constraint(par) || any(pr > 1) || any(pr < 0)) {
       return(Inf)
     }
@@ -29,7 +29,7 @@ mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
   }
 }
 
-prob <- function(p) {
+pi_map <- function(p) {
   p[3] <- 1 - p[1] - p[2]
   c(
     p[1]^2,
@@ -49,14 +49,14 @@ constraint <- function(par) {
     1 - par[1] - par[2] >= 0
 }
 
-nll <- mult_likelihood(
+neg_noglik_full <- mult_likelihood(
   x = c(85, 196, 341),
   group = c(1, 1, 1, 2, 2, 3),
-  prob = prob,
+  pi_map = pi_map,
   constraint = constraint
 )
 
-moth_optim <- optim(c(0.3, 0.3), nll)
+moth_optim <- optim(c(0.3, 0.3), neg_noglik_full)
 ```
 
 ## Last Time
@@ -416,13 +416,13 @@ tail(em_trace)
 #| fig-width: 5
 #| fig-height: 3.4
 #| fig-cap: "EM algorithm iterations shown as points on the log-likelihood contour plot"
-nll_pep <- Vectorize(function(p1, p2) nll(c(p1, p2)))
+nll_pep <- Vectorize(function(p1, p2) neg_noglik_full(c(p1, p2)))
 
 em_trace <- transform(
   em_trace,
   n = seq_len(nrow(em_trace)),
   par_norm_diff = sqrt((par0.1 - par.1)^2 + (par0.2 - par.2)^2),
-  loglik = nll_pep(par.1, par.2)
+  nll = nll_pep(par.1, par.2)
 )
 
 group <- c(1, 1, 1, 2, 2, 3)
@@ -459,7 +459,7 @@ for (i in seq_len(maxit)) {
 
   for (k in seq_len(n_mat)) {
     for (j in seq_len(n_mat)) {
-      val <- -sum(y * log(prob(c(pC[k], pI[j]))))
+      val <- -sum(y * log(pi_map(c(pC[k], pI[j]))))
       if (is.finite(val)) {
         z[k, j] <- val
       } else {
@@ -470,7 +470,7 @@ for (i in seq_len(maxit)) {
 
   level_curves[[i]] <- z
 
-  ll[i] <- -sum(y * log(prob(par)))
+  ll[i] <- -sum(y * log(pi_map(par)))
 
   exp_vals[i, ] <- y
   par <- MStep(y)
@@ -552,8 +552,8 @@ ggplot(em_trace, aes(n, par_norm_diff)) +
 ```{r loglikelihood-convergence, warning=FALSE, echo = FALSE, fig.cap="Log-likelihood convergence"}
 #| fig-width: 4
 #| fig-height: 2.5
-mutate(em_trace, diff_loglik = 1e-12 + loglik - min(loglik)) |>
-  ggplot(aes(n, diff_loglik)) +
+mutate(em_trace, diff_nll = 1e-12 + nll - min(nll)) |>
+  ggplot(aes(n, diff_nll)) +
   labs(y = expression(l[theta] - min(l))) +
   geom_point() +
   geom_line() +
@@ -600,7 +600,7 @@ theta_grid <- expand.grid(
 )
 
 res <- apply(theta_grid, 1, em, em_step = em_mult_step)
-neg_logliks <- apply(res, 2, nll)
+neg_logliks <- apply(res, 2, neg_noglik_full)
 
 which.min(neg_logliks)
 ```
@@ -665,7 +665,7 @@ score <- function(theta, x = c(85, 196, 341)) {
 
 ## Empirical Fisher Information
 
-The empirical Fisher information is defined as
+The empirical observed Fisher information is defined as
 $$
 \hat{i}(\theta) = -\frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta)
 $$
@@ -779,7 +779,7 @@ score(theta_hat)
 ```{r}
 -optimHess(
   theta_hat,
-  nll,
+  neg_noglik_full,
   score
 )
 ```
@@ -910,12 +910,12 @@ $$
 First we implement the map $Q$ as an R function.
 
 ```{r q-def}
-Q <- function(theta0, theta1, x = c(85, 196, 341)) {
+Q <- function(theta, theta0, x = c(85, 196, 341)) {
+  theta[3] <- 1 - theta[1] - theta[2]
   theta0[3] <- 1 - theta0[1] - theta0[2]
-  theta1[3] <- 1 - theta1[1] - theta1[2]
   group <- c(1, 1, 1, 2, 2, 3)
-  (x[group] * pi_map(theta1) / M(pi_map(theta1), group)[group]) %*%
-    log(pi_map(theta0))
+  (x[group] * pi_map(theta0) / M(pi_map(theta0), group)[group]) %*%
+    log(pi_map(theta))
 }
 ```
 
@@ -924,12 +924,12 @@ Q <- function(theta0, theta1, x = c(85, 196, 341)) {
 Next, we implement the gradient for Q:
 
 ```{r gradq-def}
-Q_grad <- function(theta, theta1, x = c(85, 196, 341)) {
+Q_grad <- function(theta, theta0, x = c(85, 196, 341)) {
   theta[3] <- 1 - theta[1] - theta[2]
   group <- c(1, 1, 1, 2, 2, 3)
   (x[group] *
-    pi_map(theta1) /
-    (M(pi_map(theta1), group)[group] * pi_map(theta))) %*%
+    pi_map(theta0) /
+    (M(pi_map(theta0), group)[group] * pi_map(theta))) %*%
     pi_grad(theta)
 }
 ```
@@ -937,7 +937,7 @@ Q_grad <- function(theta, theta1, x = c(85, 196, 341)) {
 ## Numerical Differentiation of $Q$
 
 ```{r q-hess}
-iY <- -hessian(Q, theta_hat, theta1 = theta_hat)
+iY <- -hessian(Q, theta_hat, theta0 = theta_hat)
 iY
 ```
 
@@ -1238,7 +1238,7 @@ pl
 We assume $\sigma_1$ and $\sigma_2$ known.
 
 ```{r gaus-mix-loglik}
-loglik <- function(par, x) {
+neg_loglik <- function(par, x) {
   p <- par[1]
   mu1 <- par[2]
   mu2 <- par[3]
@@ -1259,7 +1259,7 @@ loglik <- function(par, x) {
 ## General-Purpose Optimization
 
 ```{r gaus-mix-example, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
-optim(c(0.5, -0.5, 4), loglik, x = x)[1:2]
+optim(c(0.5, -0.5, 4), neg_loglik, x = x)[1:2]
 ```
 
 . . .
@@ -1267,7 +1267,7 @@ optim(c(0.5, -0.5, 4), loglik, x = x)[1:2]
 Again, however, initialization matters!
 
 ```{r gaus-mix-example-bad, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
-optim(c(0.9, 3, 1), loglik, x = x)[1:2]
+optim(c(0.9, 3, 1), neg_loglik, x = x)[1:2]
 ```
 
 ## The $Q$-Function
@@ -1356,7 +1356,7 @@ em(c(0.5, -0.5, 4), em_gauss_step)
 . . .
 
 ```{r gaus-mix-example2, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
-optim(c(0.5, -0.5, 4), loglik, x = x)[1:2]
+optim(c(0.5, -0.5, 4), neg_loglik, x = x)[1:2]
 ```
 
 . . .
@@ -1368,7 +1368,7 @@ em(c(0.9, 3, 1), em_gauss_step) # Starting value still matters
 ## Gradients and Numerical Differentiation
 
 ```{r numderiv-grad1}
-grad1 <- function(par) grad(function(par) loglik(par, x), par)
+grad1 <- function(par) grad(function(par) neg_loglik(par, x), par)
 ```
 
 . . .
@@ -1407,10 +1407,10 @@ grad2(par_hat)
 
 ```{r tracing-convergence}
 em_tracer <- tracer(
-  c("par0", "par", "loglik", "h_prime"),
+  c("par0", "par", "nll", "h_prime"),
   Delta = 0,
   expr = quote({
-    loglik <- loglik(par, x)
+    nll <- neg_loglik(par, x)
     h_prime <- sum(grad2(par)^2)
   })
 )
@@ -1429,7 +1429,7 @@ tail(em_trace, 3)
 ```{r convergence-plots-1, warning=FALSE}
 autoplot(
   em_trace,
-  y = loglik - min(loglik)
+  y = nll - min(nll)
 )
 ```
 
@@ -1539,8 +1539,13 @@ em_gauss_illustration(20, em_trace)
 ## Label Switching
 
 If we set $\sigma_1 = \sigma_2$, then the likelihood is invariant to
-switching the labels of the components, so the EM algorithm may converge to
-either of the two symmetric modes.
+switching the labels of the components, i.e., $(p, \mu_1, \mu_2)$ and
+$(1-p, \mu_2, \mu_1)$ give the same likelihood.
+
+\medskip\pause
+
+So the EM algorithm may converge to
+**either** of the two symmetric modes.
 
 ```{r mixture-gaus-sim2}
 #| echo: false
