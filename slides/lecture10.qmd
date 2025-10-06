@@ -1,5 +1,5 @@
 ---
-title: "The EM-Algorithm"
+title: "A Deeper Look into the EM-Algorithm"
 execute:
   cache: false
 ---
@@ -49,14 +49,14 @@ constraint <- function(par) {
     1 - par[1] - par[2] >= 0
 }
 
-loglik <- mult_likelihood(
+nll <- mult_likelihood(
   x = c(85, 196, 341),
   group = c(1, 1, 1, 2, 2, 3),
   prob = prob,
   constraint = constraint
 )
 
-moth_optim <- optim(c(0.3, 0.3), loglik)
+moth_optim <- optim(c(0.3, 0.3), nll)
 ```
 
 ## Last Time
@@ -220,9 +220,10 @@ with $p_T = 1 - p_C - p_I$.
 
 \medskip\pause
 
-Let's define the function $\pi$, that maps $\theta$ to the genotype probabilities
+Let's define the function $\pi$, that maps $\theta$ to the genotype
+probabilities
 $$
-\pi(\theta) = 
+\pi(\theta) =
   \begin{bmatrix}
     p_C^2 \\
     2 p_C p_I \\
@@ -247,11 +248,12 @@ $$
 
 . . .
 
-Note that 
+Note that
 $$
 \E_{Y \mid X, \theta'}(Y_k) = \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}}
 $$
-since $Y \mid X, \theta' \sim \operatorname{Mult}(X_{j(k)}, ( \pi_k(\theta') / M(\pi(\theta'))_{j(k)} )_{k \in A_{j(k)}})$.
+since
+$Y \mid X, \theta' \sim \operatorname{Mult}\left(X_{j(k)}, \left( \frac{\pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \right)_{k \in A_{j(k)}}\right)$.
 
 ## E-step for Multinomial Model
 
@@ -307,14 +309,16 @@ m_step_mult <- function(y) {
 }
 ```
 
-## Factory for the EM Step
+## EM Step Function Factory
 
-A function factory returns 
+A **function factory** returns a function. Here, we create a function that
+performs one EM step for the multinomial model.
 
+. . .
 
 ```{r}
 create_em_mult_step <- function(x, group) {
-  force(x)
+  force(x) # Force evaluation of x
   force(group)
 
   e_step <- function(theta) e_step_mult(theta, x, group)
@@ -327,14 +331,16 @@ create_em_mult_step <- function(x, group) {
 ## EM Algorithm Implementation
 
 ```{r EM-factory}
-em <- function(par, em_step, epsilon = 1e-6, maxit = 20, cb = NULL) {
+em <- function(par, em_step, eps = 1e-6, maxit = 20, cb = NULL) {
   for (i in seq_len(maxit)) {
     par0 <- par
     par <- em_step(par)
+
     if (!is.null(cb)) {
-      cb()
+      cb() # Callback function for tracing, to be explained
     }
-    if (sum((par - par0)^2) <= epsilon * (sum(par^2) + epsilon)) {
+
+    if (sum((par - par0)^2) <= eps * (sum(par^2) + eps)) {
       break
     }
   }
@@ -344,20 +350,28 @@ em <- function(par, em_step, epsilon = 1e-6, maxit = 20, cb = NULL) {
 
 ## Peppered Moths EM Algorithm
 
+First, we create the EM step function.
+
 ```{r, results='hold'}
 em_mult_step <- create_em_mult_step(
   x = c(85, 196, 341),
   group = c(1, 1, 1, 2, 2, 3)
 )
+```
 
+. . .
+
+Then we can run the EM algorithm.
+
+```{r}
 em(c(0.3, 0.3), em_mult_step)
 moth_optim$par
 ```
 
 ## Inside the EM Algorithm
 
-The `tracer()` function in the `CSwR` package can be used to trace
-the iterations of an algorithm.
+The `tracer()` function in the `CSwR` package can be used to trace the
+iterations of an algorithm.
 
 . . .
 
@@ -368,9 +382,9 @@ em_tracer <- tracer("par", Delta = 0)
 
 . . .
 
-Each call to `tracer()` returns a S3 object of class tracer. The 
-object has a field `tracer`, which is a function that will
-record the current value of given parameters each time it is called.
+Each call to `tracer()` returns a S3 object of class tracer. The object has a
+field `tracer`, which is a function that will record the current value of given
+parameters each time it is called.
 
 . . .
 
@@ -390,8 +404,8 @@ summary(em_tracer)
 
 ```{r em-tracer}
 em_tracer <- tracer(c("par0", "par"), Delta = 0)
-phat <- em(c(0.3, 0.3), em_mult_step, epsilon = 0, cb = em_tracer$tracer)
-phat
+p_hat <- em(c(0.3, 0.3), em_mult_step, eps = 0, cb = em_tracer$tracer)
+p_hat
 em_trace <- summary(em_tracer)
 tail(em_trace)
 ```
@@ -402,13 +416,13 @@ tail(em_trace)
 #| fig-width: 5
 #| fig-height: 3.4
 #| fig-cap: "EM algorithm iterations shown as points on the log-likelihood contour plot"
-loglik_pep <- Vectorize(function(p1, p2) loglik(c(p1, p2)))
+nll_pep <- Vectorize(function(p1, p2) nll(c(p1, p2)))
 
 em_trace <- transform(
   em_trace,
   n = seq_len(nrow(em_trace)),
   par_norm_diff = sqrt((par0.1 - par.1)^2 + (par0.2 - par.2)^2),
-  loglik = loglik_pep(par.1, par.2)
+  loglik = nll_pep(par.1, par.2)
 )
 
 group <- c(1, 1, 1, 2, 2, 3)
@@ -416,7 +430,7 @@ group <- c(1, 1, 1, 2, 2, 3)
 EStep <- function(theta) e_step_mult(theta, x, group)
 MStep <- function(y) m_step_mult(y)
 
-epsilon <- 1e-6
+eps <- 1e-6
 maxit <- 5
 
 exp_vals <- matrix(NA, nrow = maxit, ncol = length(group))
@@ -513,7 +527,8 @@ ggplot(df_all, aes(pC, pI)) +
 ```{r tracer-plot1, echo = FALSE}
 #| fig-height: 2.7
 #| fig-width: 3.5
-#| fig-cap: "Parameter convergence of the EM algorithm applied to the Peppered moths problem."
+#| fig-cap: "Parameter convergence of the EM algorithm applied to the Peppered
+#|   moths problem."
 ggplot(em_trace, aes(n, par_norm_diff)) +
   geom_point() +
   geom_line() +
@@ -532,24 +547,6 @@ ggplot(em_trace, aes(n, par_norm_diff)) +
   scale_y_log10()
 ```
 
-## Linear Convergence
-
-The log-rate of the convergence can be estimated by least-squares.
-
-```{r linear-convergence}
-log_lm <- lm(log(par_norm_diff) ~ n, data = em_trace)
-exp(coefficients(log_lm)["n"])
-```
-
-\medskip\pause
-
-It is very small in this case implying fast convergence.
-
-\medskip\pause
-
-This is not always the case. If the log-likelihood is flat, the EM-algorithm can
-become arbitrarily slow with a rate close to 1.
-
 ##
 
 ```{r loglikelihood-convergence, warning=FALSE, echo = FALSE, fig.cap="Log-likelihood convergence"}
@@ -567,8 +564,8 @@ mutate(em_trace, diff_loglik = 1e-12 + loglik - min(loglik)) |>
 
 ### Local Maxima
 
-$Q$ is not typically convex, so no guarantee that the EM-algorithm converges
-to the global maximum.
+$Q$ is not typically convex, so no guarantee that the EM-algorithm converges to
+the global maximum.
 
 \medskip\pause
 
@@ -596,44 +593,48 @@ One way to deal with local maxima is to use multiple starting values.
 
 For the moths, we can use a grid of starting values.
 
+```{r}
+theta_grid <- expand.grid(
+  pC = seq(0.01, 0.49, length.out = 5),
+  pI = seq(0.01, 0.49, length.out = 5)
+)
+
+res <- apply(theta_grid, 1, em, em_step = em_mult_step)
+neg_logliks <- apply(res, 2, nll)
+
+which.min(neg_logliks)
+```
+
 # Fisher Information
 
-## Statistics
+## The Fisher Information
 
 When doing statistical inference, we need to measure the uncertainty of
 estimates.
 
 \medskip\pause
 
-The Fisher information is a key quantity for this.
-
-## Gradient of $Q$ for the Multinomial Model
-
-Recall that
+The Fisher information is a key quantity for this. It is defined as
 $$
-Q(\theta \mid \theta') = \sum_{k} \frac{x_{j(i)} p_i(\theta')}{M(\pi(\theta'))_{j(i)}} \log \pi_i(\theta),
-$$
-where $j(i)$ is defined by $i \in A_{j(i)}$.
-
-\medskip\pause
-
-The gradient of $Q$ w.r.t. $\theta$
-$$
-\nabla_{\theta} Q(\theta \mid \theta') = \sum_{i} \frac{x_{j(i)}p_i(\theta')}{M(p(\theta'))_{j(i)}p_i(\theta)} \nabla p_i(\theta).
+i(\theta) = - \E\left( \frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta) \right).
 $$
 
-\medskip\pause
+. . .
 
-When evaluated in $\theta'$ it is
-$$
-\nabla_{\theta} Q(\theta' \mid \theta') = \sum_{i} \frac{x_{j(i)}}{M(p(\theta'))_{j(i)}} \nabla p_i(\theta').
-$$
+This is the expected curvature of the log-likelihood.
 
-## Gradient Implementation
+### Complete, Observed, and Missing Information
+
+In the presence of latent variables, we can define three types of Fisher
+information:
+
+- **Complete-data information** $i_Y(\theta)$
+- **Observed-data information** $i_X(\theta)$
+- **Missing information** $i_{Y \mid X}(\theta) = i_Y(\theta) - i_X(\theta)$
 
 ```{r}
 #| echo: false
-Dprob <- function(p) {
+pi_grad <- function(p) {
   matrix(
     c(
       2 * p[1],
@@ -655,30 +656,93 @@ Dprob <- function(p) {
   )
 }
 
-grad_Q <- function(p, x = c(85, 196, 341)) {
-  p[3] <- 1 - p[1] - p[2]
+score <- function(theta, x = c(85, 196, 341)) {
+  theta <- c(theta, 1 - sum(theta))
   group <- c(1, 1, 1, 2, 2, 3)
-  (x[group] / M(prob(p), group)[group]) %*% Dprob(p)
+  (x[group] / M(pi_map(theta), group)[group]) %*% pi_grad(theta)
 }
 ```
 
-## Gradient at the MLE
+## Empirical Fisher Information
 
-The EM algorithm is a fixed-point algorithm. The limit $\hat{\theta}$ satisfies
+The empirical Fisher information is defined as
 $$
-\nabla_{\theta} Q(\theta' \mid \theta') = \nabla_{\theta} \ell(\theta')
+\hat{i}(\theta) = -\frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta)
 $$
-from the fact that
-$$
-\theta' = \arg\max_{\theta} \left(Q(\theta \mid \theta') -  \ell(\theta)\right).
-$$
+where $\ell_i(\theta)$ is the log-likelihood of observation $i$.
+
+\medskip\pause
+
+In the EM context, we typically do not have access to the individual
+log-likelihood contributions $\ell_i(\theta)$, but we can solve this through
+other means.
 
 . . .
 
-### Emprical Verification
+### Three Ways of Computing the Observed Fisher Information
+
+1. The **gradient identity**: For the score function from the Q function, then
+   differentiate.\pause
+2. The **information identity**: Estimate complete and missing information,
+   then subtract.\pause
+3. The **EM-mapping**: Differentiate the EM-mapping, which is a fixed point at the
+   MLE.
+
+## First Way: Via the Gradient Identity
+
+Recall that the Q function is
+$$
+Q(\theta \mid \theta') = \E_{Y \mid X, \theta'} \log p(X, Y \mid \theta).
+$$
+
+\medskip\pause
+
+At convergence, $\theta' = \hat{\theta}$ (the MLE of the observed data
+log-likelihood).
+
+\medskip\pause
+
+If we differentiate once, we have
+$$
+\nabla_\theta Q(\theta \mid \theta') = \E_{Y \mid X, \theta'} \nabla_\theta \log p(X, Y \mid \theta).
+$$
+
+\medskip\pause
+
+Setting $\theta'=\theta$ gives Fisher's (score) identity
+$$
+\nabla_\theta Q(\theta \mid \theta)
+= \E_{Y \mid X,\theta}\nabla_{\theta} \log p(X, Y \mid \theta)
+= \nabla_\theta \log p(X \mid \theta).
+$$
+
+## Gradient of $Q$ for the Multinomial Model
+
+For the multinomial model, the Q function is 
+$$
+Q(\theta \mid \theta')  = \sum_{i} \frac{x_{j(i)} \pi_i(\theta')}{M(\pi(\theta'))_{j(i)}} \log \pi_i(\theta),
+$$
+where $j(i)$ is defined by $i \in A_{j(i)}$.
+
+\medskip\pause
+
+The gradient is
+$$
+\nabla_{\theta} Q(\theta \mid \theta') = \sum_{i} \frac{x_{j(i)}\pi_i(\theta')}{M(\pi(\theta'))_{j(i)}\pi_i(\theta)} \nabla \pi_i(\theta).
+$$
+
+\medskip\pause
+
+When evaluated in $\theta$ it is
+$$
+\nabla_{\theta} Q(\theta \mid \theta) = \sum_{i} \frac{x_{j(i)}}{M(\pi(\theta))_{j(i)}} \nabla \pi_i(\theta).
+$$
+
+
+## Numerical Validation of the Gradient Identity
 
 ```{r p-hat-call}
-p_hat <- em(c(0.3, 0.3), em_mult_step, epsilon = 1e-20)
+theta_hat <- em(c(0.3, 0.3), em_mult_step, eps = 1e-20)
 ```
 
 :::: {.columns}
@@ -686,56 +750,23 @@ p_hat <- em(c(0.3, 0.3), em_mult_step, epsilon = 1e-20)
 ::: {.column width="47%"}
 
 ```{r p-hat}
-p_hat
+theta_hat
 ```
 
 :::
 
+. . .
+
 ::: {.column width="47%"}
 
 ```{r grad-q}
-grad_Q(p_hat)
+score(theta_hat)
 ```
 
 :::
 
 ::::
 
-## Empirical Fisher Information
-
-Recall that a multinomial observation with size parameter $n$ can be regarded as
-$n$ i.i.d. observations.
-
-. . .
-
-For i.i.d. observations the Fisher information (for one sample) can be estimated
-as the empirical variance of the gradient of the log-likelihood. By the identity
-$$
-\nabla_{\theta} Q_i(\theta' \mid \theta') = \nabla_{\theta} \ell_i(\theta')
-$$
-holding for each observation, we can compute the empirical variance.
-
-## Moths Empirical Fisher
-
-Can think of the moths as i.i.d. observations.
-
-```{r}
-emp_fisher <- function(p, x = c(85, 196, 341)) {
-  grad1 <- grad_Q(p, c(1, 0, 0))
-  grad2 <- grad_Q(p, c(0, 1, 0))
-  grad3 <- grad_Q(p, c(0, 0, 1))
-  x[1] *
-    t(grad1) %*% grad1 +
-    x[2] * t(grad2) %*% grad2 +
-    x[3] * t(grad3) %*% grad3
-}
-```
-
-. . .
-
-```{r}
-emp_fisher(p_hat)
-```
 
 ## Numerical Fisher information
 
@@ -747,9 +778,9 @@ emp_fisher(p_hat)
 
 ```{r}
 -optimHess(
-  p_hat,
-  loglik,
-  grad_Q
+  theta_hat,
+  nll,
+  score
 )
 ```
 
@@ -763,7 +794,10 @@ emp_fisher(p_hat)
 
 ```{r}
 library(numDeriv)
-ihat <- -jacobian(grad_Q, p_hat)
+ihat <- -jacobian(
+  score,
+  theta_hat
+)
 ihat
 ```
 
@@ -775,62 +809,81 @@ ihat
 
 Different estimates of same quantity. Should be close but not identical.
 
-## Measuring Variance
-
-Fisher information can be used to compute standard errors of MLEs
-
-\medskip\pause
-
-Empirical Fisher information can be computed for i.i.d. observations using the
-  gradients $\nabla_{\theta} Q_i(\bar{\theta} \mid \hat{\theta})$ evaluated in
-  $\bar{\theta} = \hat{\theta}$.
-
-\medskip\pause
-
-Observed Fisher information can be computed by numerical differentiation of
-  the gradient $-\nabla_{\theta} Q(\bar{\theta} \mid \bar{\theta})$ evaluated in
-  $\bar{\theta} = \hat{\theta}$.
-
 ## Second Way: The Information Identity
 
-From
+Recall that with $\theta'=\theta$,
 $$
-\ell(\theta) = Q(\theta \mid \theta') + H(\theta \mid \theta')
+\nabla_\theta Q(\theta \mid \theta) = \nabla_\theta \log p(X \mid \theta).
 $$
-it follows that the observed Fisher information equals
+
+\pause
+
+Differentiating again (w.r.t to $\theta$) gives
 $$
-\hat{i}_X := - D^2_{\theta} \ell(\hat{\theta}) =
-\underbrace{-D^2_{\theta} Q(\hat{\theta} \mid \theta')}_{\hat{i}_Y(\theta')} -
-\underbrace{D^2_{\theta} H(\hat{\theta} \mid \theta')}_{\hat{i}_{Y \mid X}(\theta')}.
+-\nabla_\theta^2 Q(\theta \mid \theta') = -\E_{Y \mid X, \theta'} \nabla_\theta^2 \log p(X, Y \mid \theta).
+$$
+
+. . .
+
+At $\theta'=\theta$, using $\log p(X, Y \mid \theta) = \log p(X \mid \theta) +
+\log p(Y \mid X, \theta)$, we can decompose this as
+$$
+-\nabla_\theta^2 Q(\theta \mid \theta) = -\nabla_\theta^2 \log p(X\mid \theta) - \E_{Y \mid X,\theta}\nabla_\theta^2 \log p(Y \mid X,\theta).
+$$
+
+. . .
+
+Taking expectation also over $X$ recovers the decomposition
+$$
+i_Y(\theta)= i_X(\theta)+ i_{Y\mid X}(\theta),
+$$
+with
+$$
+\begin{aligned}
+  i_Y(\theta)&= -\E_{X,Y\mid\theta}\nabla_\theta^2 \log p(X,Y\mid\theta),                           \\
+  i_X(\theta)&= -\E_{X\mid\theta}\nabla_\theta^2 \log p(X\mid\theta),                               \\
+  i_{Y\mid X}(\theta)&= -\E_{X\mid\theta}\E_{Y\mid X,\theta}\nabla_\theta^2 \log p(Y\mid X,\theta).
+\end{aligned}
+$$
+
+## The Information Identity
+
+At the MLE $\hat{\theta}$,
+$$
+\hat{i}_X := - \nabla^2_{\theta} \ell(\hat{\theta}) =
+\underbrace{-\nabla^2_{\theta} Q(\hat{\theta} \mid \hat\theta)}_{\hat{i}_Y} -
+\underbrace{\nabla^2_{\theta} H(\hat{\theta} \mid \hat\theta)}_{\hat{i}_{Y \mid X}}.
 $$
 
 \medskip\pause
 
-Introducing $\hat{i}_Y := \hat{i}_Y(\hat{\theta})$ and
-$\hat{i}_{Y \mid X} = \hat{i}_{Y \mid X}(\hat{\theta})$. We have the
-_information identity_
+Thus we have the **information identity** (Louis identity):
 $$
 \hat{i}_X = \hat{i}_Y - \hat{i}_{Y \mid X}.
 $$
+
+. .
 
 ### Interpretation
 
 - $\hat{i}_Y$ is the Fisher information for complete $Y$.
 - $\hat{i}_{Y \mid X}$ is the information "lost" from not observing full $X$.
 
-## More Identities
+## The Complete-Data Information
 
-How to compute the information loss?
+
+## Complete and Missing Data
+
+We can compute the complete-data information directly from the $Q$ function, but
+how do we compute the missing information?
 
 \medskip\pause
 
-The second **Bartlett identity** can be reformulated as
+The second **Bartlett identity** can be used to show that
 $$
-\partial_{\theta_i} \partial_{\theta_j} H(\bar{\theta} \mid \bar{\theta})
-= - \partial_{\theta'_i} \partial_{\theta_j} H(\bar{\theta} \mid \bar{\theta})
+\nabla_{\theta} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta})
+= - \nabla_{\theta'} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta}).
 $$
-which follows from differentiation under the integral of
-$\int h(y \mid x, \theta) \mu_x(d y) = 1.$
 
 \medskip\pause
 
@@ -838,90 +891,62 @@ And since we also have
 $$
 Q(\theta \mid \theta') = \ell(\theta) - H(\theta \mid \theta')
 $$
-we find that
+and because $\ell(\theta)$ does not depend on $\theta'$, we get
 $$
-\partial_{\theta'_i} \partial_{\theta_j} Q(\bar{\theta} \mid \bar{\theta}) =  -
-\partial_{\theta'_i} \partial_{\theta_j} H(\bar{\theta} \mid \bar{\theta}) =
-\partial_{\theta_i} \partial_{\theta_j} H(\bar{\theta} \mid \bar{\theta}).
+\nabla_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\theta}) =  -
+\nabla_{\theta'} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta}) =
+\nabla_{\theta} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta}).
 $$
 
 \medskip\pause
 
 Thus
 $$
-\hat{i}_{Y \mid X} = D_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\theta}).
+\hat{i}_{Y \mid X} = \nabla_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\theta}).
 $$
 
-## New Implementations
+## Implementations of $Q$
 
 First we implement the map $Q$ as an R function.
 
 ```{r q-def}
-Q <- function(p, pp, x = c(85, 196, 341)) {
-  p[3] <- 1 - p[1] - p[2]
-  pp[3] <- 1 - pp[1] - pp[2]
+Q <- function(theta0, theta1, x = c(85, 196, 341)) {
+  theta0[3] <- 1 - theta0[1] - theta0[2]
+  theta1[3] <- 1 - theta1[1] - theta1[2]
   group <- c(1, 1, 1, 2, 2, 3)
-  (x[group] * prob(pp) / M(prob(pp), group)[group]) %*% log(prob(p))
+  (x[group] * pi_map(theta1) / M(pi_map(theta1), group)[group]) %*%
+    log(pi_map(theta0))
 }
 ```
 
-. . .
+## Implementation of Gradient of $Q$
 
-and a modified `grad_Q()` of two arguments:
+Next, we implement the gradient for Q:
 
 ```{r gradq-def}
-grad_Q <- function(p, pp, x = c(85, 196, 341)) {
-  p[3] <- 1 - p[1] - p[2]
+Q_grad <- function(theta, theta1, x = c(85, 196, 341)) {
+  theta[3] <- 1 - theta[1] - theta[2]
   group <- c(1, 1, 1, 2, 2, 3)
-  (x[group] * prob(pp) / (M(prob(pp), group)[group] * prob(p))) %*% Dprob(p)
+  (x[group] *
+    pi_map(theta1) /
+    (M(pi_map(theta1), group)[group] * pi_map(theta))) %*%
+    pi_grad(theta)
 }
 ```
 
 ## Numerical Differentiation of $Q$
 
-We use **numDeriv** functions `jacobian()` and `hessian()` to differentiate
-numerically.
-
-:::: {.columns}
-
-::: {.column width="47%"}
-
 ```{r q-hess}
-iY <- -hessian(
-  Q,
-  p_hat,
-  pp = p_hat
-)
+iY <- -hessian(Q, theta_hat, theta1 = theta_hat)
 iY
 ```
 
 . . .
 
-```{r q-jacobian}
--jacobian(
-  grad_Q,
-  p_hat,
-  pp = p_hat
-)
-```
-
-:::
-
-. . .
-
-::: {.column width="47%"}
-
 ```{r iyx-jacobian}
-iYX <- jacobian(function(
-  pp
-) grad_Q(p_hat, pp), p_hat)
-
-iY - iYX
+iYX <- jacobian(function(theta) Q_grad(theta_hat, theta), theta_hat)
+iX <- iY - iYX
 ```
-
-:::
-
-::::
 
 ## Third Way: The EM-Mapping
 
@@ -933,14 +958,14 @@ $$
 \medskip\pause
 
 A global maximum of the likelihood is a fixed point of $\Phi$,
-$\Phi(\theta) = \theta.$
+$\Phi(\hat{\theta}) = \hat{\theta}.$
 
 \medskip\pause
 
 Since the limit of the EM algorithm, $\hat{\theta}$, is a fixed point and other
 identities above, it can be shown that
 $$
-D_{\theta} \Phi(\hat{\theta})^T = \hat{i}_{Y\mid X} \left(\hat{i}_Y\right)^{-1}.
+\nabla_{\theta} \Phi(\hat{\theta})^T = \hat{i}_{Y\mid X} \left(\hat{i}_Y\right)^{-1}.
 $$
 
 \medskip\pause
@@ -948,19 +973,15 @@ $$
 Hence
 $$
 \begin{aligned} \hat{i}_X & = \left(I - \hat{i}_{Y\mid X}
-\left(\hat{i}_Y\right)^{-1}\right) \hat{i}_Y = \left(I - D_{\theta}
+\left(\hat{i}_Y\right)^{-1}\right) \hat{i}_Y = \left(I - \nabla_{\theta}
 \Phi(\hat{\theta})^T\right) \hat{i}_Y. \end{aligned}
 $$
 
-\medskip\pause
-
-$D_{\theta} \Phi(\hat{\theta})$ can be computed via numerical differentiation.
-
-## EM Step
+## EM Step Fixed Point
 
 ```{r}
 Phi <- create_em_mult_step(c(85, 196, 341), c(1, 1, 1, 2, 2, 3))
-p_hat
+theta_hat
 ```
 
 . . .
@@ -969,25 +990,152 @@ Let's test it!
 
 ```{r}
 test_that("Fixed point", {
-  expect_equal(Phi(p_hat), p_hat, tol = 1e-8)
+  expect_equal(Phi(theta_hat), theta_hat, tol = 1e-8)
 })
 ```
 
 ## Differentiating the EM Map
 
 ```{r}
-DPhi <- jacobian(Phi, p_hat) # Using numDeriv function 'jacobian()'
-iX <- (diag(1, 2) - t(DPhi)) %*% iY
+DPhi <- jacobian(Phi, theta_hat)
+iX <- (diag(2) - t(DPhi)) %*% iY
 iX
-ihat # Computed using numerical differentiation of grad_Q
 ```
+
+. . .
+
+We can check against the result from method 1.
+
+```{r}
+test_that("Methods 1, 2, and 3 are equivalent", {
+  expect_equal(iX, ihat, tol = 1e-6)
+  expect_equal(iX, iY - iYX, tol = 1e-6)
+})
+```
+
+
+## Convergence of the EM Algorithm
+
+We have already shown that the EM algorithm monotonically increases the observed
+data log-likelihood:
+$$
+\ell(\theta^{(t+1)}) \ge \ell(\theta^{(t)}).
+$$
+
+. . .
+
+We have also just shown that the EM
+algorithm converges to a fixed point of the EM mapping:
+$$
+\theta^{(t+1)} = \Phi(\theta^{(t)}), \quad \hat{\theta} = \Phi(\hat{\theta}).
+$$
+
+. . .
+
+By the Taylor expansion of $\Phi$ around $\hat{\theta}$, we have
+$$
+\theta^{(t+1)} - \hat{\theta} \approx \nabla \Phi(\hat{\theta}) (\theta^{(t)} - \hat{\theta})
+$$
+
+. . .
+
+So the error at step $t+1$ is approximately a linear transformation of the error at
+step $t$.
+
+. . .
+
+And the rate of convergence is determined by the matrix $\nabla \Phi(\hat{\theta})$.
+
+## Convergence: Connection to Fisher Information
+
+Let $\rho(A)$ be the spectral radius of a matrix $A$, i.e., the largest absolute value of its eigenvalues.
+
+\medskip\pause
+
+This means that the convergence rate of the EM algorithm is governed by
+$$
+\rho(\nabla \Phi(\hat{\theta})) = \rho\left(\hat{i}_{Y \mid X} \left(\hat{i}_Y\right)^{-1}\right).
+$$
+
+\medskip\pause
+
+If $\rho(\nabla \Phi(\hat{\theta}))$ is close to 0, the EM algorithm converges
+quickly, and if it is close to 1, the EM algorithm converges slowly.
+
+. . .
+
+### Relation to Missing Information
+
+If there is little missing information, i.e., $\hat{i}_{Y \mid X}$ is small,
+then $\rho(\nabla \Phi(\hat{\theta}))$ is small and the EM algorithm converges
+quickly.  
+
+## Convergence Estimation
+
+The log-rate of the convergence can be estimated by least-squares.
+
+```{r linear-convergence}
+log_lm <- lm(log(par_norm_diff) ~ n, data = em_trace)
+exp(coefficients(log_lm)["n"])
+```
+
+\medskip\pause
+
+It is very small in this case implying fast convergence.
+
+\medskip\pause
+
+This is not always the case. If the log-likelihood is flat, the EM-algorithm can
+become arbitrarily slow with a rate close to 1.
+
+## The Generalized EM Algorithm
+
+### Key Idea
+
+Relax the M-step: instead of fully maximizing
+$$
+Q(\theta \mid \theta^{(t)}),
+$$
+we just require an **increase**:
+$$
+Q(\theta^{(t+1)} \mid \theta^{(t)}) \ge Q(\theta^{(t)} \mid \theta^{(t)}).
+$$
+
+. . .
+
+Full maximization may be **hard or computationally expensive**. GEM allows
+**simpler updates** (e.g., gradient step, coordinate-wise update).
+
+. . .
+
+### Properties
+
+E-step is unchanged and the **log-likelihood is still non-decreasing**: 
+$$
+\ell(\theta^{(t+1)}) \ge \ell(\theta^{(t)}).
+$$
+
+\medskip\pause
+
+Still converges to a **stationary point** of the likelihood.
+
+. . .
+
+### Examples
+
+- One gradient step on $Q$ instead of full maximization.\pause
+- Useful for **complex mixture models** or latent structures.
 
 # Gaussian Mixtures
 
 ## Finite Mixtures
 
-Let $Z \in \{1, \ldots, K\}$ with $P(Z = k) = p_k$, and the conditional
-distribution of $X$ given $Z = k$ has density $f_k( \cdot \mid \psi_k)$.
+Let $Z
+\in \{1, \ldots, K\}$ with $P(Z = k) =
+p_k$, and the conditional
+distribution of $X$ given $Z
+= k$ has density $f_k( \cdot \mid
+\psi_k)$.
 
 \medskip\pause
 
@@ -1003,15 +1151,19 @@ $$
 f(x \mid \theta) =  \sum_{k=1}^K f_k(x \mid \psi_k) p_k.
 $$
 
-## Gaussian Mixtures $(K = 2)$
+## Gaussian Mixtures $(K
+= 2)$
 
 The two Gaussian distributions are parametrized by five parameters
-$\mu_1, \mu_2 \in \mathbb{R}$ and $\sigma_1, \sigma_2 > 0$, and
-$p = P(Z = 1) = 1 - P(Z = 2)$.
+$\mu_1,
+\mu_2 \in \mathbb{R}$ and $\sigma_1, \sigma_2 > 0$, and
+$p = P(Z = 1) = 1
+- P(Z = 2)$.
 
 \medskip\pause
 
-The conditional distribution of $X$ given $Z = k$ is
+The conditional distribution of $X$ given $Z =
+k$ is
 $$
 f_k(x) = \frac{1}{\sqrt{2 \pi \sigma_k^2}} e^{-\frac{(x - \mu_k)^2}{2 \sigma_k^2}}.
 $$
@@ -1026,9 +1178,9 @@ $$
 
 ## Simulation
 
-:::: {.columns}
+:::: {.columns align="center"}
 
-::: {.column width="50%"}
+::: {.column width="53%"}
 
 ```{r mixture-gaus-sim}
 sigma1 <- 1
@@ -1051,7 +1203,7 @@ x[!z] <- rnorm(n - n1, mu2, sigma2)
 
 :::
 
-::: {.column width="44%"}
+::: {.column width="41%"}
 
 ```{r, echo=FALSE}
 #| fig-cap: "Histogram of simulated data from a two-component Gaussian mixture model."
@@ -1081,7 +1233,7 @@ pl
 
 ::::
 
-## Log-likelihood ua
+## Log-likelihood
 
 We assume $\sigma_1$ and $\sigma_2$ known.
 
@@ -1104,7 +1256,7 @@ loglik <- function(par, x) {
 }
 ```
 
-## Optimizing
+## General-Purpose Optimization
 
 ```{r gaus-mix-example, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
 optim(c(0.5, -0.5, 4), loglik, x = x)[1:2]
@@ -1131,13 +1283,15 @@ and
 $$
 Q(\theta \mid \theta')  = \sum_{i=1}^n \hat{p}_{i} \left(\log(p) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + (1 - \hat{p}_{i})\left( \log(1-p) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
 $$
-where $\hat{p}_i = P_{\theta'}(Z_i = 1 \mid X_i = x_i)$.
+where $\hat{p}_i
+= P_{\theta'}(Z_i = 1 \mid X_i =
+x_i)$.
 
 \medskip\pause
 
 The maximum is attained at
 $$
-\theta = \left(\frac{1}{n} \sum_{i} \hat{p}_i, \frac{1}{\sum_{i} \hat{p}_i} \sum_{i} \hat{p}_i x_i,
+\hat{\theta} = \left(\frac{1}{n} \sum_{i} \hat{p}_i, \frac{1}{\sum_{i} \hat{p}_i} \sum_{i} \hat{p}_i x_i,
 \frac{1}{\sum_{i} (1 - \hat{p}_i)} \sum_{i} (1 - \hat{p}_i) x_i \right).
 $$
 
@@ -1150,7 +1304,8 @@ $$
 
 . . .
 
-which for the $K = 2$ Gaussian case gives
+which for the $K
+= 2$ Gaussian case gives
 $$
 \hat{p}_i = P_{\theta'} (Z_i = 1 \mid X = x_i) =
 \frac{ p'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}}}{
@@ -1161,11 +1316,35 @@ $$
 
 ## Implementation
 
-See [`em_gauss_mix.R`](R/em_gauss_mix.R) for the source file of the
-implementation.
+See the source code for an implementation.
 
 ```{r source-em-mix}
-source(here::here("R", "em_gauss_mix.R"))
+#| echo: false
+e_step_gauss <- function(par, x, sigma1 = 1, sigma2 = sigma1) {
+  p <- par[1]
+  mu1 <- par[2]
+  mu2 <- par[3]
+  a <- p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1
+  b <- (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2
+  a / (a + b)
+}
+
+m_step_gauss <- function(p_hat, x) {
+  n <- length(x)
+  N1 <- sum(p_hat)
+  N2 <- n - N1
+  c(N1 / n, sum(p_hat * x) / N1, sum((1 - p_hat) * x) / N2)
+}
+
+create_em_gauss_step <- function(x, sigma1 = 1, sigma2 = sigma1) {
+  force(x)
+  force(sigma1)
+  force(sigma2)
+
+  function(par) m_step_gauss(e_step_gauss(par, x, sigma1, sigma2), x)
+}
+
+em_gauss_step <- create_em_gauss_step(x, sigma1, sigma2)
 ```
 
 ## Testing
@@ -1177,7 +1356,7 @@ em(c(0.5, -0.5, 4), em_gauss_step)
 . . .
 
 ```{r gaus-mix-example2, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
-optim(c(0.5, -0.5, 4), loglik, x = x)[c(1, 2)]
+optim(c(0.5, -0.5, 4), loglik, x = x)[1:2]
 ```
 
 . . .
@@ -1189,7 +1368,6 @@ em(c(0.9, 3, 1), em_gauss_step) # Starting value still matters
 ## Gradients and Numerical Differentiation
 
 ```{r numderiv-grad1}
-library(numDeriv)
 grad1 <- function(par) grad(function(par) loglik(par, x), par)
 ```
 
@@ -1197,14 +1375,14 @@ grad1 <- function(par) grad(function(par) loglik(par, x), par)
 
 ```{r numderiv-grad2}
 Q <- function(par, par_prime) {
-  phat <- e_step_gauss(par_prime, x, sigma1, sigma2)
+  p_hat <- e_step_gauss(par_prime, x, sigma1, sigma2)
   p <- par[1]
   mu1 <- par[2]
   mu2 <- par[3]
   sum(
-    phat *
+    p_hat *
       (log(p) - (x - mu1)^2 / (2 * sigma1^2)) +
-      (1 - phat) * (log(1 - p) - (x - mu2)^2 / (2 * sigma2^2))
+      (1 - p_hat) * (log(1 - p) - (x - mu2)^2 / (2 * sigma2^2))
   )
 }
 grad2 <- function(par) -grad(Q, par, par_prime = par)
@@ -1228,8 +1406,6 @@ grad2(par_hat)
 ## Convergence
 
 ```{r tracing-convergence}
-library(CSwR)
-
 em_tracer <- tracer(
   c("par0", "par", "loglik", "h_prime"),
   Delta = 0,
@@ -1238,9 +1414,10 @@ em_tracer <- tracer(
     h_prime <- sum(grad2(par)^2)
   })
 )
+
 par_hat <- em(c(0.2, 2, 2), em_gauss_step, cb = em_tracer$tracer)
 em_trace <- summary(em_tracer)
-tail(em_trace, 4)
+tail(em_trace, 3)
 ```
 
 ##
@@ -1291,32 +1468,196 @@ em_gauss_illustration <- function(i, em_trace) {
   mu2_i <- em_trace$par0.3[i]
 
   pl +
-    geom_line(aes(y = gaussdens2(x, p_i, mu1_i, mu2_i)), color = "darkorange", size = 1) +
+    geom_line(
+      aes(y = gaussdens2(x, p_i, mu1_i, mu2_i)),
+      color = "darkorange",
+      size = 1
+    ) +
+    lims(y = c(0, 0.25)) +
     labs(title = paste0("k = ", i))
 }
 ```
 
-## 
-
 ```{r}
-#| fig-width: 4
-#| fig-height: 3.2
+#| fig-width: 4.2
+#| fig-height: 2.8
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
 em_gauss_illustration(1, em_trace)
 ```
 
+##
+
 ```{r}
-#| fig-width: 4
-#| fig-height: 3.2
+#| fig-width: 4.2
+#| fig-height: 2.8
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
-em_gauss_illustration(2, em_trace)
+em_gauss_illustration(4, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(8, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(12, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(16, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(20, em_trace)
+```
+
+## Label Switching
+
+If we set $\sigma_1 = \sigma_2$, then the likelihood is invariant to
+switching the labels of the components, so the EM algorithm may converge to
+either of the two symmetric modes.
+
+```{r mixture-gaus-sim2}
+#| echo: false
+sigma1 <- 1
+sigma2 <- 1
+mu1 <- -0.5
+mu2 <- 4
+p <- 0.5
+n <- 5000
+z <- sample(
+  c(TRUE, FALSE),
+  n,
+  replace = TRUE,
+  prob = c(p, 1 - p)
+)
+x <- numeric(n)
+n1 <- sum(z)
+x[z] <- rnorm(n1, mu1, sigma1)
+x[!z] <- rnorm(n - n1, mu2, sigma2)
+
+em_gauss_step_alt <- create_em_gauss_step(x, sigma1)
+```
+
+. . .
+
+```{r}
+em(c(0.2, 3, -0.5), em_gauss_step_alt)
+```
+
+. . .
+
+```{r}
+em(c(0.2, -3, -0.5), em_gauss_step_alt)
+```
+
+. . .
+
+Notice that the solutions have switched the labels of the mean components.
+
+## Exercise
+
+Implement the EM algorithm for a missing data problem:
+
+```{r}
+x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
+```
+
+Assume that $X_i \sim \text{Bernoulli}(\theta)$ i.i.d. and that the data are
+missing at random. The complete data log-likelihood is
+$$
+\ell_C(\theta) = \sum_{i=1}^n \left( X_i \log(\theta) + (1 - X_i) \log(1 - \theta) \right).
+$$
+
+. . .
+
+### Step 1 (Derive)
+
+- E-step: Compute $Q(\theta \mid \theta') = \E_{X_\text{miss} \mid X_\text{obs}, \theta'}\left( \log p(X_\text{obs}, X_\text{miss} \mid \theta)\right)$.
+- M-step: Maximize $Q(\theta \mid \theta')$ over $\theta$.
+
+. . .
+
+### Step 2 (Implement)
+
+Implement the EM algorithm and run it from two different starting points. Record
+the path of $\theta^{(t)}$ and the log-likelihood values $\ell(\theta^{(t)})$.
+
+```{r}
+#| include: false
+x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
+
+# EM for Bernoulli with missing entries (treated as latent)
+em_bern_missing <- function(x, p0 = 0.5, maxit = 6) {
+  obs <- !is.na(x)
+  ll <- function(p) sum(x[obs] * log(p) + (1 - x[obs]) * log(1 - p))
+  p <- p0
+  ps <- numeric(maxit + 1)
+  lls <- numeric(maxit + 1)
+
+  for (t in 0:maxit) {
+    ps[t + 1] <- p
+    lls[t + 1] <- ll(p)
+    if (t < maxit) {
+      # E-step: expected value of each missing Xi is p
+      k <- sum(!obs)
+      p <- (sum(x[obs]) + k * p) / length(x) # M-step: mean of completed data
+    }
+  }
+  list(p_final = p, path = ps, loglik = lls, loglik_diff = diff(lls))
+}
+
+# Run from two starts
+res1 <- em_bern_missing(x, p0 = 0.5)
+res2 <- em_bern_missing(x, p0 = 0.1)
+
+res1$path
+res1$loglik_diff # ≥ 0 (monotone)
+res2$path
+
+# Closed-form fixed point: solves p = (sum(obs 1s) + 2 p)/9 -> p = 4/7
+# Fisher information:
+p_hat <- res1$p_final
+n_obs <- sum(!is.na(x))
+i_obs <- n_obs / (p_hat * (1 - p_hat)) # observed-data info
+i_complete <- length(x) / (p_hat * (1 - p_hat)) # complete-data info
+c(p_hat = p_hat, i_obs = i_obs, i_complete = i_complete)
 ```
 
 ## Summary
 
-- We introduced the EM-algorithm, using the pepper moth example throughout
-- We showed three ways to compute the Fisher information
-- We covered Gaussian mixtures and how to optimize over their parameters using
-  the EM algorithm
+We introduced the EM-algorithm, using the pepper moth example throughout
+
+\medskip\pause 
+
+We showed three ways to compute the Fisher information
+
+\medskip\pause
+
+We covered Gaussian mixtures and how to optimize over their parameters using
+the EM algorithm.
