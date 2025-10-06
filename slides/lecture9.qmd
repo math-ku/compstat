@@ -247,9 +247,10 @@ $$
 
 The log-likelihood is
 $$
-\begin{aligned} \ell(p_C, p_I) & = n_C \log(p_C^2 +
-2p_Cp_I + 2p_Cp_T) \\ & \phantom{={}}+ n_I \log(p_I^2 +2p_Ip_T) + n_T \log
-(p_T^2) \end{aligned}
+\begin{aligned}
+  \ell(p_C, p_I) & = n_C \log(p_C^2 + 2p_Cp_I + 2p_Cp_T) \\
+                 & \phantom{={}}+ n_I \log(p_I^2 +2p_Ip_T) + n_T \log (p_T^2)
+\end{aligned}
 $$
 
 ## Standard Form
