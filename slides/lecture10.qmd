@@ -1,5 +1,5 @@
 ---
-title: "A Deeper Look into the EM-Algorithm"
+title: "A Deeper Look into the EM Algorithm"
 execute:
   cache: false
 ---
@@ -74,12 +74,12 @@ We talked about the barrier methods for constrained optimization.
 
 ### The EM Algorithm
 
-We introduced the EM-algorithm as a general algorithm for likelihood
+We introduced the EM algorithm as a general algorithm for likelihood
 optimization when the likelihood is complicated.
 
 ## Recap: The EM Algorithm
 
-The EM-algorithm iteratively optimizes
+The EM algorithm iteratively optimizes
 $$
 \theta^{(t+1)} = \argmax_\theta Q(\theta \mid \theta^{(t)}),
 $$
@@ -110,9 +110,9 @@ the MLE.
 
 ### Gaussian Mixtures
 
-Example of a finite mixture model where the EM-algorithm is useful.
+Example of a finite mixture model where the EM algorithm is useful.
 
-## Recap: The Peppered Moth
+## Recap: The Peppered Moths
 
 :::: {.columns}
 
@@ -120,7 +120,7 @@ Example of a finite mixture model where the EM-algorithm is useful.
 
 ### Alleles
 
-C, Ci, T with frequencies $p_C$, $p_I$, $p_T$ and
+C, I, T with frequencies $p_C$, $p_I$, $p_T$ and
 $$
 p_C + p_I + p_T = 1.
 $$
@@ -131,7 +131,7 @@ CC, CI, CT, II, IT, TT
 
 ### Phenotypes
 
-Black, mottled, light-colored
+Black, Mottled, Light-Colored
 
 :::
 
@@ -146,7 +146,7 @@ Black, mottled, light-colored
 | ----- | ----- | ------- | ------------- |
 | **C** | Black | Black   | Black         |
 | **I** | Black | Mottled | Mottled       |
-| **T** | Black | Mottled | Light-colored |
+| **T** | Black | Mottled | Light-Colored |
 
 :::
 
@@ -154,7 +154,7 @@ Black, mottled, light-colored
 
 ## Latent Variables
 
-### Genotype Lables
+### Genotype Labels
 
 Let each moth $i=1,\ldots,n$ have an (unobserved) genotype label
 $$
@@ -564,18 +564,18 @@ mutate(em_trace, diff_loglik = 1e-12 + loglik - min(loglik)) |>
 
 ### Local Maxima
 
-$Q$ is not typically convex, so no guarantee that the EM-algorithm converges to
+$Q$ is not typically convex, so no guarantee that the EM algorithm converges to
 the global maximum.
 
 \medskip\pause
 
-For this reason, the EM-algorithm is also sensitive to starting values.
+For this reason, the EM algorithm is also sensitive to starting values.
 
 . . .
 
 ### Bad Initialization
 
-The EM-algorithm can be sensitive to starting values.
+The EM algorithm can be sensitive to starting values.
 
 
 . . .
@@ -1072,7 +1072,7 @@ quickly.
 
 ## Convergence Estimation
 
-The log-rate of the convergence can be estimated by least-squares.
+The log-rate of convergence can be estimated by least-squares.
 
 ```{r linear-convergence}
 log_lm <- lm(log(par_norm_diff) ~ n, data = em_trace)
@@ -1085,7 +1085,7 @@ It is very small in this case implying fast convergence.
 
 \medskip\pause
 
-This is not always the case. If the log-likelihood is flat, the EM-algorithm can
+This is not always the case. If the log-likelihood is flat, the EM algorithm can
 become arbitrarily slow with a rate close to 1.
 
 ## The Generalized EM Algorithm
@@ -1651,7 +1651,7 @@ c(p_hat = p_hat, i_obs = i_obs, i_complete = i_complete)
 
 ## Summary
 
-We introduced the EM-algorithm, using the pepper moth example throughout
+We introduced the EM algorithm, using the Peppered Moths example throughout
 
 \medskip\pause 
 
