@@ -49,14 +49,14 @@ constraint <- function(par) {
     1 - par[1] - par[2] >= 0
 }
 
-neg_noglik_full <- mult_likelihood(
+neg_noglik_obs <- mult_likelihood(
   x = c(85, 196, 341),
   group = c(1, 1, 1, 2, 2, 3),
   pi_map = pi_map,
   constraint = constraint
 )
 
-moth_optim <- optim(c(0.3, 0.3), neg_noglik_full)
+moth_optim <- optim(c(0.3, 0.3), neg_noglik_obs)
 ```
 
 ## Last Time
@@ -97,20 +97,22 @@ step.
 
 ### More on the EM Algorithm
 
-Examples on Gaussian mixtures and the multinomial model.
+We tackle the Peppered Moths example with the EM algorithm.
 
 . . .
 
 ### Fisher Information
 
-When the likelihood is optimized, the Fisher information gives the variance of
-the MLE.
+After we have optimized the likelihood, we often want to
+estimate variance of estimates. For this we need the Fisher
+information.
 
 . . .
 
-### Gaussian Mixtures
+### Gaussian Mixture
 
-Example of a finite mixture model where the EM algorithm is useful.
+We tackle an example of a mixture of Gaussians---the prototypical 
+EM example.
 
 ## Recap: The Peppered Moths
 
@@ -272,6 +274,10 @@ e_step_mult <- function(theta, x, group) {
 
 . . .
 
+:::: {.columns}
+
+::: {.column width="47%"}
+
 ```{r}
 pi_map <- function(p) {
   p[3] <- 1 - p[1] - p[2]
@@ -285,6 +291,25 @@ pi_map <- function(p) {
   )
 }
 ```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+```{r}
+M <- function(y, group) {
+  as.vector(
+    tapply(y, group, sum)
+  )
+}
+```
+
+:::
+
+::::
+
 
 ## M-Step for the Multinomial Model
 
@@ -377,7 +402,7 @@ moth_optim$par
 ## Inside the EM Algorithm
 
 The `tracer()` function in the `CSwR` package can be used to trace the
-iterations of an algorithm.
+iterations of an algorithm.^[Use `Delta` to control verbosity. `0`: no output.]
 
 . . .
 
@@ -412,8 +437,8 @@ summary(em_tracer)
 em_tracer <- tracer(c("par0", "par"), Delta = 0)
 p_hat <- em(c(0.3, 0.3), em_mult_step, eps = 0, cb = em_tracer$tracer)
 p_hat
+
 em_trace <- summary(em_tracer)
-tail(em_trace)
 ```
 
 ##
@@ -421,8 +446,10 @@ tail(em_trace)
 ```{r plot-curves, echo = FALSE, warning = FALSE}
 #| fig-width: 5
 #| fig-height: 3.4
-#| fig-cap: "EM algorithm iterations shown as points on the log-likelihood contour plot"
-nll_pep <- Vectorize(function(p1, p2) neg_noglik_full(c(p1, p2)))
+#| fig-cap: "EM algorithm iterations for the Peppered Moths example. The orange cross marks
+#|   the MLE. The surfaces are the current negative observed log-likelihoods, with the 
+#|   black dot indicating the EM step."
+nll_pep <- Vectorize(function(p1, p2) neg_noglik_obs(c(p1, p2)))
 
 em_trace <- transform(
   em_trace,
@@ -568,12 +595,12 @@ mutate(em_trace, diff_nll = 1e-14 + nll - min(nll)) |>
 
 ## Multi-Start
 
-One pitfall with the EM algorithm is local maxima. One way to address this is
-to use multiple starting values.
+A common problem in likelihood optimization is local maxima. 
 
 \medskip\pause
 
-For the moths, we can use a grid of starting values.
+We can solve this using a grid of starting values.^[`neg_loglik_obs()` computes
+the negative observed log-likelihood.]
 
 ```{r}
 theta_grid <- expand.grid(
@@ -582,7 +609,7 @@ theta_grid <- expand.grid(
 )
 
 res <- apply(theta_grid, 1, em, em_step = em_mult_step)
-neg_logliks <- apply(res, 2, neg_noglik_full)
+neg_logliks <- apply(res, 2, neg_noglik_obs)
 
 which.min(neg_logliks)
 ```
@@ -766,7 +793,7 @@ differentiation.
 ```{r}
 -optimHess(
   theta_hat,
-  neg_noglik_full,
+  neg_noglik_obs,
   score
 )
 ```
@@ -969,7 +996,7 @@ theta_hat
 
 . . .
 
-Let's test it!
+Let's check if this is fixed point.
 
 ```{r}
 test_that("Fixed point", {
@@ -987,7 +1014,7 @@ iX
 
 . . .
 
-We can check against the result from method 1.
+Let's check that all of our methods agree.
 
 ```{r}
 test_that("Methods 1, 2, and 3 are equivalent", {
@@ -1162,7 +1189,7 @@ It is small in this case, implying fast convergence.
 ### Key Idea
 
 Relax the M-step: instead of fully maximizing
-$ Q(\theta \mid \theta^{(t)}),$ we just require an **increase**:
+$Q(\theta \mid \theta^{(t)})$, we just require an **increase**:
 $$
 Q(\theta^{(t+1)} \mid \theta^{(t)}) \ge Q(\theta^{(t)} \mid \theta^{(t)}).
 $$
@@ -1191,10 +1218,9 @@ Still converges to a **stationary point** of the likelihood.
 
 . . .
 
-### Examples
+### Trade-Off
 
-- One gradient step on $Q$ instead of full maximization.\pause
-- Useful for **complex mixture models** or latent structures.
+We trade slower convergence for faster iterations.
 
 :::
 
@@ -1203,6 +1229,8 @@ Still converges to a **stationary point** of the likelihood.
 # Gaussian Mixtures
 
 ## Finite Mixtures
+
+A finite mixture is 
 
 Let $Z
 \in \{1, \ldots, K\}$ with $P(Z = k) =
@@ -1215,7 +1243,7 @@ distribution of $X$ given $Z
 
 The joint density is
 $$
-(x, k) \mapsto f_k(x \mid \psi_k) p_k
+f_k(x \mid \psi_k) p_k
 $$
 
 . . .
@@ -1490,8 +1518,8 @@ em_tracer <- tracer(
 )
 
 par_hat <- em(c(0.2, 2, 2), em_gauss_step, cb = em_tracer$tracer)
+
 em_trace <- summary(em_tracer)
-tail(em_trace, 3)
 ```
 
 ##
