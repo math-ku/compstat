@@ -193,10 +193,12 @@ $$
 
 . . .
 
-Here, $M : \mathbb{N}_0^6 \to \mathbb{N}_0^3$ is the cell collapsing map
+Here, $M : \mathbb{N}_0^6 \to \mathbb{N}_0^3$ is the cell-collapsing map
 $$
 M(y) = (y_1 + y_2 + y_3,\ y_4 + y_5,\ y_6).
 $$
+
+. . .
 
 ### Multinomial Distribution
 
@@ -243,8 +245,8 @@ EM $Q$-function:
 $$
 \begin{aligned}
 Q(\theta \mid \theta')
-  &= \E_{Y \mid X, \theta'} \log p (Y \mid \theta) \\
-  &= \sum_{k=1}^6 \E_{Y \mid X, \theta'}(Y_k) \log \pi_k(\theta) \\
+  &= \E_{Y \mid X, \theta'} \log p (Y \mid \theta) \\ \pause
+  &= \sum_{k=1}^6 \E_{Y \mid X, \theta'}(Y_k) \log \pi_k(\theta) \\ \pause
   &= \sum_{k=1}^6 \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \log \pi_k(\theta) \quad \text{where } k \in A_{j(k)}.
 \end{aligned}
 $$
@@ -325,11 +327,11 @@ $$
   \hat{p}_I & = \frac{n_{II} + (n_{CI} + n_{IT}) / 2}{n}
 \end{aligned}
 $$
-where $n = n_{CC} + n_{CI} + n_{CT} + n_{II} + n_{IT} + n_{TT}$.
+where $n = \symbf{1}^T y$ is the total number of observations.
 
-## M-Step Implementation
+\medskip\pause
 
-MLE of complete log-likelihood:
+Here's an implementation of this.
 
 ```{r mstep-mult}
 m_step_mult <- function(y) {
@@ -349,7 +351,7 @@ performs one EM step for the multinomial model.
 
 ```{r}
 create_em_mult_step <- function(x, group) {
-  force(x) # Force evaluation of x
+  force(x)
   force(group)
 
   e_step <- function(theta) e_step_mult(theta, x, group)
@@ -358,6 +360,12 @@ create_em_mult_step <- function(x, group) {
   function(par) m_step(e_step(par))
 }
 ```
+
+. . .
+
+We use `force()` to ensure that `x` and `group` are evaluated when the factory
+is called, not when the returned function is called.
+
 
 ## EM Algorithm Implementation
 
@@ -392,12 +400,31 @@ em_mult_step <- create_em_mult_step(
 
 . . .
 
+:::: {.columns}
+
+::: {.column width="47%"}
+
 Then we can run the EM algorithm.
 
 ```{r}
 em(c(0.3, 0.3), em_mult_step)
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+This corresponds to the MLE found via `optim()`.
+
+```{r}
 moth_optim$par
 ```
+
+:::
+
+::::
 
 ## Inside the EM Algorithm
 
@@ -435,7 +462,12 @@ summary(em_tracer)
 
 ```{r em-tracer}
 em_tracer <- tracer(c("par0", "par"), Delta = 0)
-p_hat <- em(c(0.3, 0.3), em_mult_step, eps = 0, cb = em_tracer$tracer)
+p_hat <- em(
+  c(0.3, 0.3),
+  em_mult_step,
+  eps = 0,
+  cb = em_tracer$tracer
+)
 p_hat
 
 em_trace <- summary(em_tracer)
@@ -445,7 +477,7 @@ em_trace <- summary(em_tracer)
 
 ```{r plot-curves, echo = FALSE, warning = FALSE}
 #| fig-width: 5
-#| fig-height: 3.4
+#| fig-height: 3
 #| fig-cap: "EM algorithm iterations for the Peppered Moths example. The orange cross marks
 #|   the MLE. The surfaces are the current negative observed log-likelihoods, with the 
 #|   black dot indicating the EM step."
@@ -860,7 +892,7 @@ $$
 
 At the MLE $\hat{\theta}$,
 $$
-\hat{i}_X := - \nabla^2_{\theta} \ell(\hat{\theta}) =
+\hat{i}_X = - \nabla^2_{\theta} \ell(\hat{\theta}) =
 \underbrace{-\nabla^2_{\theta} Q(\hat{\theta} \mid \hat\theta)}_{\hat{i}_Y} -
 \underbrace{\nabla^2_{\theta} H(\hat{\theta} \mid \hat\theta)}_{\hat{i}_{Y \mid X}}.
 $$
@@ -897,15 +929,12 @@ $$
 
 \medskip\pause
 
-And since we also have
-$$
-Q(\theta \mid \theta') = \ell(\theta) - H(\theta \mid \theta')
-$$
-and because $\ell(\theta)$ does not depend on $\theta'$, we get
+And since we also have $Q = \ell - H$ and because $\ell(\theta)$ does not
+depend on $\theta'$, we get
 $$
 \nabla_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\theta}) =  -
 \nabla_{\theta'} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta}) =
-\nabla_{\theta} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta}).
+\nabla^2_{\theta} H(\hat{\theta} \mid \hat{\theta}).
 $$
 
 \medskip\pause
@@ -943,6 +972,11 @@ Q_grad <- function(theta, theta0, x = c(85, 196, 341)) {
     pi_grad(theta)
 }
 ```
+
+. . .
+
+`pi_grad()` is the gradient of the genotype probabilities w.r.t. allele
+frequencies (defined in source code).
 
 ## Numerical Differentiation of $Q$
 
