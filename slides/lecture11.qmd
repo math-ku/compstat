@@ -18,7 +18,54 @@ source(here::here("R", "sgd.R"))
 
 ### The Expectation-Maximization (EM) Algorithm
 
+A general approach to maximum likelihood estimation with latent variables.
+
+. . .
+
+### Fisher Information
+
+We saw three different ways to define the Fisher information
+and how they relate to the EM algorithm.
+
+## Recap: The EM Algorithm
+
+The EM algorithm iteratively optimizes
+$$
+\theta^{(t+1)} = \argmax_\theta Q(\theta \mid \theta^{(t)}),
+$$
+with
+$$
+Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X,\theta^{(t)}}\big(\log p(X, Z \mid \theta)\big).
+$$
+
+\medskip\pause
+
+Convergence is **linear** near a local maximum.
+
+## Recap: Fisher Information
+
+The Fisher information is defined as
+$$
+i(\theta) = - \E\left( \frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta) \right).
+$$
+
+\medskip\pause
+
+We mentioned three ways to compute it:
+
+1. Differentiate the score function (defined through $Q$).\pause
+2. Compute complete and missing information and using the information
+   identity. \pause
+3. Differentiate the EM mapping.
+
 ## Today
+
+### Gaussian Mixture EM Example
+
+We pick up where we left off last time,
+focusing on the Gaussian mixture example.
+
+. . .
 
 ### Stochastic Gradient Descent
 
@@ -27,6 +74,490 @@ Useful stochastic method for optimization
 \medskip\pause
 
 Can be used in a **mini-batch** version.
+
+# EM Gaussian Mixture Example
+
+## Finite Mixtures
+
+A finite mixture is 
+
+Let $Z
+\in \{1, \ldots, K\}$ with $P(Z = k) =
+p_k$, and the conditional
+distribution of $X$ given $Z
+= k$ has density $f_k( \cdot \mid
+\psi_k)$.
+
+\medskip\pause
+
+The joint density is
+$$
+f_k(x \mid \psi_k) p_k
+$$
+
+. . .
+
+and the marginal density for the distribution of $X$ is
+$$
+f(x \mid \theta) =  \sum_{k=1}^K f_k(x \mid \psi_k) p_k.
+$$
+
+## Gaussian Mixtures $(K
+= 2)$
+
+The two Gaussian distributions are parametrized by five parameters
+$\mu_1,
+\mu_2 \in \mathbb{R}$ and $\sigma_1, \sigma_2 > 0$, and
+$p = P(Z = 1) = 1
+- P(Z = 2)$.
+
+\medskip\pause
+
+The conditional distribution of $X$ given $Z =
+k$ is
+$$
+f_k(x) = \frac{1}{\sqrt{2 \pi \sigma_k^2}} e^{-\frac{(x - \mu_k)^2}{2 \sigma_k^2}}.
+$$
+
+\medskip\pause
+
+The marginal density is
+$$
+f(x) = p \frac{1}{\sqrt{2 \pi \sigma_1^2}} e^{-\frac{(x - \mu_1)^2}{2 \sigma_1^2}} +
+(1 - p)\frac{1}{\sqrt{2 \pi \sigma_2^2}}e^{-\frac{(x - \mu_2)^2}{2 \sigma_2^2}}.
+$$
+
+## Simulation
+
+:::: {.columns align="center"}
+
+::: {.column width="53%"}
+
+```{r mixture-gaus-sim}
+sigma1 <- 1
+sigma2 <- 2
+mu1 <- -0.5
+mu2 <- 4
+p <- 0.5
+n <- 5000
+z <- sample(
+  c(TRUE, FALSE),
+  n,
+  replace = TRUE,
+  prob = c(p, 1 - p)
+)
+x <- numeric(n)
+n1 <- sum(z)
+x[z] <- rnorm(n1, mu1, sigma1)
+x[!z] <- rnorm(n - n1, mu2, sigma2)
+```
+
+:::
+
+::: {.column width="41%"}
+
+```{r, echo=FALSE}
+#| fig-cap: "Histogram of simulated data from a two-component Gaussian mixture model."
+gausdens <- function(x, mu1, mu2, sigma1, sigma2) {
+  (p *
+    exp(-(x - mu1)^2 / (2 * sigma1^2)) /
+    sigma1 +
+    (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) /
+    sqrt(2 * pi)
+}
+
+xx <- seq(-3, 11, 0.1)
+
+pl <- ggplot(data.frame(x), aes(x)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 40, fill = "lightgray") +
+  geom_line(
+    aes(x, gausdens(x, mu1, mu2, sigma1, sigma2)),
+    color = "black",
+    linewidth = 1
+  ) +
+  labs(y = "Density", x = "x")
+
+pl
+```
+
+:::
+
+::::
+
+## Log-likelihood
+
+We assume $\sigma_1$ and $\sigma_2$ known.
+
+```{r gaus-mix-loglik}
+neg_loglik <- function(par, x) {
+  p <- par[1]
+  mu1 <- par[2]
+  mu2 <- par[3]
+
+  if (p < 0 || p > 1) {
+    return(Inf)
+  }
+
+  -sum(log(
+    p *
+      exp(-(x - mu1)^2 / (2 * sigma1^2)) /
+      sigma1 +
+      (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2
+  ))
+}
+```
+
+## General-Purpose Optimization
+
+```{r gaus-mix-example, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
+optim(c(0.5, -0.5, 4), neg_loglik, x = x)[1:2]
+```
+
+. . .
+
+Again, however, initialization matters!
+
+```{r gaus-mix-example-bad, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
+optim(c(0.9, 3, 1), neg_loglik, x = x)[1:2]
+```
+
+## The $Q$-Function
+
+The complete data log-likelihood is
+$$
+\sum_{i=1}^n \symbf{1}_{z_i = 1} \left(\log(p) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + \symbf{1}_{z_i = 2}\left( \log(1-p) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
+$$
+
+. . .
+
+and
+$$
+Q(\theta \mid \theta')  = \sum_{i=1}^n \hat{p}_{i} \left(\log(p) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + (1 - \hat{p}_{i})\left( \log(1-p) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
+$$
+where $\hat{p}_i
+= P_{\theta'}(Z_i = 1 \mid X_i =
+x_i)$.
+
+\medskip\pause
+
+The maximum is attained at
+$$
+\hat{\theta} = \left(\frac{1}{n} \sum_{i} \hat{p}_i, \frac{1}{\sum_{i} \hat{p}_i} \sum_{i} \hat{p}_i x_i,
+\frac{1}{\sum_{i} (1 - \hat{p}_i)} \sum_{i} (1 - \hat{p}_i) x_i \right).
+$$
+
+## The E-Step
+
+The conditional probability in a mixture model is generally
+$$
+P(Z = z \mid X = x) = \frac{p_z f_z(x \mid \psi_z)}{\sum_{k = 1}^K p_k f_k(x \mid \psi_k)}
+$$
+
+. . .
+
+which for the $K
+= 2$ Gaussian case gives
+$$
+\hat{p}_i = P_{\theta'} (Z_i = 1 \mid X = x_i) =
+\frac{ p'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}}}{
+\left( p'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}} +
+\frac{\sigma_1 (1 - p'_1)}{\sigma_2} e^{-\frac{(x_i - \mu_2')^2}{2 \sigma_2^2}}\right) }.
+$$
+
+## EM Algorithm
+
+```{r em-alg}
+em <- function(par, em_step, eps = 1e-6, maxit = 20, cb = NULL) {
+  for (i in seq_len(maxit)) {
+    par0 <- par
+    par <- em_step(par)
+
+    if (!is.null(cb)) {
+      cb()
+    }
+
+    if (sum((par - par0)^2) <= eps * (sum(par^2) + eps)) {
+      break
+    }
+  }
+  par
+}
+```
+
+## Implementation
+
+See the source code for an implementation.
+
+```{r source-em-mix}
+#| echo: false
+e_step_gauss <- function(par, x, sigma1 = 1, sigma2 = sigma1) {
+  p <- par[1]
+  mu1 <- par[2]
+  mu2 <- par[3]
+  a <- p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1
+  b <- (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2
+  a / (a + b)
+}
+
+m_step_gauss <- function(p_hat, x) {
+  n <- length(x)
+  N1 <- sum(p_hat)
+  N2 <- n - N1
+  c(N1 / n, sum(p_hat * x) / N1, sum((1 - p_hat) * x) / N2)
+}
+
+create_em_gauss_step <- function(x, sigma1 = 1, sigma2 = sigma1) {
+  force(x)
+  force(sigma1)
+  force(sigma2)
+
+  function(par) m_step_gauss(e_step_gauss(par, x, sigma1, sigma2), x)
+}
+
+em_gauss_step <- create_em_gauss_step(x, sigma1, sigma2)
+```
+
+## Testing
+
+```{r test-em-gauss-mix}
+em(c(0.5, -0.5, 4), em_gauss_step)
+```
+
+. . .
+
+```{r gaus-mix-example2, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
+optim(c(0.5, -0.5, 4), neg_loglik, x = x)[1:2]
+```
+
+. . .
+
+```{r run-em-gauss-mix-again}
+em(c(0.9, 3, 1), em_gauss_step) # Starting value still matters
+```
+
+## Gradients and Numerical Differentiation
+
+```{r numderiv-grad1}
+library(numDeriv)
+grad1 <- function(par) grad(function(par) neg_loglik(par, x), par)
+```
+
+. . .
+
+```{r numderiv-grad2}
+Q <- function(par, par_prime) {
+  p_hat <- e_step_gauss(par_prime, x, sigma1, sigma2)
+  p <- par[1]
+  mu1 <- par[2]
+  mu2 <- par[3]
+  sum(
+    p_hat *
+      (log(p) - (x - mu1)^2 / (2 * sigma1^2)) +
+      (1 - p_hat) * (log(1 - p) - (x - mu2)^2 / (2 * sigma2^2))
+  )
+}
+grad2 <- function(par) -grad(Q, par, par_prime = par)
+```
+
+## Gradient Identity
+
+```{r gradient-identities1}
+grad1(c(0.5, 0, 4))
+grad2(c(0.5, 0, 4))
+```
+
+. . .
+
+```{r gradient-identities2}
+par_hat <- em(c(0.5, 0, 4), em_gauss_step)
+grad1(par_hat)
+grad2(par_hat)
+```
+
+## Convergence
+
+```{r tracing-convergence}
+library(CSwR)
+em_tracer <- tracer(
+  c("par0", "par", "nll", "h_prime"),
+  Delta = 0,
+  expr = quote({
+    nll <- neg_loglik(par, x)
+    h_prime <- sum(grad2(par)^2)
+  })
+)
+
+par_hat <- em(c(0.2, 2, 2), em_gauss_step, cb = em_tracer$tracer)
+
+em_trace <- summary(em_tracer)
+```
+
+##
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```{r convergence-plots-1, warning=FALSE}
+autoplot(
+  em_trace,
+  y = nll - min(nll)
+)
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+```{r convergence-plots-2, warning=FALSE}
+autoplot(
+  em_trace,
+  y = h_prime
+)
+```
+
+:::
+
+::::
+
+##
+
+```{r mixture-convergence}
+#| echo: false
+gaussdens2 <- function(x, p, mu1, mu2) {
+  (p *
+    exp(-(x - mu1)^2 / (2 * sigma1^2)) /
+    sigma1 +
+    (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) /
+    sqrt(2 * pi)
+}
+
+em_gauss_illustration <- function(i, em_trace) {
+  p_i <- em_trace$par0.1[i]
+  mu1_i <- em_trace$par0.2[i]
+  mu2_i <- em_trace$par0.3[i]
+
+  pl +
+    geom_line(
+      aes(y = gaussdens2(x, p_i, mu1_i, mu2_i)),
+      color = "darkorange",
+      size = 1
+    ) +
+    lims(y = c(0, 0.25)) +
+    labs(title = paste0("k = ", i))
+}
+```
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(1, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(4, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(8, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(12, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(16, em_trace)
+```
+
+##
+
+```{r}
+#| fig-width: 4.2
+#| fig-height: 2.8
+#| echo: false
+#| fig-cap: "Iterations of the EM algorithm"
+em_gauss_illustration(20, em_trace)
+```
+
+## Label Switching
+
+If we set $\sigma_1 = \sigma_2$, then the likelihood is invariant to
+switching the labels of the components, i.e., $(p, \mu_1, \mu_2)$ and
+$(1-p, \mu_2, \mu_1)$ give the same likelihood.
+
+\medskip\pause
+
+So the EM algorithm may converge to
+**either** of the two symmetric modes.
+
+```{r mixture-gaus-sim2}
+#| echo: false
+sigma1 <- 1
+sigma2 <- 1
+mu1 <- -0.5
+mu2 <- 4
+p <- 0.8
+n <- 5000
+z <- sample(
+  c(TRUE, FALSE),
+  n,
+  replace = TRUE,
+  prob = c(p, 1 - p)
+)
+x <- numeric(n)
+n1 <- sum(z)
+x[z] <- rnorm(n1, mu1, sigma1)
+x[!z] <- rnorm(n - n1, mu2, sigma2)
+
+em_gauss_step_alt <- create_em_gauss_step(x, sigma1)
+```
+
+. . .
+
+```{r}
+em(c(0.2, 3, -0.5), em_gauss_step_alt)
+```
+
+. . .
+
+```{r}
+em(c(0.8, -3, -0.5), em_gauss_step_alt)
+```
+
+. . .
+
+In this example, we generated data with $p = 0.8$ and $\sigma_1 = \sigma_2$.
+
+# Stochastic Gradient Descent
 
 ## Minimizing Sums
 
@@ -276,6 +807,14 @@ guarantee convergence.
 
 But this is **not** the case for SGD.
 
+\medskip
+
+Can we find conditions on the step sizes $t_k$ that ensure convergence of SGD? Yes!
+
+\medskip
+
+But first, we need to introduce the concept of **strong convexity**.
+
 :::
 
 ::: {.column width="47%"}
@@ -306,38 +845,23 @@ ggplot(
 
 ## Strong Convexity
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-Can we find conditions on the step sizes $t_k$ that ensure convergence of SGD? Yes!
-
-\medskip\pause
-
-But first, we need to introduce the concept of **strong convexity**.
-
-
-\medskip\pause
-
 A differentiable function $f: \mathbb{R}^p \to \mathbb{R}$ is **strongly convex** if
 $$
-f(y) \geq f(x) + \nabla f(x)^T (y - x) + \frac{m}{2} \lVert y - x\rVert_2^2
+f(y) \geq f(x) + \nabla f(x)^T (y - x) + \frac{\mu}{2} \lVert y - x\rVert_2^2.
 $$
 
 \medskip\pause
-
-:::
-
-::: {.column width="47%"}
 
 ```{r}
 #| echo: false
+#| fig-height: 3
+#| fig-width: 5
 f <- function(x) x^2 # strongly convex function
 df <- function(x) 2 * x # gradient
 mu <- 1 # strong convexity parameter
 x0 <- 1 # point of tangent
 
-x <- seq(-2, 2, length.out = 400)
+x <- seq(-1, 2, length.out = 400)
 
 # Tangent line at x0
 tangent <- df(x0) * (x - x0) + f(x0)
@@ -349,36 +873,38 @@ plot(
   x,
   f(x),
   type = "l",
-  lwd = 2,
-  col = "blue",
+  axes = FALSE,
   ylim = c(-0.5, 4),
   ylab = "f(x)",
-  xlab = "x",
-  main = "Strong Convexity Visualization"
+  xlab = "x"
 )
-lines(x, tangent, col = "red", lwd = 2, lty = 2)
-lines(x, sc_bound, col = "green", lwd = 2, lty = 3)
+lines(x, tangent, col = "darkorange", lty = 2)
+lines(x, sc_bound, col = "steelblue", lty = 3)
 points(x0, f(x0), pch = 19)
 legend(
-  "topright",
-  legend = c("f(x)", "Tangent at x0", "Tangent + mu/2 (x-x0)^2"),
-  col = c("blue", "red", "green"),
-  lwd = 2,
-  lty = c(1, 2, 3)
+  "topleft",
+  legend = c(
+    expression(f(x)),
+    expression(f(x) + nabla * f(x)^T * (y - x)),
+    expression(
+      f(x) +
+        nabla * f(x)^T * (y - x) +
+        frac(mu, 2) * group("|", group("|", y - x, "|"), "|")^2
+    )
+  ),
+  col = c("black", "darkorange", "steelblue"),
+  box.col = "transparent",
+  lty = c(1, 2, 3),
+  bg = "white"
 )
 ```
 
-:::
-
-::::
+## Example: Strong Convexity
 
 
 ## The Robbins--Monro Convergence Theorem
 
-
-\medskip\pause
-
-Suppose $f$ is strongly convex and
+Now, suppose $f$ is strongly convex and
 $$
 \operatorname{E}\big(\rVert \nabla f(x)\lVert_2^2\big) \leq A + B \lVert x\rVert_2^2
 $$
@@ -417,6 +943,10 @@ $$
 t \sum_{i=1}^n \left( \nabla f_i(x_{k + i - 1}) - \nabla f_i(x_k) \right)
 $$
 which does not tend to zero if $t$ is constant.
+
+\pdfpcnote{
+  What am I trying to say here?
+}
 
 ## Convergence Rates
 
@@ -466,6 +996,10 @@ $$
 
 So SGD does **not** enjoy linear convergence rates under strong convexity.
 
+## Illustration of Convergence Rates
+
+## Permuted Gradient Descent
+
 ## Mini-Batch Gradient Descent
 
 Idea: take mini-batch $A_k$ of size $b$ of the data and iterate through
@@ -503,6 +1037,8 @@ but somewhat **less** robust to local minima.
 - In many applications (e.g. deep learning), we don't care about optimizing to
   high accuracy.
 - Stochastic gradients help us escape local minima.
+
+## Example of SGD beating GD
 
 ## Learning Rate
 
