@@ -54,6 +54,7 @@ format: html
 
 - Discuss compositions of convex functions, or at least motivate why we take log
   of likelihood (not sure)
+- Maybe talk about strong convexity here.
 
 ## Lecture 8: Debugging and Likelihood Optimization
 
@@ -69,6 +70,13 @@ format: html
 
 ## Lecture 10: The EM Algorithm continued
 
+- Drop the peppered moths example. It is too complicated. Use the Gaussian
+  mixture example instead.
+- Too much material. But if we remove the peppered moths example, it should be
+  fine.
+- Consider showing only two ways to derive the Fisher information from the
+  complete data information, not all three.
+
 ## Lecture 11: Stochastic Gradient Descent
 
 ## Lecture 12: Rcpp
@@ -76,4 +84,3 @@ format: html
 ## Lecture 13: SGD continued
 
 ## Lecture 14: Wrap up and R packages
-
