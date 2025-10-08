@@ -7,4 +7,25 @@
 \usepackage{pgfplots}
 \usepackage{tikzducks}
 \usetikzlibrary{positioning}
+\usetikzlibrary{intersections}
+\usetikzlibrary{fit}
 \usetikzlibrary{shapes.geometric}
+\usetikzlibrary{decorations.markings}
+\pgfplotsset{compat=1.18}
+
+\pgfplotsset{
+  line label/.style={
+      postaction={
+          decorate,
+          decoration={
+              markings,
+              mark=at position 1 with
+                {\node[anchor=west,inner sep=3pt] {#1};}
+            }
+        }
+    }
+}
+
+\tikzset{
+  plate/.style={rectangle,draw,rounded corners,inner sep=4pt,label={#1}}
+}
