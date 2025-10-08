@@ -6,6 +6,7 @@ format: html
 ## General
 
 - Harmonize notation with book
+- Harmonize indicator notation
 - Tone down emphasis on object oriented programming.
 - Reconsider reading instructions; maybe not aligned properly.
 - Start each lecture with a recap of the previous lecture.
