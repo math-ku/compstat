@@ -148,6 +148,10 @@ will work on debugging a piece of code together. You can find the code here:
 
 - **Slides:** [The EM Algorithm](slides/lecture10.pdf)
 
+#### Exercise Session 6
+
+- **Main topic**: None - work on your assignments with TA assistance
+
 #### Lecture 11: Stochastic Gradient Descent
 
 - **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf)
