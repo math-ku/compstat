@@ -154,7 +154,7 @@ will work on debugging a piece of code together. You can find the code here:
 
 #### Lecture 11: Stochastic Gradient Descent
 
-- **Slides:** [Stochastic Gradient Descent](slides/lecture12.pdf)
+- **Slides:** [Stochastic Gradient Descent](slides/lecture11.pdf)
 - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt)
 
 #### Presentations of Assignment 3
