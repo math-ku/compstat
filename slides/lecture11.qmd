@@ -162,7 +162,7 @@ $$
 
 ### Complete-Data Model
 
-Then the complete data model is
+Then the complete-data model is
 $$
 p(x_i, z_i \mid \psi) = \pi_{z_i} f_{z_i}(x_i \mid \psi_{z_i}).
 $$
@@ -171,7 +171,7 @@ $$
 
 For Gaussian mixtures, the components are Gaussian:
 $$
-f_k(x \mid \mu_k, \sigma_k) = \frac{1}{\sqrt{2 \pi \sigma_k^2}} e^{-\frac{(x - \mu_k)^2}{2 \sigma_k^2}}.
+f_k(x \mid \mu_k, \sigma_k^2) = \frac{1}{\sqrt{2 \pi \sigma_k^2}} e^{-\frac{(x - \mu_k)^2}{2 \sigma_k^2}}.
 $$
 with $\psi_k = (\mu_k, \sigma_k^2)$.
 
@@ -266,7 +266,7 @@ The responsibility tells us how responsible component 1 is for generating $x_i$.
 
 The conditional probability in a mixture model is generally
 $$
-P(Z = z \mid X = x) = \frac{\pi_z f_z(x \mid \psi_z)}{\sum_{k = 1}^K \pi_k f_k(x \mid \psi_k)}.
+\Pr(Z = z \mid X = x) = \frac{\pi_z f_z(x \mid \psi_z)}{\sum_{k = 1}^K \pi_k f_k(x \mid \psi_k)}.
 $$
 
 \medskip\pause
@@ -284,7 +284,7 @@ $$
 The MLEs of $\theta$ given $Q(\theta \mid \theta')$ are
 $$
 \hat{\theta}^{(t + 1)} = 
-\left(\frac{1}{n} \sum_{i} \tau_i, \quad \frac{1}{\sum_{i=1}^n \tau_i} \sum_{i=1}^n \tau_i x_i, \quad \frac{1}{\sum_{i=1}^n (1 - \tau_i)} \sum_{i} (1 - \tau_i) x_i \right).
+\left(\frac{1}{n} \sum_{i=1}^n \tau_i, \quad \frac{1}{\sum_{i=1}^n \tau_i} \sum_{i=1}^n \tau_i x_i, \quad \frac{1}{\sum_{i=1}^n (1 - \tau_i)} \sum_{i=1}^n (1 - \tau_i) x_i \right).
 $$
 
 . . .
@@ -488,7 +488,7 @@ em_par <- em(c(0.5, -0.5, 4), em_gauss_step)
 
 . . .
 
-```{r gaus-mix-example2, dependson=c("gaus-mix-loglik", "gaus-mix-sim")}
+```{r gaus-mix-example2, dependson=c("gaus-mix-loglik")}
 testthat::test_that("EM and optim give similar results", {
   testthat::expect_equal(em_par, optim_par$par, tolerance = 1e-3)
 })
@@ -803,7 +803,7 @@ sgd_basic <- function(
 
 If $i$ is drawn uniformly at random from $\{1, \ldots, n\}$ then
 $$
-\E(\nabla f_i(x)) = \nabla f(x).
+\E(\nabla f_i(x_k)) = \nabla f(x_k).
 $$
 
 So SGD gradients are **unbiased** estimates of the full gradient.
@@ -1203,7 +1203,7 @@ Suppose $f$ is strongly convex and we have
 unbiased stochastic estimates of the gradients, $g_k$, with
 $\E(g_k \mid x_k) = \nabla f(x_k)$ and 
 $$
-\E\big(\rVert g_k(x)\lVert_2^2 \mid x_k \big) \leq A + B \lVert x_k \rVert_2^2
+\E\big(\rVert g_k \lVert_2^2 \mid x_k \big) \leq A + B \lVert x_k \rVert_2^2
 $$
 for some constants $A$ and $B$. 
 
@@ -1252,14 +1252,14 @@ the gradient estimates does not vanish as we approach the minimum.
 
 For convex $f$, GD with diminishing step sizes converges at rate
 $$
-f(x_n) - f^* = O\left(\frac{1}{\sqrt{k}}\right). 
+f(x_k) - f^* = O\left(\frac{1}{\sqrt{k}}\right). 
 $$
 
 . . .
 
 When $f$ is differentiable with Lipschitz gradient, we get
 $$
-f(x_n) - f^* = O\left(\frac{1}{k}\right). 
+f(x_k) - f^* = O\left(\frac{1}{k}\right). 
 $$
 
 . . .
@@ -1268,7 +1268,7 @@ $$
 
 For convex $f$ with diminishing step sizes, SGD converges at rate
 $$
-\E\big(f(x_n) - f^*\big) = O\left(\frac{1}{\sqrt{k}}\right).
+\E\big(f(x_k) - f^*\big) = O\left(\frac{1}{\sqrt{k}}\right).
 $$
 
 . . .
@@ -1280,8 +1280,9 @@ gradient.
 
 When $f$ is strongly convex and has Lipschitz gradient, GD satisfies
 $$
-f(x_n) - f^* = O(\delta^k), \qquad \delta \in (0, 1).
+f(x_k) - f^* = O(\delta^k), \qquad \delta \in (0, 1)
 $$
+and $\delta = 1 - \mu/L$
 
 . . .
 
@@ -1358,6 +1359,10 @@ $O(1/\sqrt{bk} + 1/k)$.
 
 Typically more efficient than standard SGD for various computational reasons,
 but somewhat **less** robust to local minima.
+
+\pdfpcnote{
+Connect to law of large numbers: averaging reduces variance.
+}
 
 ##
 
@@ -1764,7 +1769,7 @@ f <- function(beta, xx, yy, lambda) {
 }
 
 f_grad <- function(beta, i, xx, yy, lambda) {
-  (xx[i] * beta - yy[i]) / n * xx[i] + lambda * beta
+  (xx[i] * beta - yy[i]) * xx[i] + lambda * beta
 }
 
 beta <- 3
