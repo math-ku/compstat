@@ -80,6 +80,8 @@ format: html
 
 ## Lecture 11: Stochastic Gradient Descent
 
+- Talk about strictly convex.
+
 ## Lecture 12: Rcpp
 
 ## Lecture 13: SGD continued
