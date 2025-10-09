@@ -392,10 +392,6 @@ neg_loglik <- function(par, x) {
 }
 ```
 
-## Optimizing the Log-Likelihood
-
-For this simple example, we can also optimize the log-likelihood directly.
-
 ## General-Purpose Optimization
 
 ```{r gaus-mix-example, dependson=c("gaus-mix-loglik")}
