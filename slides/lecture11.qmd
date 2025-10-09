@@ -120,11 +120,15 @@ p <- 0.5
 
 il_df <- data.frame(
   x = xx,
-  y = gausdens(xx, mu1, mu2, sigma1, sigma2, p)
+  y1 = dnorm(xx, mu1, sigma1) * p,
+  y2 = dnorm(xx, mu2, sigma2) * (1 - p),
+  ymix = gausdens(xx, mu1, mu2, sigma1, sigma2, p)
 )
 
-pl <- ggplot(il_df, aes(x, y)) +
+pl <- ggplot(il_df, aes(x, ymix)) +
   geom_line() +
+  geom_line(aes(y = y1), linetype = "dashed", color = "steelblue") +
+  geom_line(aes(y = y2), linetype = "dashed", color = "darkorange") +
   labs(y = "Density", x = "x")
 
 pl
@@ -1092,7 +1096,7 @@ gradient with $L = 2$, since $\nabla^2 f(x) = 2$.
 
 This is *identical* to the strong convexity parameter.
 
-## More Complicated Example
+## Example of Strong Convexity--Lipschitz Gap
 
 :::: {.columns}
 
@@ -1751,12 +1755,11 @@ SGD algorithms typically subset rows, or blocks of rows.
 In a column-major order matrix, this is not optimal. Transposing the matrix
 first can help.
 
-## Exercise
+## Exercise: Single-Variable Ridge Regression
 
-Minimize the following function:^[This is actually ridge
-regression with a single predictor.]
+Minimize 
 $$
-F(\beta) = \frac{1}{2n} \sum_{i=1}^n f_i(\beta) = \frac{1}{2n} \sum_{i=1}^n (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2
+\frac{1}{n} \sum_{i=1}^n f_i(\beta), \qquad f_i(\beta) = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2
 $$
 
 . . .
@@ -1786,15 +1789,15 @@ plot(beta_grid, f_vec(beta_grid, x, y, 0.6), type = "l")
 
 ### Step 1
 
-Implement a stochastic gradient descent method for solving this problem. Plot convergence
-in terms of epochs and time. 
+Implement a stochastic gradient descent method for solving this problem. Plot
+convergence in terms of epochs and time. Test your implementation against R's
+built-in `optimize()` or an analytical solution. 
 
 . . .
 
 ### Step 2
 
-Test your implementation against R's built-in `optimize()`. Then 
-profile your code.
+Profile your algorithm.
 
 . . .
 
