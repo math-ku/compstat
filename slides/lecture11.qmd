@@ -1,7 +1,5 @@
 ---
 title: "Stochastic Gradient Descent"
-execute:
-  cache: false
 ---
 
 {{< include _common.qmd >}}
@@ -1791,6 +1789,24 @@ step_size_illustration(0.9)
 
 ::::
 
+## 
+
+\begin{algorithm}[H]
+  \caption{Stochastic gradient descent (with mini-batches)}
+  \KwData{Initial step size $t_0 > 0$}
+  \For{$k = 1,2,\dots$}{
+    $A_k \gets$ batch of data\;
+
+    $t_k \gets$ new, smaller, step size\;
+
+    $x \gets x - t_k \sum_{i \in A_k} \nabla f(x_i)$\;
+    \If{converged}{
+      \Return{$x$}
+    }
+  }
+\end{algorithm}
+
+
 ## Implementation Details
 
 ### Nested Loops
@@ -1817,7 +1833,7 @@ first can help.
 
 Minimize 
 $$
-\frac{1}{n} \sum_{i=1}^n f_i(\beta), \quad\text{with}\quad f_i(\beta) = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2
+\frac{1}{n} \sum_{i=1}^n f_i(\beta), \quad\text{with}\quad f_i(\beta) = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2.
 $$
 
 . . .
@@ -1847,21 +1863,22 @@ plot(beta_grid, f_vec(beta_grid, x, y, 0.6), type = "l")
 
 ### Step 1
 
-Implement a stochastic gradient descent method for solving this problem. Plot
-loss in terms of epochs and time. Test your implementation against R's
-built-in `optimize()` or an analytical solution. 
+Generate some data, for instance $x$ from `rnorm` and `y <- x * beta + rnorm(n)`.
+You can pick $\beta$ and $n$ however you want.
 
 . . .
 
 ### Step 2
 
-Profile your algorithm.
+Solve this problem using stochastic gradient descent. Plot loss in terms of
+epochs and time. Test your method against `optimize()` or an
+analytical solution.
 
 . . .
 
 ### Step 3
 
-Try implementing mini-batch SGD or a learning rate schedule.
+Profile your algorithm.
 
 ## Summary
 
