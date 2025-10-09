@@ -1,45 +1,46 @@
 decay_scheduler <- function(
-  gamma0 = 1,
+  t0 = 1,
   a = 1,
   K = 1,
-  gamma1 = NULL,
-  n1 = NULL
+  t1 = NULL,
+  k1 = NULL
 ) {
   force(a)
 
-  if (!is.null(gamma1) && !is.null(n1)) {
-    K <- n1^a * gamma1 / (gamma0 - gamma1)
+  if (!is.null(t1) && !is.null(k1)) {
+    K <- k1^a * t1 / (t0 - t1)
   }
 
-  b <- gamma0 * K
+  b <- t0 * K
 
-  function(n) b / (K + n^a)
+  function(k) b / (K + k^a)
 }
 
 
 logreg_sgd <- function(
-    X,
-    y,
-    batch_size = 1,
-    max_epochs = 100,
-    gamma0 = NULL,
-    loss_optim = 0,
-    K = 5,
-    a = 1) {
+  X,
+  y,
+  batch_size = 1,
+  max_epochs = 100,
+  t0 = NULL,
+  loss_optim = 0,
+  K = 5,
+  a = 1
+) {
   loss <- double(max_epochs)
 
   n <- nrow(X)
   p <- ncol(X)
   it <- 0
 
-  if (is.null(gamma0)) {
+  if (is.null(t0)) {
     L <- 0.25 * norm(crossprod(X), "2") / n
     learning_rate <- 1 / L
   } else {
-    learning_rate <- gamma0
+    learning_rate <- t0
   }
 
-  scheduler <- decay_scheduler(gamma0 = learning_rate, K = K, a = a)
+  scheduler <- decay_scheduler(t0 = learning_rate, K = K, a = a)
 
   full_batch <- n == batch_size
 

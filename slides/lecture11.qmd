@@ -287,7 +287,7 @@ $$
 
 The MLEs of $\theta$ given $Q(\theta \mid \theta')$ are
 $$
-\hat{\theta}^{(t + 1)} = 
+\hat{\theta} = 
 \left(\frac{1}{n} \sum_{i=1}^n \tau_i, \quad \frac{1}{\sum_{i=1}^n \tau_i} \sum_{i=1}^n \tau_i x_i, \quad \frac{1}{\sum_{i=1}^n (1 - \tau_i)} \sum_{i=1}^n (1 - \tau_i) x_i \right).
 $$
 
@@ -301,7 +301,7 @@ $$
 
 We update $\pi$ as
 $$
-\pi^{(t + 1)} = \frac{1}{n} \sum_{i=1}^n \tau_i, 
+\hat{\pi} = \frac{1}{n} \sum_{i=1}^n \tau_i, 
 $$
 which is the fraction of all data points "assigned" to component 1.
 
@@ -315,7 +315,7 @@ which is the fraction of all data points "assigned" to component 1.
 
 We update $\mu_1$ as 
 $$
-\mu_1^{(t + 1)} = \frac{\sum_{i=1}^n \tau_i x_i}{\sum_{i=1}^n \tau_i},
+\hat{\mu}_1 = \frac{\sum_{i=1}^n \tau_i x_i}{\sum_{i=1}^n \tau_i},
 $$
 and similarly for $\mu_2$.
 
@@ -983,7 +983,7 @@ But this is **not** the case for SGD.
 ```{r}
 #| fig-cap: "Convergence of SGD for logistic regression with a fixed step size."
 #| echo: false
-res_sgd <- logreg_sgd(X, y, max_epochs = 200, batch_size = 1, gamma0 = 5)
+res_sgd <- logreg_sgd(X, y, max_epochs = 200, batch_size = 1, t0 = 5)
 pal <- palette.colors(palette = "Okabe-Ito")
 
 loss <- loss_2d_vectorized(
@@ -1207,7 +1207,7 @@ Suppose $f$ is strongly convex and we have
 unbiased stochastic estimates of the gradients, $g_k$, with
 $\E(g_k \mid x_k) = \nabla f(x_k)$ and 
 $$
-\E\big(\rVert g_k \lVert_2^2 \mid x_k \big) \leq A + B \lVert x_k \rVert_2^2
+\E\big(\rVert g_k \lVert_2^2 \, \mid x_k \big) \leq A + B \lVert x_k \rVert_2^2
 $$
 for some constants $A$ and $B$. 
 
@@ -1245,7 +1245,7 @@ $$
 
 Difference between the two is
 $$
-t \sum_{i=1}^n \left( \nabla f_i(x_{k + i - 1}) - \nabla f_i(x_k) \right)
+t \sum_{i=1}^n \Big( \nabla f_i(x_{k + i - 1}) - \nabla f_i(x_k) \Big)
 $$
 which does not tend to zero for constant $t$. So the noise in
 the gradient estimates does not vanish as we approach the minimum.
@@ -1407,7 +1407,7 @@ for (b in c(1, 10, 100, n)) {
     max_epochs = 100,
     batch_size = b,
     a = 1,
-    gamma0 = 3
+    t0 = 3
   )
 
   conv_data <- rbind(
@@ -1658,76 +1658,138 @@ decay_scheduler <- function(
   t0 = 1,
   a = 1,
   K = 1,
-  t1 = NULL,
-  n1 = NULL
+  t = NULL,
+  k1 = NULL
 ) {
   force(a)
 
-  if (!is.null(t1) && !is.null(n1)) {
-    K <- n1^a * t1 / (t0 - t1)
+  if (!is.null(t) && !is.null(k1)) {
+    K <- k1^a * t / (t0 - t)
   }
 
   b <- t0 * K
 
-  function(n) b / (K + n^a)
+  function(k) b / (K + k^a)
 }
 ```
 
 ##
 
-```{r decay-fig, echo=FALSE, dependson="decay", fig.cap="Examples of learning rate schedules. Note that the left panel has $a \\leq 1$ while the right panel has $a > 1$ (not guaranteed convergence)."}
+```{r decay-fig, echo=FALSE, dependson="decay"}
 #| fig-height: 3
-#| fig-width: 5
+#| fig-width: 4
+#| fig-cap: "Examples of learning rate schedules,
+#|   using $t_k = \\frac{t_0 }{1 + K^{-1} k^{a}}$."
 grid_par <- expand.grid(
-  n = seq(0, 1000, 2),
+  k = seq(0, 1000, 2),
   K = c(25, 50, 100),
   a = c(0.6, 1),
   t0 = 1
 )
 
-grid_par <- dplyr::mutate(grid_par, rate = t0 * K / (K + n^a))
+grid_par <- dplyr::mutate(grid_par, rate = t0 * K / (K + k^a))
 
-p1 <- ggplot(grid_par, aes(n, rate, color = factor(K), linetype = factor(a))) +
+ggplot(grid_par, aes(k, rate, color = factor(K), linetype = factor(a))) +
   geom_line() +
   scale_color_discrete("K") +
   scale_linetype_discrete("a") +
   guides(color = guide_legend(order = 1), linetype = guide_legend(order = 2))
-
-grid_par <- expand.grid(
-  n = seq(0, 1000, 2),
-  K = c(1e4, 1e5, 1e6),
-  a = c(2, 2.5),
-  t0 = 1
-)
-
-grid_par <- dplyr::mutate(grid_par, rate = t0 * K / (K + n^a))
-
-p2 <- ggplot(grid_par, aes(n, rate, color = factor(K), linetype = factor(a))) +
-  geom_line() +
-  scale_color_discrete("K", labels = c(quote(10^4), quote(10^5), quote(10^6))) +
-  scale_linetype_discrete("a") +
-  guides(color = guide_legend(order = 1), linetype = guide_legend(order = 2))
-
-p1 + p2 + plot_layout(axes = "collect_y")
 ```
 
 ## So, Is The Problem of Setting Learning Rate Solved?
 
 No, not really, because it's still hard to pick $t_0$, $K$, and $a$.
 
+```{r}
+#| echo: false
+set.seed(123)
+
+n <- 1000
+p <- 2
+Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
+mu <- c(0, 0)
+
+X <- rmvnorm(n, mean = mu, sigma = Sigma)
+beta <- c(1, 2)
+y <- rbinom(n, 1, plogis(X %*% beta))
+
+res_glm <- glm.fit(X, y, family = binomial())
+
+loss_2d <- function(beta1, beta2, X, y) {
+  beta <- c(beta1, beta2)
+  z <- X %*% beta
+  p_hat <- 1 / (1 + exp(-z))
+  -mean(y * log(p_hat) + (1 - y) * log(1 - p_hat))
+}
+
+beta1 <- seq(-1, 3, length = 100)
+beta2 <- seq(-1, 3, length = 100)
+
+loss_2d_vectorized <- Vectorize(function(b1, b2) loss_2d(b1, b2, X, y))
+
+z <- outer(beta1, beta2, loss_2d_vectorized)
+
+step_size_illustration <- function(a) {
+  res_sgd <- logreg_sgd(
+    X,
+    y,
+    max_epochs = 100,
+    batch_size = 1,
+    a = a,
+    t0 = 0.5
+  )
+
+  pal <- palette.colors(palette = "Okabe-Ito")
+
+  contour(beta1, beta2, z, col = "dark grey", drawlabels = FALSE, asp = 1)
+
+  lines(
+    res_sgd$beta_history[1, ],
+    res_sgd$beta_history[2, ],
+    col = pal[3]
+  )
+  points(
+    res_sgd$beta_history[1, ],
+    res_sgd$beta_history[2, ],
+    col = pal[3],
+    pch = 19,
+    cex = 0.5
+  )
+
+  points(
+    res_glm$coefficients[1],
+    res_glm$coefficients[2],
+    col = pal[2],
+    pch = 19,
+    cex = 1
+  )
+}
+```
+
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-![SGD with fast decay.](../images/lecture12-lrdecay-fast.png)
-
+```{r}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: SGD on the logistic regression example with
+#|   $a = 0.6$ (slow decay).
+step_size_illustration(0.6)
+```
 :::
 
 . . .
 
 ::: {.column width="47%"}
 
-![SGD with slow decay.](../images/lecture12-lrdecay-slow.png)
+```{r}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: SGD on the logistic regression example with
+#|   $a = 0.9$ (fast decay).
+step_size_illustration(0.9)
+```
 
 :::
 
@@ -1759,7 +1821,7 @@ first can help.
 
 Minimize 
 $$
-\frac{1}{n} \sum_{i=1}^n f_i(\beta), \qquad f_i(\beta) = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2
+\frac{1}{n} \sum_{i=1}^n f_i(\beta), \quad\text{with}\quad f_i(\beta) = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2
 $$
 
 . . .
@@ -1790,7 +1852,7 @@ plot(beta_grid, f_vec(beta_grid, x, y, 0.6), type = "l")
 ### Step 1
 
 Implement a stochastic gradient descent method for solving this problem. Plot
-convergence in terms of epochs and time. Test your implementation against R's
+loss in terms of epochs and time. Test your implementation against R's
 built-in `optimize()` or an analytical solution. 
 
 . . .
