@@ -11,6 +11,9 @@ pdf-engine: xelatex
 execute:
   echo: true
 
+filters:
+  - beamer-overlays.lua
+
 format: beamer
 
 knitr:
