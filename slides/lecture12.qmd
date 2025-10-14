@@ -444,12 +444,38 @@ sum_cpp(int x) // Argument type: int
 If your function returns nothing, use `void`:
 
 ```cpp
-void // Returns nothing
+void
 sum_cpp()
 {
   Rcpp::cout << "Hello world" << std::endl;
 }
 ```
+
+## Functions are Not First-Class Citizens
+
+In C++, you cannot directly pass functions as argments.
+
+\medskip\pause
+
+You cannot do this:
+
+```cpp
+double
+f(double x)
+{
+  return x * x;
+}
+
+double
+g(std::function f, double x)
+{ // Does not work!
+  return f(x)
+}
+```
+
+. . .
+
+Actually, you can, but you have to use 
 
 ## Zero-Based Indexing
 
