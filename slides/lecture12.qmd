@@ -19,11 +19,7 @@ old_options <- options(digits = 4)
 using namespace Rcpp;
 ```
 
-## Last Time
-
-Last time, we covered stochastic gradient descent.
-
-\medskip\pause
+## Last Time: Stochastic Gradient Descent
 
 \begin{algorithm}[H]
   \caption{Stochastic gradient descent (with mini-batches)}
@@ -142,9 +138,15 @@ Code is translated into machine code before execution.
 Here's a small program in C++.
 
 ```cpp
-int add(int a, int b) { return a + b; }
+int
+add(int a, int b)
+{
+  return a + b;
+}
 
-int main() {
+int
+main()
+{
   std::cout << add(2, 3) << std::endl;
   return 0;
 }
@@ -173,15 +175,9 @@ In the end, this will be represented in binary (1s and 0s).
 
 ## Why C++?
 
-C++ generates machine code: no longer have to be scared of loops!
-
-\medskip\pause
-
-Pass by reference: no need to copy large objects.
-
-\medskip\pause
-
-Access to external C++ libraries
+The main reason is **performance**. C++ generates machine code,
+so you no longer have to be scared of for loops or excessive
+copying.
 
 \medskip\pause
 
@@ -191,28 +187,25 @@ Wrap and reuse C++ code with other languages
 
 Compilation catches bugs early.
 
+\bigskip
+
 :::: {.columns}
 
 ::: {.column width="47%"}
 
+![](../images/compiling.png){width=100%}
+
+:::
+
+::: {.column width="47%" align="center"}
+
 ### Why _Not_ C++?
 
-Compiling adds overhead.
-
-\medskip\pause
-
-Debugging is more complicated.
+Compiling adds overhead and complicates debugging.
 
 \medskip\pause
 
 Distributing code is more involved.
-
-
-:::
-
-::: {.column width="47%"}
-
-![](../images/compiling.png){width=80%}
 
 :::
 
@@ -296,7 +289,8 @@ Rcpp simplifies this process **considerably**.
 
 ```{Rcpp rcpp-sum, eval = FALSE}
 // [[Rcpp::export]]
-double sum_cpp(Rcpp::NumericVector x) {
+double
+sum_cpp(Rcpp::NumericVector x) {
   double total = 0;
   const int n = x.size();
 
@@ -387,11 +381,12 @@ sum_r <- function(x) {
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-double sum_cpp(NumericVector x) {
+double
+sum_cpp(NumericVector x)
+{
   double total = 0;
-  const int n = x.size();
 
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < x.size(); ++i) {
     total += x[i];
   }
 
@@ -402,6 +397,8 @@ double sum_cpp(NumericVector x) {
 :::
 
 ::::
+
+# Writing Code in Rcpp
 
 ## Writing Code in R and Rcpp
 
@@ -424,6 +421,53 @@ double sum_cpp(NumericVector x) {
   C++
 - Rcpp implements vectorized arithmetic (as in R)
 - Rcpp implements a long list of vectorized R-like functions
+
+## Return and Argument Types
+
+C++ is **strongly typed**: you need to specify types for 
+both return value and arguments.
+
+. . .
+
+```cpp
+double         // Return type: double
+sum_cpp(int x) // Argument type: int
+{
+  return x / 3;
+}
+```
+
+. . .
+
+### `void`
+
+If your function returns nothing, use `void`:
+
+```cpp
+void // Returns nothing
+sum_cpp()
+{
+  Rcpp::cout << "Hello world" << std::endl;
+}
+```
+
+## Zero-Based Indexing
+
+In C++, vector and array indices start at 0 (not 1)!
+
+\medskip\pause
+
+Don't do this!
+
+```cpp
+void
+sum_cpp(Rcpp::NumericVector x)
+{
+  for (int i = 0; i <= x.size(); ++i) {
+    x[i] = x[i] / 5;
+  }
+}
+```
 
 ## Including C++ Code in R
 
@@ -555,7 +599,8 @@ If you don't want to modify the input, you can pass by const reference.
 
 ```{Rcpp rcpp-sum-constref, eval = FALSE}
 // [[Rcpp::export]]
-double sum_cpp_const_ref(const Rcpp::NumericVector& x) {
+double
+sum_cpp_const_ref(const Rcpp::NumericVector& x) {
   double total = 0.0;
   const int n = x.size();
 
@@ -572,16 +617,19 @@ In C++, this can make a big difference, but with Rcpp, it makes no difference.
 ## Value of Constant References
 
 ```{Rcpp constref-ex, eval = FALSE}
-NumericVector f_copy(NumericVector x) {
+NumericVector
+f_copy(NumericVector x) {
   return pow(x, 2);
 }
 
-NumericVector f_constref(const NumericVector& x) {
+NumericVector
+f_constref(const NumericVector& x) {
   return pow(x, 2);
 }
 
 // [[Rcpp::export]]
-NumericVector f_copyref(const bool copy) {
+NumericVector
+f_copyref(const bool copy) {
   NumericVector x = runif(100000);
   if (copy) {
     return f_copy(x);
@@ -603,8 +651,8 @@ bench::mark(
 
 ## Sugar
 
-- Rcpp contains a wealth of syntactic **sugar**
-- Often versions of R's vectorized functions
+Rcpp contains a wealth of syntactic **sugar**, such
+as vectorized functions.
 
 ```{Rcpp rcpp-sum-sugar, eval = FALSE}
 // [[Rcpp::export]]
@@ -615,48 +663,18 @@ double sum_cpp_sugar(const Rcpp::NumericVector& x) {
 
 ## Premature Optimization
 
-- Most C++ compilers will optimize the code for you.
-- What you see in the source code is **not** what you get.
-- Temporary variables are often optimized away.
-- Copy elisions
+Premature optimization is especially useless with C++ since
+the compiler will often optimize the code for you anyway.
 
-## Exercise
+\medskip\pause
 
-- Implement `cpp_sd()` using Rcpp that computes the standard deviation of a
-  (numeric) vector. Benchmark against `sd()`.
-- Remember to test your functions.
-- Don't use `Rcpp:sd()`, please ☺
-- If you have time over, try a different algorithm for computing the standard
-  deviation.
+What you see in the source code is **not** what you get.
 
-```{Rcpp rcpp-sd, eval = FALSE, echo = FALSE}
-// [[Rcpp::export]]
-double cpp_sd(NumericVector x) {
-  double out = 0.0;
-  double x_mean = 0.0;
+\medskip\pause
 
-  int n = x.size();
+Copies and temporaries are often optimized away.
 
-  for (int i = 0; i < n; ++i) {
-    out += x[i] / n;
-  }
-
-  for (int i = 0; i < n; ++i) {
-     out += std::pow(x[i] - x_mean, 2);
-  }
-
-  return std::sqrt(out / (n - 1));
-}
-```
-
-. . .
-
-```{r sd-bench, echo = FALSE, cache = TRUE}
-x <- rnorm(1e5)
-bench::mark(cpp_sd(x), sd(x), check = FALSE) |> plot()
-```
-
-## Von Mises Rejection Sampling
+## Example: Von Mises Rejection Sampling
 
 ### For-Loop Version
 
@@ -676,7 +694,7 @@ rvonmises <- function(n, kappa) {
 }
 ```
 
-### Vectorized Version
+## Vectorized Version
 
 :::: {.columns}
 
@@ -725,7 +743,7 @@ rvonmises_vec <-
 
 ::::
 
-### Rcpp Implementation
+## Rcpp Implementation
 
 ```{Rcpp vMsim-cpp, eval = FALSE}
 // [[Rcpp::export]]
@@ -746,7 +764,10 @@ NumericVector rvonmises_cpp(const int n, const double kappa) {
 }
 ```
 
-```{r vMsim3, dependson="vMsim-cpp", fig.width = 12, echo = FALSE}
+##
+
+```{r vMsim3, dependson="vMsim-cpp", echo = FALSE}
+#| fig-width: 5
 par(mfrow = c(1, 2))
 f <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
 x <- rvonmises_cpp(100000, 0.5)
@@ -758,7 +779,10 @@ curve(f(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
 par(mfrow = c(1, 1))
 ```
 
-```{r vMsim-cpp-runtime, dependson=c("vMsim-cpp", "vM-rejection-vec", "vM-rejection"), echo = FALSE, fig.width = 11}
+## 
+
+```{r vMsim-cpp-runtime, dependson=c("vMsim-cpp", "vM-rejection-vec", "vM-rejection"), echo = FALSE}
+#| fig-width: 5
 bench::mark(
   rvonmises(1000, kappa = 5),
   rvonmises_vec(1000, kappa = 5),
@@ -770,11 +794,16 @@ bench::mark(
 
 ## The Standard Template Library (STL)
 
-- A library of generic algorithms, data structures, and iterators for C++. --
+A library of generic algorithms, data structures, and iterators for C++.
 
-- Accessed via the `std` namespace.
-- Provides a number of useful functions for working with vectors and other
-  containers.
+\medskip\pause
+
+Accessed via the `std` namespace.
+
+\medskip\pause
+
+Provides a number of useful functions for working with vectors and other
+containers.
 
 . . .
 
@@ -790,29 +819,32 @@ for (int i = 0; i < 10; ++i) {
 }
 ```
 
-## Linear Algebra
+## Linear Algebra with RcppArmadillo
 
-### RcppArmadillo
+Armadillo is a user-friendly C++ library for linear algebra.
 
 ```cpp
 #include <RcppArmadillo.h>
+
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-arma::mat armaMatrixMultiply(const arma::mat &A, const arma::mat &B) {
+arma::mat
+armaMatMul(const arma::mat& A, const arma::mat& B)
+{
   return A * B;
 }
 ```
 
-. . .
-
-### RppEigen
+## Linear Algebra with RcppEigen
 
 ```cpp
 #include <RcppEigen.h>
+
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::export]]
-Eigen::MatrixXd eigenMatrixMultiply(const Eigen::MatrixXd &A,
-                                    const Eigen::MatrixXd &B) {
+Eigen::MatrixXd
+eigenMatMul(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B)
+{
   return A * B;
 }
 ```
@@ -827,7 +859,8 @@ exported.
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-bool is_odd_cpp(int num = 10) {
+bool
+is_odd_cpp(int num = 10) {
    bool result = (num % 2 == 1);
    return result;
 }
@@ -844,7 +877,8 @@ bool is_odd_cpp(int num = 10) {
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-bool is_odd_cpp(int num = 10) {
+bool
+is_odd_cpp(int num = 10) {
    bool result = (num % 2 == 1);
    return result;
 }
@@ -867,14 +901,21 @@ is_odd_cpp(7)
 
 ## Packages
 
-- Best practice for Rcpp code is actually to write a package.
-- Not as complicated as you might think!
-- Facilitates reproducibility
-- If we have time, we might cover in course.
+Like tests, Rcpp code works best in packages. 
+
+\medskip\pause
+
+We will cover this in our final lecture.
+
+\medskip\pause
+
+Not as complicated as you might think!
 
 :::: {.columns}
 
-::: {.column width="47%"}
+::: {.column width="62%"}
+
+. . .
 
 ### R Packages
 
@@ -882,9 +923,9 @@ Great book to get started; free and available online at <https://r-pkgs.org>.
 
 :::
 
-::: {.column width="47%"}
+::: {.column width="25%"}
 
-![](../images/r-pkgs.png)
+![](../images/r-pkgs.png){width=100%}
 
 :::
 
@@ -915,7 +956,8 @@ run_mean <- function(y, k) {
 
 ```{Rcpp rcpp-runmean, echo = FALSE, eval=FALSE}
 // [[Rcpp::export]]
-NumericVector run_mean_cpp(NumericVector y, int k) {
+NumericVector
+run_mean_cpp(NumericVector y, int k) {
   int n = y.size();
   int m = floor((k - 1) / 2);
   int kk = 2 * m + 1;
@@ -965,5 +1007,45 @@ plot(run_bench)
 
 - [The unofficial Rcpp API documentation](https://thecoatlessprofessor.com/programming/cpp/unofficial-rcpp-api-documentation/)
 - [The many official vignettes](https://cran.r-project.org/web/packages/Rcpp/index.html)
-- [Rcpp For Everyone](https://teuder.github.io/rcpp4everyone_en/) by Masaki E.
-  Tsuda
+- [Rcpp For Everyone](https://teuder.github.io/rcpp4everyone_en/) by Masaki E. Tsuda
+
+## Exercise
+
+- Implement `cpp_sd()` using Rcpp that computes the standard deviation of a
+  (numeric) vector. Benchmark against `sd()`.
+- Remember to test your functions.
+- Don't use `Rcpp:sd()`, please ☺
+- If you have time over, try a different algorithm for computing the standard
+  deviation.
+
+```{Rcpp rcpp-sd, eval = FALSE, echo = FALSE}
+// [[Rcpp::export]]
+double
+cpp_sd(NumericVector x) {
+  double out = 0.0;
+  double x_mean = 0.0;
+
+  int n = x.size();
+
+  for (int i = 0; i < n; ++i) {
+    out += x[i] / n;
+  }
+
+  for (int i = 0; i < n; ++i) {
+     out += std::pow(x[i] - x_mean, 2);
+  }
+
+  return std::sqrt(out / (n - 1));
+}
+```
+
+. . .
+
+```{r sd-bench, echo = FALSE, cache = TRUE}
+x <- rnorm(1e5)
+bench::mark(cpp_sd(x), sd(x), check = FALSE) |> plot()
+```
+
+## Summary
+
+## Next Time
