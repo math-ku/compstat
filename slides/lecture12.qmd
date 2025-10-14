@@ -19,38 +19,73 @@ old_options <- options(digits = 4)
 using namespace Rcpp;
 ```
 
+## Last Time
+
+Last time, we covered stochastic gradient descent.
+
+\medskip\pause
+
+\begin{algorithm}[H]
+  \caption{Stochastic gradient descent (with mini-batches)}
+  \KwData{Initial step size $t_0 > 0$}
+  \For{$k = 1,2,\dots$}{
+    $A_k \gets$ batch of data\;
+
+    $t_k \gets$ new, smaller, step size\;
+
+    $x \gets x - t_k \sum_{i \in A_k} \nabla f(x_i)$\;
+    \If{converged}{
+      \Return{$x$}
+    }
+  }
+\end{algorithm}
+
+\medskip\pause
+
+We mentioned that R is ill-suited for this type of algorithm. Today, we will
+learn how to fix this through C++.
+
 ## Today
 
-### C++ and Rcpp
+### C++
 
-- Why do we want to use C++?
-- What is **compiled** code?
-- How do we use Rcpp to connect R to C++?
-- What are the pitfalls and benefits of using Rcpp?
+Why do we want to use C++?
 
-## Why R?
+\medskip\pause
 
-Why are we even using R?
+What is **compiled** code?
 
 . . .
 
+### Rcpp
+
+We learn how to connect R and C++ using the Rcpp package.
+
+## Why R?
+
 :::: {.columns}
 
-::: {.column width="47%"}
+::: {.column width="30%"}
+
+Why are we even using R?
+
+\bigskip
+
+![](../images/r-logo.svg)
+
+:::
+
+. . .
+
+::: {.column width="60%"}
 
 Because R lets us
 
 - work interactively,
-- explore and visualize data via a rich toolset,
-- easily retrieve or generate data,
-- summarize and report (via RMarkdown/Quarto), and
+- explore and visualize data via a rich toolset,\pause
+- easily retrieve or generate data,\pause
+- summarize and report (via RMarkdown/Quarto), and\pause
 - make use of a comprehensive ecosystem of packages.
-
-:::
-
-::: {.column width="47%"}
-
-![](../images/r-logo.svg)
 
 :::
 
@@ -58,7 +93,9 @@ Because R lets us
 
 ## Why _Not_ R?
 
-It is often slow due to being an **interpreted** language.
+R is often slow because it is an **interpreted** language.
+
+. . .
 
 :::: {.columns}
 
@@ -66,31 +103,43 @@ It is often slow due to being an **interpreted** language.
 
 ### Interpreted Languages
 
-- Execution of code happens line by line.
-- Many functions are written in C, but you still have to call them from R.
-- **Examples:** R, Python, Matlab, Javascript.
+<!-- TODO: Add flow chart to describe interpreted languages -->
+
+Execution of code happens line by line.
+
+\medskip\pause
+
+Many functions are written in C, but you still have to call them from R.
+
+\medskip\pause
+
+**Examples:** R, Python, Matlab, Javascript.
 
 :::
+
+. . .
 
 ::: {.column width="47%"}
 
 ### Compiled Languages
 
-- Code is translated into machine code before execution.
-- This makes it faster.
-- **Examples:** C, C++, Fortran, Java
+Code is translated into machine code before execution.
+
+\medskip\pause
+
+**Examples:** C, C++, Fortran, Java
 
 :::
 
 ::::
 
-## Compiled vs Interpreted Languages
+## 
 
-![](../images/chatgpt-compiled-interpreted.png){width=63%}
+![Compiled vs interpreted languages according to DALL-E 2.](../images/chatgpt-compiled-interpreted.png){width=55%}
 
-## Compiled Code
+## C++ Code
 
-### C++ Code
+Here's a small program in C++.
 
 ```cpp
 int add(int a, int b) { return a + b; }
@@ -101,9 +150,9 @@ int main() {
 }
 ```
 
-. . .
+## Assembly Representation
 
-### Assembly Representation
+In machine code, the code on the previous slide might look like this:
 
 ```assembly
 0000000000401130 <main>:
@@ -116,25 +165,48 @@ int main() {
   401166:       c3                      retq
 ```
 
+. . .
+
+### Binary Representation
+
+In the end, this will be represented in binary (1s and 0s).
+
 ## Why C++?
 
-- C++ generates machine code: no longer have to be scared of loops!
-- Pass by reference: no need to copy large objects.
-- Access to external C++ libraries
-- Wrap and reuse C++ code with other languages
-- Compilation catches bugs early.
+C++ generates machine code: no longer have to be scared of loops!
 
-. . .
+\medskip\pause
+
+Pass by reference: no need to copy large objects.
+
+\medskip\pause
+
+Access to external C++ libraries
+
+\medskip\pause
+
+Wrap and reuse C++ code with other languages
+
+\medskip\pause
+
+Compilation catches bugs early.
 
 :::: {.columns}
 
 ::: {.column width="47%"}
 
-## Why _Not_ C++?
+### Why _Not_ C++?
 
-- Compiling adds overhead.
-- Debugging is more complicated.
-- Distributing code is more involved.
+Compiling adds overhead.
+
+\medskip\pause
+
+Debugging is more complicated.
+
+\medskip\pause
+
+Distributing code is more involved.
+
 
 :::
 
@@ -157,11 +229,13 @@ But we can extend R by coupling it to a compiled language, like
 
 . . .
 
-### Problem
+### Problem {.alert}
 
 Doing so has historically been **tedious** and **error-prone**.
 
-### Basic C++ Version of `sum()`
+. . .
+
+## Basic C++ Version of `sum()`
 
 ```{c sum-c, eval=FALSE}
 // foo.c
@@ -187,7 +261,7 @@ extern "C++"
 }
 ```
 
-### C++ Example (Continued)
+## C++ Example (Continued)
 
 Next, we need to compile this into a binary file by calling:
 
@@ -234,13 +308,15 @@ double sum_cpp(Rcpp::NumericVector x) {
 }
 ```
 
+. . .
+
 ### Exporting C++ Functions
 
-Automizes the process of compiling, linking, and exporting.
+Automatizes the process of compiling, linking, and exporting.
 
 . . .
 
-### R Interface
+## R Interface of Rcpp
 
 - Provides collection of classes to represent R objects
   - `Rcpp::NumericalVector`
@@ -256,12 +332,11 @@ Automizes the process of compiling, linking, and exporting.
 
 Depends on distro, but on Ubuntu call this:
 
-```r
-sudo
-apt
-install
-r - base - dev
+```bash
+sudo apt install r-base-dev
 ```
+
+. . .
 
 ### OSX
 
@@ -271,6 +346,8 @@ You need Xcode. Open up a terminal and call this:
 xcode-select --install
 ```
 
+. . .
+
 ### Windows
 
 Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
@@ -279,7 +356,7 @@ Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
 
 :::: {.columns}
 
-::: {.column width="47%"}
+::: {.column width="44%"}
 
 ### R
 
@@ -288,16 +365,20 @@ library(Rcpp)
 
 sum_r <- function(x) {
   total <- 0
+
   for (i in seq_along(x)) {
     total <- total + x[i]
   }
+
   total
 }
 ```
 
 :::
 
-::: {.column width="47%"}
+. . .
+
+::: {.column width="50%"}
 
 ### C++
 
@@ -309,9 +390,11 @@ using namespace Rcpp;
 double sum_cpp(NumericVector x) {
   double total = 0;
   const int n = x.size();
+
   for (int i = 0; i < n; ++i) {
     total += x[i];
   }
+
   return total;
 }
 ```
@@ -348,7 +431,7 @@ double sum_cpp(NumericVector x) {
 library(Rcpp)
 ```
 
---
+. . .
 
 The C++ code can be passed directly to the `cppFunction()` as a text string for
 compilation and setting up an R interface.
@@ -373,12 +456,12 @@ Better to put C++ code in an `.cpp` file (for instance in `src/` folder) and use
 `sourceCpp()` (or RStudio's UI tool) to compile the code and set up the R
 interface.
 
-. . .
+\medskip\pause
 
 In `R/my_r_experiment.R` (or similar), call
 
 ```r
-sourceCpp(here::here("src/my_cpp_functions.cpp"))
+sourceCpp(here::here("src", "my_cpp_functions.cpp"))
 ```
 
 ```
@@ -396,7 +479,6 @@ Each file should start with
 
 ```cpp
 #include <Rcpp.h>
-using namespace Rcpp; // Optional
 ```
 
 ## Sum Functions
@@ -405,40 +487,46 @@ Let's see if we can beat R's own `sum()` (See
 [here](https://github.com/wch/r-source/blob/3b69aff4083ee81d6c4fe7177eb2b2a2ca41a240/src/main/summary.c#L152)
 for the implementation.)
 
-```{r bench-sum, cache = TRUE, fig.width = 10, fig.height = 4}
+```{r bench-sum, cache = TRUE}
+#| fig-width: 5
+#| fig-height: 2.2
 x <- runif(1e5)
 bench::mark(sum(x), sum_cpp(x), sum_r(x)) |>
   plot()
 ```
 
-## Exercise
-
-Write a C++ function `cpp_mean()` that computes the arithmetic mean of a numeric
-input vector.
-
-Benchmark your function against `mean()`.
-
 ## Constants
 
-- In C++, we can use `const` to declare constants.
-- After declaration, the value cannot be changed.
-- Can lead to _marginal_ performance improvements.
+In C++, we can use `const` to declare constants.
 
 ```cpp
 const double pi = 3.14159;
 pi = 3.14; // Error!
 ```
 
-### `Const` Correctness
+. . .
 
-- Enforce immutability wherever appropriate.
-- Can help avoid bugs.
-- Up to you
+After declaration, the variable cannot be modified.
+
+\medskip\pause
+
+Marginal performance improvements, but also helps catch bugs.
+
+
+. . .
+
+### Const Correctness
+
+Enforce immutability wherever appropriate.
+
 
 ## Passing by Reference
 
-- Useful to avoid copying large objects or when we want to modify the input.
-- Post-fix `&` to the type.
+Useful to avoid copying large objects or when we want to modify the input.
+
+\medskip\pause
+
+Post-fix `&` to the type.
 
 ```{Rcpp rcpp-sum-ref, eval = FALSE}
 // [[Rcpp::export]]
@@ -454,17 +542,16 @@ double sum_cpp_ref(Rcpp::NumericVector& x) {
 }
 ```
 
-. . .
-
-### Rcpp Objects Reference R Objects
+## Rcpp Objects Reference R Objects
 
 - Modifing the Rcpp object modifies the original object.
 - Little point in using `&` in **exported** functions.
 
-## Const Reference
+## `Const` References
 
-- If you don't want to modify the input, you can pass by const reference.
-- Pre-fix `const` to the type.
+If you don't want to modify the input, you can pass by const reference.
+
+. . .
 
 ```{Rcpp rcpp-sum-constref, eval = FALSE}
 // [[Rcpp::export]]
@@ -480,11 +567,9 @@ double sum_cpp_const_ref(const Rcpp::NumericVector& x) {
 }
 ```
 
-- In C++, this can make a big difference.
-- But with Rcpp, it makes little difference.
-- Sometimes no difference with standard C++ too.
+In C++, this can make a big difference, but with Rcpp, it makes no difference.
 
-### Value of Constant References
+## Value of Constant References
 
 ```{Rcpp constref-ex, eval = FALSE}
 NumericVector f_copy(NumericVector x) {
