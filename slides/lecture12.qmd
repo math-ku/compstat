@@ -71,9 +71,9 @@ Why are we even using R?
 
 :::
 
-. . .
-
 ::: {.column width="60%"}
+
+\pause
 
 Because R lets us
 
@@ -127,9 +127,59 @@ Code is translated into machine code before execution.
 
 :::
 
+
 ::::
 
-## 
+##
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm and 1cm,
+      process/.style={rectangle, draw, rounded corners, minimum width=2.2cm, minimum height=1cm},
+      arrow/.style={->, thick}
+    ]
+
+    % Interpreted pipeline
+    \node[process, fill=yellow!10] (src) {Source code};
+    \node[diamond, draw, fill=green!15, above=of src] (user) {User};
+    \node[process, fill=blue!10, right=of src] (interp) {Interpreter};
+    \node[process, fill=red!15, right=of interp] (bin) {Machine code};
+    \node[circle, draw, fill=gray!15, right=of bin] (cpu) {CPU};
+
+    \draw[arrow] (src) -- (interp);
+    \draw[arrow] (user) -- (src);
+    \draw[arrow] (interp) -- (bin);
+    \draw[arrow] (bin) -- (cpu);
+  \end{tikzpicture}
+  \caption{Interpreted languages (R, Python)}
+\end{figure}
+
+\pause
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm and 1cm,
+      process/.style={rectangle, draw, rounded corners, minimum width=2.2cm, minimum height=1cm, align=center},
+      arrow/.style={->, thick}
+    ]
+    % Compiled pipeline
+    \node[process, fill=yellow!10] (src) {Source code};
+    \node[process, fill=blue!10, right=of src] (comp) {Compiler};
+    \node[process, fill=red!15, right=of comp] (bin) {Machine code};
+    \node[circle, draw, fill=gray!15, right=of bin] (cpu) {CPU};
+    \node[diamond, draw, fill=green!15, above=of bin] (user) {User};
+
+    \draw[dashed,arrow] (src) -- (comp);
+    \draw[dashed,arrow] (comp) -- (bin);
+    \draw[arrow] (user) -- (bin);
+    \draw[arrow] (bin) -- (cpu);
+  \end{tikzpicture}
+  \caption{Compiled Languages (C++, Fortran, Rust)}
+\end{figure}
+
+##
 
 ![Compiled vs interpreted languages according to DALL-E 2.](../images/chatgpt-compiled-interpreted.png){width=55%}
 
@@ -175,21 +225,17 @@ In the end, this will be represented in binary (1s and 0s).
 
 ## Why C++?
 
-The main reason is **performance**. C++ generates machine code,
-so you no longer have to be scared of for loops or excessive
-copying.
-
-\medskip\pause
-
-Wrap and reuse C++ code with other languages
+C++ generates performant machine code: you no longer have to be scared of for loops.
 
 \medskip\pause
 
 Compilation catches bugs early.
 
-\bigskip
+\medskip
 
-:::: {.columns}
+. . .
+
+:::: {.columns align="center"}
 
 ::: {.column width="47%"}
 
@@ -211,81 +257,20 @@ Distributing code is more involved.
 
 ::::
 
-## R Can Be Extended
+## Bridging R and C++ with Rcpp
 
-But we can extend R by coupling it to a compiled language, like
+R is actually built partially in compiled languages (C, Fortran).
 
-- C,
-- C++,
-- Fortran, and
-- Java.
+\medskip\pause
 
-. . .
+But, writing your own C/C++ code and connecting it to R has
+historically been painful.
 
-### Problem {.alert}
+\medskip\pause
 
-Doing so has historically been **tedious** and **error-prone**.
+This has changed with the Rcpp package.
 
-. . .
-
-## Basic C++ Version of `sum()`
-
-```{c sum-c, eval=FALSE}
-// foo.c
-#include <R.h>
-#include <Rinternals.h>
-
-extern "C++"
-{
-  SEXP sum_c(SEXP x)
-  {
-    x = PROTECT(coerceVector(x, REALSXP));
-    SEXP s = PROTECT(allocVector(REALSXP, 1));
-    double* x_ref = REAL(x);
-    double* s_ref = REAL(s);
-
-    for (int i = 0; i < length(x); i++)
-      s_ref[0] += x_ref[i];
-
-    UNPROTECT(2);
-
-    return s;
-  }
-}
-```
-
-## C++ Example (Continued)
-
-Next, we need to compile this into a binary file by calling:
-
-```{sh shlib, eval = FALSE}
-R CMD SHLIB foo.c
-```
-
-. . .
-
-Then, in R, we would call this:
-
-```{r foo-so, eval = FALSE}
-dyn.load("foo.so") # or `foo.dll` if on Windows
-```
-
-. . .
-
-Finally, access function by calling this:
-
-```{r foo-r, eval = FALSE}
-x <- c(1.0, 1.5, -0.2, 0.1, 0.0)
-.Call("sum_c", x = x)
-```
-
-```{r, echo = FALSE}
-sum(c(1.0, 1.5, -0.2, 0.1, 0.0))
-```
-
-## Rcpp
-
-Rcpp simplifies this process **considerably**.
+## The Sum Function in C++
 
 ```{Rcpp rcpp-sum, eval = FALSE}
 // [[Rcpp::export]]
@@ -302,18 +287,10 @@ sum_cpp(Rcpp::NumericVector x) {
 }
 ```
 
-. . .
-
-### Exporting C++ Functions
-
-Automatizes the process of compiling, linking, and exporting.
-
-. . .
-
 ## R Interface of Rcpp
 
 - Provides collection of classes to represent R objects
-  - `Rcpp::NumericalVector`
+  - `Rcpp::NumericVector`
   - `Rcpp::DataFrame`
 - Adds a number of functions, often vectorized, to manipulate these objects
   - `Rcpp::sum()`
@@ -350,7 +327,7 @@ Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
 
 :::: {.columns}
 
-::: {.column width="44%"}
+::: {.column width="40%"}
 
 ### R
 
@@ -372,7 +349,7 @@ sum_r <- function(x) {
 
 . . .
 
-::: {.column width="50%"}
+::: {.column width="54%"}
 
 ### C++
 
@@ -386,9 +363,8 @@ sum_cpp(NumericVector x)
 {
   double total = 0;
 
-  for (int i = 0; i < x.size(); ++i) {
+  for (int i = 0; i < x.size(); ++i)
     total += x[i];
-  }
 
   return total;
 }
@@ -400,28 +376,6 @@ sum_cpp(NumericVector x)
 
 # Writing Code in Rcpp
 
-## Writing Code in R and Rcpp
-
-### Notable Differences
-
-- **Vectors are indexed from 0**
-- Statements end with a semicolon (**`;`**)
-- The assignment operator is **`=`**
-- Input and output types need to be declared
-- Class methods have a different syntax (e.g. `x.size()` not `size(x)`)
-- An explicit `return` statement is required to return a value
-- For loops have a different syntax: `for (<init>; <check>; <increment>)`
-- You don't assign to create functions.
-
-. . .
-
-### Similarities
-
-- Rcpp classes, like `NumericVector` and `List`, unify data structures in R and
-  C++
-- Rcpp implements vectorized arithmetic (as in R)
-- Rcpp implements a long list of vectorized R-like functions
-
 ## Return and Argument Types
 
 C++ is **strongly typed**: you need to specify types for 
@@ -430,8 +384,8 @@ both return value and arguments.
 . . .
 
 ```cpp
-double         // Return type: double
-sum_cpp(int x) // Argument type: int
+double   // Return type: double
+f(int x) // Argument type: int
 {
   return x / 3;
 }
@@ -439,43 +393,61 @@ sum_cpp(int x) // Argument type: int
 
 . . .
 
-### `void`
-
 If your function returns nothing, use `void`:
 
 ```cpp
 void
-sum_cpp()
+f()
 {
   Rcpp::cout << "Hello world" << std::endl;
 }
 ```
 
-## Functions are Not First-Class Citizens
+## Syntax
 
-In C++, you cannot directly pass functions as argments.
+### Assignment
 
-\medskip\pause
-
-You cannot do this:
-
-```cpp
-double
-f(double x)
-{
-  return x * x;
-}
-
-double
-g(std::function f, double x)
-{ // Does not work!
-  return f(x)
-}
-```
+You assign values using `=` (not `<-`, as in R).
 
 . . .
 
-Actually, you can, but you have to use 
+### Statements
+
+Statements end with a semicolon (`;`). A new line is not enough!
+
+. . .
+
+### Explicit Return
+
+You need to use `return` to return a value.
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+```r
+f <- function(x) {
+  y <- x + 1
+  y
+}
+```
+
+:::
+
+::: {.column width="47%"}
+
+```cpp
+int
+f(int x)
+{
+  int y = x + 1;
+  return y;
+}
+```
+
+:::
+
+::::
 
 ## Zero-Based Indexing
 
@@ -487,13 +459,251 @@ Don't do this!
 
 ```cpp
 void
-sum_cpp(Rcpp::NumericVector x)
+ooops(Rcpp::NumericVector x)
 {
   for (int i = 0; i <= x.size(); ++i) {
     x[i] = x[i] / 5;
   }
 }
 ```
+
+. . .
+
+Will look at one element past the end of the vector!
+
+## Declaration Order Matters
+
+This will not compile:\footnote{But would work just fine in R.}
+
+```cpp
+double
+f(double x)
+{
+  return g(x) + 1;
+}
+
+double
+g(double x)
+{
+  return x * 2;
+}
+```
+
+. . .
+
+You need to declare `g()` before `f()`.
+
+## References
+
+In C++, you can explicitly pass arguments by reference using `&`.
+
+```cpp
+void
+f(double& x)
+{
+  x = x + 1;
+}
+```
+
+. . .
+
+```cpp
+double
+g()
+{
+  double x = 2;
+  f(x);
+  return x; // returns 3
+}
+```
+
+## Pointers
+
+You can also use pointers, but you don't need them with Rcpp
+and can be confusing and dangerous.
+
+```cpp
+void
+f(double x)
+{
+  double* p = &x;
+  *p = *p + 1;
+
+  return;
+}
+```
+
+## In-Place Modification
+
+Unlike R, C++ functions can modify their arguments in place.
+
+```cpp
+void
+f(int& x)
+{
+  x += 1; // identical to x = x + 1;
+}
+
+int
+g()
+{
+  int x = 2;
+  f(x);
+  return x; // returns 3
+}
+```
+
+```{Rcpp rcpp-sum-ref, eval = FALSE, echo=FALSE}
+// [[Rcpp::export]]
+double
+sum_cpp_ref(Rcpp::NumericVector& x) {
+  double total = 0.0;
+  const int n = x.size();
+
+  for (int i = 0; i < n; ++i) {
+    total += x[i];
+  }
+
+  return total;
+}
+```
+
+## Classes and Objects
+
+C++ is an object-oriented programming language.
+
+```cpp
+class Point
+{
+public:
+  double x;
+  double y;
+}
+```
+
+. . .
+
+```cpp
+Point
+create_point(double x, double y)
+{
+  Point p;
+  p.x = x;
+  p.y = y;
+
+  return p;
+}
+```
+
+## Methods in C++
+
+In C++, methods belong to classes.
+
+```cpp
+class Point
+{
+public:
+  double x;
+  double y;
+
+  double distance_from_origin() { return std::sqrt(x * x + y * y); }
+};
+```
+
+. . .
+
+Methods are called using the `.` operator.
+
+```cpp
+double
+distance(Point p)
+{
+  return p.distance_from_origin();
+}
+```
+
+## C++ is Not a Functional Programming Language
+
+But it has elements of it. 
+
+\medskip\pause
+
+You can, for instance, pass functions as arguments.
+
+```cpp
+int
+add(int a, int b)
+{
+  return a + b;
+}
+
+int
+compute(int x, int y, int (*func)(int, int))
+{
+  return func(x, y);
+}
+```
+
+## Function Arguments
+
+In R, the same function can take different types of arguments.
+
+\medskip\pause
+
+This works differently in C++:
+
+```cpp
+double
+f(int x)
+{
+  return x + 1;
+}
+
+void
+main()
+{
+  f(3);   // OK (an integer, result is 4)
+  f(2.5); // Look out! (Compiles, but `x` -> 2, result is 3)
+  f("2"); // Error! (Cannot convert string to int.)
+}
+```
+
+## Function Overloading
+
+Instead, you can define multiple functions with the same name but different
+argument types:
+
+
+```cpp
+double
+f(double x)
+{
+  return x + 1;
+}
+
+int
+f(int x)
+{
+  return x + 1;
+}
+```
+
+## Constants
+
+In C++, we can use `const` to declare constants.
+
+```cpp
+const double pi = 3.14159;
+pi = 3.14; // Error!
+```
+
+. . .
+
+After declaration, the variable cannot be modified.
+
+\medskip\pause
+
+Marginal performance improvements, but signals intent and can prevent bugs.
 
 ## Including C++ Code in R
 
@@ -522,9 +732,8 @@ one()
 
 ## Source Files
 
-Better to put C++ code in an `.cpp` file (for instance in `src/` folder) and use
-`sourceCpp()` (or RStudio's UI tool) to compile the code and set up the R
-interface.
+But it's better to use `.cpp` files (for instance in the `src/` folder) and call
+`sourceCpp()` (or RStudio's UI tool).
 
 \medskip\pause
 
@@ -543,12 +752,20 @@ my_project/
 └── my_rproject.Rproj        # RStudio project file
 ```
 
-. . .
+## Rcpp Syntax
 
 Each file should start with
 
 ```cpp
 #include <Rcpp.h>
+```
+
+. . .
+
+Before each function you want to export to R, add the comment
+
+```cpp
+// [[Rcpp::export]]
 ```
 
 ## Sum Functions
@@ -565,57 +782,47 @@ bench::mark(sum(x), sum_cpp(x), sum_r(x)) |>
   plot()
 ```
 
-## Constants
+## References in Rcpp
 
-In C++, we can use `const` to declare constants.
+You might think that this would create a copy
+of the R input vector.
 
 ```cpp
-const double pi = 3.14159;
-pi = 3.14; // Error!
-```
-
-. . .
-
-After declaration, the variable cannot be modified.
-
-\medskip\pause
-
-Marginal performance improvements, but also helps catch bugs.
-
-
-. . .
-
-### Const Correctness
-
-Enforce immutability wherever appropriate.
-
-
-## Passing by Reference
-
-Useful to avoid copying large objects or when we want to modify the input.
-
-\medskip\pause
-
-Post-fix `&` to the type.
-
-```{Rcpp rcpp-sum-ref, eval = FALSE}
 // [[Rcpp::export]]
-double sum_cpp_ref(Rcpp::NumericVector& x) {
-  double total = 0.0;
-  const int n = x.size();
-
-  for (int i = 0; i < n; ++i) {
-    total += x[i];
-  }
-
-  return total;
+double
+sum_cpp_ref(Rcpp::NumericVector x)
+{
+  return Rcpp::sum(x);
 }
 ```
 
-## Rcpp Objects Reference R Objects
+. . .
 
-- Modifing the Rcpp object modifies the original object.
-- Little point in using `&` in **exported** functions.
+But no, `Rcpp::NumericalVector` is a reference to the R object.
+
+## Pitfall: Modifying R Objects
+
+```{Rcpp rcpp-uhoh, eval = FALSE}
+// [[Rcpp::export]]
+void
+uh_oh(Rcpp::NumericVector x)
+{
+  x = x + 1.0;
+}
+```
+
+. . .
+
+```{r uh-oh}
+x <- 1.5:4.5
+uh_oh(x)
+x
+```
+
+. . .
+
+The input vector `x` has been modified in place! You can use `Rcpp::clone()`
+to avoid this.
 
 ## `Const` References
 
@@ -640,39 +847,37 @@ sum_cpp_const_ref(const Rcpp::NumericVector& x) {
 
 In C++, this can make a big difference, but with Rcpp, it makes no difference.
 
-## Value of Constant References
+## Printing
 
-```{Rcpp constref-ex, eval = FALSE}
-NumericVector
-f_copy(NumericVector x) {
-  return pow(x, 2);
-}
+Printing to the R console can be done using `Rcpp::Rcout`.
 
-NumericVector
-f_constref(const NumericVector& x) {
-  return pow(x, 2);
-}
-
+```{Rcpp rcpp-print, eval = FALSE}
 // [[Rcpp::export]]
-NumericVector
-f_copyref(const bool copy) {
-  NumericVector x = runif(100000);
-  if (copy) {
-    return f_copy(x);
-  } else {
-    return f_constref(x);
-  }
+void
+print_cpp(const Rcpp::NumericVector& x) {
+  Rcpp::Rcout << "x = " << x << std::endl;
 }
 ```
 
-### Benchmark
+. . .
 
-```{r constref-bench, cache = TRUE}
-bench::mark(
-  f_copyref(TRUE),
-  f_copyref(FALSE),
-  check = FALSE
-)
+```{r}
+print_cpp(1:5)
+```
+
+## Errors and Warnings
+
+You can signal errors and warnings using `Rcpp::stop()` and `Rcpp::warning()`.
+
+```{Rcpp rcpp-error, eval = FALSE}
+// [[Rcpp::export]]
+double
+safe_log(double x) {
+  if (x <= 0) {
+    Rcpp::stop("x must be positive");
+  }
+  return std::log(x);
+}
 ```
 
 ## Sugar
@@ -702,7 +907,7 @@ Copies and temporaries are often optimized away.
 
 ## Example: Von Mises Rejection Sampling
 
-### For-Loop Version
+### R Version
 
 ```{r vM-rejection, cache = TRUE}
 rvonmises <- function(n, kappa) {
@@ -720,60 +925,15 @@ rvonmises <- function(n, kappa) {
 }
 ```
 
-## Vectorized Version
+##
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r vM-rejection-fast, cache = TRUE}
-new_sampler <- function(generator) {
-  alpha <- 1
-  function(n, ...) {
-    y <- list()
-    j <- 1
-    l <- 0
-    while (l < n) {
-      m <- ceiling((n - l) / alpha)
-      y[[j]] <- generator(m, ...)
-      l <- l + length(y[[j]])
-      if (j == 1) {
-        alpha <<- (l + 1) / (m + 1)
-      }
-      j <- j + 1
-    }
-    unlist(y)[1:n]
-  }
-}
-```
-
-:::
-
-::: {.column width="47%"}
-
-```{r vM-rejection-vec-ran, cache = TRUE}
-vonmises_generator <- function(m, kappa) {
-  y <- runif(m, -pi, pi)
-  u <- runif(m)
-  accept <- u <= exp(kappa * (cos(y) - 1))
-  y[accept]
-}
-```
-
-```{r vM-rejection-vec, cache = TRUE}
-rvonmises_vec <-
-  new_sampler(vonmises_generator)
-```
-
-:::
-
-::::
-
-## Rcpp Implementation
+### Rcpp Version
 
 ```{Rcpp vMsim-cpp, eval = FALSE}
 // [[Rcpp::export]]
-NumericVector rvonmises_cpp(const int n, const double kappa) {
+NumericVector
+rvonmises_cpp(const int n, const double kappa)
+{
   NumericVector y(n);
   int i = 0;
 
@@ -785,33 +945,17 @@ NumericVector rvonmises_cpp(const int n, const double kappa) {
       i++;
     }
   }
-
   return y;
 }
 ```
 
 ##
 
-```{r vMsim3, dependson="vMsim-cpp", echo = FALSE}
+```{r vMsim-cpp-runtime, dependson=c("vMsim-cpp", "vM-rejection"), echo = FALSE}
 #| fig-width: 5
-par(mfrow = c(1, 2))
-f <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
-x <- rvonmises_cpp(100000, 0.5)
-hist(x, breaks = seq(-pi, pi, length.out = 20), prob = TRUE)
-curve(f(x, 0.5), -pi, pi, col = "blue", lwd = 2, add = TRUE)
-x <- rvonmises_cpp(100000, 2)
-hist(x, breaks = seq(-pi, pi, length.out = 20), prob = TRUE)
-curve(f(x, 2), -pi, pi, col = "blue", lwd = 2, add = TRUE)
-par(mfrow = c(1, 1))
-```
-
-## 
-
-```{r vMsim-cpp-runtime, dependson=c("vMsim-cpp", "vM-rejection-vec", "vM-rejection"), echo = FALSE}
-#| fig-width: 5
+#| fig-caption: "Benchmark of R and Rcpp implementations of the von Mises rejection sampler."
 bench::mark(
   rvonmises(1000, kappa = 5),
-  rvonmises_vec(1000, kappa = 5),
   rvonmises_cpp(1000, kappa = 5),
   check = FALSE
 ) |>
@@ -841,7 +985,7 @@ Unlike R and Rcpp vector, `std::vector()` grows efficiently.
 std::vector<int> x;
 
 for (int i = 0; i < 10; ++i) {
-  x.emplace_back(i)
+  x.emplace_back(i);
 }
 ```
 
@@ -861,7 +1005,13 @@ armaMatMul(const arma::mat& A, const arma::mat& B)
 }
 ```
 
+. . .
+
+Intuitive syntax, depends on BLAS and LAPACK.
+
 ## Linear Algebra with RcppEigen
+
+Eigen is another popular C++ library for linear algebra.
 
 ```cpp
 #include <RcppEigen.h>
@@ -875,55 +1025,36 @@ eigenMatMul(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B)
 }
 ```
 
-## R Markdown
+. . .
 
-Can put the code in Rcpp chunks, which will be automatically compiled and
-exported.
+More low-level than Armadillo, but does not depend on BLAS/LAPACK.
 
-```{Rcpp rcpp-odd-ex, echo = FALSE}
-#include <Rcpp.h>
+## Parallelization
+
+Parallelization in R comes with overhead. The situation in C++ is better.
+
+\medskip\pause
+
+To main ways to parallelize C++ code in R are OpenMP and the
+[RcppParallel](https://rcppcore.github.io/RcppParallel/) package.
+
+```cpp
+#include <RcppParallel.h>
 using namespace Rcpp;
 
+// [[Rcpp::depends(RcppParallel)]]
 // [[Rcpp::export]]
-bool
-is_odd_cpp(int num = 10) {
-   bool result = (num % 2 == 1);
-   return result;
+double
+parallel_function(const Rcpp::NumericVector& x)
+{
+  // Your parallel code here
 }
 ```
 
-:::: {.columns}
+. . .
 
-::: {.column width="47%"}
-
-<!-- prettier-ignore-start -->
-
-```{Rcpp}`r ''`
-#include <Rcpp.h>
-using namespace Rcpp;
-
-// [[Rcpp::export]]
-bool
-is_odd_cpp(int num = 10) {
-   bool result = (num % 2 == 1);
-   return result;
-}
-```
-````
-
-<!-- prettier-ignore-end -->
-
-:::
-
-::: {.column width="47%"}
-
-```{r}
-is_odd_cpp(7)
-```
-
-:::
-
-::::
+We won't cover the details here, but expect much better leverage than
+using R's parallelization tools.
 
 ## Packages
 
@@ -937,7 +1068,7 @@ We will cover this in our final lecture.
 
 Not as complicated as you might think!
 
-:::: {.columns}
+:::: {.columns align="center"}
 
 ::: {.column width="62%"}
 
@@ -957,92 +1088,57 @@ Great book to get started; free and available online at <https://r-pkgs.org>.
 
 ::::
 
-## Exercise
+## The cpp11 Package
 
-Recall the running mean implementation:
+Nowadays, you can also use the [cpp11](https://cpp11.r-lib.org/) package, which works
+similarly to Rcpp but is more lightweight.
 
-```{r run-mean}
-run_mean <- function(y, k) {
-  n <- length(y)
-  m <- floor((k - 1) / 2)
-  k <- 2 * m + 1
-  y <- y / k
-  s <- rep(NA, n)
-  s[m + 1] <- sum(y[1:k])
-  for (i in (m + 1):(n - m - 1)) {
-    s[i + 1] <- s[i] - y[i - m] + y[i + 1 + m]
-  }
-  s
-}
-```
+\medskip\pause
 
-- Rewrite this in Rcpp and compare the performance.
-- Test your implementation
-- Benchmark it against `run_mean()`
+Won't cover it here, but has some advantages and disadvantages compared to Rcpp.
 
-```{Rcpp rcpp-runmean, echo = FALSE, eval=FALSE}
-// [[Rcpp::export]]
-NumericVector
-run_mean_cpp(NumericVector y, int k) {
-  int n = y.size();
-  int m = floor((k - 1) / 2);
-  int kk = 2 * m + 1;
-  NumericVector s = rep(NA_REAL, n);
-  s[m] = 0;
-  for(int i = 0; i < kk; ++i)
-    s[m] += y[i] / kk;
-  for(int i = m; i < (n - m - 1); ++i)
-    s[i + 1] = s[i] - y[i - m] / kk + y[i + 1 + m] / kk;
-  return s;
-}
-```
+. . .
 
-### Testing
+:::: {.columns}
 
-```{r runmean-test}
-library(testthat)
+::: {.column width="47%"}
 
-test_that("R and C++ running mean functions are equivalent", {
-  y <- rnorm(7)
-  expect_equal(run_mean(y, k = 3), run_mean_cpp(y, k = 3))
-})
-```
+### Advantages
 
-### Benchmarking
+- Compiles faster
+- Grows vectors efficiently
+- Enforces copy-on-write semantics (like R)
 
-```{r runmean-bench, message = FALSE, cache = TRUE}
-y <- rnorm(4096)
-run_bench <- bench::press(
-  n = c(512, 1024, 2048, 4096),
-  {
-    y <- rnorm(n)
-    bench::mark(
-      run_mean(y, k = 11),
-      run_mean_cpp(y, k = 11),
-      check = FALSE
-    )
-  }
-)
-```
+:::
 
-```{r plot-bench, fig.width = 12, fig.height = 6, echo = FALSE}
-plot(run_bench)
-```
+. . .
+
+::: {.column width="47%"}
+
+### Disadvantages
+
+- Smaller ecosystem
+- Fewer built-in functions (sugar)
+- No (stable) Armadillo or Eigen bindings
+
+:::
+
+::::
 
 ## Getting Help
 
+- [The many official vignettes](https://cran.r-project.org/web/packages/Rcpp/index.html)\pause
+- [Rcpp For Everyone](https://teuder.github.io/rcpp4everyone_en/) by Masaki E. Tsuda\pause
+- [Rcpp Gallery](https://gallery.rcpp.org/)\pause
 - [The unofficial Rcpp API documentation](https://thecoatlessprofessor.com/programming/cpp/unofficial-rcpp-api-documentation/)
-- [The many official vignettes](https://cran.r-project.org/web/packages/Rcpp/index.html)
-- [Rcpp For Everyone](https://teuder.github.io/rcpp4everyone_en/) by Masaki E. Tsuda
 
 ## Exercise
 
-- Implement `cpp_sd()` using Rcpp that computes the standard deviation of a
-  (numeric) vector. Benchmark against `sd()`.
-- Remember to test your functions.
-- Don't use `Rcpp:sd()`, please ☺
-- If you have time over, try a different algorithm for computing the standard
-  deviation.
+1. Implement a function using Rcpp that computes the standard deviation of a
+   (numeric) vector. Benchmark against `sd()`.\footnote{Don't use `Rcpp::sd()`, please!}\pause
+2. Test your function against R's `sd()` function to make sure it works correctly.\pause
+3. Benchmark your function against R's `sd()` function to see if it is faster.
+4. Handle cases when the input vector is of length 0 or 1.
 
 ```{Rcpp rcpp-sd, eval = FALSE, echo = FALSE}
 // [[Rcpp::export]]
@@ -1054,7 +1150,7 @@ cpp_sd(NumericVector x) {
   int n = x.size();
 
   for (int i = 0; i < n; ++i) {
-    out += x[i] / n;
+    x_mean += x[i] / n;
   }
 
   for (int i = 0; i < n; ++i) {
@@ -1065,13 +1161,32 @@ cpp_sd(NumericVector x) {
 }
 ```
 
-. . .
-
-```{r sd-bench, echo = FALSE, cache = TRUE}
-x <- rnorm(1e5)
-bench::mark(cpp_sd(x), sd(x), check = FALSE) |> plot()
-```
-
 ## Summary
 
-## Next Time
+R is an interpreted language, which makes it easy to use but often slow.
+
+\medskip\pause
+
+You can use C++ to speed up your code, and it is not as hard as you might think.
+
+\medskip\pause
+
+But there are pitfalls, so be careful!
+
+\medskip\pause
+
+Debugging C++ code is tricky and failures can crash R.
+
+## Next Two Lectures
+
+### Variations on Stochastic Gradient Descent
+
+We expand on the stochastic gradient descent algorithm, looking at
+momentum and adaptive step sizes.
+
+. . .
+
+### R Packages and Wrap-up (Final Lecture)
+
+We learn how to set up R packages, which is the best way to
+distribute R and Rcpp code.
