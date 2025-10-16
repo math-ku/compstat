@@ -32,11 +32,13 @@ What to think of during examination
 
 ### Components
 
-- Code for experiments
-- Source code for functions (which we should be able to reuse)
-- Tests
-- Rcpp code
+- Code for experiments\pause
+- Source code for functions (which we should be able to reuse)\pause
+- Tests\pause
+- Rcpp code\pause
 - Data
+
+\medskip\pause
 
 There are many ways to organize this. Which one to choose?
 
@@ -48,18 +50,20 @@ There are many ways to organize this. Which one to choose?
 
 ### R Package
 
-One way is to make an R package, makes it easy to
+One way is to make an R package. 
 
-- connect to C++ code through Rcpp,
-- set up automatic testing,
-- document your code, and
+\medskip\pause
+
+This makes it easy to
+
+- connect to C++ code through Rcpp,\pause
+- set up automatic testing,\pause
+- document your code, and\pause
 - declare dependencies (other packages, R version).
 
 :::
 
 ::::
-
----
 
 ## R Packages
 
@@ -124,7 +128,7 @@ as the **usethis** package.
 Let's build a simple package that solves the Rosenbrock optimization problem,
 i.e. find
 $$
-x^* = \operatorname{arg\,min}\Big((a - x_1)^2 + b(x_2 - x_1^2)^2\Big).
+x^* = \argmin_{x}\Big((a - x_1)^2 + b(x_2 - x_1^2)^2\Big).
 $$
 
 . . .
@@ -661,19 +665,16 @@ my_fun <- function(x) {
 Document `objective()` with roxygen2 syntax. No need for sensible documentation.
 Just make sure you have the bare minimum.
 
----
-
 ## Documentation in This Course
 
 - Not making a package for CRAN, so lower standards.
 - You don't need to document to benefit from building a package.
 - But it's not a bad idea to do so anyway!
 
----
+##
 
 ![The whole game](../images/pkgs-workflow.png)
 
----
 
 ## Projects
 
@@ -726,7 +727,7 @@ document it, and manage dependencies and licensing.
 
 . . .
 
-## What We Didn't Cover
+### What We Didn't Cover
 
 - Version control (git)\pause
 - How to properly format metadata (`DESCRIPTION`)\pause
