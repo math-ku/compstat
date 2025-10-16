@@ -10,25 +10,25 @@ title: "R Packages and Wrap-Up"
 
 Workshop in creating an R package
 
+. . .
+
 ### Course Summary
 
 What did we actually do?
+
+. . .
 
 ### Oral Examination Prep (Afternoon Session)
 
 What to think of during examination
 
----
-
-## Organizing Code as an R Package
-
----
+# Organizing Code as an R Package
 
 ## Organizing Code
 
 :::: {.columns}
 
-::: {.column width="45%"}
+::: {.column width="47%"}
 
 ### Components
 
@@ -42,7 +42,9 @@ There are many ways to organize this. Which one to choose?
 
 :::
 
-::: {.column width="45%"}
+. . .
+
+::: {.column width="47%"}
 
 ### R Package
 
@@ -61,9 +63,9 @@ One way is to make an R package, makes it easy to
 
 ## R Packages
 
-:::: {.columns}
+:::: {.columns align="center"}
 
-::: {.column width="47%"}
+::: {.column width="50%"}
 
 Different approaches, but we will follow **R Packages**
 [@wickhamPackagesOrganizeTest2023], which is based around the **devtools**
@@ -71,20 +73,20 @@ package.
 
 :::
 
-::: {.column width="47%"}
+::: {.column width="35%"}
 
-![R Packages](../images/rpkgs-cover-2e-small.png)
+![](../images/rpkgs-cover-2e-small.png){.border}
 
 :::
 
 ::::
 
----
-
-## Devtools
+## devtools
 
 Meta-package for various helpers that aid in developing R packages (and
 projects).
+
+\medskip
 
 First off, install and load **devtools**:
 
@@ -93,26 +95,27 @@ install.packages("devtools")
 library(devtools)
 ```
 
-:::: {.columns}
+\medskip\pause
 
-::: {.column width="45%"}
+:::: {.columns align="center"}
 
-This loads other packages that will be useful for setting up your package, most
-importantly the **usethis** package.
+::: {.column width="54%"}
+
+### usethis
+
+This loads other packages that will be useful for setting up your package, such
+as the **usethis** package.
 
 :::
 
-::: {.column width="45%"}
+::: {.column width="40%"}
 
-![](../images/usethis-logo.png)
+![](../images/devtools.pdf){width=50%}![](../images/usethis-logo.png){width=50%}
 
-![](../images/devtools.pdf)
 
 :::
 
 ::::
-
----
 
 ## A Toy Example
 
@@ -120,12 +123,15 @@ importantly the **usethis** package.
 
 Let's build a simple package that solves the Rosenbrock optimization problem,
 i.e. find
+$$
+x^* = \operatorname{arg\,min}\Big((a - x_1)^2 + b(x_2 - x_1^2)^2\Big).
+$$
 
-$$
-x^* = \operatorname{arg\,min}\left((a - x_1)^2 + b(x_2 - x_1^2)^2\right).
-$$
+. . .
 
 ### What We Will Learn
+
+::: {.incremental}
 
 - Adding R functions to our package
 - Testing our code
@@ -134,7 +140,7 @@ $$
 - Licensing our package
 - Documenting the code
 
----
+:::
 
 ## A First Package
 
@@ -146,16 +152,15 @@ Call
 usethis::create_package("rosenbrock")
 ```
 
-or use `File > New Project > New Directory > R Package using devtools` in R
-Studio.
+\medskip\pause
 
 :::: {.columns}
 
-::: {.column width="45%"}
+::: {.column width="47%"}
 
 Gives you a **minimal** package:
 
-<!--prettier-ignore-start-->
+\medskip
 
 \dirtree{%
   .1 rosenbrock/.
@@ -164,14 +169,16 @@ Gives you a **minimal** package:
   .2 NAMESPACE.
 }
 
-<!--prettier-ignore-end-->
+\medskip
 
 You may also have `.Rbuildignore` and `.rosenbrock.Rproj` depending on how you
 created the package.
 
 :::
 
-::: {.column width="45%"}
+. . .
+
+::: {.column width="47%"}
 
 ### Install It
 
@@ -192,13 +199,22 @@ Voila, you have made an R package!
 
 ### `R/`
 
+::: {.incremental}
+
 - All R code should live in `.R`-files in `R/`.
-- These files should (almost) always contain **only** functions.
+- These files should usually only contain **functions**.
 - Many ways to organize your files: one function per file, all functions of a
   certain S3 class in one file etc.
 
-Let's create a first file: `R/objective.R`. Use `usethis::use_r("objective")`
-and insert this:
+:::
+
+. . .
+
+Let's create a first file: `R/objective.R`. 
+
+\medskip\pause
+
+Use `usethis::use_r("objective")` and insert this:
 
 ```r
 objective <- function(x, a = 1, b = 100) {
@@ -208,54 +224,64 @@ objective <- function(x, a = 1, b = 100) {
 
 ## Workflow
 
-We have created a first R file, but how do we use it? Two major options:
+We have created a first R file, now what? Two major options:
 
 :::: {.columns}
 
-::: {.column width="45%"}
+::: {.column width="47%"}
 
 ### devtools::install()
 
 Installs the package, like calling `install.packages()`.
+
+\medskip\pause
 
 Robust but slow. Need to call `library(rosenbrock)` to load
 package\footnote{Done automatically in R Studio}.
 
 :::
 
-::: {.column width="45%"}
+. . .
+
+::: {.column width="47%"}
 
 ### `devtools::load_all()`
 
 Sources all of your code.
 
+\medskip\pause
+
 Quick but not as robust.
+
+\medskip\pause
+
+Good for regular development.
 
 :::
 
 ::::
-
----
 
 ### Try It
 
 Try both options and see if you can call your newly defined function,
 `objective()`.
 
----
+##
 
-![The various states of a package and how to move between them.](../images/install-load-states.png)
-
----
+![The various states of a package and how to move between them.](../images/install-load-states.png){width=90%}
 
 ## Exporting Functions
 
 If you called `devtools::load_all()` then everything is sourced and you can just
 call `objective()` directly.
 
+\medskip\pause
+
 But if you use `devtools::install()` and `library(rosenbrock)`, then you would
 need to use `rosenbrock:::objective()`. The reason is that the function is not
 yet exported.
+
+. . .
 
 ### NAMESPACE
 
@@ -266,6 +292,8 @@ comment:
 # Generated by roxygen2: do not edit by hand
 ```
 
+. . .
+
 If you want to just export everything, you can remove this file and recreate it
 with this content:
 
@@ -273,7 +301,7 @@ with this content:
 exportPattern("^[[:alpha:]]+")
 ```
 
----
+. . .
 
 ## roxygen2
 
@@ -283,6 +311,8 @@ namespace.
 
 [^more-on-this-later]: More on this later.
 
+\medskip\pause
+
 To export a function, you need to place a special roxygen2 comment just before
 the function:
 
@@ -290,8 +320,12 @@ the function:
 #' @export
 ```
 
+. . .
+
 Go ahead and place this before your `objective()` definition. Then run
 `devtools::document()` to roxygenize your package.
+
+\medskip\pause
 
 Now `NAMESPACE` will (should) contain this:
 
@@ -299,17 +333,13 @@ Now `NAMESPACE` will (should) contain this:
 export(objective)
 ```
 
-Reinstall the package and see if you can call `objective()` after loading it.
+\medskip\pause
 
----
+Reinstall the package and see if you can call `objective()` after loading it.
 
 ## Tests
 
 ### testthat
-
-- We have already encountered **testthat** for writing tests in a formalized
-  way.
-- But **testthat** was actually written especially for packages.
 
 Let's start using **testthat** with our package:
 
@@ -317,9 +347,11 @@ Let's start using **testthat** with our package:
 usethis::use_testthat()
 ```
 
+. . .
+
 This creates some new files and directories:
 
-<!--prettier-ignore-start-->
+\medskip
 
 \dirtree{%
   .1 rosenbrock/.
@@ -329,25 +361,27 @@ This creates some new files and directories:
   .3 testthat.R.
 }
 
-<!--prettier-ignore-end-->
-
----
-
 ## A First Simple Test
 
-For the Rosenbrock function, \(f^\* = f(a,a^2) = f(1,1) = 0\). Let's make sure
+For the Rosenbrock function, $f^* = f(a,a^2) = f(1,1) = 0$. Let's make sure
 this is the case for us too!
 
+\medskip\pause
+
 To create a test, we can use `usethis::use_test()`.
+
+\medskip\pause
 
 Call `use_test("objective")` (it's good practice to name the test file the same
 as the file where the function you're testing is defined) and insert this:
 
 ```r
-test_that("multiplication works", {
+test_that("objective as optimum", {
   # add a test using expect_equal()
 })
 ```
+
+. . .
 
 ### Check That Everything Works
 
@@ -357,8 +391,6 @@ Run `devtools::test()`, and hopefully see:
 [ FAIL 0 | WARN 0 | SKIP 0 | PASS 1 ]
 ```
 
----
-
 ## Checking
 
 ### R CMD check
@@ -366,16 +398,29 @@ Run `devtools::test()`, and hopefully see:
 R contains functionality for checking that your package is built correctly and
 you can access this functionality through `devtools::check()`.
 
+\medskip\pause
+
 No requirement that your package needs to pass these checks (if you're using it
 as a project), but it's good practice to make sure it does.
 
-- **ERROR**: Major problem with your package
-- **WARNING**: Something that is most likely not great but not critical
-- **NOTE**: Typically small issues with your package
+\medskip\pause
 
-Now run `devtools::check()`. Is there a problem? Yes, let's fix it!
+ERROR
+: Major problem with your package\pause
 
----
+WARNING
+: Something that is most likely not great but not critical\pause
+
+NOTE
+: Typically small issues with your package
+
+\medskip\pause
+
+Now run `devtools::check()`. Is there a problem? 
+
+\medskip\pause
+
+Yes, we're missing a license!
 
 ## Metadata
 
@@ -387,11 +432,10 @@ Package: rosenbrock
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R:
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+    person("First", "Last", , "first.last@example.com", <...>)
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: `use_mit_license()`, `use_gpl3_license()` or friends
+    to pick a license
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
@@ -400,21 +444,23 @@ RoxygenNote: 7.3.2
 For now we'll leave most of these files alone, but let's fix one thing: the
 license
 
----
-
 ## Licensing
 
 ### Why Do You Need a License?
 
-- Licensing software tells other people about how they are allowed to reuse your
-  code.
-- If you do not provide a license, this generally means that **nobody is allowed
-  to copy, distribute, or modify your code.**
-- If you have other contributors, then "nobody" includes **you too!**
+Licensing software tells other people about how they are allowed to reuse your
+code.
 
----
+\medskip\pause
 
-### Choosing a License
+If you do not provide a license, this generally means that **nobody is allowed
+to copy, distribute, or modify your code.**
+
+\medskip\pause
+
+If you have other contributors, then "nobody" includes **you too!**
+
+## Choosing a License
 
 So we need to pick a license: for now we'll pick the MIT license.  
 (Read more about picking a license at <https://choosealicense.com>.)
@@ -422,6 +468,8 @@ So we need to pick a license: for now we'll pick the MIT license.
 ```r
 usethis::use_mit_license()
 ```
+
+. . .
 
 This will add new files to your package: `LICENSE`, `LICENSE.md`, and modify
 `DESCRIPTION`, in which you should see:
@@ -434,12 +482,12 @@ License: MIT + file LICENSE
 
 In R packages, you make dependencies explicit, defined in `DESCRIPTION`.
 
-### Gradient
+. . .
 
-Let's say that we want to compute the gradient for the Rosenbrock function.
+### Computing the Gradient
 
-One way to do so is to use numerical differentiation through the **numDeriv**
-package:
+Let's say that we want to use **numDeriv** to numerically
+compute the gradient for the Rosenbrock function.
 
 ```r
 gradient <- function(x, a = 1, b = 100) {
@@ -447,11 +495,15 @@ gradient <- function(x, a = 1, b = 100) {
 }
 ```
 
+. . .
+
 Now our package depends on **numDeriv**, so we need to add it to `DESCRIPTION`:
 
 ```r
 usethis::use_package("numDeriv")
 ```
+
+. . .
 
 In `DESCRIPTION`, you should now see this:
 
@@ -459,8 +511,6 @@ In `DESCRIPTION`, you should now see this:
 Imports:
   numDeriv
 ```
-
----
 
 ## Rcpp
 
@@ -470,9 +520,11 @@ Imports:
 
 Rcpp works best in a package:
 
-- No more manual sourcing (no need to call `Rcpp::sourceCpp()`)
+- No more manual sourcing (no need to call `Rcpp::sourceCpp()`)\pause
 - You don't need to add directives for dependencies to **RcppArmadillo** and
   other packages.
+
+\medskip\pause
 
 We will rely on **roxygen2**. First, call
 
@@ -501,13 +553,11 @@ Now just need to run `devtools::document()` and `devtools::load_all()` or
 
 ::::
 
----
-
 ## Exporting Rcpp Code
 
 :::: {.columns}
 
-::: {.column width="45%"}
+::: {.column width="47%"}
 
 ### Wrapping
 
@@ -519,12 +569,16 @@ my_fun <- function(x) {
 }
 ```
 
+. . .
+
 Typically easier because checking input and preparing output is easier on the R
 side.
 
 :::
 
-::: {.column width="45%"}
+. . .
+
+::: {.column width="47%"}
 
 ### Direct Export
 
@@ -532,8 +586,14 @@ You can add roxygen2 comments in Rcpp code too:
 
 ```cpp
 //' @export
-double my_fun_cpp() { ... }
+double
+my_fun_cpp()
+{
+  ...
+}
 ```
+
+. . .
 
 Saves you having to write and maintain an R function.
 
@@ -541,35 +601,37 @@ Saves you having to write and maintain an R function.
 
 ::::
 
----
-
 ## Documentation
 
 :::: {.columns}
 
-::: {.column width="45%"}
+::: {.column width="47%"}
 
 ### Why?
 
 Because
 
-- you make your code accessible to others,
-- it makes you think an extra time about what your function is doing, and
+- you make your code accessible to others,\pause
+- it makes you think an extra time about what your function is doing, and\pause
 - your future self will thank you.
 
 :::
 
-::: {.column width="45%"}
+. . .
+
+::: {.column width="47%"}
 
 ### Types
 
-- Comments in code
-- Manual (help files)
+- Comments in code\pause
+- Manual (help files)\pause
 - Long-form articles (vignettes)
 
 :::
 
 ::::
+
+\medskip\pause
 
 ### roxygen2
 
@@ -593,6 +655,8 @@ my_fun <- function(x) {
   ...
 }
 ```
+
+. . .
 
 ### Your Turn
 
@@ -662,11 +726,11 @@ Start trying to convert your work for one assignment into a package
 
 ---
 
-## Oral Examination Prep
-
----
+# Oral Examination Prep
 
 ## Procedure
+
+::: {.incremental}
 
 1. After entering the room you will connect the computer and check that it works
    with the projector.
@@ -680,4 +744,14 @@ Start trying to convert your work for one assignment into a package
 5. After at most 25 min the exam ends, and after assessment you will be given a
    grade.
 
-# References
+:::
+
+::: {.standout}
+
+##
+
+Thank you, and good luck!
+
+:::
+
+## References

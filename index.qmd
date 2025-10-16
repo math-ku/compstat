@@ -185,21 +185,28 @@ to get started.
 
 #### Lecture 13: Variations on Stochastic Gradient Descent
 
-<!-- - **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf) -->
-<!-- - **Reading:** -->
-<!--   [Sections 11.2-11.3 (CSwR)](https://cswr.nrhstat.org/stochopt#beyond-basic-stochastic-gradient-algorithms) -->
+- **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf)
+- **Reading:**
+  [Sections 11.2-11.3 (CSwR)](https://cswr.nrhstat.org/stochopt#beyond-basic-stochastic-gradient-algorithms)
 
 #### Presentations of Assignment 4
 
-- **Instructions:** [Assignment 4](assignments/assignment4.html)
+- **Instructions:** [Assignment 4](assignments/assignment4.html) ([source](assignments/assignment4.qmd))
 
 ### Week 8
 
 #### Lecture 14: R Packages and Wrap-Up
 
-<!-- - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf) -->
+This lecture will mostly be a hands-on session. Please bring your laptop. We
+will work on creating an R package together. Please install the 
+[devtools](https://cran.r-project.org/web/packages/devtools/index.html) and
+[usethis](https://cran.r-project.org/web/packages/usethis/index.html) packages
+before the lecture.
 
+- **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf) ([source](slides/lecture14.qmd))
 
 ### Week 9
 
-Examinations
+#### Examinations
+
+See the schedule on Absalon.

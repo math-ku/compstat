@@ -3,7 +3,6 @@ project:
   render:
     - "*.qmd"
     - "*.md"
-    - "!slides/lecture14.qmd"
 
 website:
   title: "Computational Statistics"
