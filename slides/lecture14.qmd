@@ -230,7 +230,7 @@ We have created a first R file, now what? Two major options:
 
 ::: {.column width="47%"}
 
-### devtools::install()
+### `devtools::install()`
 
 Installs the package, like calling `install.packages()`.
 
@@ -268,7 +268,7 @@ Try both options and see if you can call your newly defined function,
 
 ##
 
-![The various states of a package and how to move between them.](../images/install-load-states.png){width=90%}
+![The various states of a package and how to move between them.](../images/install-load-states.png){width=92% .border}
 
 ## Exporting Functions
 
@@ -300,8 +300,6 @@ with this content:
 ```r
 exportPattern("^[[:alpha:]]+")
 ```
-
-. . .
 
 ## roxygen2
 
@@ -681,50 +679,60 @@ Just make sure you have the bare minimum.
 
 When you have a project, you typically need more things:
 
-- scripts with simulations, etc, which produce output
-- datasets stored in different formats
-- notebooks (or latex sources)
+- Scripts that produce output\pause
+- Datasets stored in different formats\pause
+- Notebooks or reports\pause
 
 These things do not naturally fit into a package framework.
 
----
+. . .
 
-### Two Choices of Structure
+## Two Choices of Structure
 
 1. Just store these things directly into the package folder. Optionally, you can
-   use `.Rbuildignore` to ignore these files when building the package.
+   use `.Rbuildignore` to ignore these files when building the package.\pause
 2. Put your **package** into a _subdirectory_ of your project. This cleanly
    separates the part of your project that contains reusable code (the package)
    and the part that is experiments and reports. But a little trickier to setup.
 
-## Exercise: Two Options
+## Exercise
 
-### Rosenbrock
+Continue building the **rosenbrock** package!
 
-Continue building the **rosenbrock** package:
+### Step 1
 
-- Write a gradient descent (or stochastic gradient descent) implementation that
-  minimizes the rosenbrock function.
-- Write the code in Rcpp. If you want, you can first write it in R to see that
-  everything is working, and then port it.
-- Feel free to use generative AI to write the code.
-- Export everything and document the package.
+Write a function `optimize_banana()` that uses `optim()` to solve the Rosenbrock
+problem. It should take as input `a`, `b`, and a starting point `x0`, and
+return the optimal point and function value.
 
-### An Assignment
+. . .
 
-Start trying to convert your work for one assignment into a package
+### Step 2
 
----
+Write an implementation of the gradient using Rcpp. Let the user
+choose whether to use the gradient or not in `optimize_banana()`.
+
+. . .
+
+### Step 3
+
+Write a plot method `plot_banana()` that plots the contours of the Rosenbrock
+function and the optimum found in `optimize_banana()`.
+
+## Summary
+
+We have learned how to create an R package, add R and Rcpp code, test it,
+document it, and manage dependencies and licensing.
+
+. . .
 
 ## What We Didn't Cover
 
-- Version control through git and github
-- How to properly format metadata (`DESCRIPTION`)
-- Integrating data into our package
-- Publishing to CRAN
+- Version control (git)\pause
+- How to properly format metadata (`DESCRIPTION`)\pause
+- Integrating data into our package\pause
+- Publishing to CRAN\pause
 - Principled approaches to reproducibility (renv, containers)
-
----
 
 # Oral Examination Prep
 
