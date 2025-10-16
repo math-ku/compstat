@@ -127,8 +127,15 @@ Code is translated into machine code before execution.
 
 :::
 
-
 ::::
+
+##
+
+![Compiled vs interpreted languages according to DALL-E 2 in 2024.](../images/chatgpt-compiled-interpreted.png){width=55%}
+
+##
+
+![Compiled vs interpreted languages according to ChatGPT in 2025.](../images/chatgpt-compiled-interpreted-2025.png){width=75%}
 
 ##
 
@@ -179,9 +186,6 @@ Code is translated into machine code before execution.
   \caption{Compiled Languages (C++, Fortran, Rust)}
 \end{figure}
 
-##
-
-![Compiled vs interpreted languages according to DALL-E 2.](../images/chatgpt-compiled-interpreted.png){width=55%}
 
 ## C++ Code
 
@@ -204,7 +208,7 @@ main()
 
 ## Assembly Representation
 
-In machine code, the code on the previous slide might look like this:
+In assembly (human-readable machine) code, the code on the previous slide might look like this:
 
 ```assembly
 0000000000401130 <main>:
@@ -221,7 +225,7 @@ In machine code, the code on the previous slide might look like this:
 
 ### Binary Representation
 
-In the end, this will be represented in binary (1s and 0s).
+In the end, this will be converted in binary (0s and 1s).
 
 ## Why C++?
 
