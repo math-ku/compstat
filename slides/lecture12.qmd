@@ -291,15 +291,39 @@ sum_cpp(Rcpp::NumericVector x) {
 }
 ```
 
-## R Interface of Rcpp
+. . .
 
-- Provides collection of classes to represent R objects
+As you can see, it looks quite similar to R code. We will explore the
+simlarities and differences in the rest of this lecture.
+
+## What Rcpp Brings
+
+### A Link to C++
+
+Rcpp provides an easy way to link functions written in C++ to R.
+
+\medskip\pause
+
+No need to manually compile and link code. Rcpp takes care of this for you!
+
+. . .
+
+### Classes
+
+Rcpp defines a number of classes that wraps R objects, including
+
   - `Rcpp::NumericVector`
   - `Rcpp::DataFrame`
-- Adds a number of functions, often vectorized, to manipulate these objects
+  - `Rcpp::List`
+
+. . .
+
+### Functions
+
+Rcpp offers many functions (sugar) that offer counterparts to R functions, including
+
   - `Rcpp::sum()`
   - `Rcpp::runif()`
-- Seamless transformation between R and C++ objects.
 
 ## Installing Rcpp
 
@@ -881,18 +905,6 @@ safe_log(double x) {
     Rcpp::stop("x must be positive");
   }
   return std::log(x);
-}
-```
-
-## Sugar
-
-Rcpp contains a wealth of syntactic **sugar**, such
-as vectorized functions.
-
-```{Rcpp rcpp-sum-sugar, eval = FALSE}
-// [[Rcpp::export]]
-double sum_cpp_sugar(const Rcpp::NumericVector& x) {
-  return Rcpp::sum(x);
 }
 ```
 
