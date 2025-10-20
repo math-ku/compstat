@@ -1181,6 +1181,14 @@ But there are pitfalls, so be careful!
 
 Debugging C++ code is tricky and failures can crash R.
 
+## Course Evaluations
+
+The course evaluations are open!
+
+\medskip
+
+Please take a few minutes to fill them out. Your feedback is valuable!
+
 ## Next Two Lectures
 
 ### Variations on Stochastic Gradient Descent
