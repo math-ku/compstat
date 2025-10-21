@@ -21,6 +21,11 @@ using namespace Rcpp;
 
 ## Last Time: Stochastic Gradient Descent
 
+A version of gradient descent that samples observations (functions) and 
+converges in expectation.
+
+\medskip\pause
+
 \begin{algorithm}[H]
   \caption{Stochastic gradient descent (with mini-batches)}
   \KwData{Initial step size $t_0 > 0$}
@@ -38,6 +43,10 @@ using namespace Rcpp;
 
 \medskip\pause
 
+Slow convergence, but cheap iterations.
+
+\medskip\pause
+
 We mentioned that R is ill-suited for this type of algorithm. Today, we will
 learn how to fix this through C++.
 
@@ -45,11 +54,11 @@ learn how to fix this through C++.
 
 ### C++
 
-Why do we want to use C++?
+What is **compiled** code?
 
 \medskip\pause
 
-What is **compiled** code?
+Why do we want to use C++?
 
 . . .
 
@@ -77,7 +86,7 @@ Why are we even using R?
 
 Because R lets us
 
-- work interactively,
+- work interactively,\pause
 - explore and visualize data via a rich toolset,\pause
 - easily retrieve or generate data,\pause
 - summarize and report (via RMarkdown/Quarto), and\pause
@@ -294,7 +303,7 @@ sum_cpp(Rcpp::NumericVector x) {
 . . .
 
 As you can see, it looks quite similar to R code. We will explore the
-simlarities and differences in the rest of this lecture.
+similarities and differences in the rest of this lecture.
 
 ## What Rcpp Brings
 
@@ -402,12 +411,12 @@ sum_cpp(NumericVector x)
 
 ::::
 
-# Writing Code in Rcpp
+# Writing Code in C++ (Rcpp)
 
 ## Return and Argument Types
 
 C++ is **strongly typed**: you need to specify types for 
-both return value and arguments.
+return values and arguments.
 
 . . .
 
@@ -525,6 +534,8 @@ You need to declare `g()` before `f()`.
 
 In C++, you can explicitly pass arguments by reference using `&`.
 
+. . .
+
 ```cpp
 void
 f(double& x)
@@ -547,8 +558,9 @@ g()
 
 ## Pointers
 
-You can also use pointers, but you don't need them with Rcpp
-and can be confusing and dangerous.
+You can also use pointers (`*`).
+
+. . .
 
 ```cpp
 void
@@ -561,9 +573,16 @@ f(double x)
 }
 ```
 
+. . .
+
+But you don't need them with Rcpp
+and they are often a source of bugs.
+
 ## In-Place Modification
 
 Unlike R, C++ functions can modify their arguments in place.
+
+. . .
 
 ```cpp
 void
@@ -603,7 +622,7 @@ C++ is an object-oriented programming language.
 ```cpp
 class Point
 {
-public:
+public: // can also use private
   double x;
   double y;
 }
@@ -627,20 +646,23 @@ create_point(double x, double y)
 
 In C++, methods belong to classes.
 
+. . .
+
 ```cpp
 class Point
 {
 public:
   double x;
   double y;
-
   double distance_from_origin() { return std::sqrt(x * x + y * y); }
 };
 ```
 
 . . .
 
-Methods are called using the `.` operator.
+You call methods using the `.` operator (or `->` for references).
+
+. . .
 
 ```cpp
 double
@@ -826,7 +848,7 @@ sum_cpp_ref(Rcpp::NumericVector x)
 
 . . .
 
-But no, `Rcpp::NumericalVector` is a reference to the R object.
+But no, `Rcpp::NumericVector` is a reference to the R object.
 
 ## Pitfall: Modifying R Objects
 
@@ -904,6 +926,7 @@ safe_log(double x) {
   if (x <= 0) {
     Rcpp::stop("x must be positive");
   }
+
   return std::log(x);
 }
 ```
@@ -947,10 +970,10 @@ rvonmises <- function(n, kappa) {
 
 ```{Rcpp vMsim-cpp, eval = FALSE}
 // [[Rcpp::export]]
-NumericVector
+Rcpp::NumericVector
 rvonmises_cpp(const int n, const double kappa)
 {
-  NumericVector y(n);
+  Rcpp::NumericVector y(n);
   int i = 0;
 
   while (i < n) {
@@ -969,7 +992,7 @@ rvonmises_cpp(const int n, const double kappa)
 
 ```{r vMsim-cpp-runtime, dependson=c("vMsim-cpp", "vM-rejection"), echo = FALSE}
 #| fig-width: 5
-#| fig-caption: "Benchmark of R and Rcpp implementations of the von Mises rejection sampler."
+#| fig-cap: "Benchmark of R and Rcpp implementations of the von Mises rejection sampler."
 bench::mark(
   rvonmises(1000, kappa = 5),
   rvonmises_cpp(1000, kappa = 5),
@@ -981,6 +1004,10 @@ bench::mark(
 ## The Standard Template Library (STL)
 
 A library of generic algorithms, data structures, and iterators for C++.
+
+\medskip\pause
+
+It's like R's base package, but for C++.
 
 \medskip\pause
 
@@ -1051,7 +1078,7 @@ Parallelization in R comes with overhead. The situation in C++ is better.
 
 \medskip\pause
 
-To main ways to parallelize C++ code in R are OpenMP and the
+Two main ways to parallelize C++ code in R are OpenMP and the
 [RcppParallel](https://rcppcore.github.io/RcppParallel/) package.
 
 ```cpp
@@ -1151,7 +1178,7 @@ Won't cover it here, but has some advantages and disadvantages compared to Rcpp.
 ## Exercise
 
 1. Implement a function using Rcpp that computes the standard deviation of a
-   (numeric) vector. Benchmark against `sd()`.\footnote{Don't use `Rcpp::sd()`, please!}\pause
+   numeric vector. Benchmark against `sd()`.\footnote{Don't use `Rcpp::sd()`, please!}\pause
 2. Test your function against R's `sd()` function to make sure it works correctly.\pause
 3. Benchmark your function against R's `sd()` function to see if it is faster.
 4. Handle cases when the input vector is of length 0 or 1.
@@ -1183,7 +1210,8 @@ R is an interpreted language, which makes it easy to use but often slow.
 
 \medskip\pause
 
-You can use C++ to speed up your code, and it is not as hard as you might think.
+You can use C++ to speed up your code, and it is not as
+difficult as you might think.
 
 \medskip\pause
 
