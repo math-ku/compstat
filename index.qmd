@@ -18,7 +18,7 @@ for you to solve independently at your own pace.
 
 #### Lecture 1: Introduction
 
-- **Slides:** [Introduction and Functions in R](slides/lecture1.pdf) ([source}](slides/lecture1.qmd))
+- **Slides:** [Introduction and Functions in R](slides/lecture1.pdf) ([source](slides/lecture1.qmd))
 - **Reading:** [Chapter 6 (AdvR)](https://adv-r.hadley.nz/functions.html)
 - **Exercises:**
   [A1-A7 (CSWR, Appendix
