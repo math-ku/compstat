@@ -1,8 +1,9 @@
 gd <- function(
-    X,
-    y,
-    mu = 0,
-    maxit = 100) {
+  X,
+  y,
+  mu = 0,
+  maxit = 100
+) {
   loss <- double(maxit)
 
   p <- ncol(X)
@@ -17,10 +18,12 @@ gd <- function(
   )
 
   for (k in 2:maxit) {
-    eta <- X %*% betas[, k-1]
+    eta <- X %*% betas[, k - 1]
     gradient <- crossprod(X, eta - y)
 
-    betas[, k] <- betas[, k-1] - gamma * gradient + mu * (betas[, k - 1] - betas[, max(1, k - 2)])
+    betas[, k] <- betas[, k - 1] -
+      gamma * gradient +
+      mu * (betas[, k - 1] - betas[, max(1, k - 2)])
 
     # Compute the loss for the current iteration
     loss[k] <- 0.5 * norm(y - eta, "2")^2
@@ -31,15 +34,15 @@ gd <- function(
 
 
 gd_general <- function(
-    par,
-    f,
-    grad_f,
-    L,
-    mu = 0,
-    type = c("polyak", "nesterov"),
-    maxit = 100,
-    ...
-    ) {
+  par,
+  f,
+  grad_f,
+  L,
+  mu = 0,
+  type = c("polyak", "nesterov"),
+  maxit = 100,
+  ...
+) {
   loss <- double(maxit)
 
   p <- length(par)
@@ -73,4 +76,3 @@ gd_general <- function(
 
   list(coefficients = x[, maxit], loss = loss, x = x)
 }
-

@@ -1,5 +1,3 @@
-library(tikzDevice)
-
 source(here::here("scripts/gd.R"))
 
 library(mvtnorm)
@@ -38,7 +36,16 @@ L <- 0.25 * norm(crossprod(X), "2") / n
 
 maxit <- 100
 res <- gd_general(beta0, f, grad_f, X = X, y = y, L = L, maxit = maxit)
-res_nesterov <- gd_general(beta0, f, grad_f, X = X, y = y, L = L, type = "nesterov", maxit = maxit)
+res_nesterov <- gd_general(
+  beta0,
+  f,
+  grad_f,
+  X = X,
+  y = y,
+  L = L,
+  type = "nesterov",
+  maxit = maxit
+)
 
 coef(res_glm)
 coef(res)
@@ -50,7 +57,15 @@ k <- seq_along(res$loss)
 
 fn <- here::here("images", "momentum-convergence.pdf")
 pdf(fn, width = 2.7, height = 3.2, pointsize = 8)
-plot(seq_along(res_nesterov$loss), res_nesterov$loss - optim, type = "l", log = "y", ylab = expression(f(x[k]) - f*"*"), xlab = "k", col = "steelblue4")
+plot(
+  seq_along(res_nesterov$loss),
+  res_nesterov$loss - optim,
+  type = "l",
+  log = "y",
+  ylab = expression(f(x[k]) - f * "*"),
+  xlab = "k",
+  col = "steelblue4"
+)
 lines(seq_along(res$loss), res$loss - optim, type = "l", log = "y")
 legend(
   "topright",
