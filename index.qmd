@@ -183,6 +183,11 @@ to get started.
     [exercises in 25.5.7 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74)
     too
 
+#### Exercise Session 7
+
+- **Main topic**: Branch prediction
+- **In class walkthrough:** TA will go through the topic with a live coding example. 
+
 #### Lecture 13: Variations on Stochastic Gradient Descent
 
 - **Slides:** [Variations on Stochastic Gradient Descent](https://github.com/math-ku/compstat/blob/main/slides/lecture13.qmd)
