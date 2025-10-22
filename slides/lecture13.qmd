@@ -218,7 +218,7 @@ $$
 
 . . .
 
-For an "optimal" step size $1 = 1/L$ with $L = 25$, GD momentum steps converge
+For an "optimal" step size $t = 1/L$ with $L = 25$, GD with momentum converges
 to three limit points.
 
 :::
@@ -236,7 +236,7 @@ to three limit points.
 
 \begin{algorithm}[H]
   \KwData{$t >0$, $\mu \in [0,1)$}
-  \For{$i \gets 1,2,\dots$}{
+  \For{$k \gets 1,2,\dots$}{
     $v_k \gets x_{k-1} - t \nabla f(x_{k-1})$\;
     $x_k \gets v_{k} + \mu (v_{k} - v_{k-1})$\;
   } 
@@ -762,7 +762,7 @@ Some directions may be important, but feature information is **sparse**.
 
 Store matrix of gradient history,
 $$
-G_k = \sum_{i = 1}^k \nabla f(x_k) \nabla f(x_k)^\intercal,
+G_k = \sum_{i = 1}^k \nabla f(x_i) \nabla f(x_i)^\intercal,
 $$
 and update by multiplying gradient with $G_k^{-1/2}$.
 
@@ -853,7 +853,7 @@ Acronym for **Ada**ptive **m**oment estimation [@kingmaAdamMethodStochastic2015]
 
 \medskip\pause
 
-Basically RMSProp + _momentum_ + _bias correction_.
+Basically RMSProp + _momentum_ (for both gradients and second moments thereof)
 
 \medskip\pause
 
@@ -887,7 +887,15 @@ Some strategies:
 
 1. **Rule of thumb**: $c \in [1, 10]$ often works well in practice\pause
 2. **Gradient norm monitoring**: Track $\|\nabla f(x_k)\|_2$ during training and set $c$ based on observed distribution\pause
-3. **Percentile-based**: Set $c$ to be the 95th or 99th percentile of observed gradient norms.
+3. **Percentile-based**: Set $c$ to be the 95th or 99th percentile of observed gradient norms\pause
+4. **Problem-specific**: Use domain knowledge about expected gradient magnitudes
+
+. . .
+
+**Practical considerations:**
+
+- Start conservative (smaller $c$) and increase if training is too slow
+- Monitor loss curves: clipping should stabilize, not hurt convergence
 
 ## Early Stopping
 
@@ -1056,21 +1064,21 @@ legend(
 
 Let's assume we're trying to solve a least-squares type of problem:
 $$
-f(\theta) = \frac{1}{2n} \sum_{i=1}^n  \left(y_i - g(\theta; x_i, y_i)\right)^2
+f(\theta) = \frac{1}{2n} \sum_{i=1}^n  \left(y_i - g(\theta; x_i)\right)^2
 $$
 with $\theta = (\alpha, \beta)$ and
 $$
-g(\theta; x, y) = \alpha \cos(\beta x).
+g(\theta; x) = \alpha \cos(\beta x).
 $$
 
 . . .
 
 Then
 $$
-\nabla_{\theta} f(\theta) =
+\nabla_{\theta} f(\theta) = \frac{1}{n}\sum_{i=1}^n (y_i - g(\theta; x_i))
 \begin{bmatrix}
-  \cos(\beta x)\\
-  -\alpha x \sin(\beta x)
+  -\cos(\beta x_i)\\
+  \alpha x_i \sin(\beta x_i)
 \end{bmatrix}.
 $$
 
