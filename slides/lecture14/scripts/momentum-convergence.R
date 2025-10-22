@@ -6,12 +6,8 @@ set.seed(622)
 
 n <- 1000
 p <- 100
-# Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
-# mu <- c(0, 0)
 
-# X <- rmvnorm(n, mean = mu, sigma = Sigma)
 X <- matrix(rnorm(n * p), n, p)
-# beta <- c(1, 2)
 beta <- runif(p)
 y <- rbinom(n, 1, plogis(X %*% beta))
 
