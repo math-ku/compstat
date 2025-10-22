@@ -3,13 +3,43 @@ title: "Variations on Stochastic Gradient Descent"
 
 execute:
   cache: false
-
-format:
-  beamer:
-    keep-tex: true
 ---
 
 {{< include _common.qmd >}}
+
+```{r}
+#| echo: false
+source(here::here("R", "gd.R"))
+
+library(mvtnorm)
+
+set.seed(622)
+
+n <- 1000
+Sigma <- matrix(c(1, 0.7, 0.7, 1), 2, 2)
+mu <- c(0, 0)
+X <- rmvnorm(n, mu, Sigma)
+beta <- c(0.5, 1)
+y <- X %*% beta + rnorm(n)
+
+res <- gd(X, y)
+mu <- 0.3
+res_momentum <- gd(X, y, mu = mu)
+
+plot_trajectory <- function(betas) {
+  b1 <- betas[1, ]
+  b2 <- betas[2, ]
+  lines(b1, b2)
+  points(b1, b2, cex = 0.5, pch = 19)
+}
+
+b1 <- seq(-0.3, 1.4, length.out = 100)
+b2 <- seq(0, 1.6, length.out = 100)
+f_vec <- Vectorize(function(b1, b2) 0.5 * norm(X %*% c(b1, b2) - y, "2")^2)
+z <- outer(b1, b2, f_vec)
+
+mus <- c(0, 0.3, 0.9)
+```
 
 ## Last Times: Rcpp and SGD
 
@@ -21,18 +51,13 @@ We introduced Rcpp and how to use it to speed up R code.
 
 ## Stochastic Gradient Descent
 
-:::: {.columns}
+:::: {.columns align="center"}
 
 ::: {.column width="39%"}
 
 ### SGD
 
 Introduced stochastic gradient descent (SGD) and mini-batch version thereof.
-
-### Problems
-
-We indicated that there were problems with vanilla SGD: poor convergence,
-erratic behavior.
 
 :::
 
@@ -49,6 +74,13 @@ erratic behavior.
 :::
 
 ::::
+
+. . .
+
+### Problems
+
+We indicated that there were problems with vanilla SGD: poor convergence,
+erratic behavior.
 
 ## Today
 
@@ -82,7 +114,7 @@ Give the particle **momentum**: like a heavy ball
 
 \medskip\pause
 
-Not specific to SGD!
+Not specific to SGD! To simplify, we will discuss standard gradient descent first.
 
 . . .
 
@@ -172,6 +204,8 @@ For some problems, the momentum method may fail to converge [@lessardAnalysisDes
 
 \medskip\pause
 
+### Example {.example}
+
 Consider
 $$
 f(x) =
@@ -191,9 +225,8 @@ to three limit points.
 
 ::: {.column width="47%"}
 
-![](../images/momentum-failure.pdf)
+![Initialized at $x_0 = 3.2$, the algorithm fails to converge.](../images/momentum-failure.pdf)
 
-Initialized at $x_0 = 3.2$, the algorithm fails to converge.
 
 :::
 
@@ -330,6 +363,57 @@ Convergence improves further for quadratic and strongly convex!
 :::
 
 ::::
+
+##
+
+```{r}
+#| fig-width: 5.2
+#| fig-height: 4.3
+#| fig-cap: "Comparison of Polyak and Nesterov momentum for a least-squares problem.
+#|    with $\\mu = 0.8$ and $30$ iterations."
+#| echo: false
+opar <- par(no.readonly = TRUE)
+par(
+  mfrow = c(1, 2),
+  mai = c(1, 0, 1, 0.0),
+  oma = c(0, 4, 0.1, 0.1),
+  cex = 1
+)
+
+maxit <- 30
+mu <- 0.8
+
+source(here::here("R", "gd.R"))
+
+for (method in c("polyak", "nesterov")) {
+  res <- gd(X, y, mu = mu, type = method, maxit = maxit)
+  first_plot <- method == "polyak"
+  contour(
+    b1,
+    b2,
+    z,
+    asp = 1,
+    col = "dark grey",
+    drawlabels = FALSE,
+    axes = FALSE,
+    frame.plot = TRUE,
+    xlab = expression(beta[1])
+  )
+  axis(1)
+  if (first_plot) {
+    axis(2)
+    mtext(expression(beta[2]), side = 2, line = 3, outer = TRUE)
+  }
+  plot_trajectory(res$betas)
+  text(
+    x = par("usr")[1] + 0.05 * diff(par("usr")[1:2]),
+    y = par("usr")[4] - 0.07 * diff(par("usr")[3:4]),
+    labels = method,
+    adj = 0
+  )
+}
+par(opar)
+```
 
 ## What About SGD?
 
