@@ -861,7 +861,7 @@ Popular and still in much use today.
 
 \medskip\pause
 
-Not covered here, but see the course literature [@hansen20024] for details.
+Not covered here, but see the course literature [@hansen2024] for details.
 
 ## Gradient Clipping
 
@@ -883,7 +883,11 @@ $$
 
 ### How do you Pick $c$?
 
-TODO
+Some strategies:
+
+1. **Rule of thumb**: $c \in [1, 10]$ often works well in practice\pause
+2. **Gradient norm monitoring**: Track $\|\nabla f(x_k)\|_2$ during training and set $c$ based on observed distribution\pause
+3. **Percentile-based**: Set $c$ to be the 95th or 99th percentile of observed gradient norms.
 
 ## Early Stopping
 
@@ -931,6 +935,118 @@ Use a held-out validation set; never the training set
 :::
 
 ::::
+
+##
+
+```{r}
+#| fig-cap: Illustration of early stopping.
+#| echo: false
+#| fig-width: 6
+#| fig-height: 4
+
+# Simulate training and validation loss curves that demonstrate early stopping
+set.seed(42)
+epochs <- 1:100
+
+# Training loss: steadily decreasing (with some noise)
+train_loss <- 2 * exp(-epochs / 25) + 0.1 + rnorm(100, 0, 0.05)
+train_loss <- pmax(train_loss, 0.05) # Ensure positive
+
+# Validation loss: decreases initially, then increases (overfitting)
+val_loss_base <- 2.2 * exp(-epochs / 20) + 0.15 + (epochs / 100)^2 * 0.8
+val_loss <- val_loss_base + rnorm(100, 0, 0.08)
+val_loss <- pmax(val_loss, 0.1) # Ensure positive
+
+# Implement early stopping algorithm
+patience <- 10
+min_delta <- 0.01
+best_val_loss <- Inf
+best_epoch <- 1
+patience_counter <- 0
+early_stop_epoch <- NULL
+
+for (epoch in 1:length(epochs)) {
+  current_val_loss <- val_loss[epoch]
+
+  if (current_val_loss <= best_val_loss - min_delta) {
+    best_val_loss <- current_val_loss
+    best_epoch <- epoch
+    patience_counter <- 0
+  } else {
+    patience_counter <- patience_counter + 1
+    if (patience_counter >= patience) {
+      early_stop_epoch <- epoch
+      break
+    }
+  }
+}
+
+# Create the plot
+plot(
+  epochs,
+  train_loss,
+  type = "l",
+  col = "steelblue",
+  xlab = "Epoch",
+  ylab = "Loss",
+  ylim = range(c(train_loss, val_loss), na.rm = TRUE),
+  xlim = c(1, max(early_stop_epoch + 10, 50))
+)
+
+# Add validation loss
+lines(epochs, val_loss, col = "darkorange")
+
+# Mark the best validation loss point
+points(best_epoch, best_val_loss, col = "black", pch = 19, cex = 1.5)
+
+# Mark the early stopping point
+if (!is.null(early_stop_epoch)) {
+  abline(v = early_stop_epoch, lty = 2)
+}
+
+# Add annotations for the patience period
+if (!is.null(early_stop_epoch) && early_stop_epoch >= best_epoch + patience) {
+  # Highlight the patience period with a more visible window
+  patience_start <- best_epoch
+  patience_end <- early_stop_epoch
+
+  # Create a shaded region for the patience window
+  y_range <- range(c(train_loss, val_loss), na.rm = TRUE)
+  y_bottom <- y_range[1] - 0.05 * diff(y_range)
+  y_top <- y_range[2] + 0.05 * diff(y_range)
+
+  rect(
+    patience_start,
+    y_bottom,
+    patience_end,
+    y_top,
+    col = rgb(0, 0, 0, 0.1),
+    border = "transparent"
+  )
+
+  # Add patience window label at the top
+  text(
+    (patience_start + patience_end) / 2,
+    y_top - 0.05 * diff(y_range),
+    paste0("Patience")
+  )
+}
+
+# Add legend
+legend(
+  "bottomleft",
+  legend = c(
+    "Training Loss",
+    "Validation Loss",
+    "Best Model",
+    "Early Stop"
+  ),
+  col = c("steelblue", "darkorange", "black", "black"),
+  lty = c(1, 1, NA, 2),
+  pch = c(NA, NA, 19, NA),
+  lwd = c(1, 1, NA, 1)
+)
+```
 
 ## Example: Nonlinear Least Squares
 
