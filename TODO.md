@@ -84,6 +84,10 @@ format: html
 
 ## Lecture 12: Rcpp
 
+- Explain more clearly how it works in practice.
+- Explain how compiling works and how errors look.
+- Show practically during lecture how to write and compile.
+
 ## Lecture 13: SGD continued
 
 ## Lecture 14: Wrap up and R packages
