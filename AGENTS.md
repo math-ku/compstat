@@ -8,6 +8,19 @@ This is a course website repository for the Computational Statistics course at t
 **Primary Language:** R (58 R files), Quarto Markdown (30 .qmd files)
 **Repository Size:** ~63 MB
 **Total Source Files:** ~101 files (.R, .qmd, .yml, .yaml, .md)
+**Target Audience:** Graduate students with prerequisite knowledge of statistics and R
+
+### Course Structure
+The course has exactly **4 assignments**, each with two versions (A and B). The four main topics are:
+1. Smoothing
+2. Univariate Simulation
+3. The EM Algorithm
+4. Stochastic Optimization
+
+### Key Course Files
+- **index.qmd** - Course schedule with links to slides, assignments, exercises, and readings
+- **overview.qmd** - Complete course overview including topics, structure, and literature
+- **faq.qmd** - Frequently asked questions about the course
 
 ## Technology Stack
 
@@ -54,8 +67,8 @@ The environment includes: tidyverse, ggplot2, Rcpp, RcppArmadillo, bench, testth
 5. **Taskfile.yml** - Task definitions for preview and render
 6. **.lintr** - R linting configuration (excludes some strict rules)
 7. **.prettierrc.yml** - Prose wrapping configuration
-8. **.clang-format** - C++ formatting (Mozilla style)
-9. **air.toml** - R code formatting configuration
+8. **.clang-format** - C++ code formatting configuration (uses Mozilla style)
+9. **air.toml** - R code formatting configuration (follows tidyverse style)
 10. **.envrc** - direnv configuration for automatic Nix environment loading
 
 ### Slides Directory Structure
@@ -139,7 +152,7 @@ Rscript -e "testthat::test_dir('tests')"
 
 **Note:** These are example tests. The repository does not have comprehensive test coverage or a dedicated test runner.
 
-### Linting
+### Linting and Formatting
 
 **R Code Linting:**
 ```bash
@@ -149,6 +162,20 @@ Rscript -e "lintr::lint_dir('slides')"
 ```
 
 Configuration is in `.lintr` which excludes: cyclocomp_linter, implicit_integer_linter, undesirable_function_linter, object_length_linter, object_name_linter.
+
+**R Code Formatting:**
+Use the `air` formatter which follows the tidyverse style guide:
+```bash
+# Inside nix develop environment
+# Configuration in air.toml
+```
+
+**C++ Code Formatting:**
+Use `.clang-format` file which follows the Mozilla style:
+```bash
+# Format C++ code according to Mozilla style
+clang-format -i your_file.cpp
+```
 
 **Note:** No automated linting is enforced in CI.
 
@@ -189,9 +216,12 @@ Configuration is in `.lintr` which excludes: cyclocomp_linter, implicit_integer_
 
 ### Adding a New Assignment
 
-1. Create `assignments/assignmentX.qmd`
-2. Reference in `index.qmd` schedule
-3. Preview changes: `task preview`
+**Note:** There are exactly 4 assignments in the course, each with two versions (A and B). Do not add more unless explicitly requested.
+
+1. Create `assignments/assignmentX.qmd` where X is 1-4
+2. Each assignment covers one of the four main topics
+3. Reference in `index.qmd` schedule
+4. Preview changes: `task preview`
 
 ### Modifying R Scripts
 
@@ -255,6 +285,10 @@ format: html  # or beamer for slides
 Content goes here...
 ```
 
+### Slide Presentation Guidelines
+
+**Important:** The presentation style makes liberal use of figures. Avoid bullet points unless actually listing something. Use pauses liberally to incrementally show content.
+
 For slides:
 ```qmd
 ---
@@ -270,6 +304,29 @@ Content...
 . . .
 
 More content (pause in Beamer)...
+
+## 
+
+Empty title frame (using ## without title)
+```
+
+**Pause Mechanisms:**
+- Use `. . .` (three dots with spaces) for pauses in Quarto
+- Use `\pause` for raw LaTeX pauses
+- Both methods work and are used throughout the slides
+
+**Raw LaTeX Commands:**
+- Raw LaTeX commands are allowed and commonly used in slides
+- For animated figures, use raw LaTeX code with pre-made figures and the `xmpmulti` package
+- For algorithms, use the `algorithm2e` package with raw LaTeX code
+
+**Example with LaTeX:**
+```qmd
+\pause
+
+\begin{algorithm}[H]
+  % algorithm content
+\end{algorithm}
 ```
 
 ### R Code in Quarto
@@ -288,7 +345,7 @@ Common chunk options: `echo`, `eval`, `message`, `warning`, `fig-width`, `fig-he
 
 ### File Naming
 - Lectures: `lectureN.qmd` where N is 1-14
-- Assignments: `assignmentN.qmd` where N is 1-4
+- Assignments: `assignmentN.qmd` where N is 1-4 (each has two versions: A and B)
 - Exercises: `UN.qmd` where N is 1-4 (U for "Ugeopgave" = exercise in Danish)
 - Tests: `test-*.R`
 - R scripts: descriptive names, often matching lecture topics
