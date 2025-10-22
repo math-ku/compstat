@@ -853,7 +853,7 @@ Acronym for **Ada**ptive **m**oment estimation [@kingmaAdamMethodStochastic2015]
 
 \medskip\pause
 
-Basically RMSProp + _momentum_ (for both gradients and second moments thereof)
+Basically RMSProp + _momentum_ + _bias correction_.
 
 \medskip\pause
 
