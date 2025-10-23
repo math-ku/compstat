@@ -7,7 +7,6 @@ format: html
 
 - Harmonize notation with book
 - Harmonize indicator notation
-- Tone down emphasis on object oriented programming.
 - Reconsider reading instructions; maybe not aligned properly.
 - Start each lecture with a recap of the previous lecture.
 - End each lecture with a summary of what was covered and a preview of the next
@@ -18,11 +17,13 @@ format: html
 - Overall time is skewed towards the optimization topic. Maybe cut some material
   and add another lecture on kernel density estimation or MCMC.
 
+## Long-term
+
+- Write lecture notes about optimization
+
 ### Interesting Topics that Could Be Covered
 
-- Gibbs sampling
 - Autodifferentiation
-- Two-dimensional kernel density estimation
 - GPU computing
 - High-performance computing clusters
 
@@ -56,6 +57,7 @@ format: html
 - Discuss compositions of convex functions, or at least motivate why we take log
   of likelihood (not sure)
 - Maybe talk about strong convexity here.
+- Maybe introduce overfitting and early stopping here instead of later for SGD
 
 ## Lecture 8: Debugging and Likelihood Optimization
 
@@ -89,5 +91,8 @@ format: html
 - Show practically during lecture how to write and compile.
 
 ## Lecture 13: SGD continued
+
+- Add some part about variance reduction, like SVRG
+- Show examples of how AdaGrad and RMSProp works
 
 ## Lecture 14: Wrap up and R packages
