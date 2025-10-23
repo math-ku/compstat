@@ -1177,9 +1177,9 @@ Use RcppEigen or RcppArmadillo.
 ### Steps
 
 1. Minimize $f(x_1, x_2) = (a - x_1)^2 + b(x_2 - x_1^2)^2$ with $a = 1$ and
-   $b = 100$ using GD with Polyak momentum. Optimum is $(a, a^2)$.\pause
-2. Implement gradient descent.\pause
-3. Add Polyak momentum.
+   $b = 100$ using gradient descent. Optimum is $(a, a^2)$.\pause
+2. Add Polyak momentum.\pause
+3. Experiment with different step sizes and momentum parameters.
 
 :::: {.columns}
 
