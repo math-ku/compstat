@@ -186,7 +186,7 @@ to get started.
 #### Exercise Session 7
 
 - **Main topic**: Branch prediction
-- **In class walkthrough:** TA will go through the topic with a live coding example. 
+- **In class walkthrough:** [Branch prediction illustration](exercises/U7.qmd). 
 
 #### Lecture 13: Variations on Stochastic Gradient Descent
 
