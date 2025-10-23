@@ -1236,8 +1236,8 @@ descent with momentum.
 
 ### Additional Resources
 
-[@gohWhyMomentumReally2017] is an article on momentum in gradient descent with
-lots of interactive visualizations.
+[@gohWhyMomentumReally2017] is an interactive article on momentum in gradient
+descent with lots of pedagogical illustrations.
 
 ## Next Time
 
