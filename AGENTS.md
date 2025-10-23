@@ -95,7 +95,7 @@ slides/
 ├── beamer-overlays.lua  # Quarto filter for Beamer
 ├── lecture[1-14].qmd    # Individual lecture files
 ├── packages.tex         # LaTeX packages for slides
-├── passoptions.latex    # Pass options template
+├── passoptions.latex    # Overrides quarto partial for LaTeX output
 └── tightlist.tex        # List formatting template
 ```
 
@@ -202,15 +202,11 @@ guide:
 ```bash
 # Inside nix develop environment
 # Configuration in air.toml
+air format R/gd.R # to format a specific file
 ```
 
-**C++ Code Formatting:** Use `.clang-format` file which follows the Mozilla
-style:
-
-```bash
-# Format C++ code according to Mozilla style
-clang-format -i your_file.cpp
-```
+**C++ Code Formatting:** Folow the Mozilla style. clang-format is not available
+in the nix development environment.
 
 **Note:** No automated linting is enforced in CI.
 
@@ -243,11 +239,14 @@ ensures Quarto's caching works correctly across CI runs.
 1. Create `slides/lectureX.qmd`
 2. Include common setup: `{{< include _common.qmd >}}`
 3. Use YAML frontmatter:
+
    ```yaml
    ---
    title: "Your Lecture Title"
    ---
+
    ```
+
 4. Render to test: `quarto render slides/lectureX.qmd`
 5. PDF output: `slides/lectureX.pdf`
 
@@ -264,7 +263,7 @@ ensures Quarto's caching works correctly across CI runs.
 ### Modifying R Scripts
 
 1. R scripts in `R/` are standalone examples/exercises
-2. Scripts often use `here::here()` for path resolution
+2. Scripts should use `here::here()` for path resolution
 3. Test scripts interactively in R console within nix develop environment
 4. No need to rebuild website unless scripts are referenced in .qmd files
 
@@ -384,6 +383,25 @@ Empty title frame (using ## without title)
 \end{algorithm}
 ```
 
+**DO NOT** use unicode characters for mathematical symbols (e.g., ∑, ∫). Always
+use LaTeX syntax (e.g., `\sum`, `\int`).
+
+#### Plots
+
+Keep plots simple and clean. Use ggplot2 if it makes sense, otherwise base R
+plots are fine.
+
+In particular:
+
+- Try to use modern colors for the plots, for instance `"darkorange"` and
+  `"royalblue`, and palettes from ColorBrewer, Tableau, or Viridis.
+- Avoid modifying line width (`lwd`).
+- Don't add any themes. They are set globally in `slides/_common.qmd`.
+- Use `expression()` for mathematical notation in axis labels and titles.
+- For ggplot2 plots, a width of around 5 inches spans the entire slide width and
+  a height of 3 inches spans the height well. Defaults are 2.8 and 2.1 for width
+  and height respectively, which is good for a one-column plot.
+
 ### R Code in Quarto
 
 ````qmd
@@ -393,13 +411,14 @@ Empty title frame (using ## without title)
 #| message: false
 
 # R code here
+```
 ````
 
-````
-
-Common chunk options: `echo`, `eval`, `message`, `warning`, `fig-width`, `fig-height`, `cache`
+Common chunk options: `echo`, `eval`, `message`, `warning`, `fig-width`,
+`fig-height`, `cache`
 
 ### File Naming
+
 - Lectures: `lectureN.qmd` where N is 1-14
 - Assignments: `assignmentN.qmd` where N is 1-4 (each has two versions: A and B)
 - Exercises: `UN.qmd` where N is 1-4 (U for "Ugeopgave" = exercise in Danish)
@@ -408,11 +427,10 @@ Common chunk options: `echo`, `eval`, `message`, `warning`, `fig-width`, `fig-he
 
 ## Dependencies Not Obvious from Structure
 
-1. **CSwR Package:** Custom R package from GitHub (nielsrhansen/CSwR) built as part of Nix flake
-2. **here Package:** Critical for path resolution, allows R scripts to work from any directory
-3. **Beamer Theme:** Uses moloch theme (theme: moloch, colortheme: moloch-tomorrow)
-4. **Cachix:** Uses "jolars" cache for faster CI builds
-5. **LaTeX Packages:** Extensive list in `slides/packages.tex` (xmpmulti, fontsetup, algorithm2e, tikz libraries, etc.)
+1. **CSwR Package:** Custom R package from GitHub (nielsrhansen/CSwR) built as
+   part of Nix flake
+2. **LaTeX Packages:** Extensive list in `slides/packages.tex` (xmpmulti,
+   fontsetup, algorithm2e, tikz libraries, etc.)
 
 ## Quick Reference Commands
 
@@ -441,7 +459,7 @@ Rscript -e "lintr::lint_dir('R')"
 
 # Start R console with all packages
 R
-````
+```
 
 ## Critical Instructions for Agents
 
@@ -449,9 +467,9 @@ R
    before any build/test commands. Without this, R, Quarto, and other tools will
    not be available.
 
-2. **DO NOT modify flake.nix or flake.lock unless explicitly required:** These
-   files define the reproducible environment. Changes can break the build for
-   all users.
+2. **DO NOT modify flake.nix and NEVER flake.lock unless explicitly required:**
+   These files define the reproducible environment. Changes can break the build
+   for all users.
 
 3. **DO NOT install R packages outside of flake.nix:** All R package
    dependencies must be declared in flake.nix. Do not use `install.packages()`.
