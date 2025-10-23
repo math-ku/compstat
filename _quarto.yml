@@ -45,7 +45,6 @@ format:
     linkcolor: black
     urlcolor: DodgerBlue3
     highlight-style: tango
-    cite-method: biblatex
     indent: true
     template-partials:
       - slides/tightlist.tex
