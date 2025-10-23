@@ -1216,18 +1216,6 @@ contour(x1, x2, z, nlevels = 20)
 
 ::::
 
-## SGD Techniques Summary
-
-| **Technique**          | **Key Idea**                       | **Update Rule**                                                        | **Benefits**                            | **Drawbacks**                    |
-| :--------------------- | :--------------------------------- | :--------------------------------------------------------------------- | :------------------------------------   | :------------------------------- |
-| **Polyak Momentum**    | Add inertia from previous step     | $x_k = x_{k-1} - t \nabla f(x_{k-1}) + \mu (x_{k-1} - x_{k-2})$        | Escapes local minima, reduces variance  | May fail to converge             |
-| **Nesterov**           | "Look ahead" before gradient       | $x_k = x_{k-1} - t \nabla f(y_{k-1}) + \mu (x_{k-1} - x_{k-2})$        | Faster convergence, better theory       | More complex                     |
-| **Polyak-Ruppert**     | Average all iterates               | $\bar{x}_k = \frac{1}{k} \sum_{i=1}^k x_i$                             | Reduces variance, works with any method | Slower initial convergence       |
-| **AdaGrad**            | Adapt to feature frequency         | $x_k = x_{k-1} - t G_k^{-1/2} \nabla f(x_{k-1})$                       | Good for sparse features                | Learning rate decays too fast    |
-| **RMSProp**            | Exponential moving average         | $x_k = x_{k-1} - \frac{t}{\sqrt{v_k}} \nabla f(x_{k-1})$               | Fixes AdaGrad decay problem             | Less theoretical foundation      |
-| **Gradient Clipping**  | Limit gradient magnitude           | $\tilde{\nabla} f = \min(1, c/\lvert \nabla f\rvert) \nabla f$                  | Prevents exploding gradients   | Need to tune threshold $c$       |
-| **Early Stopping**     | Stop when validation stagnates     | Monitor validation loss                                                | Prevents overfitting                    | Requires validation set          |
-
 ## Summary
 
 We introduced several new concepts:
@@ -1269,4 +1257,4 @@ We summarize the course.
 
 We talk about the upcoming oral examinations.
 
-## References
+## References {.allowframebreaks}
