@@ -1,4 +1,4 @@
-source(here::here("scripts/gd.R"))
+source(here::here("R", "gd.R"))
 
 library(mvtnorm)
 
@@ -30,7 +30,7 @@ grad_f <- function(beta, X, y) {
 beta0 <- double(p)
 L <- 0.25 * norm(crossprod(X), "2") / n
 
-maxit <- 100
+maxit <- 500
 res <- gd_general(beta0, f, grad_f, X = X, y = y, L = L, maxit = maxit)
 res_nesterov <- gd_general(
   beta0,
@@ -47,7 +47,7 @@ coef(res_glm)
 coef(res)
 coef(res_nesterov)
 
-optim <- tail(res_nesterov$loss, 1)
+optim <- min(res_nesterov$loss, 1) - 1e-10
 
 k <- seq_along(res$loss)
 
