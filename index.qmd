@@ -190,7 +190,7 @@ to get started.
 
 #### Lecture 13: Variations on Stochastic Gradient Descent
 
-- **Slides:** [Variations on Stochastic Gradient Descent](https://github.com/math-ku/compstat/blob/main/slides/lecture13.qmd)
+- **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf) ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture13.qmd))
 - **Reading:**
   [Sections 11.2-11.3 (CSwR)](https://cswr.nrhstat.org/stochopt#beyond-basic-stochastic-gradient-algorithms)
 
