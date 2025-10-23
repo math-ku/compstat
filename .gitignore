@@ -378,3 +378,6 @@ TSWLatexianTemp*
 site_libs/
 
 *-listing.json
+
+# Solutions folder
+_solutions/
