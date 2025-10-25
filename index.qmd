@@ -187,6 +187,7 @@ to get started.
 
 - **Main topic**: Branch prediction
 - **In class walkthrough:** TA will go through the topic with a live coding example. 
+- **Solutions**: [Exercise 7](exercises/U7.qmd)
 
 #### Lecture 13: Variations on Stochastic Gradient Descent
 
