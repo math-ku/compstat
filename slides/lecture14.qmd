@@ -18,11 +18,11 @@ What did we actually do?
 
 . . .
 
-### Oral Examination Prep (Afternoon Session)
+### Oral Examination
 
 What to think of during examination
 
-# Organizing Code as an R Package
+# Why Write a Package?
 
 ## Organizing Code
 
@@ -32,15 +32,17 @@ What to think of during examination
 
 ### Components
 
+In any given project, you may have:
+
 - Code for experiments\pause
-- Source code for functions (which we should be able to reuse)\pause
+- Source code (which we may want to reuse)\pause
 - Tests\pause
 - Rcpp code\pause
 - Data
 
 \medskip\pause
 
-There are many ways to organize this. Which one to choose?
+How do we organize this?
 
 :::
 
@@ -48,22 +50,225 @@ There are many ways to organize this. Which one to choose?
 
 ::: {.column width="47%"}
 
-### R Package
+### Sourcing
 
-One way is to make an R package. 
+One way is to just keep R scripts and source them as needed.
 
 \medskip\pause
 
-This makes it easy to
+But this puts the burden on you to keep track of where things are and in what
+order to source them.
 
-- connect to C++ code through Rcpp,\pause
-- set up automatic testing,\pause
-- document your code, and\pause
-- declare dependencies (other packages, R version).
+\medskip\pause
+
+Reusability is limited.
+
+. . .
+
+### R Package
+
+Another way is to make an R package! 
+
+\medskip\pause
+
+This forces you to organize your code, and gives you tools to manage
+dependencies, testing, data, documentation, and C++ integration.
 
 :::
 
 ::::
+
+## Including Functions
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Without a Package
+
+Need to keep track of where your functions are defined or source manually.
+
+```{r}
+#| eval: false
+source("path/to/some/file1.R")
+source("path/to/some/file2.R")
+
+my_first_function()
+my_second_function()
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### With a Package
+
+You can just do:
+
+```{r}
+#| eval: false
+library(mypkg)
+
+my_first_function()
+my_second_function()
+```
+
+. . .
+
+or `mypkg::my_first_function()`{.r} if you don't want to load the whole package.
+
+:::
+
+::::
+
+
+## Testing
+
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Without a Package
+
+Previously, we needed to manually run scripts to test our code: store them
+in some folder and call `testthat::test_dir()`{.r}
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### With a Package
+
+With a package, we can use `devtools::test()`{.r} to run all tests in the
+package.
+
+\medskip\pause
+
+And tests are run automatically when checking the package with
+`devtools::check()`{.r}.
+
+:::
+
+::::
+
+## Dependencies
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Without a Package
+
+If your code depends on other packages, you need to
+
+1. Make sure they are installed using `install.packages()`{.r}.\pause
+2. Load them using `library()`{.r} at the right places (or call
+   `pkg::fun()`{.r} directly).
+
+:::
+
+::: {.column width="47%"}
+
+. . .
+
+### With a Package
+
+Dependencies are declared in the `DESCRIPTION` file of your package.
+
+\medskip\pause
+
+When installing your package, dependencies are installed automatically.
+
+:::
+
+::::
+
+## C++ Integration (Rcpp)
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Without a Package
+
+You need to manually source C++ files using `Rcpp::sourceCpp()`{.r}.
+
+\medskip\pause
+
+Need to specify dependencies manually using special comments in the C++ code:
+
+```cpp
+// [[Rcpp::depends(RcppEigen)]]
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### With a Package
+
+Rcpp code lives in `src/` and is compiled automatically when installing the
+package.
+
+\medskip\pause
+
+Dependencies on other Rcpp packages (RcppArmadillo, RcppEigen) are handled automatically
+through `DESCRIPTION`.
+
+:::
+
+::::
+
+## Data
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Without a Package
+
+You need to keep track of where data files are located and load them
+manually.
+
+```{r}
+#| eval: false
+mydata <- read.csv(
+  "path/to/mydata.csv"
+)
+```
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### With a Package
+
+Data can be included in the package in `data/` and directly
+available (if exported) as `mypkg::mydata`{.r}.
+
+:::
+
+::::
+
+## Publishing
+
+If you find out that your code is useful to others, you can publish it on CRAN or
+GitHub.
+
+\medskip\pause
+
+And if you've already made a package, this is straightforward!
+
+# Writing an R Package
 
 ## R Packages
 
@@ -150,7 +355,7 @@ $$
 
 ### Create It
 
-Call
+Use RStudio^[`File -> New Project -> New Directory -> R Package Using Devtools`] or call
 
 ```r
 usethis::create_package("rosenbrock")
@@ -173,18 +378,20 @@ Gives you a **minimal** package:
   .2 NAMESPACE.
 }
 
-\medskip
-
-You may also have `.Rbuildignore` and `.rosenbrock.Rproj` depending on how you
-created the package.
-
 :::
 
 . . .
 
 ::: {.column width="47%"}
 
-### Install It
+You may also have `.Rbuildignore` and `.rosenbrock.Rproj` depending on how you
+created the package.
+
+:::
+
+::::
+
+## Install It
 
 Open up the package in your editor (R Studio\footnote{In which case it should
 already be opened.}).
@@ -193,32 +400,32 @@ already be opened.}).
 devtools::install()
 ```
 
+. . .
+
 Voila, you have made an R package!
 
-:::
+\medskip\pause
 
-::::
+If you're in RStudio, you can also click the "Build" tab and then "Install
+and Restart"\footnote{\texttt{Ctrl/Cmd+Shift+B}}.
+
 
 ## R Code
 
 ### `R/`
 
-::: {.incremental}
-
-- All R code should live in `.R`-files in `R/`.
-- These files should usually only contain **functions**.
+- All R code should live in `.R`-files in `R/`.\pause
+- These files should usually only contain **functions**.\pause
 - Many ways to organize your files: one function per file, all functions of a
-  certain S3 class in one file etc.
+  certain S3 class in one file etc.\pause
 
-:::
-
-. . .
+\medskip
 
 Let's create a first file: `R/objective.R`. 
 
 \medskip\pause
 
-Use `usethis::use_r("objective")` and insert this:
+Call `usethis::use_r("objective")`{.r} and insert
 
 ```r
 objective <- function(x, a = 1, b = 100) {
@@ -234,14 +441,14 @@ We have created a first R file, now what? Two major options:
 
 ::: {.column width="47%"}
 
-### `devtools::install()`
+### `devtools::install()`{.r}
 
-Installs the package, like calling `install.packages()`.
+Installs the package, like calling `install.packages()`{.r}.
 
 \medskip\pause
 
-Robust but slow. Need to call `library(rosenbrock)` to load
-package\footnote{Done automatically in R Studio}.
+Robust but slow. Need to call `library(rosenbrock)`{.r} to load
+package\footnote[frame]{Done automatically in R Studio}.
 
 :::
 
@@ -249,7 +456,7 @@ package\footnote{Done automatically in R Studio}.
 
 ::: {.column width="47%"}
 
-### `devtools::load_all()`
+### `devtools::load_all()`{.r}\footnote[frame]{\texttt{Ctrl/Cmd+Shift+L}}
 
 Sources all of your code.
 
@@ -265,10 +472,12 @@ Good for regular development.
 
 ::::
 
-### Try It
+\medskip
+
+### Try It {.example}
 
 Try both options and see if you can call your newly defined function,
-`objective()`.
+`objective()`{.r}.
 
 ##
 
@@ -276,13 +485,13 @@ Try both options and see if you can call your newly defined function,
 
 ## Exporting Functions
 
-If you called `devtools::load_all()` then everything is sourced and you can just
-call `objective()` directly.
+If you called `devtools::load_all()`{.r} then everything is sourced and you can just
+call `objective()`{.r} directly.
 
 \medskip\pause
 
-But if you use `devtools::install()` and `library(rosenbrock)`, then you would
-need to use `rosenbrock:::objective()`. The reason is that the function is not
+But if you use `devtools::install()`{.r} and `library(rosenbrock)`{.r}, then you would
+need to use `rosenbrock:::objective()`{.r}. The reason is that the function is not
 yet exported.
 
 . . .
@@ -296,27 +505,15 @@ comment:
 # Generated by roxygen2: do not edit by hand
 ```
 
-. . .
-
-If you want to just export everything, you can remove this file and recreate it
-with this content:
-
-```r
-exportPattern("^[[:alpha:]]+")
-```
-
 ## roxygen2
 
 **roxygen2** is a package that helps with package
-documentation[^more-on-this-later], but it can also be used for handling the
+documentation, but it can also be used for handling the
 namespace.
-
-[^more-on-this-later]: More on this later.
 
 \medskip\pause
 
-To export a function, you need to place a special roxygen2 comment just before
-the function:
+To export a function, you need a special roxygen2 comment before the function:
 
 ```r
 #' @export
@@ -324,8 +521,8 @@ the function:
 
 . . .
 
-Go ahead and place this before your `objective()` definition. Then run
-`devtools::document()` to roxygenize your package.
+Go ahead and place this before your `objective()`{.r} definition. Then run
+`devtools::document()`{.r}^[Shortcut: `Ctrl/Cmd+Shift+d`] to roxygenize your package.
 
 \medskip\pause
 
@@ -337,7 +534,7 @@ export(objective)
 
 \medskip\pause
 
-Reinstall the package and see if you can call `objective()` after loading it.
+Reinstall the package and see if you can call `objective()`{.r} after loading it.
 
 ## Tests
 
@@ -359,7 +556,7 @@ This creates some new files and directories:
   .1 rosenbrock/.
   .2 tests/.
   .3 testthat/.
-  .4 test-<some-fun>.R.
+  .4 <currently-empty>.
   .3 testthat.R.
 }
 
@@ -370,15 +567,14 @@ this is the case for us too!
 
 \medskip\pause
 
-To create a test, we can use `usethis::use_test()`.
+To create a test, we can use `usethis::use_test()`{.r}.
 
 \medskip\pause
 
-Call `use_test("objective")` (it's good practice to name the test file the same
-as the file where the function you're testing is defined) and insert this:
+Call `use_test("objective")`{.r} and insert this:
 
 ```r
-test_that("objective as optimum", {
+test_that("objective at optimum", {
   # add a test using expect_equal()
 })
 ```
@@ -387,7 +583,7 @@ test_that("objective as optimum", {
 
 ### Check That Everything Works
 
-Run `devtools::test()`, and hopefully see:
+Run `devtools::test()`{.r}^[Shortcut: `Ctrl/Cmd+Shift+t`], and (hopefully) get
 
 ```
 [ FAIL 0 | WARN 0 | SKIP 0 | PASS 1 ]
@@ -398,7 +594,7 @@ Run `devtools::test()`, and hopefully see:
 ### R CMD check
 
 R contains functionality for checking that your package is built correctly and
-you can access this functionality through `devtools::check()`.
+you can access this functionality through `devtools::check()`{.r}.
 
 \medskip\pause
 
@@ -418,7 +614,7 @@ NOTE
 
 \medskip\pause
 
-Now run `devtools::check()`. Is there a problem? 
+Now run `devtools::check()`{.r}. Is there a problem? 
 
 \medskip\pause
 
@@ -461,6 +657,13 @@ to copy, distribute, or modify your code.**
 \medskip\pause
 
 If you have other contributors, then "nobody" includes **you too!**
+
+. . .
+
+### Personal Projects
+
+For a small personal project, licensing is overkill, at least if you
+are not sharing it with others.
 
 ## Choosing a License
 
@@ -522,7 +725,7 @@ Imports:
 
 Rcpp works best in a package:
 
-- No more manual sourcing (no need to call `Rcpp::sourceCpp()`)\pause
+- No more manual sourcing (no need to call `Rcpp::sourceCpp()`{.r})\pause
 - You don't need to add directives for dependencies to **RcppArmadillo** and
   other packages.
 
@@ -538,18 +741,28 @@ to set up a package doc file in `R/rosenbrock-package.R`.
 
 :::
 
+. . .
+
 ::: {.column width="42%"}
 
-Then use `usethis::use_rcpp()` to put the pieces in place:
+Then use `usethis::use_rcpp()`{.r}, which sets up Rcpp by modifying
+`DESCRIPTION` and setting up the namespace via roxygen2.
 
-```
-rosenbrock/
-└── src/
-    └── slop-package.cpp/
-```
+\medskip\pause
 
-Now just need to run `devtools::document()` and `devtools::load_all()` or
-`devtools::install()` and now your code is available (but not exported).
+It will also create a `src/` folder with a empty C++ file:
+
+\medskip
+
+\dirtree{%
+  .1 rosenbrock/.
+  .2 src/.
+  .3 rosenbrock-package.cpp.
+}
+
+\bigskip\pause
+
+Install or load your package and your code is available (but not exported).
 
 :::
 
@@ -637,7 +850,7 @@ Because
 
 ### roxygen2
 
-Primary purpose of the package. You write code in a special syntax and it
+Primary purpose of the roxygen2 package. You write code in a special syntax and it
 converts it into manual files that R understands.
 
 ## roxygen2 Syntax
@@ -662,7 +875,7 @@ my_fun <- function(x) {
 
 ### Your Turn
 
-Document `objective()` with roxygen2 syntax. No need for sensible documentation.
+Document `objective()`{.r} with roxygen2 syntax. No need for sensible documentation.
 Just make sure you have the bare minimum.
 
 ## Documentation in This Course
@@ -686,8 +899,6 @@ When you have a project, you typically need more things:
 
 These things do not naturally fit into a package framework.
 
-. . .
-
 ## Two Choices of Structure
 
 1. Just store these things directly into the package folder. Optionally, you can
@@ -702,7 +913,7 @@ Continue building the **rosenbrock** package!
 
 ### Step 1
 
-Write a function `optimize_banana()` that uses `optim()` to solve the Rosenbrock
+Write a function `optimize_banana()`{.r} that uses `optim()`{.r} to solve the Rosenbrock
 problem. It should take as input `a`, `b`, and a starting point `x0`, and
 return the optimal point and function value.
 
@@ -711,14 +922,15 @@ return the optimal point and function value.
 ### Step 2
 
 Write an implementation of the gradient using Rcpp. Let the user
-choose whether to use the gradient or not in `optimize_banana()`.
+choose whether to use the gradient or not in `optimize_banana()`{.r}.
 
 . . .
 
 ### Step 3
 
-Write a plot method `plot_banana()` that plots the contours of the Rosenbrock
-function and the optimum found in `optimize_banana()`.
+Return an S3 object of class `banana` from `optimize_banana()`{.r}, and then
+write an S3 plot method `plot.banana()`{.r} that plots the contours of the
+Rosenbrock function and the optimum found in `optimize_banana()`{.r}.
 
 ## Summary
 
@@ -733,9 +945,9 @@ document it, and manage dependencies and licensing.
 - How to properly format metadata (`DESCRIPTION`)\pause
 - Integrating data into our package\pause
 - Publishing to CRAN\pause
-- Principled approaches to reproducibility (renv, containers)
+- Enhanced reproducibility (renv)
 
-# Oral Examination Prep
+# Oral Examination
 
 ## Procedure
 
@@ -754,6 +966,107 @@ document it, and manage dependencies and licensing.
    grade.
 
 :::
+
+## Recommendations
+
+::: {.incremental}
+
+- You should prepare a presentation that covers the assignments.
+- You don't need to have covered *everything* in detail, but you should show that
+  you understand the main concepts.
+- For a good grade, you need to have studied at least part of the
+  assignment in detail.
+- We expect you to use slides. Aim for around 15-20 slides.
+- Use plenty of plots. Pick out important code snippets.
+- Practice your presentation.
+- Keep your code available in case we want to see something.
+
+:::
+
+# Summary of the Course
+
+## Statistical Topics
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Smoothing
+
+We covered two major smoothing techniques:
+
+- Kernel density estimation\pause
+- Smoothing splines
+
+. . .
+
+### Monte Carlo Methods
+
+We covered:
+
+- Inverse transform sampling\pause
+- Rejection sampling\pause
+- Importance sampling
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### Optimization
+
+We covered:
+
+- Unconstrained optimization (gradient descent, Newton's method)\pause
+- Constrained optimization (interior point method)\pause
+- The EM algorithm\pause
+- Stochastic gradient descent (mini-batching, acceleration)
+  
+:::
+
+::::
+
+## Computational Topics
+
+:::: {.columns}
+
+::: {.column width="47%"}
+
+### Accuracy
+
+- Testing your code (ad-hoc, testthat)\pause
+- Debugging techniques (interactive debugging)
+
+. . .
+
+### Measuring Performance
+
+- Profiling (profvis)\pause
+- Benchmarking (bench)
+
+:::
+
+. . .
+
+::: {.column width="47%"}
+
+### Improving Performance
+
+- Using R (vectorization, avoiding copies)\pause
+- Using Rcpp (C++)\pause
+- Parallelization (foreach)
+
+. . .
+
+### Organizing Code
+
+- Object-oriented programming (S3)\pause
+- R Packages
+
+:::
+
+::::
 
 ::: {.standout}
 

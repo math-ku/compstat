@@ -73,6 +73,21 @@
           packages = [
             R
             pkgs.bashInteractive
+            (pkgs.rstudioWrapper.override {
+              packages = with pkgs.rPackages; [
+                Rcpp
+                RcppArmadillo
+                RcppEigen
+                devtools
+                knitr
+                numDeriv
+                rmarkdown
+                testthat
+                tidyverse
+                usethis
+                roxygen2
+              ];
+            })
             pkgs.go-task
             pkgs.librsvg
             pkgs.quartoMinimal
