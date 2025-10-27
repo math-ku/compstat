@@ -61,7 +61,6 @@ testthat, knitr, rmarkdown, here, lme4, profvis, foreach, doParallel, CSwR
 ├── images/                # Images, diagrams, logos
 ├── assets/                # Additional assets (bibliography, images)
 ├── tests/                 # R test files (test-*.R)
-├── scripts/               # Utility scripts (Python converter)
 ├── _quarto.yml           # Main Quarto configuration
 ├── _quarto-present.yml   # Quarto profile for presentations
 ├── _quarto-publish.yml   # Quarto profile for publishing
