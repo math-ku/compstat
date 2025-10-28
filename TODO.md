@@ -96,3 +96,9 @@ format: html
 - Show examples of how AdaGrad and RMSProp works
 
 ## Lecture 14: Wrap up and R packages
+
+- The material is too extensive. Maybe scrap the exercises.
+- Expand C++ example with actual task for them to do.
+- Add instructions to re-install, document etc when they do things.
+- Mention problem with rdb corruption that seems to happen.
+- Maybe skip documentation part?
