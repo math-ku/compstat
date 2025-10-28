@@ -88,6 +88,8 @@ dependencies, testing, data, documentation, and C++ integration.
 
 Need to keep track of where your functions are defined or source manually.
 
+. . .
+
 ```{r}
 #| eval: false
 source("path/to/some/file1.R")
@@ -149,8 +151,7 @@ package.
 
 \medskip\pause
 
-And tests are run automatically when checking the package with
-`devtools::check()`{.r}.
+And tests are run automatically when checking the package.
 
 :::
 
@@ -164,7 +165,7 @@ And tests are run automatically when checking the package with
 
 ### Without a Package
 
-If your code depends on other packages, you need to
+If your code depends on other packages, you need to:
 
 1. Make sure they are installed using `install.packages()`{.r}.\pause
 2. Load them using `library()`{.r} at the right places (or call
@@ -472,7 +473,7 @@ Good for regular development.
 
 ::::
 
-\medskip
+\medskip\pause
 
 ### Try It {.example}
 
@@ -522,7 +523,7 @@ To export a function, you need a special roxygen2 comment before the function:
 . . .
 
 Go ahead and place this before your `objective()`{.r} definition. Then run
-`devtools::document()`{.r}^[Shortcut: `Ctrl/Cmd+Shift+d`] to roxygenize your package.
+`devtools::document()`{.r}^[Shortcut: `Ctrl/Cmd+Shift+D`] to roxygenize your package.
 
 \medskip\pause
 
@@ -583,7 +584,7 @@ test_that("objective at optimum", {
 
 ### Check That Everything Works
 
-Run `devtools::test()`{.r}^[Shortcut: `Ctrl/Cmd+Shift+t`], and (hopefully) get
+Run `devtools::test()`{.r}^[Shortcut: `Ctrl/Cmd+Shift+T`], and (hopefully) get
 
 ```
 [ FAIL 0 | WARN 0 | SKIP 0 | PASS 1 ]
@@ -594,7 +595,8 @@ Run `devtools::test()`{.r}^[Shortcut: `Ctrl/Cmd+Shift+t`], and (hopefully) get
 ### R CMD check
 
 R contains functionality for checking that your package is built correctly and
-you can access this functionality through `devtools::check()`{.r}.
+you can access this functionality through `devtools::check()`{.r}^[Shortcut:
+`Ctrl/Cmd+Shift+E`].
 
 \medskip\pause
 
@@ -887,6 +889,18 @@ Just make sure you have the bare minimum.
 ##
 
 ![The whole game](../images/pkgs-workflow.png)
+
+## Shortcuts
+
+Use the shortcuts (and save yourself some typing/clicking):^[Replace `Ctrl` with `Cmd` on Mac.]
+
+| Action                        | Shortcut       |
+|:------------------------------|:---------------|
+| Install package               | `Ctrl+Shift+B` |
+| Load all code                 | `Ctrl+Shift+L` |
+| Document package              | `Ctrl+Shift+D` |
+| Test package                  | `Ctrl+Shift+T` | 
+| Check package                 | `Ctrl+Shift+E` |
 
 
 ## Projects
