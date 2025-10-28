@@ -905,21 +905,36 @@ Use the shortcuts (and save yourself some typing/clicking):^[Replace `Ctrl` with
 
 ## Projects
 
+:::: {.columns}
+
+::: {.column width="47%"}
+
 When you have a project, you typically need more things:
 
 - Scripts that produce output\pause
 - Datasets stored in different formats\pause
 - Notebooks or reports\pause
 
+\medskip
+
 These things do not naturally fit into a package framework.
 
-## Two Choices of Structure
+:::
 
-1. Just store these things directly into the package folder. Optionally, you can
-   use `.Rbuildignore` to ignore these files when building the package.\pause
+. . .
+
+::: {.column width="47%"}
+
+## Solutions
+
+1. Just store these things directly in the package folder. \pause
 2. Put your **package** into a _subdirectory_ of your project. This cleanly
    separates the part of your project that contains reusable code (the package)
    and the part that is experiments and reports. But a little trickier to setup.
+
+:::
+
+::::
 
 ## Exercise
 
@@ -1007,16 +1022,12 @@ document it, and manage dependencies and licensing.
 
 ### Smoothing
 
-We covered two major smoothing techniques:
-
 - Kernel density estimation\pause
 - Smoothing splines
 
 . . .
 
 ### Monte Carlo Methods
-
-We covered:
 
 - Inverse transform sampling\pause
 - Rejection sampling\pause
@@ -1029,8 +1040,6 @@ We covered:
 ::: {.column width="47%"}
 
 ### Optimization
-
-We covered:
 
 - Unconstrained optimization (gradient descent, Newton's method)\pause
 - Constrained optimization (interior point method)\pause
