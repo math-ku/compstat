@@ -925,7 +925,7 @@ These things do not naturally fit into a package framework.
 
 ::: {.column width="47%"}
 
-## Solutions
+### Solutions
 
 1. Just store these things directly in the package folder. \pause
 2. Put your **package** into a _subdirectory_ of your project. This cleanly
