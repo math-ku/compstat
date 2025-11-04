@@ -16,7 +16,8 @@
 
 ## Long-term
 
-- Write lecture notes about optimization
+- Write lecture notes about optimization to replace optimization chapter in
+  book.
 
 ### Interesting Topics that Could Be Covered
 
