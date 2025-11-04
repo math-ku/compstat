@@ -11,6 +11,8 @@
 - Talk about exponential tilting for rejection and importance sampling.
 - Overall time is skewed towards the optimization topic. Maybe cut some material
   and add another lecture on kernel density estimation or MCMC.
+- Talk more about sparse matrices. Maybe have a larger part on numerical linear
+  algebra.
 
 ## Long-term
 
@@ -25,6 +27,18 @@
 ## Assignment 1A
 
 - Emphasize that they should generalize to other kernels.
+
+## Assignment 2B
+
+- Maybe it's cryptic that this is a case of exponential tilting.
+
+## Assignment 4A
+
+- Maybe avoid suggesting the Demmler-Reinsch basis, and focus on B-splines.
+
+## Assignment 4B
+
+- Ask them to show that it is not convex.
 
 ## Lecture 1: Introduction
 
@@ -45,11 +59,19 @@
 
 - Too much content. Maybe skip futures and just stick with foreach. Or skip some
   implementation parts of the running mean smoother, for instance.
+- Highlight that Demmler-Reinsch basis is mostly a theoretical construct and not
+  used in practice.
+
+## Lecture 5: Rejection Sampling
+
+- Talk about finding a good proposal (minimizing p/q)
 
 ## Lecture 6: Monte Carlo Simulation
 
 - Remove or simplify variance estimator for the normalized importance sampling
   estimator. Or at least remove the code for it.
+- Did not have time for graph example. Maybe remove it? Keeping it is not too
+  bad since I can just skip it if there is no time left. It's just an example.
 
 ## Lecture 7: Optimization
 
