@@ -60,7 +60,7 @@ investigated as a function of real time (not iterations).
 
 With stochastic optimization algorithms it is of particular interest to
 investigate how convergence is affected by the various control parameters for
-the different algorithms such as size of minibatch and learning rate for SGD.
+the different algorithms such as size of mini-batch and learning rate for SGD.
 
 # A: Logistic Regression Smoothing
 
@@ -84,7 +84,7 @@ the temperature of the horse when admitted.
 
 Compare the stochastic gradient algorithms to other optimization algorithms and
 investigate how different choices of basis (e.g. the default B-spline basis or
-the Demmler-Reinsch basis), affect convergence.
+the polynomial basis), affect convergence.
 
 # B: Log-Logistic Dose-Response Curves
 
