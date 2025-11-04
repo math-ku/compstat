@@ -4,6 +4,7 @@ project:
     - "*.qmd"
     - "*.md"
     - "!AGENTS.md"
+    - "!TODO.md"
 
 website:
   title: "Computational Statistics"
