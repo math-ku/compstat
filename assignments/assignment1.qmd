@@ -69,6 +69,14 @@ selection works, but for benchmarking and profiling it is best to use simulated
 data. Think about how to make your implementation as general and generic as
 possible.
 
+::: {.callout-tip}
+
+When comparing your implementation with R's built-in `density()`{.R}, make sure
+to read the documentation carefully, in particular the documentation of the
+`bw` argument. 
+
+:::
+
 # B: Bivariate Smoothing
 
 Implement a smoothing spline smoother using LOOCV for selecting the tuning
