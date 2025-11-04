@@ -22,6 +22,10 @@
 - GPU computing
 - High-performance computing clusters
 
+## Assignment 1A
+
+- Emphasize that they should generalize to other kernels.
+
 ## Lecture 1: Introduction
 
 - Maybe add one example for each topic covered in the course, aligned with the
