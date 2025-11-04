@@ -206,9 +206,8 @@ to get started.
 
 This lecture will mostly be a hands-on session. Please bring your laptop. We
 will work on creating an R package together. Please install the 
-[devtools](https://cran.r-project.org/web/packages/devtools/index.html) and
-[usethis](https://cran.r-project.org/web/packages/usethis/index.html) packages
-before the lecture.
+[devtools](https://cran.r-project.org/web/packages/devtools/index.html) package
+prior to the lecture.
 
 - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf) ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture14.qmd))
 
