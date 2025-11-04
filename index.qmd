@@ -36,7 +36,7 @@ for you to solve independently at your own pace.
 - **Slides:** [OOP and Density Estimation](slides/lecture2.pdf) ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture2.qmd))
 - **Reading:**
   - [Chapter 13](https://adv-r.hadley.nz/s3.html) (AdvR)
-  - [Sections 2-2.2](https://cswr.nrhstat.org/density.html) (CSwR)
+  - [Sections 2-2.4](https://cswr.nrhstat.org/density.html) (CSwR)
 - **Exercises:**
   - [A8-A10](https://cswr.nrhstat.org/app-r#app-ex) (CSwR, Appendix A)
   - [2.1-2.6](https://cswr.nrhstat.org/density#density:ex) (CSwR, Chapter 2)
@@ -64,7 +64,9 @@ for you to solve independently at your own pace.
 #### Lecture 4: Parallelization and Scatterplot Smoothing
 
 - **Slides:** [Parallelization and Scatterplot Smoothing](slides/lecture4.pdf) ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture4.qmd))
-- **Reading:** [Chapter 3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)
+- **Reading:** 
+  - [Chapter 3, but skip 3.3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)
+  - [Chapter 4, but skip 4.2-4.3 (CSwR)](https://cswr.nrhstat.org/timeseries.html)
 - **Exercises:**
   [3.4 (Chapter 3,
   CSWR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
@@ -77,8 +79,7 @@ for you to solve independently at your own pace.
   [Random Number Generation and Rejection
   Sampling](slides/lecture5.pdf) ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture5.qmd))
 - **Reading:**
-  - [Chapter 5 (CSwR)](https://cswr.nrhstat.org/random-number-generation), but
-    skip 5.1
+  - [Chapter 5, but skip 5.1 (CSwR)](https://cswr.nrhstat.org/random-number-generation)
   - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp)
 - **Exercises:**
   - [Exercises 5.1-5.2 in Chapter 5
