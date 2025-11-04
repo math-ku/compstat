@@ -1,8 +1,3 @@
----
-title: Course Improvements
-format: html
----
-
 ## General
 
 - Harmonize notation with book
@@ -89,11 +84,13 @@ format: html
 - Explain more clearly how it works in practice.
 - Explain how compiling works and how errors look.
 - Show practically during lecture how to write and compile.
+- Incorporate standalone R scripts into the quarto file.
 
 ## Lecture 13: SGD continued
 
 - Add some part about variance reduction, like SVRG
 - Show examples of how AdaGrad and RMSProp works
+- Incorporate standalone R scripts into the quarto file.
 
 ## Lecture 14: Wrap up and R packages
 
