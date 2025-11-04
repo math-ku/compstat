@@ -11,22 +11,6 @@ library(tidyverse)
 old_options <- options(digits = 4)
 ```
 
-```{r data, echo=FALSE, cache = TRUE}
-vegetables <- read.table(
-  here::here("data", "vegetables.txt"),
-  header = TRUE,
-  colClasses = c(
-    "numeric",
-    "numeric",
-    "factor",
-    "factor",
-    "numeric",
-    "numeric",
-    "numeric"
-  )
-)[, c(1, 2, 3)]
-```
-
 ## Recap: Monte Carlo Methods
 
 ### Standard Monte Carlo

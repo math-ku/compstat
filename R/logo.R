@@ -1,6 +1,6 @@
 # Code to generate logo for the course
 
-phiphsi <- read.table(file.path("data", "phipsi.tsv"), header = TRUE)
+phiphsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
 
 from <- 1.5 * -pi
 to <- 1.2 * pi
@@ -17,7 +17,7 @@ hist(
   yaxt = "n",
   xaxt = "n",
   border = "lightgrey",
-  xlim = c(from, to),
+  xlim = c(from, to)
 )
 
 d1 <- density(phipsi$phi, bw = 0.6, from = from, to = to)
