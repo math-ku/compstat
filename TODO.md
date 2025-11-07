@@ -25,6 +25,10 @@
 - GPU computing
 - High-performance computing clusters
 
+## Assignments
+
+Assignment 1A, 2B, 4A, 4A are definitely more popular than the alternatives.
+
 ## Assignment 1A
 
 - Emphasize that they should generalize to other kernels.
@@ -39,7 +43,7 @@
 
 ## Assignment 4B
 
-- Ask them to show that it is not convex.
+- Ask them to show that it is not convex?
 
 ## Lecture 1: Introduction
 
