@@ -77,6 +77,9 @@ Assignment 1A, 2B, 4A, 4A are definitely more popular than the alternatives.
   estimator. Or at least remove the code for it.
 - Did not have time for graph example. Maybe remove it? Keeping it is not too
   bad since I can just skip it if there is no time left. It's just an example.
+- Simplify the number of ideas for picking importance distribution. Maybe just
+  talk about the defensive mixture and also, perhaps, introduce exponential
+  tilting.
 
 ## Lecture 7: Optimization
 
@@ -101,8 +104,8 @@ Assignment 1A, 2B, 4A, 4A are definitely more popular than the alternatives.
 
 - Drop the peppered moths example. It is too complicated. Use the Gaussian
   mixture example instead.
-- Too much material. But if we remove the peppered moths example, it should be
-  fine.
+- Too much material. But if we remove the peppered moths example, it should
+  be fine.
 - Consider showing only two ways to derive the Fisher information from the
   complete data information, not all three.
 
