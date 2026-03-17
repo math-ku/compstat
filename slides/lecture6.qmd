@@ -4,7 +4,8 @@ title: "Monte Carlo Methods"
 
 {{< include _common.qmd >}}
 
-```{r setup-common2}
+```{r}
+#| label: setup-common2
 #| echo: false
 #| message: false
 #| warning: false
@@ -14,7 +15,9 @@ theme_set(theme_minimal(base_size = 10))
 options(width = 60)
 ```
 
-```{r setup, include=FALSE}
+```{r}
+#| label: setup
+#| include: false
 old_options <- options(digits = 4)
 ```
 
@@ -133,15 +136,14 @@ $$
 
 ## Example: Gamma Distribution
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 We want to estimate the mean of a $\mathrm{Gamma}(8,1)$ distribution.
 
 . . .
 
-```{r gamma-sim, echo=-1}
+```{r, echo=-1}
+#| label: gamma-sim
 set.seed(1234)
 B <- 1000
 x <- rgamma(B, 8)
@@ -151,12 +153,12 @@ sigma_hat <- sd(x)
 mu_hat[B] # Theoretical: 8
 sigma_hat # Theoretical: √8
 ```
+:::::
 
-:::
-
-::: {.column width="47%"}
-
-```{r gamma-fig, echo = FALSE}
+::::: {.column width="47%"}
+```{r}
+#| label: gamma-fig
+#| echo: false
 #| fig-cap: "Density of a Gamma(8,1) distribution with mean indicated."
 x <- seq(0, 20, length.out = 100)
 y <- dgamma(x, 8)
@@ -168,13 +170,14 @@ tibble(x, y) |>
   annotate("text", x = 7, y = 0.02, label = "E(X)", hjust = -0.5)
 ```
 
-:::
+:::::
 
-::::
+:::
 
 ##
 
-```{r gamma-fig1}
+```{r}
+#| label: gamma-fig1
 #| fig-height: 2.8
 #| fig-width: 5
 #| echo: false
@@ -211,7 +214,8 @@ functions for Chernoff-based bounds.
 
 \medskip\pause
 
-More commonly, just run until the empirical confidence interval is sufficiently narrow.
+More commonly, just run until the empirical confidence interval is sufficiently
+narrow.
 
 . . .
 
@@ -256,7 +260,7 @@ $$
 
 . . .
 
-$g$ is the _importance_ density and $f/g$ is called the _likelihood ratio_.
+$g$ is the *importance* density and $f/g$ is called the *likelihood ratio*.
 
 . . .
 
@@ -272,8 +276,7 @@ It has mean $\mu$.
 
 ```{r}
 #| echo: false
-#| fig-cap: "Target and importance densities
-#|  with corresponding importance weights."
+#| fig-cap: "Target and importance densities with corresponding importance weights."
 #| fig-width: 5
 #| fig-height: 3
 x <- seq(-5, 5, length.out = 200)
@@ -316,11 +319,10 @@ p1 / p2 + plot_layout(heights = c(2, 1), axes = "collect")
 
 ## Gamma Importance Sampling
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r gamma-sim-IS, echo=-1}
+::: {.columns}
+::::: {.column width="47%"}
+```{r, echo=-1}
+#| label: gamma-sim-IS
 set.seed(1234)
 B <- 1000
 x <- rnorm(B, 10, 3)
@@ -333,13 +335,14 @@ mu_hat_IS[B]
 
 Close to theoretical value (8).
 
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
-```{r gammasim-fig, echo = FALSE}
+::::: {.column width="47%"}
+```{r}
+#| label: gammasim-fig
+#| echo: false
 #| fig-height: 3.2
 #| fig-width: 2.7
 z <- seq(-12, 12, length.out = 100) + 10
@@ -368,15 +371,16 @@ p2 <- tibble(x = z, w) |>
 p1 / p2 + plot_layout(axes = "collect")
 ```
 
-:::
+:::::
 
-::::
+:::
 
 ##
 
-```{r gamma-IS-fig1, echo = FALSE}
-#| fig-cap: "Convergence of the importance sampling estimate of the mean of a
-#|   Gamma(8,1) distribution using a N(10,3) importance distribution."
+```{r}
+#| label: gamma-IS-fig1
+#| echo: false
+#| fig-cap: "Convergence of the importance sampling estimate of the mean of a Gamma(8,1) distribution using a N(10,3) importance distribution."
 #| fig-width: 5
 #| fig-height: 2.5
 mu_hat_IS <- cumsum(x * w_star) / (1:B)
@@ -444,14 +448,18 @@ Choose $g$ so that $|h(x)| w^*(x)$ becomes as constant as possible.
 
 ## Gamma Importance Sampling
 
-```{r gamma-IS-sd, echo=TRUE}
+```{r}
+#| label: gamma-IS-sd
+#| echo: true
 sigma_hat_IS <- sd(x * w_star)
 sigma_hat_IS
 ```
 
 . . .
 
-```{r gamma-IS-fig2, echo=FALSE}
+```{r}
+#| label: gamma-IS-fig2
+#| echo: false
 #| fig-width: 4.5
 #| fig-cap: "Importance sampling estimate of the mean of a Gamma(8,1)."
 p +
@@ -467,7 +475,10 @@ p +
   geom_point(size = 0.5)
 ```
 
-```{r test, echo=FALSE, eval=FALSE}
+```{r}
+#| label: test
+#| echo: false
+#| eval: false
 mu_hat_IS <- replicate(10000, {
   x <- rnorm(B, 10, 3)
   w_star <- dgamma(x, 8) / dnorm(x, 10, 3)
@@ -507,15 +518,13 @@ Instead, we can try a heavy-tailed importance distribution, such as Student-$t$.
 
 ##
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r is-normal-plot}
+::: {.columns}
+::::: {.column width="47%"}
+```{r}
+#| label: is-normal-plot
 #| echo: false
 #| fig-height: 3
-#| fig-cap: "Densities, integrand, and weights for the importance sampling example
-#|   with a normal importance distribution."
+#| fig-cap: "Densities, integrand, and weights for the importance sampling example with a normal importance distribution."
 set.seed(1)
 n <- 1000
 x_norm <- rnorm(n)
@@ -570,18 +579,16 @@ p1b <- ggplot(tibble(x = w_h), aes(x)) +
 p1 / p1b + plot_layout(heights = c(2, 1), axes = "collect")
 ```
 
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
-
-```{r is-t-plot}
+::::: {.column width="47%"}
+```{r}
+#| label: is-t-plot
 #| echo: false
 #| fig-height: 3
-#| fig-cap: "Densities, integrand, and weights for the importance sampling example
-#|   with Student-$t$ as importance distribution."
+#| fig-cap: "Densities, integrand, and weights for the importance sampling example with Student-$t$ as importance distribution."
 dens_df_t <- tibble(
   x = x_grid,
   target = dnorm(x_grid, 0, 1),
@@ -649,10 +656,9 @@ p2b <- ggplot(tibble(x = abs(w_h_t)), aes(x)) +
 p2 / p2b + plot_layout(heights = c(2, 1), axes = "collect")
 ```
 
+:::::
+
 :::
-
-::::
-
 
 ## Normalized Weights
 
@@ -705,7 +711,8 @@ $$
 
 . . .
 
-```{r gamma-sim-ISw, echo=-1}
+```{r, echo=-1}
+#| label: gamma-sim-ISw
 set.seed(1234)
 B <- 1000
 x <- rnorm(B, 10, 3)
@@ -719,11 +726,12 @@ mu_hat_IS[B] # Theoretical value 8
 
 ##
 
-```{r gamma-ISw-fig1, echo = FALSE}
+```{r}
+#| label: gamma-ISw-fig1
+#| echo: false
 #| fig-width: 4.5
 #| fig-height: 3
-#| fig-cap: "Convergence of the importance sampling estimate of the mean of a
-#|   Gamma(8,1) distribution using normalized weights."
+#| fig-cap: "Convergence of the importance sampling estimate of the mean of a Gamma(8,1) distribution using normalized weights."
 p <- tibble(x = 1:B, y = mu_hat_IS) |>
   ggplot(aes(x, y)) +
   geom_line() +
@@ -749,8 +757,7 @@ $$
   \frac{1}{n} \begin{bmatrix} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
 \right),
 $$
-where
-$$
+where $$
 \begin{aligned}
   \sigma^2_{\mathrm{IS}} & = \var \big(h(X_1) w^*(X_1)\big) \\
   \gamma & = \cov (h(X_1) w^*(X_1), w^*(X_1)) \\
@@ -764,8 +771,8 @@ We can then apply the $\Delta$-method with $t(x, y) = x / y$.
 
 \medskip\pause
 
-Observe that $\nabla t(x, y) = \begin{bmatrix}1 / y \\ - x / y^2\end{bmatrix}$
-, whence
+Observe that $\nabla t(x, y) = \begin{bmatrix}1 / y \\ - x / y^2\end{bmatrix}$ ,
+whence
 
 $$
 \nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
@@ -794,7 +801,8 @@ hat(c) is just the MC estimate of c.
 
 ##
 
-```{r delta-method-plot3D}
+```{r}
+#| label: delta-method-plot3D
 #| echo: false
 #| fig-width: 5
 #| fig-height: 4.5
@@ -858,7 +866,8 @@ points3D(
 
 ## Gamma Normalized Weights, Variance
 
-```{r sigma_hat_is_w}
+```{r}
+#| label: sigma_hat_is_w
 c_hat <- mean(w_star)
 sigma_hat_IS <- sd(x * w_star)
 sigma_hat_w_star <- sd(w_star)
@@ -874,7 +883,10 @@ sigma_hat_IS_w <- sqrt(
 sigma_hat_IS_w
 ```
 
-```{r test-2, echo=FALSE, eval=FALSE}
+```{r}
+#| label: test-2
+#| echo: false
+#| eval: false
 mu_hat_IS <- replicate(10000, {
   x <- rnorm(B, 10, 3)
   w_star <- numeric(B)
@@ -887,11 +899,11 @@ sd(mu_hat_IS) * sqrt(B)
 
 ##
 
-```{r gamma-ISw-fig2}
+```{r}
+#| label: gamma-ISw-fig2
 #| echo: false
 #| fig-width: 4.5
-#| fig-cap: "Importance sampling estimate of the mean of a Gamma(8,1)
-#|   distribution with 95% confidence bands using normalized weights."
+#| fig-cap: "Importance sampling estimate of the mean of a Gamma(8,1) distribution with 95% confidence bands using normalized weights."
 p +
   geom_ribbon(
     aes(
@@ -968,10 +980,8 @@ improves efficiency.
 
 ## Weight Degeneracies
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 Suppose that
 $$
 X \sim \mathcal{N}(0, I_{2})
@@ -988,16 +998,14 @@ $$
 with large $|\mu|$, most samples are far from the origin, so $f(X)$ is nearly
 zero and weights are highly variable.
 
-:::
+:::::
 
-::: {.column width="47%"}
-
-
-```{r poor-importance-demo}
+::::: {.column width="47%"}
+```{r}
+#| label: poor-importance-demo
 #| echo: false
 #| fig-height: 2.3
-#| fig-cap: "Target (blue) and importance (orange) densities
-#|   with samples from the importance distribution."
+#| fig-cap: "Target (blue) and importance (orange) densities with samples from the importance distribution."
 library(mvtnorm)
 
 set.seed(1)
@@ -1034,9 +1042,9 @@ tibble(
   coord_fixed()
 ```
 
-:::
+:::::
 
-::::
+:::
 
 ##
 
@@ -1098,7 +1106,8 @@ $\mathrm{ESS} \approx 1$, and the estimate is unreliable.
 
 ### Gamma Importance Example
 
-```{r ess-demo}
+```{r}
+#| label: ess-demo
 ess <- (sum(w_star))^2 / sum(w_star^2)
 ess # out of n = 1000 samples
 ```
@@ -1181,13 +1190,11 @@ Use a Gaussian approximation centered at the mode of the target distribution.
 
 . . .
 
-
 ### Adaptive Importance Sampling
 
 Iteratively refine the importance distribution based on pilot runs.
 
 . . .
-
 
 ### Defensive Mixtures
 
@@ -1199,7 +1206,6 @@ ensure coverage of the entire target support.
 ### Mixture Distributions
 
 Use a mixture of distributions to capture multiple modes or complex shapes.
-
 
 ## Laplace Approximation
 
@@ -1226,15 +1232,12 @@ $$
 f(x) \approx f(x^*) \exp\left(-\frac{1}{2}(x - x^*)^T H (x - x^*)\right)
 $$
 
-
 ## Laplace Approximation
-
 
 ### Steps
 
 1. Find the mode $x^* = \arg\max_x f(x)$.\pause
-2. Compute the Hessian $H$ of the first-order Taylor approximation of
-   $-\log
+2. Compute the Hessian $H$ of the first-order Taylor approximation of $-\log
    f(x)$ around $x^*$.\pause
 3. Use $\mathcal{N}(x^*, H^{-1})$ as importance distribution.
 
@@ -1246,10 +1249,8 @@ Best for unimodal, smooth, and symmetric target densities.
 
 ## Example: Gamma Distribution
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 The density of the $\mathrm{Gamma}(3,1)$ distribution is
 $$
 f(x) = \frac{1}{2} x^2 e^{-x}, \quad x > 0.
@@ -1266,15 +1267,12 @@ $$
 
 So the Laplace approximation is $\mathcal{N}(2, 2^2)$.
 
-:::
+:::::
 
-::: {.column width="47%"}
-
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
-#| fig-cap: "Target (solid black) and Laplace approximation (dashed blue)
-#|   densities for a Gamma(3,1) distribution."
+#| fig-cap: "Target (solid black) and Laplace approximation (dashed blue) densities for a Gamma(3,1) distribution."
 f_density <- function(x) dgamma(x, shape = 3, rate = 1) # Gamma(3,1)
 log_f <- function(x) log(f_density(x))
 
@@ -1313,10 +1311,9 @@ ggplot(df, aes(x = x, y = value, color = Density, linetype = Density)) +
   )
 ```
 
+:::::
+
 :::
-
-::::
-
 
 ## Adaptive Importance Sampling
 
@@ -1327,8 +1324,8 @@ based on the samples obtained.
 
 ### Basic Idea
 
-Start with an initial importance distribution and refine it based on samples
-and weights.
+Start with an initial importance distribution and refine it based on samples and
+weights.
 
 . . .
 
@@ -1355,8 +1352,7 @@ $$
 
 . . .
 
-Then update the importance distribution parameters as
-$$
+Then update the importance distribution parameters as $$
 \begin{aligned}
   \mu_{t+1}      &= \frac{\sum_{i=1}^n w_i^* x_i}{\sum_{i=1}^n w_i^*},\\
   \sigma^2_{t+1} &= \frac{\sum_{i=1}^n w_i^* (x_i - \mu_{t+1})^2}{\sum_{i=1}^n w_i^*}.
@@ -1371,6 +1367,7 @@ This can be extended to multivariate targets using weighted covariance.
 
 ```{r}
 #| echo: false
+#| label: adaptive-importance-demo
 library(ggplot2)
 library(tibble)
 
@@ -1451,6 +1448,7 @@ plot_step <- function(iter) {
 ```
 
 ```{r}
+#| label: adaptive-importance-fig1
 #| echo: false
 #| fig-width: 5.4
 #| fig-height: 2.5
@@ -1461,6 +1459,7 @@ plot_step(1)
 ##
 
 ```{r}
+#| label: adaptive-importance-fig2
 #| echo: false
 #| fig-width: 5.4
 #| fig-height: 2.5
@@ -1471,6 +1470,7 @@ plot_step(2)
 ##
 
 ```{r}
+#| label: adaptive-importance-fig3
 #| echo: false
 #| fig-width: 5.4
 #| fig-height: 2.5
@@ -1481,6 +1481,7 @@ plot_step(3)
 ##
 
 ```{r}
+#| label: adaptive-importance-fig4
 #| echo: false
 #| fig-width: 5.4
 #| fig-height: 2.5
@@ -1491,6 +1492,7 @@ plot_step(4)
 ##
 
 ```{r}
+#| label: adaptive-importance-fig5
 #| echo: false
 #| fig-width: 5.4
 #| fig-height: 2.5
@@ -1518,31 +1520,27 @@ with heavier tails to ensure coverage.
 
 ##
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ```{r}
+#| label: gamma-importance-fig
 #| echo: false
-#| fig-cap: "Target (black) and importance (blue) densities with samples from
-#|   the importance distribution."
+#| fig-cap: "Target (black) and importance (blue) densities with samples from the importance distribution."
 #| ref-label: gammasim-fig
 #| fig-height: 3
 #| fig-width: 2.7
 ```
 
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
-
-```{r gamma-defensive-fig}
+::::: {.column width="47%"}
+```{r}
+#| label: gamma-defensive-fig
 #| fig-height: 3
 #| fig-width: 2.7
-#| fig-cap: "Target (black) and importance (orange) densities with samples from
-#|   the defensive importance mixture distribution."
+#| fig-cap: "Target (black) and importance (orange) densities with samples from the defensive importance mixture distribution."
 #| echo: false
 set.seed(1234)
 B <- 1000
@@ -1579,9 +1577,9 @@ p2 <- tibble(x = z, w) |>
 p1 / p2 + plot_layout(axes = "collect")
 ```
 
-:::
+:::::
 
-::::
+:::
 
 ## Case Study: Network Failure
 
@@ -1596,7 +1594,8 @@ $p$.](../images/networkfig.png){ width=70% }
 
 We can represent a graph using an adjacency matrix.
 
-```{r network_adj, echo=13}
+```{r, echo=13}
+#| label: network_adj
 options(width = 65)
 A <- matrix(0, 10, 10)
 A[1, c(2, 4, 5)] <- 1
@@ -1625,7 +1624,8 @@ We begin with a function that checks if nodes 1 and 10 are disconnected.
 
 . . .
 
-```{r discon-def}
+```{r}
+#| label: discon-def
 discon <- function(Aup) {
   A <- Matrix::forceSymmetric(Aup, "U")
   i <- 3
@@ -1642,7 +1642,8 @@ discon <- function(Aup) {
 
 ## Sampling a Graph
 
-```{r simNet}
+```{r}
+#| label: simNet
 sim_net <- function(Aup, p) {
   ones <- which(Aup == 1)
   Aup[ones] <- sample(
@@ -1657,13 +1658,15 @@ sim_net <- function(Aup, p) {
 
 . . .
 
-```{r sim-bench}
+```{r}
+#| label: sim-bench
 bench::bench_time(replicate(1e5, sim_net(Aup, 0.5)))
 ```
 
 ## Estimating Probability of Nodes 1 and 10 Disconnected
 
-```{r sim}
+```{r}
+#| label: sim
 set.seed(27092016)
 n <- 1e5
 tmp <- replicate(n, discon(sim_net(Aup, 0.05)))
@@ -1676,7 +1679,8 @@ mu_hat
 
 Estimate with confidence interval using $\sigma^2 = \mu (1 - \mu)$.
 
-```{r sim-confint}
+```{r}
+#| label: sim-confint
 mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
 ```
 
@@ -1685,7 +1689,8 @@ mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
 We will simulate with failure probability $p_0$ and compute the importance
 weights.
 
-```{r impw}
+```{r}
+#| label: impw
 weights <- function(Aup, Aup0, p0, p) {
   w <- discon(Aup0)
 
@@ -1705,7 +1710,8 @@ For the IS estimator the weights will be multiplied by the indicator that 1 and
 
 ## Estimating Probability of Nodes 1 and 10 Disconnected
 
-```{r sim2}
+```{r}
+#| label: sim2
 #| cache: true
 tmp <- replicate(n, weights(Aup, sim_net(Aup, 0.2), 0.2, 0.05))
 mu_hat_IS <- mean(tmp)
@@ -1754,7 +1760,8 @@ computation.
 There are $2^{18} = 262,144$ different networks with any number of the edges
 failing, so complete enumeration is possible.
 
-```{r enumeration}
+```{r}
+#| label: enumeration
 #| cache: true
 ones <- which(Aup == 1)
 Atmp <- Aup
@@ -1776,7 +1783,8 @@ for (i in 0:(2^18 - 1)) {
 
 Here is the true value:
 
-```{r disconnect-prob}
+```{r}
+#| label: disconnect-prob
 sum(prob)
 ```
 
@@ -1796,8 +1804,8 @@ And the IS estimate with confidence interval:
 mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
 ```
 
-
-```{r reset-options}
+```{r}
+#| label: reset-options
 #| echo: false
 options(digits = old_options$digits)
 ```
@@ -1834,10 +1842,11 @@ improve robustness.
 
 ### Step 1
 
-Implement an importance sampler for computing the mean of the von
-Mises distribution. Plot the result and check convergence towards $\mu$.
+Implement an importance sampler for computing the mean of the von Mises
+distribution. Plot the result and check convergence towards $\mu$.
 
-```{r vonmises-density}
+```{r}
+#| label: vonmises-density
 dvmises <- function(x, mu = 0, kappa = 2) {
   exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0))
 }
@@ -1854,11 +1863,11 @@ Compute the estimate of the mean and its standard error.
 ### Step 3
 
 Compute the effective sample size and coefficient of variation of the importance
-weights. Experiment with different importance densities to see if you find
-a better one.
+weights. Experiment with different importance densities to see if you find a
+better one.
 
-
-```{r vmises-importance}
+```{r}
+#| label: vmises-importance
 #| include: false
 vonmises_importance <- function(n, mu = 0, kappa = 2) {
   x <- rnorm(n, 0, pi / 2)
