@@ -4,7 +4,9 @@ title: "Measuring and Improving Performance"
 
 {{< include _common.qmd >}}
 
-```{r setup, include=FALSE}
+```{r}
+#| label: setup
+#| include: false
 source(here::here("R", "kernel.R"), keep.source = TRUE)
 
 phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
@@ -70,19 +72,18 @@ If you're only doing it for yourself, then is the **investment** worth it?
 
 \medskip
 
-> We _should_ forget about small efficiencies, say about 97% of the time:
+> We *should* forget about small efficiencies, say about 97% of the time:
 > premature optimization is the root of all evil. Yet we should not pass up our
 > opportunities in that critical 3%.
 >
 > \medskip
-> _—Donald Knuth_
+> *—Donald Knuth*
 
 . . .
 
 ### Readability
 
 Improving performance often comes at the cost of code readability.
-
 
 ## Profiling
 
@@ -96,10 +97,8 @@ A profiler quantifies how much time each part of your code takes to run.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Two Types of Profiling {.example}
 
 **Instrumentation-based profiling** inserts code to measure time taken by
@@ -116,10 +115,9 @@ functions are running.
 
 This is what R's profilers do.
 
-:::
+:::::
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Outputs of Profilers {.alert}
 
 Profilers record both time and memory usage.
@@ -128,18 +126,19 @@ Profilers record both time and memory usage.
 
 In this course we focus mostly on time.
 
-:::
+:::::
 
-::::
+:::
 
 ## Profiling in R
 
-The R package
-[profvis](https://CRAN.R-project.org/package=profvis)
-provides tools to visualize profiling output.^[Can be activated directly in
+The R package [profvis](https://CRAN.R-project.org/package=profvis) provides
+tools to visualize profiling
+output.^[Can be activated directly in
 RSTudio (but not Positron)].
 
-```{r load_profvis}
+```{r}
+#| label: load_profvis
 library(profvis)
 ```
 
@@ -149,14 +148,15 @@ library(profvis)
 
 1. Source the code you want to profile using `source()`.\pause
 2. Either run `profvis()` on the expression you want to profile or in RStudio,
-   `Profile -> Start Profiling`. Run your code, and then `Profile -> `Stop
-   Profiling`.
+   `Profile -> Start Profiling`. Run your code, and then `Profile ->`Stop
+   Profiling\`.
 
 \pause\medskip
 
 The result is an interactive webpage (tab in RStudio).
 
-```{r source_profvis}
+```{r}
+#| label: source_profvis
 #| eval: false
 source("<your-file>.R")
 profvis(your_function())
@@ -168,6 +168,7 @@ Let's profile the implementation of the kernel density estimator from the last
 lecture.
 
 ```{r}
+#| label: kern-dens-code
 # In file R/kernel.R
 kern_dens <- function(x, h, m = 512) {
   rg <- range(x)
@@ -193,6 +194,7 @@ Now let's run the profiler.
 . . .
 
 ```{r}
+#| label: kern-dens-prof
 #| eval: false
 source(here::here("R", "kernel.R"))
 
@@ -226,8 +228,8 @@ Fixing this is easy! We can \alert{vectorize} the inner loop.
 
 . . .
 
-
 ```{r}
+#| label: kern-dens-vec-code
 #| eval: false
 # Old (Nested Loop)
 kern_dens_vec <- function(x, h, m = 512) {
@@ -250,6 +252,7 @@ The bottleneck is the nested loop, which imposes considerable overhead in R.
 Fixing this is easy! We can \alert{vectorize} the inner loop.
 
 ```{r}
+#| label: kern-dens-vec-code-2
 #| eval: false
 # New (vectorized)
 kern_dens_vec <- function(x, h, m = 512) {
@@ -268,6 +271,7 @@ kern_dens_vec <- function(x, h, m = 512) {
 How much faster is this? We'll \alert{benchmark} this soon.
 
 ```{r}
+#| label: kern-dens-vec-code-3
 #| echo: false
 kern_dens_vec <- function(x, h, m = 512) {
   rg <- range(x)
@@ -311,7 +315,6 @@ you really need to profile them then?
 Running profvis inside Quarto/RMarkdown often does not work well. But, if you
 do, using `keep.source = TRUE` in `source()` might help.
 
-
 # Benchmarking
 
 ## Benchmarking
@@ -323,11 +326,11 @@ implementations of the same task.
 
 ### The bench Package
 
-We use the R package
-[bench](https://cran.r-project.org/package=bench) for
+We use the R package [bench](https://cran.r-project.org/package=bench) for
 benchmarking.
 
 ```{r}
+#| label: load_bench
 library(bench)
 ```
 
@@ -345,6 +348,7 @@ Also checks results for correctness, unless `check = FALSE`.
 ## A First, Simple Benchmark
 
 ```{r}
+#| label: simple-bench
 x <- runif(100)
 
 sqrt_bench <- bench::mark(
@@ -357,8 +361,8 @@ sqrt_bench
 
 ## `plot.bench_mark()`
 
-
-```{r bee-bench}
+```{r}
+#| label: bee-bench
 #| fig-width: 5.3
 #| fig-cap: A beeswarm plot of the benchmark results.
 plot(sqrt_bench)
@@ -366,10 +370,8 @@ plot(sqrt_bench)
 
 . . .
 
-The
-[ggbeeswarm](https://CRAN.R-project.org/package=ggbeeswarm)
-package is necessary for default plot behavior.
-
+The [ggbeeswarm](https://CRAN.R-project.org/package=ggbeeswarm) package is
+necessary for default plot behavior.
 
 ## Parameterized Benchmarking
 
@@ -378,7 +380,8 @@ across outer product of its initial arguments.
 
 . . .
 
-```{r dens-bench}
+```{r}
+#| label: dens-bench
 #| message: false
 #| warning: false
 dens_bench <- bench::press(
@@ -397,13 +400,15 @@ dens_bench <- bench::press(
 
 ## Bench Press Results
 
-```{r head-bench}
+```{r}
+#| label: head-bench
 head(dens_bench, 6)
 ```
 
 ##
 
-```{r default-press-plot}
+```{r}
+#| label: default-press-plot
 #| fig-cap: Default plot method for `bench::press()` results, here showing
 #|  the performance of three different implementations of a kernel density
 #|  estimator.
@@ -414,7 +419,8 @@ plot(dens_bench)
 
 ##
 
-```{r custom-bench-plot-code}
+```{r}
+#| label: custom-bench-plot-code
 #| ref-label: "custom-bench-plot-code"
 #| fig-height: 1.8
 #| fig-width: 3.4
@@ -462,10 +468,8 @@ We could divide the strategies for optimizing code into multiple categories.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### General Strategies
 
 Strategies that apply to **every** computer language, such as
@@ -483,20 +487,19 @@ Strategies that apply selectively to the R language, such as calling
 - vectorized (compiled) functions, or\pause
 - specialized functions.
 
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Context-Specific Tricks
 
 Strategies that are specific to the problem at hand, such as **binning** (later
 this lecture).
 
-:::
+:::::
 
-::::
+:::
 
 ## R Is Slow ...
 
@@ -504,10 +507,9 @@ this lecture).
 
 \pause\medskip
 
-R is an **interpreted** (as opposed to _compiled_) language. You have the
+R is an **interpreted** (as opposed to *compiled*) language. You have the
 convenience of never having to wait around for something to compile, but pay the
 price when you need a piece of code to be fast.
-
 
 \pause\medskip
 
@@ -526,6 +528,7 @@ implemented in a compiled language (e.g. `lm()` and `qr()`.)
 . . .
 
 ```{r}
+#| label: bench-loop-vector
 x <- rnorm(1e4)
 bench_res <- bench::mark(
   loop = {
@@ -541,7 +544,8 @@ bench_res <- bench::mark(
 
 ##
 
-```{r bench-plot}
+```{r}
+#| label: bench-plot
 #| fig-width: 5
 #| fig-cap: Benchmark results for a loop vs. a vectorized computation
 plot(bench_res)
@@ -566,6 +570,7 @@ Just because you ran a vectorized function, it doesn't make it fast.
 . . .
 
 ```{r}
+#| label: bench-loop-bench
 loop_bench <- bench::mark(
   sapply = sapply(x, function(x_i) 10 * x_i),
   loop = {
@@ -580,9 +585,10 @@ loop_bench <- bench::mark(
 )
 ```
 
----
+--------------------------------------------------------------------------------
 
 ```{r}
+#| label: bench-loop-plot
 #| fig-width: 5
 #| fig-height: 2
 #| fig-cap: The loop is slightly faster than the vectorized `sapply()`.
@@ -626,7 +632,6 @@ Turns complexity from $O(nm)$ to $O(n) + O(mB)$.
 
 \medskip
 
-
 It's an example of context-specific optimization.
 
 . . .
@@ -642,6 +647,7 @@ A key to the implementation is this function, which loops over the data, for
 each point checking which bin center is closest.
 
 ```{r}
+#| label: kern-bin-code
 kern_bin <- function(x, l, u, B) {
   w <- numeric(B)
   delta <- (u - l) / (B - 1)
@@ -658,6 +664,7 @@ kern_bin <- function(x, l, u, B) {
 ## Full Binning Implementation
 
 ```{r}
+#| label: kern-dens-bin-code
 kern_dens_bin <- function(x, h, m = 512) {
   rg <- range(x) + c(-3 * h, 3 * h)
   xx <- seq(rg[1], rg[2], length.out = m)
@@ -677,7 +684,8 @@ points as bin centers.
 
 ##
 
-```{r micro3}
+```{r}
+#| label: micro3
 #| echo: false
 #| fig-width: 5.2
 #| fig-cap: The relative benefit of binning increases with the size of the data.
@@ -709,14 +717,14 @@ mutate(
   labs(y = "time (µs)")
 ```
 
-
 ## Testing
 
 As always, we should test our code to ensure it works as expected.
 
 . . .
 
-```{r plot-kern-dens-benchmark}
+```{r}
+#| label: plot-kern-dens-benchmark
 #| fig-width: 4
 #| echo: false
 #| fig-cap: The standard density estimator as a black line and
@@ -753,7 +761,8 @@ ggplot(bind_rows(df1, df2), aes(x, y, fill = method, color = method)) +
 
 ##
 
-```{r test-kern-dens-bench}
+```{r}
+#| label: test-kern-dens-bench
 #| fig-width: 5.3
 #| echo: false
 #| fig-cap: Absolute errors due to bining decrease with increasing length of
@@ -782,6 +791,7 @@ The `kern_dens_bin()` function is so much faster for long sequences that to get
 good profiling results we use a 512 times longer data sequence.
 
 ```{r}
+#| label: line-prof-bin
 #| eval: false
 x <- rnorm(2^22)
 profvis(kern_dens_bin(x, 0.2))
@@ -794,7 +804,6 @@ profvis(kern_dens_bin(x, 0.2))
 \pdfpcnote{
   The bottleneck is now the loop in `kern_bin()`.
 }
-
 
 ## Avoiding Copies
 
@@ -813,6 +822,7 @@ profvis(kern_dens_bin(x, 0.2))
 . . .
 
 ```{r}
+#| label: copy-on-write
 x <- rnorm(100)
 x <- c(x, 4) # 101 values are allocated
 ```
@@ -825,8 +835,8 @@ In R, everything is typically loaded into memory.
 
 ### Garbage Collection
 
-R includes a garbage collector, which intermittently releases unused blocks
-in memory.
+R includes a garbage collector, which intermittently releases unused blocks in
+memory.
 
 ### Trade-Offs
 
@@ -847,7 +857,6 @@ block of memory.
 Some operations are faster with column-major order and others are faster with
 row-major order.
 
-
 ## Computing Matrix-Vector Products
 
 Let's say we want to compute the product of a matrix `x` and a vector `y`.
@@ -857,6 +866,7 @@ Let's say we want to compute the product of a matrix `x` and a vector `y`.
 We access rows, then transpose.
 
 ```{r}
+#| label: f1-code
 f1 <- function(x, y) {
   n <- NROW(x)
   z <- double(n)
@@ -871,15 +881,14 @@ f1 <- function(x, y) {
 
 ##
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Strategy 2
 
 Transpose first, then access columns.
 
 ```{r}
+#| label: f2-code
 f2 <- function(x, y) {
   n <- NROW(x)
   x_t <- t(x)
@@ -893,17 +902,17 @@ f2 <- function(x, y) {
 }
 ```
 
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Strategy 3
 
 Access columns directly, update sums together.
 
 ```{r}
+#| label: f3-code
 f3 <- function(x, y) {
   n <- NROW(x)
   p <- NCOL(x)
@@ -917,15 +926,14 @@ f3 <- function(x, y) {
 }
 ```
 
+:::::
+
 :::
-
-::::
-
-
 
 ##
 
 ```{r}
+#| label: bench-matvec
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2.8
@@ -951,6 +959,7 @@ Benchmark `gauss()` against `dnorm()`; plot and compare the results. Before
 starting: which do you think will be faster?
 
 ```{r}
+#| label: gauss-code
 gauss <- function(x, h = 1) {
   exp(-x^2 / (2 * h^2)) / (h * sqrt(2 * pi))
 }
