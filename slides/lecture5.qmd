@@ -435,6 +435,7 @@ Bessel function.
 \medskip
 
 ```{r}
+#| label: vMdensity
 #| fig-cap: The von Mises density for $\mu = 2$ and $\kappa = 9$.
 #| echo: false
 #| fig-width: 5
@@ -685,6 +686,7 @@ $$
 ## Implementation
 
 ```{r}
+#| label: vMsim-slow
 get_one_sample_vmises <- function(kappa) {
   repeat {
     Y <- runif(1, -pi, pi)
@@ -700,6 +702,7 @@ get_one_sample_vmises <- function(kappa) {
 . . .
 
 ```{r}
+#| label: vMsim-slow2
 sample_vonmises_slow <- function(n, kappa) {
   replicate(n, get_one_sample_vmises(kappa))
 }
