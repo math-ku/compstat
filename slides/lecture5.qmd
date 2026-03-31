@@ -4,7 +4,9 @@ title: "Random Number Generation and Rejection Sampling"
 
 {{< include _common.qmd >}}
 
-```{r setup, include=FALSE}
+```{r}
+#| label: setup
+#| include: false
 library(profvis)
 
 knitr::read_chunk(here::here("R", "vMSim.R"))
@@ -45,8 +47,7 @@ $$
 $$
 with
 $$
-\symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
-$$
+\symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z. $$
 
 \pause
 
@@ -57,10 +58,12 @@ $$
 \hat{\symbf{\beta}} = (\symbf{\Phi}^T \symbf{\Phi} + \lambda \symbf{\Omega})^{-1} \symbf{\Phi}^T \symbf{y}.
 $$
 
-
 ## Efficient Computations of Smoothing Splines
 
-```{r looad-nuuk-data, echo=FALSE, message=FALSE}
+```{r}
+#| label: looad-nuuk-data
+#| echo: false
+#| message: false
 library(Matrix)
 pen_mat <- function(inner_knots) {
   knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
@@ -105,8 +108,8 @@ expensive.
 
 \medskip\pause
 
-In practice, we therefore often use fewer basis functions than data points, $p
-< n$.
+In practice, we therefore often use fewer basis functions than data points, $p <
+n$.
 
 \pause
 
@@ -165,7 +168,8 @@ $$
 
 ## The Demmler-Reinsch Basis (Columns of $\widetilde{\symbf{U}}$)
 
-```{r spline-diagonalization}
+```{r}
+#| label: spline-diagonalization
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 3
@@ -199,7 +203,8 @@ bind_cols(select(nuuk_year, Year), as_tibble(U_tilde)) |>
 
 ##
 
-```{r spline-gamma}
+```{r}
+#| label: spline-gamma
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 3
@@ -226,7 +231,6 @@ Computers have no concept of "true" randomness and instead generate
 **pseudo-random** numbers.
 
 \medskip\pause
-
 
 Not really random, but appear to be so.
 
@@ -295,7 +299,6 @@ applying a function to samples from a simpler distribution.
 To sample $X \sim \mathrm{Exp}(\lambda)$, use $X = -\log(U)/\lambda$ with $U
 \sim \mathrm{Uniform}(0,1)$.
 
-
 ## Inversion Sampling
 
 A type of **transformation** sampling.
@@ -336,7 +339,6 @@ See [Exercise 5.1 in
 CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex) or the
 [Ziggurat algorithm](https://en.wikipedia.org/wiki/Ziggurat_algorithm).
 
-
 ## Computing $\Phi^{-1}$
 
 Recall that
@@ -346,8 +348,7 @@ $$
 
 . . .
 
-
-But $\Phi^{-1}$ (the quantile function) does not have a closed-form expression.  
+But $\Phi^{-1}$ (the quantile function) does not have a closed-form expression.\
 
 \medskip\pause
 
@@ -362,13 +363,12 @@ of $\Phi^{-1}$ is how R generates samples from $\mathcal{N}(0,1)$.
 
 \medskip\pause
 
-
 ## Sampling in R
 
-R has three basic options for customizing the behavior,
-set through `RNGkind()`.
+R has three basic options for customizing the behavior, set through `RNGkind()`.
 
-```{r rng-kind}
+```{r}
+#| label: rng-kind
 RNGkind()
 ```
 
@@ -381,7 +381,6 @@ RNGkind()
 - `sample.kind`: type of sampler for `sample()`
 
 ##
-
 
 \begin{figure}
   \begin{tikzpicture}[node distance=1cm, auto, >=stealth, thick]
@@ -399,7 +398,6 @@ RNGkind()
   \caption{Main categories of sampling methods (in this course).}
 \end{figure}
 
-
 ## Example: Sampling from a $t$-Distribution
 
 If we let
@@ -413,7 +411,8 @@ $$
 
 . . .
 
-This transformation is used in R and other software to simulate $t$-distributed random variables.
+This transformation is used in R and other software to simulate $t$-distributed
+random variables.
 
 \medskip\pause
 
@@ -423,7 +422,6 @@ This transformation is used in R and other software to simulate $t$-distributed 
   $w \gets $ sample from $\chi^2_k$\;
   \KwRet{$z / \sqrt{w / k}$}\;
 \end{algorithm}
-
 
 ## Von Mises Distribution
 
@@ -473,12 +471,12 @@ p2 <- ggplot(xy, aes(x = x, y = y)) +
 p1 + p2
 ```
 
-
 ## Sampling from the von Mises Distribution
 
 ### Using movMF
 
-```{r vMsim}
+```{r}
+#| label: vMsim
 library(movMF)
 xy <- rmovMF(500, 0.5 * c(cos(-1.5), sin(-1.5)))
 
@@ -495,8 +493,8 @@ closed-form expression for the quantile function.
 
 ##
 
-
-```{r vMhist}
+```{r}
+#| label: vMhist
 #| fig-height: 2.5
 #| fig-width: 5.5
 #| echo: false
@@ -548,11 +546,13 @@ $Y_k$ has density $f$.
 
 \medskip\pause
 
-$\alpha$ is the **acceptance probability** and $g(y)/\alpha$ the **envelope** of $f$.
+$\alpha$ is the **acceptance probability** and $g(y)/\alpha$ the **envelope** of
+$f$.
 
 ##
 
-```{r rejection-sampling-ggplot}
+```{r}
+#| label: rejection-sampling-ggplot
 #| echo: false
 #| fig-height: 2.5
 #| fig-width: 5
@@ -705,10 +705,10 @@ sample_vonmises_slow <- function(n, kappa) {
 }
 ```
 
-
 ##
 
-```{r vMsim2}
+```{r}
+#| label: vMsim2
 #| fig-width: 5.4
 #| fig-height: 3
 #| echo: false
@@ -750,7 +750,8 @@ ggplot(df, aes(x)) +
 
 ##
 
-```{r profile-vsim}
+```{r}
+#| label: profile-vsim
 #| echo: false
 #| eval: false
 source(here::here("R", "vmises-sim-slow.R"))
@@ -778,13 +779,13 @@ It is faster to generate all random numbers once and store them in a vector.
 But how to do that for rejection sampling with an \alert{unknown} number of
 rejections?
 
-
 ## Vectorized (but Random Length) Rejection Sampler
 
 We can speed up the rejection sampler by generating $m$ proposal samples at
 once.
 
-```{r vM-rejection-vec}
+```{r}
+#| label: vM-rejection-vec
 fixed_vonmises_sampler <- function(m, kappa) {
   Y <- runif(m, -pi, pi)
   u <- runif(m)
@@ -824,7 +825,8 @@ in advance.
 
 ## Function Factory for Rejection Sampling
 
-```{r new_rejection_sampler}
+```{r}
+#| label: new_rejection_sampler
 new_rejection_sampler <- function(generator) {
   function(n, ...) {
     alpha <- 1
@@ -846,7 +848,8 @@ new_rejection_sampler <- function(generator) {
 
 ##
 
-```{r vmises-bench}
+```{r}
+#| label: vmises-bench
 #| fig-width: 5
 #| fig-height: 1.5
 sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
@@ -861,10 +864,8 @@ bench::mark(
 
 ## Adaptive Envelopes
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 When $f$ is _log-concave_ on $I$ we can construct bounds of the form
 $$
 f(x) \leq e^{V(x)}
@@ -875,12 +876,11 @@ V(x) = \sum_{i=1}^m  (a_i x + b_i) \symbf{1}_{I_i}(x)
 $$
 for intervals $I_i$ forming a partition of $I$.
 
+:::::
 
-:::
-
-::: {.column width="47%"}
-
-```{r log-concave-envelope-general}
+::::: {.column width="47%"}
+```{r}
+#| label: log-concave-envelope-general
 #| echo: false
 library(ggplot2)
 
@@ -924,9 +924,9 @@ ggplot(df, aes(x)) +
   theme_minimal()
 ```
 
-:::
+:::::
 
-::::
+:::
 
 \bigskip\pause
 
@@ -935,7 +935,6 @@ Typically, $a_i x + b_i$ is tangent to the graph of $\log(f)$ at $x_i \in I_i =
 $$
 z_0 < x_1 < z_1 < x_2 < \ldots < z_{m-1} < x_m < z_m.
 $$
-
 
 ## Beta Distribution
 
@@ -975,8 +974,10 @@ fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
 sample_beta <- new_rejection_sampler(fixed_beta_sampler)
 ```
 
-```{r Beta-fig}
-#| fig-cap: Histograms of samples from an adaptive envelope sampler with theoretical
+```{r}
+#| label: Beta-fig
+#| fig-cap: Histograms of samples from an adaptive envelope sampler with
+#|   theoretical
 #|   densities (blue) and envelopes (orange) overlaid.
 #| fig-width: 5.5
 #| fig-height: 3
@@ -1069,7 +1070,8 @@ ggplot(sample_df, aes(x)) +
 
 ##
 
-```{r beta-envelopes}
+```{r}
+#| label: beta-envelopes
 #| echo: false
 #| warning: false
 #| fig-width: 5.5
@@ -1124,23 +1126,20 @@ ggplot(plot_df, aes(x = x)) +
 
 ## Von Mises Adaptive Envelopes
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 The von Mises density is unfortunately not globally log-concave.
 
 \medskip\pause
 
-But, it *is* 
+But, it *is*
 
 - log-concave on $(-\pi, \pi/2)$ and $(\pi/2, \pi)$ and
 - log-convex on $(-\pi, -\pi/2)$ and $(-\pi/2, \pi/2)$.
 
-:::
+:::::
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-cap: The von Mises density with $\kappa = 0.5$.
@@ -1168,13 +1167,14 @@ ggplot(xy, aes(x = x, y = y)) +
   )
 ```
 
-:::
+:::::
 
-::::
+:::
 
 ##
 
-```{r vonmises-adaptive}
+```{r}
+#| label: vonmises-adaptive
 #| echo: false
 dvm <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
 
@@ -1260,8 +1260,10 @@ envelope <- function(x, x1, x2, kappa) {
 }
 ```
 
-```{r vonmises-adaptive-plot}
-#| fig-cap: Histograms of samples from an adaptive envelope sampler for the von Mises distribution,
+```{r}
+#| label: vonmises-adaptive-plot
+#| fig-cap: Histograms of samples from an adaptive envelope sampler for the von
+#|   Mises distribution,
 #|   with theoretical densities (blue) and envelopes (orange) overlaid.
 #| fig-width: 5.5
 #| fig-height: 3
@@ -1344,7 +1346,7 @@ ggplot(sample_df, aes(x)) +
 
 ## Caveats about Adaptive Envelopes
 
-Adaptive envelopes is a general and powerful technique, but tricky to implement! 
+Adaptive envelopes is a general and powerful technique, but tricky to implement!
 
 \medskip\pause
 
@@ -1356,31 +1358,25 @@ A good implementation should make use of new points to update envelope.
 
 ## Transformation Methods vs. Rejection Sampling
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Transformation Methods
 
 Transform samples from a simple distribution to the target distribution.
 
 \medskip\pause
 
-Efficient if the transformation is available
-and cheap to compute.
+Efficient if the transformation is available and cheap to compute.
 
 \medskip\pause
 
 But may not work for complex or unnormalized distributions!
 
-:::
-
+:::::
 
 . . .
 
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Rejection Sampling
 
 Uses a proposal distribution and accepts/rejects samples.
@@ -1397,12 +1393,11 @@ Often less efficient, but very general.
 
 Useful for complex, high-dimensional, or unnormalized distributions.
 
+:::::
+
 :::
 
-::::
-
 . . .
-
 
 ### Takeaway {.example}
 
@@ -1420,7 +1415,9 @@ $$
 to implement a function, `my_rchisq()`, such that
 `my_rchisq(n, k)` returns a sample of $n$ i.i.d. observations from $\chi^2_k$.
 
-```{r rchisq2-implementation, include = FALSE}
+```{r}
+#| label: rchisq2-implementation
+#| include: false
 my_rchisq <- function(n, k) {
   y <- numeric(n)
   for (i in seq_len(n)) {
@@ -1431,7 +1428,9 @@ my_rchisq <- function(n, k) {
 }
 ```
 
-```{r rchisq2-implementation-faster, include = FALSE}
+```{r}
+#| label: rchisq2-implementation-faster
+#| include: false
 my_fast_rchisq <- function(n, k) {
   x <- matrix(rnorm(k * n), k)
   colSums(x)
@@ -1444,7 +1443,9 @@ my_fast_rchisq <- function(n, k) {
 
 Make another function `my_other_rchisq()` that uses inverse sampling.
 
-```{r rchisq2, include = FALSE}
+```{r}
+#| label: rchisq2
+#| include: false
 my_other_rchisq <- function(n, k) {
   x <- rnorm(n)
   qchisq(x, k)
@@ -1457,7 +1458,9 @@ my_other_rchisq <- function(n, k) {
 
 Benchmark your implementations against one another and `rchisq()`.
 
-```{r rchisq-bench, include = FALSE}
+```{r}
+#| label: rchisq-bench
+#| include: false
 n <- 1e4
 k <- 5
 bench::mark(
