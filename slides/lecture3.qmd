@@ -77,7 +77,7 @@ If you're only doing it for yourself, then is the **investment** worth it?
 > opportunities in that critical 3%.
 >
 > \medskip
-> *—Donald Knuth*
+> *---Donald Knuth*
 
 . . .
 
@@ -133,9 +133,8 @@ In this course we focus mostly on time.
 ## Profiling in R
 
 The R package [profvis](https://CRAN.R-project.org/package=profvis) provides
-tools to visualize profiling
-output.^[Can be activated directly in
-RSTudio (but not Positron)].
+tools to visualize profiling output.^[Can be activated directly in RSTudio (but
+not Positron)].
 
 ```{r}
 #| label: load_profvis
@@ -409,9 +408,9 @@ head(dens_bench, 6)
 
 ```{r}
 #| label: default-press-plot
-#| fig-cap: Default plot method for `bench::press()` results, here showing
-#|  the performance of three different implementations of a kernel density
-#|  estimator.
+#| fig-cap: Default plot method for `bench::press()` results, here showing the
+#|   performance of three different implementations of a kernel density
+#|   estimator.
 #| fig-width: 5.3
 #| fig-height: 2.6
 plot(dens_bench)
@@ -606,11 +605,11 @@ we cannot optimize the kernel further.
 But we can use \alert{binning}: create $B$ bins and evaluate the kernel and
 replace
 $$
-  \hat{f}(x) = \frac{1}{n h} \sum_{i=1}^n K\left( \frac{x - x_i}{h} \right)
+\hat{f}(x) = \frac{1}{n h} \sum_{i=1}^n K\left( \frac{x - x_i}{h} \right)
 $$
 with
 $$
-  \hat{f}(x) = \frac{1}{n h} \sum_{j=1}^B n_j K\left( \frac{x - c_j}{h} \right)
+\hat{f}(x) = \frac{1}{n h} \sum_{j=1}^B n_j K\left( \frac{x - c_j}{h} \right)
 $$
 where $c_j$ is the center of the $j$th bin and $n_j$ is the number of data
 points in the $j$th bin.
@@ -727,8 +726,8 @@ As always, we should test our code to ensure it works as expected.
 #| label: plot-kern-dens-benchmark
 #| fig-width: 4
 #| echo: false
-#| fig-cap: The standard density estimator as a black line and
-#|   the binning estimate as a filled area.
+#| fig-cap: The standard density estimator as a black line and the binning
+#|   estimate as a filled area.
 set.seed(123)
 x <- rnorm(1e4) + rnorm(1e4, -3, 0.7)
 
