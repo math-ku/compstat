@@ -7,6 +7,7 @@ title: "Measuring and Improving Performance"
 ```{r}
 #| label: setup
 #| include: false
+
 source(here::here("R", "kernel.R"), keep.source = TRUE)
 
 phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
@@ -157,6 +158,7 @@ The result is an interactive webpage (tab in RStudio).
 ```{r}
 #| label: source_profvis
 #| eval: false
+
 source("<your-file>.R")
 profvis(your_function())
 ```
@@ -168,6 +170,7 @@ lecture.
 
 ```{r}
 #| label: kern-dens-code
+
 # In file R/kernel.R
 kern_dens <- function(x, h, m = 512) {
   rg <- range(x)
@@ -528,6 +531,7 @@ implemented in a compiled language (e.g. `lm()` and `qr()`.)
 
 ```{r}
 #| label: bench-loop-vector
+
 x <- rnorm(1e4)
 bench_res <- bench::mark(
   loop = {
@@ -547,6 +551,7 @@ bench_res <- bench::mark(
 #| label: bench-plot
 #| fig-width: 5
 #| fig-cap: Benchmark results for a loop vs. a vectorized computation
+
 plot(bench_res)
 ```
 
@@ -570,6 +575,7 @@ Just because you ran a vectorized function, it doesn't make it fast.
 
 ```{r}
 #| label: bench-loop-bench
+
 loop_bench <- bench::mark(
   sapply = sapply(x, function(x_i) 10 * x_i),
   loop = {
@@ -689,6 +695,7 @@ points as bin centers.
 #| fig-width: 5.2
 #| fig-cap: The relative benefit of binning increases with the size of the data.
 #| fig-height: 3
+
 res2 <- bench::press(
   n = 2^(5:13),
   {
