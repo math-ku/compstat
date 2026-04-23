@@ -1,7 +1,9 @@
-```{r setup-common}
+```{r}
+#| label: setup-common
 #| echo: false
 #| message: false
 #| warning: false
+
 library(tidyverse)
 library(patchwork)
 theme_set(theme_minimal(base_size = 10))
@@ -9,24 +11,14 @@ options(width = 60)
 ```
 
 ::: {.content-hidden when-format="beamer"}
-
 \DeclareMathOperator*{\argmin}{\arg\,\min}
-
 \DeclareMathOperator*{\argmax}{\arg\,\min}
-
 \DeclareMathOperator*{\minimize}{minimize}
-
 \DeclareMathOperator{\kl}{KL}
-
 \DeclareMathOperator{\var}{Var}
-
 \DeclareMathOperator{\cov}{Cov}
-
 \DeclareMathOperator{\normal}{\mathcal{N}}
 \DeclareMathOperator{\binomial}{Bin}
-
 \DeclareMathOperator{\uniform}{\mathcal{U}}
-
 \newcommand{\E}{\operatorname{E}}
-
 :::
