@@ -4,7 +4,10 @@ title: "Optimization"
 
 {{< include _common.qmd >}}
 
-```{r setup, include=FALSE}
+```{r}
+#| label: setup
+#| include: false
+
 library(patchwork)
 library(tidyverse)
 
@@ -17,7 +20,7 @@ old_options <- options(digits = 4)
 
 Estimate $\E h(X)$ with $X \sim f$ by
 $$
-\hat{\mu}_n = \frac{1}{n} \sum_{i=1}^n h(X_i) \quad \text{with } X_i \overset{iid}{\sim} f.
+  \hat{\mu}_n = \frac{1}{n} \sum_{i=1}^n h(X_i) \quad \text{with } X_i \overset{iid}{\sim} f.
 $$
 
 . . .
@@ -26,11 +29,11 @@ $$
 
 Use the "trick" that
 $$
-\mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
+  \mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
 $$
 and estimate
 $$
-\hat{\mu}_n^{IS} = \frac{1}{n} \sum_{i=1}^n h(X_i) w^*(X_i) \quad \text{with } X_i \overset{iid}{\sim} g.
+  \hat{\mu}_n^{IS} = \frac{1}{n} \sum_{i=1}^n h(X_i) w^*(X_i) \quad \text{with } X_i \overset{iid}{\sim} g.
 $$
 
 ## Recap: Importance Sampling
@@ -46,7 +49,6 @@ sampling by estimating normalized weights.
 
 Pick an importance distribution $g$ that covers the important parts of $f$, with
 heavy tails, and from which we can easily sample.
-
 
 ## Today
 
@@ -77,7 +79,6 @@ We learn about gradient descent and Newton's method.
 
 The process of trying to optimize an objective function $f$.
 
-
 \medskip\pause
 
 Typically, we are interested in either **minimizing** or **maximizing** the
@@ -99,13 +100,13 @@ minimization.
 
 ## Standard Form
 
-In _standard form_, an optimization problem is written as
+In *standard form*, an optimization problem is written as
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_x  && f(x) \\
-  &\textrm{subject to}         && g_i(x) \leq 0, \quad i = 1, \ldots, m \\
-  &                            && h_j(x) = 0, \quad j = 1, \ldots, k.
-  \end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_x  && f(x) \\
+    &\textrm{subject to}         && g_i(x) \leq 0, \quad i = 1, \ldots, m \\
+    &                            && h_j(x) = 0, \quad j = 1, \ldots, k.
+    \end{aligned}
 $$
 where
 
@@ -119,7 +120,7 @@ where
 
 We write the solution as
 $$
-x^* = \operatorname{argmin}_x f(x)
+  x^* = \operatorname{argmin}_x f(x)
 $$
 
 ## Examples of Optimization Problems
@@ -127,9 +128,9 @@ $$
 ### Smoothing Splines
 
 $$
-\operatorname*{minimize}_{\symbf{\beta}} \left(
-  (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
-\right)
+  \operatorname*{minimize}_{\symbf{\beta}} \left(
+    (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
+  \right)
 $$
 
 . . .
@@ -137,10 +138,10 @@ $$
 ### Finding the Hyperparameter for Smoothing Splines
 
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_\lambda  && \left( (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta} \right) \\
-  &\textrm{subject to}               && \lambda \geq 0.
-\end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_\lambda  && \left( (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta} \right) \\
+    &\textrm{subject to}               && \lambda \geq 0.
+  \end{aligned}
 $$
 
 ## Examples of Optimization Problems
@@ -148,7 +149,7 @@ $$
 ### Maximum Likelihood
 
 $$
-\operatorname*{minimize}_{\theta}\big( - \log f(\theta \mid x)\big),
+  \operatorname*{minimize}_{\theta}\big( - \log f(\theta \mid x)\big),
 $$
 where $f(\theta \mid x)$ is the likelihood function.
 
@@ -157,11 +158,11 @@ where $f(\theta \mid x)$ is the likelihood function.
 ### Minimum-Variance Portfolio
 
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_w  &&  w^T \Sigma w\\
-  &\textrm{subject to}         && \bar{p}^T w \geq r_\mathrm{min},\\
-  &                            && \symbf{1}^T w = 1,
-\end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_w  &&  w^T \Sigma w\\
+    &\textrm{subject to}         && \bar{p}^T w \geq r_\mathrm{min},\\
+    &                            && \symbf{1}^T w = 1,
+  \end{aligned}
 $$
 where $w$ are the asset weights, $\Sigma$ is the covariance matrix of asset
 returns, $\bar{p}$ is the vector of expected returns, and $r_\mathrm{min}$ is
@@ -171,9 +172,9 @@ the minimum acceptable return.
 
 The problem is to
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_{\beta \in \mathbb{R}^p} &&f(\beta) = \frac{1}{2} \lVert y - X\beta\rVert_2^2.
-\end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_{\beta \in \mathbb{R}^p} &&f(\beta) = \frac{1}{2} \lVert y - X\beta\rVert_2^2.
+  \end{aligned}
 $$
 
 . . .
@@ -182,7 +183,7 @@ $$
 
 The solution is
 $$
-\beta^* = \operatorname{argmin}_{\beta \in \mathbb{R}^p} f(\beta).
+  \beta^* = \operatorname{argmin}_{\beta \in \mathbb{R}^p} f(\beta).
 $$
 
 ## Types of Optimization Problems
@@ -212,11 +213,11 @@ $$
 Standard form:
 
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_x     && f(x) \\
-  &\textrm{subject to}            && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
-  &                               && a_j^T x = b_j, \quad j = 1, \ldots, k,
-  \end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_x     && f(x) \\
+    &\textrm{subject to}            && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
+    &                               && a_j^T x = b_j, \quad j = 1, \ldots, k,
+    \end{aligned}
 $$
 
 where $f$ and $g_i$ are convex.
@@ -226,7 +227,7 @@ where $f$ and $g_i$ are convex.
 A function $f$ is convex iff for all $x_1, x_2 \in \operatorname{dom} f$ and
 $\lambda \in [0, 1]$
 $$
-f(\lambda x_1 + (1 - \lambda) x_2) \leq \lambda f(x_1) + (1 - \lambda) f(x_2).
+  f(\lambda x_1 + (1 - \lambda) x_2) \leq \lambda f(x_1) + (1 - \lambda) f(x_2).
 $$
 
 This is known as **Jensen's inequality**.
@@ -238,6 +239,7 @@ This is known as **Jensen's inequality**.
 #| fig-width: 4
 #| fig-height: 2
 #| fig-cap: "Jensen's inequality for a convex function."
+
 library(ggplot2)
 
 # Convex function
@@ -255,10 +257,7 @@ df <- data.frame(
   type = c(rep("f", 100), rep("chord", 2))
 )
 
-pts <- data.frame(
-  x = c(x1, x2),
-  y = c(f(x1), f(x2))
-)
+pts <- data.frame(x = c(x1, x2), y = c(f(x1), f(x2)))
 
 labels <- c(
   f = expression(f(x)),
@@ -290,7 +289,7 @@ ggplot(df, aes(x, y)) +
 
 If $f$ is **differentiable**, then the condition is equivalent to
 $$
-f(x_1) \geq f(x_2) + \nabla f(x_2)^T(x_1 - x_2).
+  f(x_1) \geq f(x_2) + \nabla f(x_2)^T(x_1 - x_2).
 $$
 
 . . .
@@ -300,6 +299,7 @@ $$
 #| fig-width: 4
 #| fig-height: 2
 #| fig-cap: "First-order condition for convexity."
+
 library(ggplot2)
 # Convex function
 f <- function(x) x^2
@@ -312,10 +312,7 @@ df <- data.frame(
   y = c(f(x_vals), f(x0)),
   type = c(rep("f", 100), "tangent")
 )
-pts <- data.frame(
-  x = x0,
-  y = f(x0)
-)
+pts <- data.frame(x = x0, y = f(x0))
 
 labels <- c(
   f = expression(f(x)),
@@ -330,12 +327,7 @@ ggplot(df, aes(x, y)) +
     linetype = "dashed",
     color = "steelblue"
   ) +
-  geom_point(
-    data = pts,
-    aes(x, y),
-    label = expression(x[2]),
-    nudge_y = 0.3
-  ) +
+  geom_point(data = pts, aes(x, y), label = expression(x[2]), nudge_y = 0.3) +
   scale_linetype_manual(
     values = c(f = "solid", tangent = "dashed"),
     labels = labels
@@ -349,7 +341,6 @@ ggplot(df, aes(x, y)) +
   labs(y = expression(f(x)), x = "x")
 ```
 
-
 ## Optimality
 
 Any (local) minimum is **global** (but not necessarily unique).
@@ -358,7 +349,7 @@ Any (local) minimum is **global** (but not necessarily unique).
 
 For differentiable $f$, $x^*$ is optimal iff
 $$
-\nabla f(x^*)^T(x - x^*) \geq 0\quad\text{for all}\quad x \in C,
+  \nabla f(x^*)^T(x - x^*) \geq 0\quad\text{for all}\quad x \in C,
 $$
 where $C$ is the feasible set.
 
@@ -368,7 +359,7 @@ where $C$ is the feasible set.
 
 If $f$ is twice-differentiable, then $x^*$ is optimal iff
 $$
-\nabla^2f(x^*) \succeq 0.
+  \nabla^2f(x^*) \succeq 0.
 $$
 
 ## Quasiconvex Optimization Problems
@@ -376,11 +367,11 @@ $$
 ### Standard Form
 
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_x && f(x) \\
-  &\textrm{subject to}        && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
-  &                               && A^T x = b,
-  \end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_x && f(x) \\
+    &\textrm{subject to}        && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
+    &                               && A^T x = b,
+    \end{aligned}
 $$
 where $g_i$ are convex but $f$ is **quasiconvex**.
 
@@ -420,13 +411,15 @@ Won't cover here, but typically **stochastic algorithms** (next week) or
 
 ##
 
-
-```{r convexity-types, echo = FALSE }
+```{r}
+#| label: convexity-types
+#| echo: false
 #| warning: false
 #| fig-height: 3.4
 #| fig-width: 5.4
 #| fig-cap: "$x^2$ (convex), $\\sin(x + \\pi)$ (non-convex),
 #|   and $\\sqrt{|x|}$ (quasi-convex)."
+
 convex_function <- function(x) x^2
 non_convex_function <- function(x) sin(x + pi)
 quasi_convex_function <- function(x) sqrt(abs(x))
@@ -500,8 +493,7 @@ p2 <- ggplot(df, aes(x = x, y = gradient)) +
   facet_wrap(~type, scales = "free_y")
 
 # Print the plots
-p1 /
-  p2 +
+p1 / p2 +
   plot_layout(axis_title = "collect", guides = "collect", axes = "collect")
 ```
 
@@ -521,8 +513,8 @@ Provides a solution up to machine precision.
 
 ### Iterative Optimization
 
-Incrementally update optimization variable until some convergence criterion
-is met.
+Incrementally update optimization variable until some convergence criterion is
+met.
 
 \medskip\pause
 
@@ -534,6 +526,7 @@ is met.
 
 ```{r}
 #| echo: false
+
 source(here::here("R", "gradient_descent.R"))
 
 library(mvtnorm)
@@ -556,9 +549,7 @@ beta2_grid <- seq(-1, 4, length.out = 51)
 beta1_grid_persp <- seq(-1, 4, length.out = 21)
 beta2_grid_persp <- seq(-1, 4, length.out = 21)
 
-f <- function(beta, x, y) {
-  norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
-}
+f <- function(beta, x, y) norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
 
 f_vals <- outer(
   beta1_grid,
@@ -599,22 +590,21 @@ We are going to use a simple example of OLS as a running example.
 We will let $p=2$, and generate some data from a multivariate normal
 distribution:
 $$
-\symbf{x} \sim \normal(
-  \symbf{\mu} = \begin{bmatrix}1 \\ 1\end{bmatrix},
-  \symbf{\Sigma} = \begin{bmatrix}1 & 0.8 \\ 0.8 & 1\end{bmatrix}
-)
+  \symbf{x} \sim \normal(
+    \symbf{\mu} = \begin{bmatrix}1 \\ 1\end{bmatrix},
+    \symbf{\Sigma} = \begin{bmatrix}1 & 0.8 \\ 0.8 & 1\end{bmatrix}
+  )
 $$
 
 ##
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ```{r}
 #| fig-width: 4
 #| fig-height: 4
 #| echo: false
+
 persp3D(
   beta1_grid,
   beta2_grid,
@@ -629,14 +619,13 @@ persp3D(
   zlab = "f"
 )
 ```
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| fig-height: 2.8
 #| echo: false
+
 source(here::here("R", "gradient_descent.R"))
 
 contour_scale <- scale_color_gradient(
@@ -657,11 +646,7 @@ step_size_illustration <- function(
 ) {
   method <- match.arg(method)
 
-  optimizer <- switch(
-    method,
-    gd = gd,
-    newton = newton
-  )
+  optimizer <- switch(method, gd = gd, newton = newton)
 
   res <- optimizer(x, y, t = t, maxit = maxit, line_search = line_search)
 
@@ -683,13 +668,9 @@ step_size_illustration <- function(
   beta1_grid <- seq(-1, 4, length.out = 51)
   beta2_grid <- seq(-1, 4, length.out = 51)
 
-  f <- function(beta, x, y) {
-    norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
-  }
+  f <- function(beta, x, y) norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
 
-  f_grad <- function(beta, x, y) {
-    -t(x) %*% (y - x %*% beta) / nrow(x)
-  }
+  f_grad <- function(beta, x, y) -t(x) %*% (y - x %*% beta) / nrow(x)
 
   taylor_approx <- function(beta, beta0, x, y, t) {
     f(beta, x, y) +
@@ -723,12 +704,7 @@ step_size_illustration <- function(
 
   res <- ggplot(beta_df, aes(beta1, beta2)) +
     contour_scale +
-    geom_point(
-      data = optimum_df,
-      color = "darkorange",
-      size = 3,
-      pch = 4
-    ) +
+    geom_point(data = optimum_df, color = "darkorange", size = 3, pch = 4) +
     labs(x = expression(beta[1]), y = expression(beta[2])) +
     coord_fixed(xlim = c(-1, 4), ylim = c(-1, 4), expand = FALSE) +
     geom_contour(aes(z = f, color = after_stat(level)), bins = 25)
@@ -771,9 +747,7 @@ step_size_illustration <- function(
   }
 
   if (plot_convergence) {
-    res <- res +
-      geom_point(data = df, size = 0.5) +
-      geom_path(data = df)
+    res <- res + geom_point(data = df, size = 0.5) + geom_path(data = df)
   }
 
   res
@@ -781,10 +755,8 @@ step_size_illustration <- function(
 
 step_size_illustration(x, y, plot_convergence = FALSE)
 ```
-
+:::::
 :::
-
-::::
 
 ## Direct Methods
 
@@ -794,7 +766,7 @@ Analytical solution, up to machine precision.
 
 Solve
 $$
-X^TX \beta = X^Ty
+  X^TX \beta = X^Ty
 $$
 for $\beta \in \mathbb{R}^p$.
 
@@ -809,7 +781,6 @@ solve(crossprod(X), crossprod(X, y))
 . . .
 
 but what happens \alert{under the hood}?
-
 
 ## Iterative Methods
 
@@ -858,10 +829,8 @@ Use the Hessian of the function (**second** derivative).
 The quintessential first-order method!
 
 \medskip\pause
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 \begin{algorithm}[H]
   \caption{Gradient descent}
   \KwData{Step size $t > 0$}
@@ -879,11 +848,9 @@ enough.
 ### Step Size {.alert}
 
 But how do we choose $t$?
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 
@@ -903,11 +870,7 @@ gd_illustration <- function(f, f_prime, x0, t, n_steps) {
     y = f(seq(min(x_vals) - 0.5, max(x_vals) + 1, length.out = 100))
   )
 
-  points_df <- data.frame(
-    step = 0:n_steps,
-    x = x_vals,
-    y = f(x_vals)
-  )
+  points_df <- data.frame(step = 0:n_steps, x = x_vals, y = f(x_vals))
 
   ggplot(df, aes(x, y)) +
     geom_line() +
@@ -939,11 +902,8 @@ gd_illustration(
   n_steps = 3
 )
 ```
-
+:::::
 :::
-
-::::
-
 
 ##
 
@@ -963,6 +923,7 @@ step_size_illustration(x, y, 0.0003)
 #| fig-width: 5
 #| fig-height: 3.25
 #| fig-cap: The step size is too large!
+
 step_size_illustration(x, y, 0.0115, maxit = 35)
 ```
 
@@ -970,30 +931,27 @@ step_size_illustration(x, y, 0.0115, maxit = 35)
 
 Take the second-order Taylor expansion of $f$ around $x$:
 $$
-f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).
+  f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).
 $$
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize w.r.t $y$ to get
 $$
-x^+ = x - t\nabla f(x).
+  x^+ = x - t\nabla f(x).
 $$
 
 ### Step Size {.alert}
 
 But we still need to choose $t$!
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
+
 # show a illustration of this taylor expansion, and the fact that the
 # gradient descent step is the minimizer of this taylor expansion
 gd_taylor_illustration <- function(f, f_prime, x0, t) {
@@ -1011,10 +969,7 @@ gd_taylor_illustration <- function(f, f_prime, x0, t) {
       values_to = "value"
     )
 
-  taylor_min <- tibble(
-    x = df$x[which.min(df$taylor)],
-    y = min(df$taylor)
-  )
+  taylor_min <- tibble(x = df$x[which.min(df$taylor)], y = min(df$taylor))
 
   next_step <- tibble(
     x = c(x0, x0 - t * f_prime(x0)),
@@ -1034,24 +989,13 @@ gd_taylor_illustration <- function(f, f_prime, x0, t) {
     ) +
     scale_color_manual(
       values = c(y = "black", taylor = "steelblue"),
-      labels = c(
-        y = expression(f(x)),
-        taylor = expression(hat(f)(x))
-      )
+      labels = c(y = expression(f(x)), taylor = expression(hat(f)(x)))
     ) +
     scale_linetype_manual(
       values = c(y = "solid", taylor = "dashed"),
-      labels = c(
-        y = expression(f(x)),
-        taylor = expression(hat(f)(x))
-      )
+      labels = c(y = expression(f(x)), taylor = expression(hat(f)(x)))
     ) +
-    labs(
-      y = expression(f(x)),
-      x = "x",
-      color = NULL,
-      linetype = NULL
-    ) +
+    labs(y = expression(f(x)), x = "x", color = NULL, linetype = NULL) +
     theme_void()
 }
 
@@ -1062,10 +1006,8 @@ gd_taylor_illustration(
   t = 0.2
 )
 ```
-
+:::::
 :::
-
-::::
 
 ## The Descent Lemma (from Taylor's Theorem)
 
@@ -1074,7 +1016,7 @@ gd_taylor_illustration(
 For any $x, y$ in the domain of $f$, there exists a $c$ on the line segment
 between $x$ and $y$ such that
 $$
-f(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(c) (y - x).
+  f(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(c) (y - x).
 $$
 
 . . .
@@ -1083,23 +1025,20 @@ $$
 
 Suppose we know that the Hessian is bounded above by $L I$, i.e.,
 $$
-\nabla^2 f(x) \preceq L I \quad \text{for all } x.
+  \nabla^2 f(x) \preceq L I \quad \text{for all } x.
 $$
 
 . . .
 
 Then
 $$
-f(y) \leq f(x) + \nabla f(x)^T (y - x) + \frac{L}{2} \lVert y - x\rVert_2^2.
+  f(y) \leq f(x) + \nabla f(x)^T (y - x) + \frac{L}{2} \lVert y - x\rVert_2^2.
 $$
-
 
 ## Lipschitz Constant
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 The bound that we used in the descent lemma, $L$, is known as the **Lipschitz
 constant** of $\nabla f$.
 
@@ -1107,7 +1046,7 @@ constant** of $\nabla f$.
 
 It is defined as follows.
 $$
-\lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2.
+  \lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2.
 $$
 
 . . .
@@ -1120,18 +1059,17 @@ $x$.
 If $f$ is twice-differentiable, then the Lipschitz constant is the smallest $L$
 such that
 $$
-\nabla^2 f(x) \preceq L I \quad \text{for all } x.
+  \nabla^2 f(x) \preceq L I \quad \text{for all } x.
 $$
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-height: 3.2
+
 # For a Lipschitz continuous function, there exists a double cone (white) whose
 # origin can be moved along the graph so that the whole graph always stays
 # outside the double cone
@@ -1140,10 +1078,7 @@ $$
 lipschitz_illustration <- function(f, f_prime, L, x0) {
   x_vals <- seq(x0 - 2, x0 + 2, length.out = 200)
 
-  df <- data.frame(
-    x = x_vals,
-    y = f_prime(x_vals)
-  )
+  df <- data.frame(x = x_vals, y = f_prime(x_vals))
 
   ggplot(df, aes(x, y)) +
     geom_ribbon(
@@ -1163,73 +1098,43 @@ lipschitz_illustration <- function(f, f_prime, L, x0) {
     labs(y = expression(nabla * f(x)), x = "x")
 }
 
-f <- function(x) {
-  ifelse(x < 0, x^2 - x, -log(1 + x))
-}
+f <- function(x) ifelse(x < 0, x^2 - x, -log(1 + x))
 
-f_prime <- function(x) {
-  ifelse(x < 0, 2 * x - 1, -1 / (1 + x))
-}
+f_prime <- function(x) ifelse(x < 0, 2 * x - 1, -1 / (1 + x))
 
-p1 <- lipschitz_illustration(
-  f = f,
-  f_prime = f_prime,
-  L = 2,
-  x0 = 0
-)
-
+p1 <- lipschitz_illustration(f = f, f_prime = f_prime, L = 2, x0 = 0)
 
 f <- function(x) {
   ifelse(
     x < 1,
     12.5 * x^2,
-    ifelse(
-      1 <= x & x < 2,
-      0.5 * x^2 + 24 * x - 12,
-      12.5 * x^2 - 24 * x + 36
-    )
+    ifelse(1 <= x & x < 2, 0.5 * x^2 + 24 * x - 12, 12.5 * x^2 - 24 * x + 36)
   )
 }
 
 f_prime <- function(x) {
-  ifelse(
-    x < 1,
-    25 * x,
-    ifelse(
-      1 <= x & x < 2,
-      x + 24,
-      25 * x - 24
-    )
-  )
+  ifelse(x < 1, 25 * x, ifelse(1 <= x & x < 2, x + 24, 25 * x - 24))
 }
 
-
-p2 <- lipschitz_illustration(
-  f = f,
-  f_prime = f_prime,
-  L = 25,
-  x0 = 0
-)
+p2 <- lipschitz_illustration(f = f, f_prime = f_prime, L = 25, x0 = 0)
 
 p1 / p2 + plot_layout(axes = "collect")
 ```
-
+:::::
 :::
-
-::::
 
 ## The Connection to Gradient Descent
 
 If we apply the descent lemma with $y = x - t \nabla f(x)$, we get
 $$
-f(x - t \nabla f(x)) \leq f(x) - t \Vert \nabla f(x)\rVert_2^2 + \frac{L t^2}{2} \lVert \nabla f(x)\rVert_2^2.
+  f(x - t \nabla f(x)) \leq f(x) - t \Vert \nabla f(x)\rVert_2^2 + \frac{L t^2}{2} \lVert \nabla f(x)\rVert_2^2.
 $$
 
 . . .
 
 This means that if $t \leq 1/L$, then
 $$
-f(x - t \nabla f(x)) \leq f(x) - \frac{t}{2} \lVert \nabla f(x)\rVert_2^2.
+  f(x - t \nabla f(x)) \leq f(x) - \frac{t}{2} \lVert \nabla f(x)\rVert_2^2.
 $$
 
 . . .
@@ -1243,6 +1148,7 @@ In other words, the function value decreases at each step.
 #| fig-width: 5
 #| fig-height: 3.25
 #| fig-cap: The step size is just right ($t = 1/L$)!
+
 step_size_illustration(x, y)
 ```
 
@@ -1256,7 +1162,7 @@ In practice, we may not know $L$ or it may be difficult to compute.
 
 It may be tempting to try to solve
 $$
-t^* = \arg_t\min f(x - t\nabla f(x)).
+  t^* = \arg_t\min f(x - t\nabla f(x)).
 $$
 
 . . .
@@ -1266,10 +1172,8 @@ search, like **backtracking line search**.
 
 ## Backtracking Line Search
 
-:::: {.columns}
-
-::: {.column width="53%"}
-
+::: {.columns}
+::::: {.column width="53%"}
 \begin{algorithm}[H]
   \caption{Backtracking line search}
   \KwData{Initial step size $t_0 > 0$, parameters $\alpha \in (0, 1/2]$ and $\gamma \in (0, 1)$}
@@ -1288,16 +1192,15 @@ decreases sufficiently.
 \medskip\pause
 
 Adapts to local curvature of the function.
+:::::
 
-:::
-
-::: {.column width="41%"}
-
+::::: {.column width="41%"}
 ```{r}
 #| fig-height: 2.9
 #| fig-width: 2.6
 #| echo: false
 #| fig-cap: An illustration of backtracking line search.
+
 # show a illustration of backtracking line search
 # that shows how the check work on a simple one-dimensional function
 # with a tangent line and the next step
@@ -1333,10 +1236,7 @@ backtracking_illustration <- function() {
 
   ggplot(df_long, aes(t, y)) +
     geom_line(aes(color = type, linetype = type)) +
-    labs(
-      y = expression(f(t)),
-      x = "t"
-    ) +
+    labs(y = expression(f(t)), x = "t") +
     scale_y_continuous(limits = c(-2, 5)) +
     scale_color_manual(
       values = c(f1 = "black", f2 = "darkorange", f3 = "steelblue"),
@@ -1355,12 +1255,8 @@ backtracking_illustration <- function() {
 }
 backtracking_illustration()
 ```
-
+:::::
 :::
-
-::::
-
-
 
 ##
 
@@ -1369,15 +1265,14 @@ backtracking_illustration()
 #| fig-width: 5
 #| fig-height: 3.25
 #| fig-cap: "Backtracking line search."
+
 step_size_illustration(x, y, line_search = TRUE)
 ```
 
 ## Conditioning
 
-:::: {.columns}
-
-::: {.column width="46%"}
-
+::: {.columns}
+::::: {.column width="46%"}
 So, $L$ decides how large step size we can take.
 
 \medskip\pause
@@ -1391,24 +1286,21 @@ means that it may be pessimistic in some directions.
 
 The **condition number** of $f$ is defined as
 $$
-\kappa = \frac{\lambda_{\max}}{\lambda_{\min}}.
+  \kappa = \frac{\lambda_{\max}}{\lambda_{\min}}.
 $$
 
 . . .
 
 If $\kappa$ is large, we say that $f$ is **ill-conditioned**. If $\kappa$ is
 small, we say that $f$ is **well-conditioned**.
+:::::
 
-:::
-
-::: {.column width="46%"}
-
+::::: {.column width="46%"}
 ```{r}
 #| echo: false
 #| fig-height: 3.2
-well_conditioned <- function(x) {
-  0.5 * ((x[1] - beta[1])^2 + (x[2] - beta[2])^2)
-}
+
+well_conditioned <- function(x) 0.5 * ((x[1] - beta[1])^2 + (x[2] - beta[2])^2)
 
 ill_conditioned <- function(x) {
   0.5 * ((x[1] - beta[1])^2 + 5 * (x[2] - beta[2])^2)
@@ -1440,29 +1332,20 @@ conditioned_df <- bind_rows(well_df, ill_df)
 
 p1 <- ggplot(conditioned_df, aes(beta1, beta2)) +
   contour_scale +
-  geom_point(
-    data = optimum_df,
-    color = "darkorange",
-    size = 3,
-    pch = 4
-  ) +
+  geom_point(data = optimum_df, color = "darkorange", size = 3, pch = 4) +
   labs(x = expression(beta[1]), y = expression(beta[2])) +
   coord_fixed(xlim = c(-1, 4), ylim = c(0.5, 3.5), expand = FALSE) +
   geom_contour(aes(z = f, color = after_stat(level)), bins = 35) +
   facet_wrap(~type, ncol = 1)
 p1
 ```
-
+:::::
 :::
-
-::::
 
 ## Convergence and Conditioning
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ```{r}
 #| fig-height: 2.5
 #| echo: false
@@ -1473,64 +1356,54 @@ y_well <- x_well %*% beta
 
 step_size_illustration(x_well, y_well)
 ```
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| fig-height: 2.5
 #| echo: false
 #| fig-cap: "Gradient descent on an ill-conditioned problem."
+
 x_ill <- rmvnorm(100, sigma = matrix(c(1, 0.8, 0.8, 1), 2, 2))
 y_ill <- x_ill %*% beta
 
 step_size_illustration(x_ill, y_ill)
 ```
-
+:::::
 :::
-
-::::
 
 ## Gradient Descent and Conditioning
 
-:::: {.columns align=center}
-
-::: {.column width="47%"}
-
+::: {.columns align=center}
+::::: {.column width="47%"}
 The problem with gradient descent is that it is sensitive to this kind of
 conditioning.
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-height: 2.8
 #| fig-cap: "The gradient descent approximation."
+
 step_size_illustration(x_ill, y_ill, t = 0.001, plot_approx = TRUE)
 ```
-
+:::::
 :::
-
-::::
 
 ## Newton's Method
 
 Recall second-order expansion of $f$ around $x$:
 $$
-f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).
+  f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).
 $$
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Gradient Descent Update
 
 Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize.
@@ -1541,18 +1414,17 @@ Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize.
 
 Instead, minimize $\hat{f}(y)$ directly:
 $$
-x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).
+  x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).
 $$
 
 \pause\bigskip
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-height: 2.4
+
 step_size_illustration(
   x,
   y,
@@ -1562,16 +1434,14 @@ step_size_illustration(
   t = 0.8,
 )
 ```
-
+:::::
 :::
-
-::::
 
 ## Damped Newton
 
 This might actually not converge, so instead we use **damped** Newton:
 $$
-x^+ = x - t\nabla^2 f(x)^{-1} \nabla f(x),
+  x^+ = x - t\nabla^2 f(x)^{-1} \nabla f(x),
 $$
 with $t > 0$ chosen by backtracking line search.
 
@@ -1590,6 +1460,7 @@ with $t > 0$ chosen by backtracking line search.
 #| fig-width: 5.4
 #| fig-height: 2.8
 #| fig-cap: "Gradient descent vs Newton's method on the ill-conditioned problem."
+
 pl_gd <- step_size_illustration(
   x_ill,
   y_ill,
@@ -1612,21 +1483,15 @@ pl_gd + pl_newton + plot_layout(guides = "collect")
 
 ## Convergence in Time and Iterations
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ![](../images/newton-gd-convergence-iteration.png){width=100%}
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ![](../images/newton-gd-convergence-time.png){width=100%}
-
+:::::
 :::
-
-::::
 
 \bigskip
 
@@ -1634,33 +1499,27 @@ In practice, results depend on the problem.
 
 ## Gradient Descent vs Newton's Method
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Gradient Descent
 
 - Cheap iterations: $O(p)$
 - Sensitive to conditioning
 - Linear convergence ($O(1/k)$)
 - Few assumptions on $f$
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Newton's Method
 
 - Expensive iterations: $O(p^3)$
 - Insensitive to conditioning
 - Quadratic convergence ($O(\log \log(1/k))$)
 - Requires $f$ to be twice-differentiable and Hessian to be positive definite
-
+:::::
 :::
-
-::::
 
 ## Quasi-Newton Methods
 
@@ -1680,25 +1539,31 @@ Same complexity but lower memory cost.
 
 ## Stopping Criteria
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Common (ad-hoc) choices
 
-- Small gradient: $$ \lVert \nabla f(x) \rVert_r \leq \epsilon $$\pause
-- Small relative change in $x$: $$
+- Small gradient:
+  $$
+  \lVert \nabla f(x) \rVert_r \leq \epsilon
+  $$
+  \pause
+- Small relative change in $x$:
+  $$
   \frac{\lVert x^{(k+1)} - x^{(k)} \rVert_2}{\lVert x^{(k)} + 10^{-q}\rVert_2}
-  \leq \epsilon$$\pause
-- Small relative change in $f$: $$\frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
-  \leq \epsilon$$
-
-:::
+  \leq \epsilon
+  $$
+  \pause
+- Small relative change in $f$:
+  $$
+  \frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
+  \leq \epsilon
+  $$
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Duality Gap
 
 If $f$ is **strongly** convex and $x$ optimal, then the duality gap is zero at
@@ -1711,10 +1576,8 @@ Most principled stopping criterion, but not always available.
 \medskip\pause
 
 \alert{Out of scope for this course!}
-
+:::::
 :::
-
-::::
 
 ## Summary
 
@@ -1738,7 +1601,7 @@ Most principled stopping criterion, but not always available.
 
 We will attempt to minimize the following function:
 $$
-f(x) = \log(1 + e^x) + \frac{1}{2}(x - 2)^2.
+  f(x) = \log(1 + e^x) + \frac{1}{2}(x - 2)^2.
 $$
 
 . . .
@@ -1746,15 +1609,12 @@ $$
 ```{r}
 #| echo: false
 #| include: false
-f <- function(x) {
-  log(1 + exp(x)) + 0.5 * (x - 2)^2
-}
+
+f <- function(x) log(1 + exp(x)) + 0.5 * (x - 2)^2
 
 curve(f, from = -2, to = 5)
 
-f_prime <- function(x) {
-  exp(x) / (1 + exp(x)) + (x - 2)
-}
+f_prime <- function(x) exp(x) / (1 + exp(x)) + (x - 2)
 ```
 
 ### Step 1

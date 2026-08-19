@@ -9,6 +9,7 @@ title: "Monte Carlo Methods"
 #| echo: false
 #| message: false
 #| warning: false
+
 library(tidyverse)
 library(patchwork)
 theme_set(theme_minimal(base_size = 10))
@@ -18,6 +19,7 @@ options(width = 60)
 ```{r}
 #| label: setup
 #| include: false
+
 old_options <- options(digits = 4)
 ```
 
@@ -31,7 +33,7 @@ normalization.
 Suppose that $g(y) \propto p(y)$ is another density, known up to normalization,
 that we can simulate from, and suppose
 $$
-\alpha' q \leq p
+  \alpha' q \leq p
 $$
 for some $\alpha' > 0$.
 
@@ -40,7 +42,7 @@ for some $\alpha' > 0$.
 If $Y$ has density $g$ and $U$ is uniform on $(0,1)$ then the conditional
 distribution
 $$
-Y \mid U \leq \alpha' \frac{q(Y)}{p(Y)}
+  Y \mid U \leq \alpha' \frac{q(Y)}{p(Y)}
 $$
 has density $f$.
 
@@ -105,7 +107,7 @@ Useful when analytical solutions are infeasible.
 
 With $X_1, \ldots, X_n$ i.i.d. with density $f$,
 $$
-\hat{\mu}_{\mathrm{MC}} = \frac{1}{n} \sum_{i=1}^n h(X_i) \rightarrow \mu = \E h(X_1) = \int h(x) f(x) \ dx
+  \hat{\mu}_{\mathrm{MC}} = \frac{1}{n} \sum_{i=1}^n h(X_i) \rightarrow \mu = \E h(X_1) = \int h(x) f(x) \ dx
 $$
 for $n \to \infty$ by the law of large numbers (LLN).
 
@@ -113,25 +115,25 @@ for $n \to \infty$ by the law of large numbers (LLN).
 
 By the central limit theorem (CLT), we know that
 $$
-\frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\mathrm{approx}} \sim
-\mathcal{N}(\mu, \sigma^2_{\mathrm{MC}} / n)
+  \frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\mathrm{approx}} \sim
+  \mathcal{N}(\mu, \sigma^2_{\mathrm{MC}} / n)
 $$
 where
 $$
-\sigma^2_{\mathrm{MC}} = \var h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.
+  \sigma^2_{\mathrm{MC}} = \var h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.
 $$
 
 ## Monte Carlo Integration
 
 We can estimate $\sigma^2_{\mathrm{MC}}$ using the empirical variance
 $$
-\hat{\sigma}^2_{\mathrm{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\mathrm{MC}})^2,
+  \hat{\sigma}^2_{\mathrm{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\mathrm{MC}})^2,
 $$
 then the variance of $\hat{\mu}_{\mathrm{MC}}$ is estimated as
 $\hat{\sigma}^2_{\mathrm{MC}} / n$ and a standard 95% confidence interval for
 $\mu$ is
 $$
-\hat{\mu}_{\mathrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\mathrm{MC}}}{\sqrt{n}}.
+  \hat{\mu}_{\mathrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\mathrm{MC}}}{\sqrt{n}}.
 $$
 
 ## Example: Gamma Distribution
@@ -144,6 +146,7 @@ We want to estimate the mean of a $\mathrm{Gamma}(8,1)$ distribution.
 
 ```{r, echo=-1}
 #| label: gamma-sim
+
 set.seed(1234)
 B <- 1000
 x <- rgamma(B, 8)
@@ -160,6 +163,7 @@ sigma_hat # Theoretical: √8
 #| label: gamma-fig
 #| echo: false
 #| fig-cap: "Density of a Gamma(8,1) distribution with mean indicated."
+
 x <- seq(0, 20, length.out = 100)
 y <- dgamma(x, 8)
 
@@ -169,9 +173,7 @@ tibble(x, y) |>
   geom_vline(xintercept = 8, linetype = "dashed", color = "steelblue") +
   annotate("text", x = 7, y = 0.02, label = "E(X)", hjust = -0.5)
 ```
-
 :::::
-
 :::
 
 ##
@@ -181,7 +183,10 @@ tibble(x, y) |>
 #| fig-height: 2.8
 #| fig-width: 5
 #| echo: false
-#| fig-cap: "Convergence of the Monte Carlo estimate of the mean of a Gamma(8,1) distribution."
+#| fig-cap: >-
+#|   Convergence of the Monte Carlo estimate of the mean of a Gamma(8,1)
+#|   distribution.
+
 p <- ggplot(tibble(x = 1:B, y = mu_hat), aes(x, y)) +
   geom_hline(yintercept = 8, linetype = "dashed", col = "steelblue4") +
   geom_line() +
@@ -244,18 +249,18 @@ So let's \alert{oversample} these regions, but correct for this by
 
 We want to find $\mu = \E h(X)$. Observe that
 $$
-\mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
+  \mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
 $$
 whenever $g$ is a density fulfilling that
 $$
-g(x) = 0 \Rightarrow f(x) = 0.
+  g(x) = 0 \Rightarrow f(x) = 0.
 $$
 
 ## Weights
 
-With $X_1, \ldots, X_n$ i.i.d. with density $g$ define the _weights_
+With $X_1, \ldots, X_n$ i.i.d. with density $g$ define the *weights*
 $$
-w^*(X_i) = \frac{f(X_i)}{g(X_i)}.
+  w^*(X_i) = \frac{f(X_i)}{g(X_i)}.
 $$
 
 . . .
@@ -267,7 +272,7 @@ $g$ is the *importance* density and $f/g$ is called the *likelihood ratio*.
 ### Estimator
 
 $$
-\hat{\mu}_{\mathrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).
+  \hat{\mu}_{\mathrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).
 $$
 
 It has mean $\mu$.
@@ -279,6 +284,7 @@ It has mean $\mu$.
 #| fig-cap: "Target and importance densities with corresponding importance weights."
 #| fig-width: 5
 #| fig-height: 3
+
 x <- seq(-5, 5, length.out = 200)
 target <- dnorm(x, mean = 0, sd = 1)
 importance <- dnorm(x, mean = 1, sd = 1)
@@ -291,9 +297,7 @@ p1 <- tibble(x, target, importance) |>
   ) |>
   ggplot(aes(x, value, color = Density, linetype = Density)) +
   geom_line() +
-  scale_color_manual(
-    values = c(target = "black", importance = "steelblue")
-  ) +
+  scale_color_manual(values = c(target = "black", importance = "steelblue")) +
   scale_linetype_manual(values = c(target = "solid", importance = "dashed")) +
   theme(legend.position.inside = c(0.87, 0.82)) +
   guides(
@@ -323,18 +327,16 @@ p1 / p2 + plot_layout(heights = c(2, 1), axes = "collect")
 ::::: {.column width="47%"}
 ```{r, echo=-1}
 #| label: gamma-sim-IS
+
 set.seed(1234)
 B <- 1000
 x <- rnorm(B, 10, 3)
-w_star <-
-  dgamma(x, 8) / dnorm(x, 10, 3)
-mu_hat_IS <-
-  cumsum(x * w_star) / (1:B)
+w_star <- dgamma(x, 8) / dnorm(x, 10, 3)
+mu_hat_IS <- cumsum(x * w_star) / (1:B)
 mu_hat_IS[B]
 ```
 
 Close to theoretical value (8).
-
 :::::
 
 . . .
@@ -345,6 +347,7 @@ Close to theoretical value (8).
 #| echo: false
 #| fig-height: 3.2
 #| fig-width: 2.7
+
 z <- seq(-12, 12, length.out = 100) + 10
 f_x <- dgamma(z, 8)
 g_x <- dnorm(z, 10, 3)
@@ -355,12 +358,8 @@ p1 <- tibble(x = z, target = f_x, importance = g_x) |>
   ggplot(aes(x, value, color = name, linetype = name)) +
   geom_line() +
   guides(color = guide_legend(position = "inside")) +
-  scale_color_manual(
-    values = c(target = "black", importance = "steelblue")
-  ) +
-  scale_linetype_manual(
-    values = c(target = "solid", importance = "dashed")
-  ) +
+  scale_color_manual(values = c(target = "black", importance = "steelblue")) +
+  scale_linetype_manual(values = c(target = "solid", importance = "dashed")) +
   theme(legend.position.inside = c(0.8, 0.8)) +
   labs(y = "Density", color = "Density", linetype = "Density")
 
@@ -370,9 +369,7 @@ p2 <- tibble(x = z, w) |>
 
 p1 / p2 + plot_layout(axes = "collect")
 ```
-
 :::::
-
 :::
 
 ##
@@ -380,16 +377,16 @@ p1 / p2 + plot_layout(axes = "collect")
 ```{r}
 #| label: gamma-IS-fig1
 #| echo: false
-#| fig-cap: "Convergence of the importance sampling estimate of the mean of a Gamma(8,1) distribution using a N(10,3) importance distribution."
+#| fig-cap: >-
+#|   Convergence of the importance sampling estimate of the mean of a Gamma(8,1)
+#|   distribution using a N(10,3) importance distribution.
 #| fig-width: 5
 #| fig-height: 2.5
+
 mu_hat_IS <- cumsum(x * w_star) / (1:B)
 sigma_hat_IS <- sd(x * w_star)
 
-p <- ggplot(
-  tibble(x = 1:B, y = mu_hat_IS),
-  aes(x, y)
-) +
+p <- ggplot(tibble(x = 1:B, y = mu_hat_IS), aes(x, y)) +
   geom_ribbon(
     aes(
       ymin = mu_hat_IS - 1.96 * sigma_hat_IS / sqrt(1:B),
@@ -409,30 +406,30 @@ p
 
 Again by the LLN
 $$
-\hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1) = \mu  \quad \text{as } n \to \infty.\pause
+  \hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1) = \mu  \quad \text{as } n \to \infty.\pause
 $$
 And by the CLT
 $$
-\hat{\mu}_{\mathrm{IS}}^* \overset{\mathrm{approx}} \sim
-\mathcal{N}(\mu, \sigma^{*2}_{\mathrm{IS}} / n)
+  \hat{\mu}_{\mathrm{IS}}^* \overset{\mathrm{approx}} \sim
+  \mathcal{N}(\mu, \sigma^{*2}_{\mathrm{IS}} / n)
 $$
 where
 $$
-\sigma^{*2}_{\mathrm{IS}} = \var \big( h(X_1)w^*(X_1)\big) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.
+  \sigma^{*2}_{\mathrm{IS}} = \var \big( h(X_1)w^*(X_1)\big) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.
 $$
 
 ## Importance Sampling Variance
 
 The IS variance can be estimated analogously with the MC variance,
 $$
-\hat{\sigma}^{*2}_{\mathrm{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2.
+  \hat{\sigma}^{*2}_{\mathrm{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2.
 $$
 
 . . .
 
 And a 95% standard confidence interval is
 $$
-\hat{\mu}^*_{\mathrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\mathrm{IS}}}{\sqrt{n}}.
+  \hat{\mu}^*_{\mathrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\mathrm{IS}}}{\sqrt{n}}.
 $$
 
 \medskip\pause
@@ -451,6 +448,7 @@ Choose $g$ so that $|h(x)| w^*(x)$ becomes as constant as possible.
 ```{r}
 #| label: gamma-IS-sd
 #| echo: true
+
 sigma_hat_IS <- sd(x * w_star)
 sigma_hat_IS
 ```
@@ -462,6 +460,7 @@ sigma_hat_IS
 #| echo: false
 #| fig-width: 4.5
 #| fig-cap: "Importance sampling estimate of the mean of a Gamma(8,1)."
+
 p +
   geom_ribbon(
     aes(
@@ -479,6 +478,7 @@ p +
 #| label: test
 #| echo: false
 #| eval: false
+
 mu_hat_IS <- replicate(10000, {
   x <- rnorm(B, 10, 3)
   w_star <- dgamma(x, 8) / dnorm(x, 10, 3)
@@ -498,7 +498,7 @@ target distribution.
 
 Suppose we want to estimate
 $$
-\E(X^4) = \int x^4 \, f(x) \, dx = 3
+  \E(X^4) = \int x^4 \, f(x) \, dx = 3
 $$
 where $f(x)$ is the standard normal density.
 
@@ -524,7 +524,10 @@ Instead, we can try a heavy-tailed importance distribution, such as Student-$t$.
 #| label: is-normal-plot
 #| echo: false
 #| fig-height: 3
-#| fig-cap: "Densities, integrand, and weights for the importance sampling example with a normal importance distribution."
+#| fig-cap: >-
+#|   Densities, integrand, and weights for the importance sampling example with
+#|   a normal importance distribution.
+
 set.seed(1)
 n <- 1000
 x_norm <- rnorm(n)
@@ -549,10 +552,7 @@ p1 <- ggplot(dens_df, aes(x, value, color = Type, linetype = Type)) +
   geom_line() +
   labs(y = "Density / Integrand") +
   scale_color_manual(
-    values = c(
-      target = "black",
-      integrand = "darkorange"
-    ),
+    values = c(target = "black", integrand = "darkorange"),
     labels = c(
       target = expression(f(x) == g(x)),
       integrand = expression(h(x) * f(x))
@@ -578,7 +578,6 @@ p1b <- ggplot(tibble(x = w_h), aes(x)) +
 
 p1 / p1b + plot_layout(heights = c(2, 1), axes = "collect")
 ```
-
 :::::
 
 . . .
@@ -588,7 +587,10 @@ p1 / p1b + plot_layout(heights = c(2, 1), axes = "collect")
 #| label: is-t-plot
 #| echo: false
 #| fig-height: 3
-#| fig-cap: "Densities, integrand, and weights for the importance sampling example with Student-$t$ as importance distribution."
+#| fig-cap: >-
+#|   Densities, integrand, and weights for the importance sampling example with
+#|   Student-$t$ as importance distribution.
+
 dens_df_t <- tibble(
   x = x_grid,
   target = dnorm(x_grid, 0, 1),
@@ -655,27 +657,25 @@ p2b <- ggplot(tibble(x = abs(w_h_t)), aes(x)) +
 
 p2 / p2b + plot_layout(heights = c(2, 1), axes = "collect")
 ```
-
 :::::
-
 :::
 
 ## Normalized Weights
 
 If $f = c^{-1} q$ with $c$ unknown then
 $$
-c = \int q(x) dx = \int \frac{q(x)}{g(x)} g(x) d x.
+  c = \int q(x) dx = \int \frac{q(x)}{g(x)} g(x) d x.
 $$
 
 . . .
 
 And
 $$
-\mu = \frac{\int h(x) w^*(x) g(x) \ d x}{\int w^*(x) g(x) \ d x},
+  \mu = \frac{\int h(x) w^*(x) g(x) \ d x}{\int w^*(x) g(x) \ d x},
 $$
 where
 $$
-w^*(x) = \frac{q(x)}{g(x)}.
+  w^*(x) = \frac{q(x)}{g(x)}.
 $$
 
 \pdfpcnote{
@@ -686,14 +686,14 @@ Note that g is still the normalized density.
 
 An importance sampling estimate of $\mu$ is thus
 $$
-\hat{\mu}_{\mathrm{IS}} = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \pause
-                        = \sum_{i=1}^n h(X_i) w(X_i),
+  \hat{\mu}_{\mathrm{IS}} = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \pause
+                          = \sum_{i=1}^n h(X_i) w(X_i),
 $$
 where $w^*(X_i) = q(X_i) / g(X_i)$ and
 $$
-w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}
+  w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}
 $$
-are the _normalized weights_.
+are the *normalized weights*.
 
 \medskip\pause
 
@@ -705,14 +705,15 @@ an unnormalized $g$ is used.
 Let's pretend that we do not know the normalizing constant of the target
 ($\mathrm{Gamma}(8,1)$) and importance ($\normal(10, 3^2)$) distributions. Then
 $$
-w^*(x) = \frac{x^7 \exp(-x)}{\exp{\left(-\frac{(x-10)^2}{18}\right)}}
-       = \exp\left(\frac{(x-10)^2}{18} - x + 7 \log(x)\right).
+  w^*(x) = \frac{x^7 \exp(-x)}{\exp{\left(-\frac{(x-10)^2}{18}\right)}}
+         = \exp\left(\frac{(x-10)^2}{18} - x + 7 \log(x)\right).
 $$
 
 . . .
 
 ```{r, echo=-1}
 #| label: gamma-sim-ISw
+
 set.seed(1234)
 B <- 1000
 x <- rnorm(B, 10, 3)
@@ -731,7 +732,10 @@ mu_hat_IS[B] # Theoretical value 8
 #| echo: false
 #| fig-width: 4.5
 #| fig-height: 3
-#| fig-cap: "Convergence of the importance sampling estimate of the mean of a Gamma(8,1) distribution using normalized weights."
+#| fig-cap: >-
+#|   Convergence of the importance sampling estimate of the mean of a Gamma(8,1)
+#|   distribution using normalized weights.
+
 p <- tibble(x = 1:B, y = mu_hat_IS) |>
   ggplot(aes(x, y)) +
   geom_line() +
@@ -750,12 +754,12 @@ the estimator is a \alert{ratio of random variables}.
 
 From the multivariate CLT, we have
 $$
-\frac{1}{n} \sum_{i=1}^n \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
-\overset{\mathrm{approx}}{\sim}
-\mathcal{N}\left(
-  c \begin{bmatrix} \mu \\ 1\end{bmatrix},
-  \frac{1}{n} \begin{bmatrix} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
-\right),
+  \frac{1}{n} \sum_{i=1}^n \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
+  \overset{\mathrm{approx}}{\sim}
+  \mathcal{N}\left(
+    c \begin{bmatrix} \mu \\ 1\end{bmatrix},
+    \frac{1}{n} \begin{bmatrix} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
+  \right),
 $$
 where $$
 \begin{aligned}
@@ -775,16 +779,16 @@ Observe that $\nabla t(x, y) = \begin{bmatrix}1 / y \\ - x / y^2\end{bmatrix}$ ,
 whence
 
 $$
-\nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
-\end{array} \right) \nabla t(c\mu, c) = \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^{2}}.
+  \nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
+  \end{array} \right) \nabla t(c\mu, c) = \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^{2}}.
 $$
 
 . . .
 
 By the $\Delta$-method,
 $$
-\hat{\mu}_{\mathrm{IS}} \overset{\mathrm{approx}}{\sim}
-\mathcal{N}\left(\mu, \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 n} \right).
+  \hat{\mu}_{\mathrm{IS}} \overset{\mathrm{approx}}{\sim}
+  \mathcal{N}\left(\mu, \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 n} \right).
 $$
 
 . . .
@@ -792,7 +796,7 @@ $$
 For $c = 1$, the asymptotic variance can be estimated by plugging in empirical
 estimates. For $c \neq 1$ it is necessary to estimate $c$ as
 $$
-\hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)
+  \hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)
 $$
 
 \pdfpcnote{
@@ -806,8 +810,9 @@ hat(c) is just the MC estimate of c.
 #| echo: false
 #| fig-width: 5
 #| fig-height: 4.5
-#| fig-cap: Tangent plane approximation of the function $t(x,y) = x/y$ at the point
-#|   $(2,3)$.
+#| fig-cap: Tangent plane approximation of the function $t(x,y) = x/y$ at the
+#|   point $(2,3)$.
+
 library(plot3D)
 
 # Define function and means
@@ -843,14 +848,7 @@ persp3D(
 )
 
 # Add tangent plane
-persp3D(
-  x_seq,
-  y_seq,
-  z_tangent,
-  add = TRUE,
-  col = "grey",
-  alpha = 0.6
-)
+persp3D(x_seq, y_seq, z_tangent, add = TRUE, col = "grey", alpha = 0.6)
 
 # Add mean point
 points3D(
@@ -868,6 +866,7 @@ points3D(
 
 ```{r}
 #| label: sigma_hat_is_w
+
 c_hat <- mean(w_star)
 sigma_hat_IS <- sd(x * w_star)
 sigma_hat_w_star <- sd(w_star)
@@ -887,6 +886,7 @@ sigma_hat_IS_w
 #| label: test-2
 #| echo: false
 #| eval: false
+
 mu_hat_IS <- replicate(10000, {
   x <- rnorm(B, 10, 3)
   w_star <- numeric(B)
@@ -903,7 +903,10 @@ sd(mu_hat_IS) * sqrt(B)
 #| label: gamma-ISw-fig2
 #| echo: false
 #| fig-width: 4.5
-#| fig-cap: "Importance sampling estimate of the mean of a Gamma(8,1) distribution with 95% confidence bands using normalized weights."
+#| fig-cap: >-
+#|   Importance sampling estimate of the mean of a Gamma(8,1) distribution with
+#|   95% confidence bands using normalized weights.
+
 p +
   geom_ribbon(
     aes(
@@ -984,7 +987,7 @@ improves efficiency.
 ::::: {.column width="47%"}
 Suppose that
 $$
-X \sim \mathcal{N}(0, I_{2})
+  X \sim \mathcal{N}(0, I_{2})
 $$
 and that we want to estimate $\operatorname{E}[f(X)]$ where $f(X)$ is large near
 the origin.
@@ -993,11 +996,10 @@ the origin.
 
 If we use a importance density $g(x)$ from
 $$
-\mathcal{N}(\mu, I_{2})
+  \mathcal{N}(\mu, I_{2})
 $$
 with large $|\mu|$, most samples are far from the origin, so $f(X)$ is nearly
 zero and weights are highly variable.
-
 :::::
 
 ::::: {.column width="47%"}
@@ -1005,7 +1007,10 @@ zero and weights are highly variable.
 #| label: poor-importance-demo
 #| echo: false
 #| fig-height: 2.3
-#| fig-cap: "Target (blue) and importance (orange) densities with samples from the importance distribution."
+#| fig-cap: >-
+#|   Target (blue) and importance (orange) densities with samples from the
+#|   importance distribution.
+
 library(mvtnorm)
 
 set.seed(1)
@@ -1035,15 +1040,10 @@ tibble(
   geom_contour(aes(z = target), color = "steelblue", linetype = "dashed") +
   geom_contour(aes(z = importance), color = "darkorange") +
   geom_point(aes(x1, x2), data = as_tibble(x), alpha = 0.3, size = 0.5) +
-  labs(
-    x = expression(X[1]),
-    y = expression(X[2])
-  ) +
+  labs(x = expression(X[1]), y = expression(X[2])) +
   coord_fixed()
 ```
-
 :::::
-
 :::
 
 ##
@@ -1053,13 +1053,16 @@ tibble(
 #| fig-height: 3.2
 #| echo: false
 #| fig-cap: "Histogram and boxplot of importance weights, showing weight degeneracy."
+
 target_density <- function(x) dmvnorm(x, mean = rep(0, d))
 importance_density <- function(x) dmvnorm(x, mean = mu)
 f <- function(x) exp(-sum(x^2) / 2) # Large near origin
 
-w_star <- apply(x, 1, function(row) {
-  target_density(row) / importance_density(row)
-})
+w_star <- apply(
+  x,
+  1,
+  function(row) target_density(row) / importance_density(row)
+)
 values <- apply(x, 1, f)
 estimate <- sum(values * w_star) / sum(w_star)
 
@@ -1068,18 +1071,13 @@ df <- tibble(weights = w_star)
 p1 <- ggplot(df, aes(w_star)) +
   geom_histogram() +
   lims(x = c(-5, 160)) +
-  labs(
-    x = "Importance Weights",
-    y = "Frequency"
-  )
+  labs(x = "Importance Weights", y = "Frequency")
 
 p2 <- ggplot(df, aes(w_star)) +
   geom_boxplot(alpha = 0.5) +
   scale_y_discrete() +
   lims(x = c(-5, 160)) +
-  labs(
-    x = "Importance Weights"
-  )
+  labs(x = "Importance Weights")
 
 p1 + p2 + plot_layout(heights = c(2, 1), axes = "collect")
 ```
@@ -1093,7 +1091,7 @@ This indicates weight degeneracy and poor sampling efficiency.
 The effective sample size (ESS) quantifies how many samples effectively
 contribute to the estimate:
 $$
-\mathrm{ESS} = \frac{1}{\sum_{i=1}^n w_i^2} = \frac{\left(\sum_{i=1}^n w^*_i\right)^2}{\sum_{i=1}^n ({w^*_i})^2}
+  \mathrm{ESS} = \frac{1}{\sum_{i=1}^n w_i^2} = \frac{\left(\sum_{i=1}^n w^*_i\right)^2}{\sum_{i=1}^n ({w^*_i})^2}
 $$
 where $w_i$ are the \alert{normalized} importance weights.
 
@@ -1108,6 +1106,7 @@ $\mathrm{ESS} \approx 1$, and the estimate is unreliable.
 
 ```{r}
 #| label: ess-demo
+
 ess <- (sum(w_star))^2 / sum(w_star^2)
 ess # out of n = 1000 samples
 ```
@@ -1121,7 +1120,7 @@ variability.
 
 It is defined as
 $$
-\mathrm{CV} = \frac{\sqrt{\frac{1}{n} \sum_{i=1}^n (w_i - \bar{w})^2}}{\bar{w}}
+  \mathrm{CV} = \frac{\sqrt{\frac{1}{n} \sum_{i=1}^n (w_i - \bar{w})^2}}{\bar{w}}
 $$
 where $\bar{w} = \frac{1}{n} \sum_{i=1}^n w_i$ is the mean weight.
 
@@ -1143,21 +1142,21 @@ CV near 0 means weights are nearly uniform---great! As a rule of thumb, CV below
 
 There is a direct relationship between ESS and CV:
 $$
-\mathrm{ESS} = \frac{n}{1 + \mathrm{CV}^2}.
+  \mathrm{ESS} = \frac{n}{1 + \mathrm{CV}^2}.
 $$
 
 ## Choosing the Importance Distribution
 
 We want low-variance estimates of
 $$
-I = \int h(x) f(x) \ dx
+  I = \int h(x) f(x) \ dx
 $$
 
 . . .
 
 The importance distribution determines the weights
 $$
-w^*(x) = \frac{f(x)}{g(x)}
+  w^*(x) = \frac{f(x)}{g(x)}
 $$
 and the variance of these weights drives the variance of the IS estimator.
 
@@ -1221,7 +1220,7 @@ importance distribution.
 Connection comes from the second-order Taylor expansion of $\log f(x)$ at the
 mode $x^*$,
 $$
-\log f(x) \approx \log f(x^*) - \frac{1}{2}(x - x^*)^T H (x - x^*)
+  \log f(x) \approx \log f(x^*) - \frac{1}{2}(x - x^*)^T H (x - x^*)
 $$
 where $H$ is the Hessian of $-\log f(x)$ at $x^*$.
 
@@ -1229,7 +1228,7 @@ where $H$ is the Hessian of $-\log f(x)$ at $x^*$.
 
 Exponentiating both sides gives:
 $$
-f(x) \approx f(x^*) \exp\left(-\frac{1}{2}(x - x^*)^T H (x - x^*)\right)
+  f(x) \approx f(x^*) \exp\left(-\frac{1}{2}(x - x^*)^T H (x - x^*)\right)
 $$
 
 ## Laplace Approximation
@@ -1237,8 +1236,8 @@ $$
 ### Steps
 
 1. Find the mode $x^* = \arg\max_x f(x)$.\pause
-2. Compute the Hessian $H$ of the first-order Taylor approximation of $-\log
-   f(x)$ around $x^*$.\pause
+2. Compute the Hessian $H$ of the first-order Taylor approximation of
+   $-\log f(x)$ around $x^*$.\pause
 3. Use $\mathcal{N}(x^*, H^{-1})$ as importance distribution.
 
 . . .
@@ -1253,26 +1252,28 @@ Best for unimodal, smooth, and symmetric target densities.
 ::::: {.column width="47%"}
 The density of the $\mathrm{Gamma}(3,1)$ distribution is
 $$
-f(x) = \frac{1}{2} x^2 e^{-x}, \quad x > 0.
+  f(x) = \frac{1}{2} x^2 e^{-x}, \quad x > 0.
 $$
 
 . . .
 
 The mode is at $x^* = 2$ and the Hessian of $-\log f(x)$ at $x^*$ is
 $$
-H = \frac{\alpha - 1}{(x^*)^2} = \frac 1 2.
+  H = \frac{\alpha - 1}{(x^*)^2} = \frac 1 2.
 $$
 
 \medskip\pause
 
 So the Laplace approximation is $\mathcal{N}(2, 2^2)$.
-
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
 #| echo: false
-#| fig-cap: "Target (solid black) and Laplace approximation (dashed blue) densities for a Gamma(3,1) distribution."
+#| fig-cap: >-
+#|   Target (solid black) and Laplace approximation (dashed blue) densities for
+#|   a Gamma(3,1) distribution.
+
 f_density <- function(x) dgamma(x, shape = 3, rate = 1) # Gamma(3,1)
 log_f <- function(x) log(f_density(x))
 
@@ -1297,22 +1298,16 @@ df <- tibble(
 # Plot
 ggplot(df, aes(x = x, y = value, color = Density, linetype = Density)) +
   geom_line() +
-  scale_color_manual(
-    values = c(f = "black", laplace = "steelblue")
-  ) +
+  scale_color_manual(values = c(f = "black", laplace = "steelblue")) +
   scale_linetype_manual(values = c(f = "solid", laplace = "dashed")) +
   theme(legend.position.inside = c(0.8, 0.8)) +
   guides(
     color = guide_legend(position = "inside"),
     linetype = guide_legend(position = "inside")
   ) +
-  labs(
-    y = "Density"
-  )
+  labs(y = "Density")
 ```
-
 :::::
-
 :::
 
 ## Adaptive Importance Sampling
@@ -1347,7 +1342,7 @@ importance distribution.
 At iteration $t$, draw samples $x_1, \ldots, x_n \sim g_t(x)$ and compute
 weights
 $$
-w_i^* = \frac{f(X_i)}{g_t(X_i)}.
+  w_i^* = \frac{f(X_i)}{g_t(X_i)}.
 $$
 
 . . .
@@ -1368,6 +1363,7 @@ This can be extended to multivariate targets using weighted covariance.
 ```{r}
 #| echo: false
 #| label: adaptive-importance-demo
+
 library(ggplot2)
 library(tibble)
 
@@ -1375,12 +1371,7 @@ library(tibble)
 f_density <- function(x) 0.4 * dnorm(x, -2, 1) + 0.6 * dnorm(x, 3, 0.5)
 
 # Adaptive importance sampling function
-adaptive_is <- function(
-  n = 1000,
-  n_iter = 5,
-  q_init_mean = 0,
-  q_init_sd = 1
-) {
+adaptive_is <- function(n = 1000, n_iter = 5, q_init_mean = 0, q_init_sd = 1) {
   # Store proposal params and samples
   proposals <- list()
   samples <- list()
@@ -1435,15 +1426,10 @@ plot_step <- function(iter) {
 
   ggplot(df, aes(x = x, y = value, color = Density, linetype = Density)) +
     geom_line() +
-    scale_color_manual(
-      values = c(target = "black", importance = "steelblue")
-    ) +
+    scale_color_manual(values = c(target = "black", importance = "steelblue")) +
     scale_linetype_manual(values = c(target = "solid", importance = "dashed")) +
     lims(x = c(-6, 6), y = c(0, 0.6)) +
-    labs(
-      y = "Density",
-      subtitle = sprintf("ESS = %.0f, CV = %.1f", ess, cv)
-    )
+    labs(y = "Density", subtitle = sprintf("ESS = %.0f, CV = %.1f", ess, cv))
 }
 ```
 
@@ -1453,6 +1439,7 @@ plot_step <- function(iter) {
 #| fig-width: 5.4
 #| fig-height: 2.5
 #| fig-cap: "Adaptive importance sampling step 1."
+
 plot_step(1)
 ```
 
@@ -1464,6 +1451,7 @@ plot_step(1)
 #| fig-width: 5.4
 #| fig-height: 2.5
 #| fig-cap: "Adaptive importance sampling, step 2."
+
 plot_step(2)
 ```
 
@@ -1475,6 +1463,7 @@ plot_step(2)
 #| fig-width: 5.4
 #| fig-height: 2.5
 #| fig-cap: "Adaptive importance sampling, step 3."
+
 plot_step(3)
 ```
 
@@ -1486,6 +1475,7 @@ plot_step(3)
 #| fig-width: 5.4
 #| fig-height: 2.5
 #| fig-cap: "Adaptive importance sampling, step 4."
+
 plot_step(4)
 ```
 
@@ -1497,6 +1487,7 @@ plot_step(4)
 #| fig-width: 5.4
 #| fig-height: 2.5
 #| fig-cap: "Adaptive importance sampling, step 5."
+
 plot_step(5)
 ```
 
@@ -1514,7 +1505,7 @@ Recall the Gamma(8,1) example where we used $g(x) = \mathcal{N}(10, 3^2)$.
 
 Instead we can use a mixture
 $$
-g_{\mathrm{mix}}(x) = 0.8 \cdot \mathcal{N}(10, 3^2) + 0.2 \cdot \mathcal{N}(10, 10^2)
+  g_{\mathrm{mix}}(x) = 0.8 \cdot \mathcal{N}(10, 3^2) + 0.2 \cdot \mathcal{N}(10, 10^2)
 $$
 with heavier tails to ensure coverage.
 
@@ -1525,12 +1516,13 @@ with heavier tails to ensure coverage.
 ```{r}
 #| label: gamma-importance-fig
 #| echo: false
-#| fig-cap: "Target (black) and importance (blue) densities with samples from the importance distribution."
+#| fig-cap: >-
+#|   Target (black) and importance (blue) densities with samples from the
+#|   importance distribution.
 #| ref-label: gammasim-fig
 #| fig-height: 3
 #| fig-width: 2.7
 ```
-
 :::::
 
 . . .
@@ -1540,8 +1532,11 @@ with heavier tails to ensure coverage.
 #| label: gamma-defensive-fig
 #| fig-height: 3
 #| fig-width: 2.7
-#| fig-cap: "Target (black) and importance (orange) densities with samples from the defensive importance mixture distribution."
+#| fig-cap: >-
+#|   Target (black) and importance (orange) densities with samples from the
+#|   defensive importance mixture distribution.
 #| echo: false
+
 set.seed(1234)
 B <- 1000
 mix_indicator <- rbinom(B, 1, 0.8)
@@ -1561,12 +1556,8 @@ p1 <- tibble(x = z, target = f_x, mixture = g_mix) |>
   ggplot(aes(x, value, color = name, linetype = name)) +
   geom_line() +
   guides(color = guide_legend(position = "inside")) +
-  scale_color_manual(
-    values = c(target = "black", mixture = "darkorange")
-  ) +
-  scale_linetype_manual(
-    values = c(target = "solid", mixture = "dashed")
-  ) +
+  scale_color_manual(values = c(target = "black", mixture = "darkorange")) +
+  scale_linetype_manual(values = c(target = "solid", mixture = "dashed")) +
   theme(legend.position.inside = c(0.8, 0.8)) +
   labs(y = "Density", color = "Density", linetype = "Density")
 
@@ -1576,9 +1567,7 @@ p2 <- tibble(x = z, w) |>
 
 p1 / p2 + plot_layout(axes = "collect")
 ```
-
 :::::
-
 :::
 
 ## Case Study: Network Failure
@@ -1596,6 +1585,7 @@ We can represent a graph using an adjacency matrix.
 
 ```{r, echo=13}
 #| label: network_adj
+
 options(width = 65)
 A <- matrix(0, 10, 10)
 A[1, c(2, 4, 5)] <- 1
@@ -1626,6 +1616,7 @@ We begin with a function that checks if nodes 1 and 10 are disconnected.
 
 ```{r}
 #| label: discon-def
+
 discon <- function(Aup) {
   A <- Matrix::forceSymmetric(Aup, "U")
   i <- 3
@@ -1644,14 +1635,10 @@ discon <- function(Aup) {
 
 ```{r}
 #| label: simNet
+
 sim_net <- function(Aup, p) {
   ones <- which(Aup == 1)
-  Aup[ones] <- sample(
-    c(0, 1),
-    length(ones),
-    replace = TRUE,
-    prob = c(p, 1 - p)
-  )
+  Aup[ones] <- sample(c(0, 1), length(ones), replace = TRUE, prob = c(p, 1 - p))
   Aup
 }
 ```
@@ -1660,6 +1647,7 @@ sim_net <- function(Aup, p) {
 
 ```{r}
 #| label: sim-bench
+
 bench::bench_time(replicate(1e5, sim_net(Aup, 0.5)))
 ```
 
@@ -1667,6 +1655,7 @@ bench::bench_time(replicate(1e5, sim_net(Aup, 0.5)))
 
 ```{r}
 #| label: sim
+
 set.seed(27092016)
 n <- 1e5
 tmp <- replicate(n, discon(sim_net(Aup, 0.05)))
@@ -1681,6 +1670,7 @@ Estimate with confidence interval using $\sigma^2 = \mu (1 - \mu)$.
 
 ```{r}
 #| label: sim-confint
+
 mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
 ```
 
@@ -1691,6 +1681,7 @@ weights.
 
 ```{r}
 #| label: impw
+
 weights <- function(Aup, Aup0, p0, p) {
   w <- discon(Aup0)
 
@@ -1713,6 +1704,7 @@ For the IS estimator the weights will be multiplied by the indicator that 1 and
 ```{r}
 #| label: sim2
 #| cache: true
+
 tmp <- replicate(n, weights(Aup, sim_net(Aup, 0.2), 0.2, 0.05))
 mu_hat_IS <- mean(tmp)
 mu_hat_IS
@@ -1763,6 +1755,7 @@ failing, so complete enumeration is possible.
 ```{r}
 #| label: enumeration
 #| cache: true
+
 ones <- which(Aup == 1)
 Atmp <- Aup
 p <- 0.05
@@ -1785,6 +1778,7 @@ Here is the true value:
 
 ```{r}
 #| label: disconnect-prob
+
 sum(prob)
 ```
 
@@ -1807,6 +1801,7 @@ mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
 ```{r}
 #| label: reset-options
 #| echo: false
+
 options(digits = old_options$digits)
 ```
 
@@ -1847,6 +1842,7 @@ distribution. Plot the result and check convergence towards $\mu$.
 
 ```{r}
 #| label: vonmises-density
+
 dvmises <- function(x, mu = 0, kappa = 2) {
   exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0))
 }
@@ -1869,6 +1865,7 @@ better one.
 ```{r}
 #| label: vmises-importance
 #| include: false
+
 vonmises_importance <- function(n, mu = 0, kappa = 2) {
   x <- rnorm(n, 0, pi / 2)
   w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)

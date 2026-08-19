@@ -71,13 +71,12 @@ by professor Niels Richard Hansen. It is provided for free online at
 
 The course will use R as a programming language. We expect you to have a basic
 grasp of R, but in case you feel the need to refresh your knowledge of the R
-basics, please take a look at
-[Hands-On Programming with R](https://rstudio-education.github.io/hopr/) by
-Garrett Grolemund, which is a short and beginner-friendly introduction to the
-basics of R. We also assume that you have a good grasp of the content of
-chapters 1-5 in Advanced R on data structures, subsetting and control flows. If
-not, please consider going over these sections before the course starts or
-during the first week.
+basics, please take a look at [Hands-On Programming with
+R](https://rstudio-education.github.io/hopr/) by Garrett Grolemund, which is a
+short and beginner-friendly introduction to the basics of R. We also assume that
+you have a good grasp of the content of chapters 1-5 in Advanced R on data
+structures, subsetting and control flows. If not, please consider going over
+these sections before the course starts or during the first week.
 
 If you haven't already, you need to install R and RStudio on your computer.
 Instructions on how to do so can be found at

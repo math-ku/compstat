@@ -7,6 +7,7 @@ title: "Random Number Generation and Rejection Sampling"
 ```{r}
 #| label: setup
 #| include: false
+
 library(profvis)
 
 knitr::read_chunk(here::here("R", "vMSim.R"))
@@ -36,18 +37,19 @@ General and useful method for sampling from a target distribution
 
 Recall, that our smoothing spline estimate is
 $$
-\symbf{f} = \symbf{\Phi}\symbf{\beta}
+  \symbf{f} = \symbf{\Phi}\symbf{\beta}
 $$
 with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
 $$
-\begin{aligned}
-  L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\
-               & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
-\end{aligned}
+  \begin{aligned}
+    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\
+                 & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
+  \end{aligned}
 $$
 with
 $$
-\symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z. $$
+  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
+$$
 
 \pause
 
@@ -55,7 +57,7 @@ $$
 
 The solution is
 $$
-\hat{\symbf{\beta}} = (\symbf{\Phi}^T \symbf{\Phi} + \lambda \symbf{\Omega})^{-1} \symbf{\Phi}^T \symbf{y}.
+  \hat{\symbf{\beta}} = (\symbf{\Phi}^T \symbf{\Phi} + \lambda \symbf{\Omega})^{-1} \symbf{\Phi}^T \symbf{y}.
 $$
 
 ## Efficient Computations of Smoothing Splines
@@ -64,6 +66,7 @@ $$
 #| label: looad-nuuk-data
 #| echo: false
 #| message: false
+
 library(Matrix)
 pen_mat <- function(inner_knots) {
   knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
@@ -79,9 +82,7 @@ pen_mat <- function(inner_knots) {
     6
 }
 
-omega <- pen_mat(
-  seq(0, 1, 0.1)
-)
+omega <- pen_mat(seq(0, 1, 0.1))
 
 nuuk <- read_table(
   here::here("data", "nuuk.txt"),
@@ -108,8 +109,8 @@ expensive.
 
 \medskip\pause
 
-In practice, we therefore often use fewer basis functions than data points, $p <
-n$.
+In practice, we therefore often use fewer basis functions than data points,
+$p < n$.
 
 \pause
 
@@ -117,15 +118,15 @@ n$.
 
 Using the singular value decomposition
 $$
-\symbf{\Phi} = \symbf{U} \symbf{D} \symbf{V}^T
+  \symbf{\Phi} = \symbf{U} \symbf{D} \symbf{V}^T
 $$
 \pause we can rewrite the smoother matrix as
 $$
-\symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda \operatorname{diag}(\symbf{\gamma}))^{-1} \widetilde{\symbf{U}}^T
+  \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda \operatorname{diag}(\symbf{\gamma}))^{-1} \widetilde{\symbf{U}}^T
 $$
 where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and \pause
 $$
-\symbf{D}^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} \symbf{D}^{-1} = \symbf{W} \operatorname{diag}(\symbf{\gamma}) \symbf{W}^T.
+  \symbf{D}^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} \symbf{D}^{-1} = \symbf{W} \operatorname{diag}(\symbf{\gamma}) \symbf{W}^T.
 $$
 
 \medskip\pause
@@ -143,15 +144,15 @@ The columns of $\widetilde{\symbf{U}}$ form the **Demmler-Reinsch basis**.
 ## Interpretation
 
 Project the data $y$ onto the Demmler-Reinsch basis (columns of
-$\widetilde{\symbf{U}}$) to get coefficients $\hat{\symbf{\beta}} =
-\widetilde{\symbf{U}}^T\symbf{y}$.
+$\widetilde{\symbf{U}}$) to get coefficients
+$\hat{\symbf{\beta}} = \widetilde{\symbf{U}}^T\symbf{y}$.
 
 \pause\medskip
 
 Each coefficient is shrunk according to the corresponding eigenvalue $\gamma_i$
 and smoothing parameter $\lambda$:
 $$
-\hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
+  \hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
 $$
 
 \pause\medskip
@@ -159,7 +160,7 @@ $$
 The final smoothed values are reconstructed by combining the shrunk coefficients
 with the basis functions.
 $$
-\hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
+  \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
 $$
 
 \pdfpcnote{
@@ -173,6 +174,7 @@ $$
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 3
+
 inner_knots <- seq(1867, 2013, length.out = 18)
 Phi <- splines::splineDesign(
   c(rep(range(inner_knots), 3), inner_knots),
@@ -180,12 +182,7 @@ Phi <- splines::splineDesign(
 )
 omega <- pen_mat(inner_knots)
 Phi_svd <- svd(Phi)
-omega_tilde <- t(
-  t(
-    crossprod(Phi_svd$v, omega %*% Phi_svd$v)
-  ) /
-    Phi_svd$d
-) /
+omega_tilde <- t(t(crossprod(Phi_svd$v, omega %*% Phi_svd$v)) / Phi_svd$d) /
   Phi_svd$d
 
 Omega_tilde_svd <- svd(omega_tilde)
@@ -210,6 +207,7 @@ bind_cols(select(nuuk_year, Year), as_tibble(U_tilde)) |>
 #| fig-height: 3
 #| fig-cap: The eigenvalues $\gamma_i$ of the penalty matrix in the
 #|   Demmler-Reinsch basis.
+
 library(patchwork)
 
 d <- Omega_tilde_svd$d
@@ -244,7 +242,7 @@ A research field in itself, see `?RNG` in R for available algorithms.
 
 The default in R, which generates integers in the range
 $$
-\{0, 1, \ldots, 2^{32} -1\}.
+  \{0, 1, \ldots, 2^{32} -1\}.
 $$
 
 \medskip\pause
@@ -296,8 +294,8 @@ applying a function to samples from a simpler distribution.
 
 ### Example {.example}
 
-To sample $X \sim \mathrm{Exp}(\lambda)$, use $X = -\log(U)/\lambda$ with $U
-\sim \mathrm{Uniform}(0,1)$.
+To sample $X \sim \mathrm{Exp}(\lambda)$, use $X = -\log(U)/\lambda$ with
+$U \sim \mathrm{Uniform}(0,1)$.
 
 ## Inversion Sampling
 
@@ -308,7 +306,7 @@ A type of **transformation** sampling.
 If $F^{-1} : (0,1) \mapsto \mathbb{R}$ is the generalized inverse of a
 distribution function and $U$ is uniformly distributed on $(0, 1)$ then
 $$
-F^{-1}(U)
+  F^{-1}(U)
 $$
 has distribution function $F$.
 
@@ -343,7 +341,7 @@ CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex) or the
 
 Recall that
 $$
-\Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \mathrm{d} z.
+  \Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \mathrm{d} z.
 $$
 
 . . .
@@ -369,6 +367,7 @@ R has three basic options for customizing the behavior, set through `RNGkind()`.
 
 ```{r}
 #| label: rng-kind
+
 RNGkind()
 ```
 
@@ -402,11 +401,11 @@ RNGkind()
 
 If we let
 $$
-T(z,w) = \frac{z}{\sqrt{w/k}},
+  T(z,w) = \frac{z}{\sqrt{w/k}},
 $$
 and take $Z \sim \mathcal{N}(0,1)$ and $W \sim \chi^2_k$, then
 $$
-X = T(Z, W) = \frac{Z}{\sqrt{W/k}} \sim t_k.
+  X = T(Z, W) = \frac{Z}{\sqrt{W/k}} \sim t_k.
 $$
 
 . . .
@@ -427,7 +426,7 @@ random variables.
 
 The density on $(-\pi, \pi]$ is
 $$
-f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x - \mu)}
+  f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x - \mu)}
 $$
 for $\kappa > 0$ and $\mu \in (-\pi, \pi]$ parameters and $I_0$ is the modified
 Bessel function.
@@ -440,15 +439,12 @@ Bessel function.
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2
+
 library(ggplot2)
 
 dvm <- function(x, k) exp(k * cos(x - 2)) / (2 * pi * besselI(k, 0))
 
-xy <- tibble(
-  x = seq(0, 2 * pi, length.out = 400),
-  y = dvm(x, 9)
-)
-
+xy <- tibble(x = seq(0, 2 * pi, length.out = 400), y = dvm(x, 9))
 
 p1 <- ggplot(xy, aes(x, y)) +
   geom_line() +
@@ -458,15 +454,8 @@ p1 <- ggplot(xy, aes(x, y)) +
 
 p2 <- ggplot(xy, aes(x = x, y = y)) +
   geom_line() +
-  coord_polar(
-    theta = "x",
-    start = 0,
-    direction = 1
-  ) +
-  labs(
-    x = "Angle (radians)",
-    y = NULL
-  ) +
+  coord_polar(theta = "x", start = 0, direction = 1) +
+  labs(x = "Angle (radians)", y = NULL) +
   theme_minimal()
 
 p1 + p2
@@ -478,6 +467,7 @@ p1 + p2
 
 ```{r}
 #| label: vMsim
+
 library(movMF)
 xy <- rmovMF(500, 0.5 * c(cos(-1.5), sin(-1.5)))
 
@@ -500,6 +490,7 @@ closed-form expression for the quantile function.
 #| fig-width: 5.5
 #| echo: false
 #| fig-cap: Histogram of samples from rmovMF()
+
 ggplot(tibble(x = x), aes(x)) +
   geom_rug(alpha = 0.1) +
   geom_histogram(
@@ -527,14 +518,14 @@ available transform $T$ for our proposal $g(y)$.
 
 \medskip\pause
 
-Let $Y_1, Y_2, \ldots$ be i.i.d. with density $g$ on $\mathbb{R}$ and $U_1, U_2,
-\ldots$ be i.i.d. uniform and independent of $Y_i$ for all $i$.
+Let $Y_1, Y_2, \ldots$ be i.i.d. with density $g$ on $\mathbb{R}$ and
+$U_1, U_2, \ldots$ be i.i.d. uniform and independent of $Y_i$ for all $i$.
 
 \medskip\pause
 
 Define
 $$
-k = \inf\left\{n \geq 1 \mid U_n \leq \alpha \frac{f(Y_n)}{g(Y_n)}\right\},
+  k = \inf\left\{n \geq 1 \mid U_n \leq \alpha \frac{f(Y_n)}{g(Y_n)}\right\},
 $$
 for $\alpha \in (0, 1]$, where $f$ is a density.
 
@@ -559,6 +550,7 @@ $f$.
 #| fig-width: 5
 #| fig-cap: Illustration of rejection sampling for a normal target density,
 #|   using a uniform proposal.
+
 set.seed(1)
 n <- 1000
 y <- runif(n, 0, 9)
@@ -576,21 +568,14 @@ curve_df <- data.frame(
 )
 
 ggplot() +
-  geom_line(
-    data = curve_df,
-    aes(x = x, y = envelope)
-  ) +
+  geom_line(data = curve_df, aes(x = x, y = envelope)) +
   geom_area(
     data = curve_df,
     aes(x = x, y = target),
     col = "black",
     fill = "grey90"
   ) +
-  geom_point(
-    data = df,
-    aes(x = y, y = u, color = accepted),
-    size = 0.5
-  ) +
+  geom_point(data = df, aes(x = y, y = u, color = accepted), size = 0.5) +
   scale_color_manual(
     values = c("red", "steelblue2"),
     labels = c("Rejected", "Accepted")
@@ -615,14 +600,14 @@ Suppose:
 
 Acceptance test:
 $$
-U \leq \frac{\alpha f(y)}{g(y)} = \frac{\alpha c q(y)}{d p(y)}
+  U \leq \frac{\alpha f(y)}{g(y)} = \frac{\alpha c q(y)}{d p(y)}
 $$
 
 \medskip\pause
 
 If $\alpha = \frac{\alpha' d}{c}$, then
 $$
-\frac{\alpha f(y)}{g(y)} = \frac{\alpha' q(y)}{p(y)}
+  \frac{\alpha f(y)}{g(y)} = \frac{\alpha' q(y)}{p(y)}
 $$
 
 \pause
@@ -635,7 +620,7 @@ You do not need to know $c$ or $d$!
 
 Given functions $q$ and $p$, we need to find $\alpha'$ such that
 $$
-\alpha' q(y) \leq p(y) \quad \text{for all } y.
+  \alpha' q(y) \leq p(y) \quad \text{for all } y.
 $$
 
 \medskip\pause
@@ -644,7 +629,7 @@ $$
 
 We can try to solve the problem
 $$
-\alpha' = \inf_{y: q(y) > 0} \frac{p(y)}{q(y)} > 0.
+  \alpha' = \inf_{y: q(y) > 0} \frac{p(y)}{q(y)} > 0.
 $$
 
 \medskip\pause
@@ -663,11 +648,11 @@ Rejection sampling using the uniform proposal, $g(y) \propto 1$.
 
 Since
 $$
-e^{\kappa(\cos(y) - 1)} = \alpha' e^{\kappa \cos(y)} \leq 1,
+  e^{\kappa(\cos(y) - 1)} = \alpha' e^{\kappa \cos(y)} \leq 1,
 $$
 where $\alpha' = \exp(-\kappa)$, we reject if
 $$
-U > e^{\kappa(\cos(Y) - 1)}.
+  U > e^{\kappa(\cos(Y) - 1)}.
 $$
 
 . . .
@@ -687,6 +672,7 @@ $$
 
 ```{r}
 #| label: vMsim-slow
+
 get_one_sample_vmises <- function(kappa) {
   repeat {
     Y <- runif(1, -pi, pi)
@@ -703,6 +689,7 @@ get_one_sample_vmises <- function(kappa) {
 
 ```{r}
 #| label: vMsim-slow2
+
 sample_vonmises_slow <- function(n, kappa) {
   replicate(n, get_one_sample_vmises(kappa))
 }
@@ -715,18 +702,16 @@ sample_vonmises_slow <- function(n, kappa) {
 #| fig-width: 5.4
 #| fig-height: 3
 #| echo: false
-#| fig-cap: Histogram of samples from `sample_vonmises_slow()`, with
-#|   theoretical density overlaid.
+#| fig-cap: Histogram of samples from `sample_vonmises_slow()`, with theoretical
+#|   density overlaid.
+
 f <- function(y, kappa) exp(kappa * cos(y)) / (2 * pi * besselI(kappa, 0))
 
 # Simulate data
 x1 <- sample_vonmises_slow(100000, 0.5)
 x2 <- sample_vonmises_slow(100000, 2)
 
-df <- tibble(
-  x = c(x1, x2),
-  kappa = factor(rep(c(0.5, 2), each = 100000))
-)
+df <- tibble(x = c(x1, x2), kappa = factor(rep(c(0.5, 2), each = 100000)))
 
 ggplot(df, aes(x)) +
   geom_histogram(
@@ -757,6 +742,7 @@ ggplot(df, aes(x)) +
 #| label: profile-vsim
 #| echo: false
 #| eval: false
+
 source(here::here("R", "vmises-sim-slow.R"))
 profvis(sample_vonmises_slow(100000, 5))
 ```
@@ -789,6 +775,7 @@ once.
 
 ```{r}
 #| label: vM-rejection-vec
+
 fixed_vonmises_sampler <- function(m, kappa) {
   Y <- runif(m, -pi, pi)
   u <- runif(m)
@@ -830,6 +817,7 @@ in advance.
 
 ```{r}
 #| label: new_rejection_sampler
+
 new_rejection_sampler <- function(generator) {
   function(n, ...) {
     alpha <- 1
@@ -855,6 +843,7 @@ new_rejection_sampler <- function(generator) {
 #| label: vmises-bench
 #| fig-width: 5
 #| fig-height: 1.5
+
 sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
 
 bench::mark(
@@ -869,22 +858,22 @@ bench::mark(
 
 ::: {.columns}
 ::::: {.column width="47%"}
-When $f$ is _log-concave_ on $I$ we can construct bounds of the form
+When $f$ is *log-concave* on $I$ we can construct bounds of the form
 $$
-f(x) \leq e^{V(x)}
+  f(x) \leq e^{V(x)}
 $$
 where
 $$
-V(x) = \sum_{i=1}^m  (a_i x + b_i) \symbf{1}_{I_i}(x)
+  V(x) = \sum_{i=1}^m  (a_i x + b_i) \symbf{1}_{I_i}(x)
 $$
 for intervals $I_i$ forming a partition of $I$.
-
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
 #| label: log-concave-envelope-general
 #| echo: false
+
 library(ggplot2)
 
 curve_fun <- function(x) exp(-0.5 * x^2)
@@ -908,11 +897,7 @@ envelope_log <- ifelse(
 )
 envelope <- exp(envelope_log)
 
-df <- data.frame(
-  x = xseq,
-  curve = curve_fun(xseq),
-  envelope = envelope
-)
+df <- data.frame(x = xseq, curve = curve_fun(xseq), envelope = envelope)
 
 ggplot(df, aes(x)) +
   geom_line(aes(y = curve), color = "grey60") +
@@ -926,17 +911,15 @@ ggplot(df, aes(x)) +
   labs(y = "Density") +
   theme_minimal()
 ```
-
 :::::
-
 :::
 
 \bigskip\pause
 
-Typically, $a_i x + b_i$ is tangent to the graph of $\log(f)$ at $x_i \in I_i =
-(z_{i-1}, z_i]$ for
+Typically, $a_i x + b_i$ is tangent to the graph of $\log(f)$ at
+$x_i \in I_i = (z_{i-1}, z_i]$ for
 $$
-z_0 < x_1 < z_1 < x_2 < \ldots < z_{m-1} < x_m < z_m.
+  z_0 < x_1 < z_1 < x_2 < \ldots < z_{m-1} < x_m < z_m.
 $$
 
 ## Beta Distribution
@@ -945,6 +928,7 @@ $$
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 2.5
+
 fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
   lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
   lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
@@ -980,11 +964,11 @@ sample_beta <- new_rejection_sampler(fixed_beta_sampler)
 ```{r}
 #| label: Beta-fig
 #| fig-cap: Histograms of samples from an adaptive envelope sampler with
-#|   theoretical
-#|   densities (blue) and envelopes (orange) overlaid.
+#|   theoretical densities (blue) and envelopes (orange) overlaid.
 #| fig-width: 5.5
 #| fig-height: 3
 #| echo: false
+
 params <- data.frame(
   x1 = c(0.3, 0.3, 0.2, 0.2),
   x2 = c(0.7, 0.7, 0.5, 0.5),
@@ -1005,9 +989,12 @@ make_beta_df <- function(n, x1, x2, alpha, beta, label) {
 
 sample_df <- do.call(
   rbind,
-  lapply(seq_len(nrow(params)), function(i) {
-    with(params[i, ], make_beta_df(100000, x1, x2, alpha, beta, label))
-  })
+  lapply(
+    seq_len(nrow(params)),
+    function(i) {
+      with(params[i, ], make_beta_df(100000, x1, x2, alpha, beta, label))
+    }
+  )
 )
 
 xseq <- seq(0, 1, length.out = 400)
@@ -1040,33 +1027,25 @@ make_envelope_df <- function(xseq, x1, x2, alpha, beta, label) {
 
 dens_df <- do.call(
   rbind,
-  lapply(seq_len(nrow(params)), function(i) {
-    with(params[i, ], make_density_df(xseq, alpha, beta, label))
-  })
+  lapply(
+    seq_len(nrow(params)),
+    function(i) with(params[i, ], make_density_df(xseq, alpha, beta, label))
+  )
 )
 env_df <- do.call(
   rbind,
-  lapply(seq_len(nrow(params)), function(i) {
-    with(params[i, ], make_envelope_df(xseq, x1, x2, alpha, beta, label))
-  })
+  lapply(
+    seq_len(nrow(params)),
+    function(i) {
+      with(params[i, ], make_envelope_df(xseq, x1, x2, alpha, beta, label))
+    }
+  )
 )
 
 ggplot(sample_df, aes(x)) +
-  geom_histogram(
-    aes(y = ..density..),
-    bins = 50,
-    fill = "grey80"
-  ) +
-  geom_line(
-    data = dens_df,
-    aes(x = x, y = density),
-    color = "steelblue3"
-  ) +
-  geom_line(
-    data = env_df,
-    aes(x = x, y = envelope),
-    color = "dark orange"
-  ) +
+  geom_histogram(aes(y = ..density..), bins = 50, fill = "grey80") +
+  geom_line(data = dens_df, aes(x = x, y = density), color = "steelblue3") +
+  geom_line(data = env_df, aes(x = x, y = envelope), color = "dark orange") +
   ylim(0, 3) +
   facet_wrap(~label, ncol = 2)
 ```
@@ -1079,8 +1058,9 @@ ggplot(sample_df, aes(x)) +
 #| warning: false
 #| fig-width: 5.5
 #| fig-height: 3
-#| fig-cap: Theoretical densities (blue) and envelopes (orange) for
-#|   different parameter values and choices of $x_1$ and $x_2$.
+#| fig-cap: Theoretical densities (blue) and envelopes (orange) for different
+#|   parameter values and choices of $x_1$ and $x_2$.
+
 params <- data.frame(
   alpha = c(4, 1.8),
   beta = c(2, 2.4),
@@ -1115,9 +1095,10 @@ make_df <- function(xseq, alpha, beta, x1, x2, label) {
 
 plot_df <- do.call(
   rbind,
-  lapply(seq_len(nrow(params)), function(i) {
-    with(params[i, ], make_df(xseq, alpha, beta, x1, x2, label))
-  })
+  lapply(
+    seq_len(nrow(params)),
+    function(i) with(params[i, ], make_df(xseq, alpha, beta, x1, x2, label))
+  )
 )
 
 ggplot(plot_df, aes(x = x)) +
@@ -1139,39 +1120,28 @@ But, it *is*
 
 - log-concave on $(-\pi, \pi/2)$ and $(\pi/2, \pi)$ and
 - log-convex on $(-\pi, -\pi/2)$ and $(-\pi/2, \pi/2)$.
-
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-cap: The von Mises density with $\kappa = 0.5$.
+
 theta <- 0.5 * c(cos(-1.5), sin(-1.5))
 
 dvm <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
 
-xy <- tibble(
-  x = seq(-pi, pi, length.out = 400),
-  y = log(dvm(x, 0.5))
-)
+xy <- tibble(x = seq(-pi, pi, length.out = 400), y = log(dvm(x, 0.5)))
 
 a <- seq(-2 * pi, 2 * pi, length.out = 100)
 
 ggplot(xy, aes(x = x, y = y)) +
-  geom_vline(
-    xintercept = c(-pi, -pi / 2, pi / 2, pi),
-    color = "grey60"
-  ) +
+  geom_vline(xintercept = c(-pi, -pi / 2, pi / 2, pi), color = "grey60") +
   geom_line() +
   labs(y = "log-density") +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  )
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ```
-
 :::::
-
 :::
 
 ##
@@ -1179,6 +1149,7 @@ ggplot(xy, aes(x = x, y = y)) +
 ```{r}
 #| label: vonmises-adaptive
 #| echo: false
+
 dvm <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
 
 von_mises_adapt_random <- function(N, x1, x2, kappa) {
@@ -1266,11 +1237,12 @@ envelope <- function(x, x1, x2, kappa) {
 ```{r}
 #| label: vonmises-adaptive-plot
 #| fig-cap: Histograms of samples from an adaptive envelope sampler for the von
-#|   Mises distribution,
-#|   with theoretical densities (blue) and envelopes (orange) overlaid.
+#|   Mises distribution, with theoretical densities (blue) and envelopes
+#|   (orange) overlaid.
 #| fig-width: 5.5
 #| fig-height: 3
 #| echo: false
+
 params <- data.frame(
   x1 = c(-0.4, -0.1, -0.4, -1),
   x2 = c(0.4, 0.1, 0.4, 1),
@@ -1290,59 +1262,42 @@ make_vm_df <- function(n, x1, x2, kappa, label) {
 
 sample_df <- do.call(
   rbind,
-  lapply(seq_len(nrow(params)), function(i) {
-    with(params[i, ], make_vm_df(100000, x1, x2, kappa, label))
-  })
+  lapply(
+    seq_len(nrow(params)),
+    function(i) with(params[i, ], make_vm_df(100000, x1, x2, kappa, label))
+  )
 )
 
 xseq <- seq(-pi, pi, length.out = 400)
 
 make_density_df <- function(xseq, kappa, label) {
-  data.frame(
-    x = xseq,
-    density = dvm(xseq, kappa),
-    label = label
-  )
+  data.frame(x = xseq, density = dvm(xseq, kappa), label = label)
 }
 
 make_envelope_df <- function(xseq, x1, x2, kappa, label) {
   env <- envelope(xseq, x1, x2, kappa) / (2 * pi * besselI(kappa, 0))
-  data.frame(
-    x = xseq,
-    envelope = env,
-    label = label
-  )
+  data.frame(x = xseq, envelope = env, label = label)
 }
 
 dens_df <- do.call(
   rbind,
-  lapply(seq_len(nrow(params)), function(i) {
-    with(params[i, ], make_density_df(xseq, kappa, label))
-  })
+  lapply(
+    seq_len(nrow(params)),
+    function(i) with(params[i, ], make_density_df(xseq, kappa, label))
+  )
 )
 env_df <- do.call(
   rbind,
-  lapply(seq_len(nrow(params)), function(i) {
-    with(params[i, ], make_envelope_df(xseq, x1, x2, kappa, label))
-  })
+  lapply(
+    seq_len(nrow(params)),
+    function(i) with(params[i, ], make_envelope_df(xseq, x1, x2, kappa, label))
+  )
 )
 
 ggplot(sample_df, aes(x)) +
-  geom_histogram(
-    aes(y = ..density..),
-    bins = 30,
-    fill = "grey80"
-  ) +
-  geom_line(
-    data = dens_df,
-    aes(x = x, y = density),
-    color = "steelblue3"
-  ) +
-  geom_line(
-    data = env_df,
-    aes(x = x, y = envelope),
-    color = "dark orange"
-  ) +
+  geom_histogram(aes(y = ..density..), bins = 30, fill = "grey80") +
+  geom_line(data = dens_df, aes(x = x, y = density), color = "steelblue3") +
+  geom_line(data = env_df, aes(x = x, y = envelope), color = "dark orange") +
   ylim(0, 1.5) +
   facet_wrap(~label, ncol = 2)
 ```
@@ -1374,7 +1329,6 @@ Efficient if the transformation is available and cheap to compute.
 \medskip\pause
 
 But may not work for complex or unnormalized distributions!
-
 :::::
 
 . . .
@@ -1395,9 +1349,7 @@ Often less efficient, but very general.
 \medskip\pause
 
 Useful for complex, high-dimensional, or unnormalized distributions.
-
 :::::
-
 :::
 
 . . .
@@ -1411,16 +1363,17 @@ when transformation is impractical or impossible.
 
 ### Step 1
 
-Use the fact that 
+Use the fact that
 $$
-W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k \quad \text{for} \quad X_1, \ldots, X_k \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
+  W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k \quad \text{for} \quad X_1, \ldots, X_k \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
 $$
-to implement a function, `my_rchisq()`, such that
-`my_rchisq(n, k)` returns a sample of $n$ i.i.d. observations from $\chi^2_k$.
+to implement a function, `my_rchisq()`, such that `my_rchisq(n, k)` returns a
+sample of $n$ i.i.d. observations from $\chi^2_k$.
 
 ```{r}
 #| label: rchisq2-implementation
 #| include: false
+
 my_rchisq <- function(n, k) {
   y <- numeric(n)
   for (i in seq_len(n)) {
@@ -1434,6 +1387,7 @@ my_rchisq <- function(n, k) {
 ```{r}
 #| label: rchisq2-implementation-faster
 #| include: false
+
 my_fast_rchisq <- function(n, k) {
   x <- matrix(rnorm(k * n), k)
   colSums(x)
@@ -1449,6 +1403,7 @@ Make another function `my_other_rchisq()` that uses inverse sampling.
 ```{r}
 #| label: rchisq2
 #| include: false
+
 my_other_rchisq <- function(n, k) {
   x <- rnorm(n)
   qchisq(x, k)
@@ -1464,6 +1419,7 @@ Benchmark your implementations against one another and `rchisq()`.
 ```{r}
 #| label: rchisq-bench
 #| include: false
+
 n <- 1e4
 k <- 5
 bench::mark(

@@ -4,7 +4,12 @@ title: "Introduction"
 
 {{< include _common.qmd >}}
 
-```{r init, echo=FALSE, message=FALSE, warning=FALSE}
+```{r}
+#| label: init
+#| echo: false
+#| message: false
+#| warning: false
+
 load(here::here("data", "top100dih.RData"))
 phipsi2 <- na.omit(dataset)
 phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
@@ -22,35 +27,29 @@ techniques and methods.
 
 . . .
 
-Largely speaking, it is **the use of computational methods to solve
-statistical problems**, for instance
+Largely speaking, it is **the use of computational methods to solve statistical
+problems**, for instance
 
 . . .
 
 - simulation,
 - optimization,
-- numerical integration, and 
+- numerical integration, and
 - data visualization.
 
 ## A Running Example
 
-:::: {.columns}
+::: {.columns}
+::::: {.column width="47%"}
+To get a bit of flavor about what we will be doing in the course, we will start
+with a running example on a data set of angles, $\Phi$ and $\Psi$, formed
+between two planes in protein structures.
+:::::
 
-::: {.column width="47%"}
-
-To get a bit of flavor about what we will be doing in the course,
-we will start with a running example on a data set of angles, $\Phi$ and
-$\Psi$, formed between two planes in protein structures.
-
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ![Amino Acid Angles](../images/PhiPsi_creative.jpg){width=90%}
-
+:::::
 :::
-
-::::
 
 ## Histograms
 
@@ -68,13 +67,13 @@ observations fall into each bin.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r hist1-src}
+::: {.columns}
+::::: {.column width="47%"}
+```{r}
+#| label: hist1-src
 #| eval: false
 #| fig-cap: A histogram of the $\Psi$ variable in the amino acid data
+
 library(ggplot2)
 
 ggplot(phipsi, aes(x = phi)) +
@@ -82,20 +81,17 @@ ggplot(phipsi, aes(x = phi)) +
   geom_rug(alpha = 0.5) +
   labs(x = expression(Phi))
 ```
+:::::
 
-:::
-
-::: {.column width="47%"}
-
-```{r hist1-show}
+::::: {.column width="47%"}
+```{r}
+#| label: hist1-show
 #| ref-label: hist1-src
 #| fig-height: 2.1
 #| echo: false
 ```
-
+:::::
 :::
-
-::::
 
 ## Density Estimation
 
@@ -107,32 +103,28 @@ density estimation** (KDE).
 
 \medskip
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r dens-src}
+::: {.columns}
+::::: {.column width="47%"}
+```{r}
+#| label: dens-src
 #| eval: false
+
 ggplot(phipsi, aes(x = phi)) +
   geom_density() +
   geom_rug(alpha = 0.5) +
   labs(x = expression(Phi))
 ```
+:::::
 
-:::
-
-::: {.column width="47%"}
-
-```{r dens-fig}
+::::: {.column width="47%"}
+```{r}
+#| label: dens-fig
 #| echo: false
 #| ref-label: dens-src
 #| fig-height: 2
-
 ```
-
+:::::
 :::
-
-::::
 
 . . .
 
@@ -144,8 +136,8 @@ But how is this KDE actually computed? Doing this efficiently is a
 
 ## Statistical Topics of the Course
 
-The course can be broken down into a number of **statistical** topics, as well as
-**computational** topics.
+The course can be broken down into a number of **statistical** topics, as well
+as **computational** topics.
 
 \medskip
 
@@ -197,10 +189,8 @@ profiling and benchmarking, and how to optimize it.
 
 ## Teaching Staff
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Instructor
 
 Johan Larsson, postdoctoral researcher
@@ -213,22 +203,18 @@ Johan Larsson, postdoctoral researcher
 
 Use Absalon discussions for course-related questions and email
 ([jola@math.ku.dk](mailto:jola@math.ku.dk)) for personal matters.
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Teaching Assistant
 
 Jinyang Liu, PhD student in machine learning
 
 ![Jin](../images/jinyang.jpg){width=50%}
-
+:::::
 :::
-
-::::
 
 ## Assignments
 
@@ -295,45 +281,39 @@ At the exam, you will present one of these at random.
 
 ## Schedule
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Lectures
 
-- Tuesdays and Thursdays, 10:15–12:00 (Johan)
+- Tuesdays and Thursdays, 10:15--12:00 (Johan)
 
 . . .
 
 ### Exercise Sessions
 
-- Thursdays, 08:15–10:00 (Jinyang)
+- Thursdays, 08:15--10:00 (Jinyang)
 
 . . .
 
 ### Presentations
 
-- Thursdays, 13:15–15:00 (Johan)
+- Thursdays, 13:15--15:00 (Johan)
 - Only weeks 3, 4, 6, and 7
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Examination
 
 - November 5-7 (9.15-16.30, tentative)
-
+:::::
 :::
-
-::::
 
 ## Exercise Sessions
 
 An opportunity to get help with the exercises. To make best use of your time,
-make sure you have _tried_ each of them.
+make sure you have *tried* each of them.
 
 \medskip
 
@@ -353,7 +333,6 @@ Exercise sessions will revolve around a central topic, for instance
 - How to organize your code
 - How to use generative AI effectively
 
-
 ## Course Literature
 
 ### Computational Statistics with R
@@ -371,11 +350,12 @@ complete, but we only use parts that are.
 
 \medskip
 
-There is a
-[companion package](https://github.com/nielsrhansen/CSwR/tree/master/CSwR_package):
+There is a [companion
+package](https://github.com/nielsrhansen/CSwR/tree/master/CSwR_package):
 
 ```{r}
 #| eval: false
+
 pak::pak("github::nielsrhansen/CSwR/CSwR_package")
 ```
 
@@ -399,10 +379,8 @@ Covers more advanced R programming topics, among which we use a few
 
 ## Online Resources
 
-:::: {.columns}
-
-::: {.column width="70%"}
-
+::: {.columns}
+::::: {.column width="70%"}
 ### Absalon
 
 Main source for information and communication about the course. Accessed at
@@ -421,16 +399,12 @@ Course content will be uploaded to
 
 This is where you will a detailed schedule of the course, slides, and the
 assignments.
+:::::
 
-:::
-
-::: {.column width="25%"}
-
+::::: {.column width="25%"}
 ![Absalon](../images/absalon.jpg){width=100%}
-
+:::::
 :::
-
-::::
 
 ## Generative AI
 
@@ -451,24 +425,18 @@ You are allowed to use them in this course, but with some caveats:
 
 \bigskip
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Copilot
 
-Access to GitHub Copilot is available for free to students, via
-[GitHub Education](https://education.github.com).
+Access to GitHub Copilot is available for free to students, via [GitHub
+Education](https://education.github.com).
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ![](../assets/images/github-education.png){width=100%}
-
+:::::
 :::
-
-::::
 
 # Programming in R
 
@@ -518,8 +486,8 @@ We expect knowledge of
 
 . . .
 
-All of this is covered in chapters 1-5 of
-[Advanced R](https://adv-r.hadley.nz/).
+All of this is covered in chapters 1-5 of [Advanced
+R](https://adv-r.hadley.nz/).
 
 . . .
 
@@ -558,6 +526,7 @@ Throughout the lectures, I assume that you have it installed and loaded.
 
 ```{r}
 #| eval: false
+
 pak::pak("tidyverse")
 library(tidyverse)
 ```
@@ -566,21 +535,19 @@ library(tidyverse)
 
 ![](../assets/images/tidyverse.png){fig-align="right" width="40%"}
 
-
 ## Best Practices
 
 ### Code Organization
 
-Write your code in scripts (`.R` files), not in the console. Organize
-your files in project directories, one for each project.
+Write your code in scripts (`.R` files), not in the console. Organize your files
+in project directories, one for each project.
 
 . . .
 
-
 ### Presentations
 
-Use [quarto](https://quarto.org) or
-[R Markdown](https://rmarkdown.rstudio.com) for easily interleaving code and text.
+Use [quarto](https://quarto.org) or [R Markdown](https://rmarkdown.rstudio.com)
+for easily interleaving code and text.
 
 . . .
 
@@ -599,7 +566,7 @@ Especially good for error messages.
 ### Generative AI
 
 - Also great for error messages and debugging
-- _Caution_: You need to understand the results, especially when you ask it to
+- *Caution*: You need to understand the results, especially when you ask it to
   create something for you.
 
 . . .
@@ -617,11 +584,9 @@ Use [reprex](https://reprex.tidyverse.org/) to create minimal, reproducible
 examples of your problem.
 
 ::: {.standout}
-
 ## Questions
 
 Any questions so far?
-
 :::
 
 # Functions
@@ -635,8 +600,8 @@ Everything that happens in R is the result of a function call. Even `+`, `[` and
 
 \medskip
 
-An R function takes a number of _arguments_, and when a function call is
-evaluated it computes a _return value_.
+An R function takes a number of *arguments*, and when a function call is
+evaluated it computes a *return value*.
 
 . . .
 
@@ -679,16 +644,12 @@ probably a good idea to turn it into a function.
 
 ## Function Syntax
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 Here is a simple function that takes two arguments and returns their sum.
 
 ```{r}
-f <- function(x, y) {
-  x + y
-}
+f <- function(x, y) x + y
 ```
 
 . . .
@@ -702,13 +663,11 @@ A function has three components: **arguments**, **body**, and **environment**.
 ### Arguments
 
 In this case, `x` and `y` are the arguments.
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Body
 
 The body of the function is everything inside the curly braces `{}`, that is,
@@ -724,23 +683,17 @@ variables that are not defined inside the function.
 ```{r}
 environment(f)
 ```
-
+:::::
 :::
-
-::::
 
 ## Arguments
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Arguments can have default values
 
 ```{r}
-g <- function(x, y = 2) {
-  x + y
-}
+g <- function(x, y = 2) x + y
 
 g(3) # y = 2
 ```
@@ -752,11 +705,9 @@ g(3) # y = 2
 ```{r}
 g(y = 3, x = 2)
 ```
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 . . .
 
 ### Use `NULL` for optional arguments
@@ -773,11 +724,8 @@ g(5)
 
 g(5, 2)
 ```
-
+:::::
 :::
-
-::::
-
 
 ## Copy-on-Write
 
@@ -793,10 +741,8 @@ arguments without shooting yourself in the foot.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ```{r}
 h <- function(x) {
   x[1] <- 100
@@ -809,11 +755,9 @@ h(a) # a is not modified
 ```
 
 . . .
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 a # a is still 1:5
 ```
@@ -824,10 +768,8 @@ a # a is still 1:5
 
 You can use the `<<-` operator to modify variables in the parent environment,
 but please don't.
-
+:::::
 :::
-
-::::
 
 ## Environment and Scoping
 
@@ -851,24 +793,18 @@ created.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 This is called **lexical scoping**.
 
 ```{r}
 x <- 10
-f <- function(y) {
-  x + y
-}
+f <- function(y) x + y
 f(5)
 ```
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 Assuming that `x` is not defined inside `f()`, R looks for `x` in the
 environment where `f()` was created, which is the global environment in this
 case.
@@ -879,10 +815,8 @@ case.
 
 As a rule of thumb, avoid using variables from the parent environment inside
 functions.
-
+:::::
 :::
-
-::::
 
 ## Return Values
 
@@ -926,7 +860,9 @@ Let's write our own apply function.
 
 \bigskip
 
-```{r own-apply}
+```{r}
+#| label: own-apply
+
 our_apply <- function(x, fun) {
   val <- numeric(length(x))
   for (i in seq_along(x)) {
@@ -959,7 +895,9 @@ a numeric.
 
 Then we get an error:
 
-```{r, error=TRUE, echo=-1}
+```{r, echo=-1}
+#| error: true
+
 set.seed(1)
 our_apply(1:10, rpois)
 ```
@@ -971,10 +909,7 @@ our_apply(1:10, rpois)
 We can use an anonymous function to pass additional arguments to `fun()`.
 
 ```{r}
-our_apply(
-  1:10,
-  function(lambda) rpois(1, lambda = 0.9)
-)
+our_apply(1:10, function(lambda) rpois(1, lambda = 0.9))
 ```
 
 ## Ellipsis (`...`)
@@ -984,7 +919,9 @@ additional arguments to `fun()`.
 
 . . .
 
-```{r own-apply-2}
+```{r}
+#| label: own-apply-2
+
 our_apply <- function(x, fun, ...) {
   # <1>
   val <- numeric(length(x))
@@ -1016,6 +953,7 @@ Simplest way to do this is to use `stopifnot()`:
 
 ```{r}
 #| error: true
+
 my_mean <- function(x) {
   stopifnot(is.numeric(x))
   sum(x) / length(x)
@@ -1086,13 +1024,11 @@ Functions, if named properly, often serve as documentation by themselves.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Favor Descriptive Names
 
-First check if you can use a _verb_, which signals **intent**.
+First check if you can use a *verb*, which signals **intent**.
 
 \medskip
 
@@ -1107,11 +1043,9 @@ Better descriptive but long, than short but cryptic.
 Avoid `.` in names; it is used for **methods** (upcoming).
 
 . . .
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Use a Consistent Style
 
 - `lowercase`
@@ -1124,10 +1058,8 @@ Avoid `.` in names; it is used for **methods** (upcoming).
 ### Namespace Clashes
 
 Avoid names of existing functions.
-
+:::::
 :::
-
-::::
 
 ## Best Practices
 
@@ -1171,7 +1103,7 @@ Write short functions and name them descriptively.
 ### Exercise 1: Hello, world!
 
 Write a function `greet` that takes a name as an argument and prints "Hello,
-Name!". If no name is given, it should print “Hello, World!”.
+Name!". If no name is given, it should print "Hello, World!".
 
 *Hint: use `is.null()` to check if an argument was provided.*
 
@@ -1186,10 +1118,11 @@ Write a function `is_even()` that returns `TRUE` if its argument is even,
 
 ### Exercise 3: Weighted mean
 
-Write a function that computes the weighted mean of a numeric vector, $x$, given a vector of weights, $w$:
+Write a function that computes the weighted mean of a numeric vector, $x$, given
+a vector of weights, $w$:
 $$
   \frac{\sum_{i=1}^n w_i x_i}{\sum_{i=1}^n w_i}
 $$
 
-Pass arguments to `sum()` via `...`. Use it to handle the case where `x` contains `NA`s.
-
+Pass arguments to `sum()` via `...`. Use it to handle the case where `x`
+contains `NA`s.

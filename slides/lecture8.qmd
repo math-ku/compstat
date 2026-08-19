@@ -6,10 +6,8 @@ title: "Testing and Debugging"
 
 ## Last Time: Optimization
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Gradient Descent
 
 Few assumptions on $f$, cheap iterations, but slow convergence.
@@ -24,13 +22,11 @@ Few assumptions on $f$, cheap iterations, but slow convergence.
   }
   \Return{$x$}
 \end{algorithm}
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Newton's Method
 
 Requires second derivatives, expensive iterations, but fast convergence.
@@ -45,10 +41,8 @@ Requires second derivatives, expensive iterations, but fast convergence.
   }
   \Return{$x$}
 \end{algorithm}
-
+:::::
 :::
-
-::::
 
 ## Today
 
@@ -87,8 +81,8 @@ A test is a function that checks that some property holds.
 
 \medskip\pause
 
-Typically, we have output from some function and want to check that it meets
-our expectations.
+Typically, we have output from some function and want to check that it meets our
+expectations.
 
 ## Automated Testing
 
@@ -121,13 +115,10 @@ But what we want is automated testing, which we can make part of our workflow.
   \end{tikzpicture}
 \end{center}
 
-
 ## The testthat Package
 
-:::: {.columns}
-
-::: {.column width="70%"}
-
+::: {.columns}
+::::: {.column width="70%"}
 The `testthat` package makes it easy to write and run tests in R.
 
 \medskip\pause
@@ -137,15 +128,12 @@ It provides a simple syntax for writing tests and integrates well with RStudio.
 \medskip\pause
 
 It is also the most common testing framework for R packages.
+:::::
 
-:::
-
-::: {.column width="20%"}
-
+::::: {.column width="20%"}
 ![](../images/testthat.png){width=100%}
+:::::
 :::
-
-::::
 
 ## Writing Tests with testthat
 
@@ -174,6 +162,7 @@ the failure.
 
 ```{r}
 #| error: true
+
 test_that("sum works", {
   expect_identical(sum(1, 2), 4) # This will fail
 })
@@ -211,21 +200,17 @@ testthat::test_dir(here::here("tests"))
 
 ## Inside Packages
 
-:::: {.columns}
-
-::: {.column width="46%"}
-
+::: {.columns}
+::::: {.column width="46%"}
 **testthat** was designed to be used inside R packages.
 
 \medskip\pause
 
-Tests are organized in files inside the `tests/testthat/` directory of an
-R package.
+Tests are organized in files inside the `tests/testthat/` directory of an R
+package.
+:::::
 
-:::
-
-::: {.column width="46%"}
-
+::::: {.column width="46%"}
 \dirtree{%
   .1 mypkg/.
   .2 R/.
@@ -234,10 +219,8 @@ R package.
   .4 test-sum.R.
   .4 test-mean.R.
 }
-
+:::::
 :::
-
-::::
 
 \bigskip\pause
 
@@ -245,10 +228,8 @@ We will see more about package development later in the course.
 
 ## Test Coverage
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 We want to test as many parts of our code as possible.
 
 \medskip\pause
@@ -265,16 +246,12 @@ Tracks which lines of code are executed when we run our tests.
 
 \alert{Out of scope} for this course, but you can read more about it in the
 [covr documentation](https://covr.r-lib.org/).
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ![Test coverage report.](../images/code-coverage.png){width=100%}
-
+:::::
 :::
-
-::::
 
 ## Reproducibility
 
@@ -301,6 +278,7 @@ precision.
 
 ```{r}
 #| error: true
+
 test_that("numerical equality", {
   expect_identical(sqrt(2)^2, 2)
 })
@@ -328,7 +306,7 @@ Debugging is the process of finding and fixing bugs.
 
 ![Down the rabbit hole.](../images/xkcd-debugging.png){width=80%}
 
----
+--------------------------------------------------------------------------------
 
 ![The "first" bug report.](../images/first-bug-reduced.jpg){width=75%}
 
@@ -347,12 +325,14 @@ h <- function() stop("We have a problem!")
 
 ```{r}
 #| error: true
+
 f()
 ```
 . . .
 
 ```{r}
 #| eval: false
+
 traceback()
 ```
 
@@ -417,10 +397,8 @@ There are two common ways to debug code interactively in R.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Browser
 
 `browser()` can be inserted anywhere in the code.
@@ -428,13 +406,11 @@ There are two common ways to debug code interactively in R.
 \medskip\pause
 
 When execution reaches `browser()`, it stops and enters debug mode.
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### RStudio Breakpoints
 
 Visual breakpoints can be set in RStudio by clicking in the margin next to a
@@ -447,10 +423,8 @@ When execution reaches a breakpoint, it stops and enters debug mode.
 \medskip\pause
 
 No need to modify the code, but cannot be conditionally set.
-
+:::::
 :::
-
-::::
 
 ## AI Debugging
 
@@ -488,33 +462,25 @@ you might have missed.
 
 ## Rubber Duck Debugging
 
-:::: {.columns align="center"}
-
-::: {.column width="54%"}
-
+::: {.columns align="center"}
+::::: {.column width="54%"}
 If you don't have anyone around to pair up with, you can always team up with a
 rubber duck!
+:::::
 
-:::
-
-::: {.column width="40%"}
-
+::::: {.column width="40%"}
 \begin{figure}
   \begin{tikzpicture}
     \duck[stethoscope=gray!80!black]
   \end{tikzpicture}
 \end{figure}
-
+:::::
 :::
-
-::::
-
 
 \bigskip\pause
 
 The idea is that explaining the code out loud helps you see it from a different
 perspective.
-
 
 # Worked Example
 
@@ -527,16 +493,16 @@ gradient descent and Newton's method.
 
 The Poisson regression model is given by
 $$
-\E(\symbf{y} \mid \symbf{X}) = \exp(\symbf{X} \symbf{\beta}),
+  \E(\symbf{y} \mid \symbf{X}) = \exp(\symbf{X} \symbf{\beta}),
 $$
-where $\symbf{X}$ is a $n \times p$ matrix of predictors and $\symbf{y}$ is
-our response.
+where $\symbf{X}$ is a $n \times p$ matrix of predictors and $\symbf{y}$ is our
+response.
 
 \medskip\pause
 
 The problem is to find
 $$
-\hat{\symbf{\beta}} = \argmin_{\symbf{\beta}} \left( \frac{1}{n} \sum_{i=1}^n \exp(\symbf{x}_i^T \symbf{\beta}) - y_i \symbf{x}_i^T \symbf{\beta} \right).
+  \hat{\symbf{\beta}} = \argmin_{\symbf{\beta}} \left( \frac{1}{n} \sum_{i=1}^n \exp(\symbf{x}_i^T \symbf{\beta}) - y_i \symbf{x}_i^T \symbf{\beta} \right).
 $$
 
 . . .
@@ -548,7 +514,9 @@ This is a convex optimization problem.
 Here, we will generate some synthetic data, for a simple Poisson regression
 model with one predictor.
 
-```{r poisson-regression}
+```{r}
+#| label: poisson-regression
+
 n <- 1000
 x <- rnorm(n)
 y <- rpois(n, exp(x))
@@ -559,7 +527,9 @@ head(X, 5)
 
 ## Implementation of Objective and Gradient
 
-```{r poisson-implementations}
+```{r}
+#| label: poisson-implementations
+
 objective <- function(beta, X, y) {
   Xty <- drop(crossprod(X, y))
   (sum(exp(X %*% beta)) - beta %*% Xty) / nrow(X)
@@ -576,7 +546,10 @@ gradient <- function(beta, X, y) {
 Gradient descent and Newton method implementations can be found in
 [`debugging.R`](R/debugging.R).
 
-```{r source-debugging-file, cache=FALSE}
+```{r}
+#| label: source-debugging-file
+#| cache: false
+
 source(here::here("R", "debugging.R"))
 ```
 
@@ -584,11 +557,11 @@ source(here::here("R", "debugging.R"))
 
 Let's run the gradient descent implementation to see if it works.
 
-:::: {.columns}
+::: {.columns}
+::::: {.column width="47%"}
+```{r}
+#| label: run-gd
 
-::: {.column width="47%"}
-
-```{r run-gd}
 res_gd <- gradient_descent(
   c(0, 0),
   objective,
@@ -599,33 +572,27 @@ res_gd <- gradient_descent(
   y = y
 )
 
-res_glm <- glm(
-  y ~ x,
-  family = "poisson"
-)
+res_glm <- glm(y ~ x, family = "poisson")
 ```
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 res_gd$par
 coef(res_glm)
 ```
-
+:::::
 :::
-
-::::
-
 
 ## Buggy Newton Method
 
 First, we define the Hessian function.
 
-```{r def-hessian}
+```{r}
+#| label: def-hessian
+
 hessian <- function(beta, X, y) {
   (crossprod(X, drop(exp(X %*% beta)) * X)) / nrow(X)
 }

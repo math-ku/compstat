@@ -28,8 +28,8 @@ But unless instructed otherwise, only a single core is going to be used.
 
 \medskip\pause
 
-The computer doesn't automatically know that your computations are safe to do
-in parallel.
+The computer doesn't automatically know that your computations are safe to do in
+parallel.
 
 ## Embarrassingly Parallel Tasks
 
@@ -46,39 +46,36 @@ Tasks that easily separate into independent subtasks.
 
 ## The foreach Package
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r foreach-load}
+::: {.columns}
+::::: {.column width="47%"}
+```{r}
+#| label: foreach-load
 #| warning: false
 #| message: false
+
 library(foreach)
 ```
 
-```{r foreach-sqrt}
+```{r}
+#| label: foreach-sqrt
 #| eval: false
+
 foreach(i = seq_len(3)) %dopar%
   {
     sqrt(i)
   }
 ```
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| ref-label: "foreach-sqrt"
 ```
-
-
+:::::
 :::
-
-::::
 
 \pause\medskip
 
@@ -95,40 +92,34 @@ Load and **register** one before using foreach.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-```{r doparallel}
+::: {.columns}
+::::: {.column width="47%"}
+```{r}
+#| label: doparallel
 #| eval: false
+
 library(doParallel)
 cl <- makeCluster(2)
 registerDoParallel(cl)
 
 foreach(i = seq_len(3)) %dopar%
   {
-    paste(
-      "Hello from process",
-      Sys.getpid()
-    )
+    paste("Hello from process", Sys.getpid())
   }
 ```
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| message: false
 #| ref-label: "doparallel"
 ```
-
+:::::
 :::
 
-::::
 ## Combining Results
 
 `foreach()` always returns a list.
@@ -149,7 +140,6 @@ foreach(i = seq_len(4), .combine = c) %dopar%
   }
 ```
 
-
 ## Futures
 
 A future represents a value that may be available later on.
@@ -160,10 +150,8 @@ Sometimes called \alert{promises}: "I promise to give you the result later."
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Without Futures {.alert}
 
 ```{r}
@@ -173,13 +161,11 @@ v <- {
 }
 v
 ```
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### With Futures {.example}
 
 ```{r}
@@ -191,10 +177,8 @@ v %<-%
   }
 v
 ```
-
+:::::
 :::
-
-::::
 
 ## Futures Enable Parallelization
 
@@ -209,6 +193,7 @@ A new \alert{thread} is created for each future.
 
 ```{r}
 #| eval: false
+
 plan(multisession) # or multicore, mirai_multisession, etc.
 
 z %<-%
@@ -229,8 +214,8 @@ Need to pick a backend (plan), with multiple options.
 
 ### `multicore`
 
-Available on Linux and macOS, but not Windows or RStudio. _Forks_ the current
-R process, instead of starting a new one. But _not_ recommended because of
+Available on Linux and macOS, but not Windows or RStudio. *Forks* the current R
+process, instead of starting a new one. But *not* recommended because of
 potential stability issues.
 
 . . .
@@ -246,13 +231,11 @@ A newer alternative, available through the
 
 In practice, twice as many cores $\neq$ twice as fast (in practice).
 
-
 . . .
 
 ### Overhead
 
 Parallelization comes with overhead (starting threads, communication).
-
 
 . . .
 
@@ -269,40 +252,37 @@ Parallelizing a task that is already parallelized may not help and may even
 
 ## Comparison of foreach and future
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### foreach
 
 Main use case is to run computations in parallel that would otherwise be done in
 a `for` loop.
-
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### future
 
 More general abstraction for asynchronous programming and parallelization.
 
 \pause\medskip
 
-Primarily used when you have various independent tasks that you want to run
-in parallel.
-
+Primarily used when you have various independent tasks that you want to run in
+parallel.
+:::::
 :::
-
-::::
 
 # Scatterplot Smoothing
 
 ## Nuuk Temperature Data
 
-```{r looad-nuuk-data, echo=FALSE, message=FALSE}
+```{r}
+#| label: looad-nuuk-data
+#| echo: false
+#| message: false
+
 nuuk <- read_table(
   here::here("data", "nuuk.txt"),
   col_names = c("Year", 1:12),
@@ -326,8 +306,8 @@ n <- nrow(nuuk_year)
 ```{r}
 #| fig-cap: Annual average temperature in Nuuk, Greenland
 #| fig-width: 4
-nuuk_plot <- ggplot(nuuk_year, aes(Year, Temperature)) +
-  geom_point()
+
+nuuk_plot <- ggplot(nuuk_year, aes(Year, Temperature)) + geom_point()
 nuuk_plot
 ```
 
@@ -338,7 +318,7 @@ Data is available [here](../data/nuuk.dat.txt).
 Given data points $(x_1, y_1), \ldots, (x_n, y_n)$, the $k$-nearest neighbor
 estimator at $x_i$ is
 $$
-\hat{f}_i = \frac{1}{k} \sum_{j \in N_i} y_j
+  \hat{f}_i = \frac{1}{k} \sum_{j \in N_i} y_j
 $$
 where $N_i$ is the set of indices for the $k$ nearest neighbors of $x_i$.
 
@@ -346,7 +326,7 @@ where $N_i$ is the set of indices for the $k$ nearest neighbors of $x_i$.
 
 This is an estimator of
 $$
-f(x) = E(Y \mid X = x).
+  f(x) = E(Y \mid X = x).
 $$
 
 \pdfpcnote{
@@ -361,7 +341,7 @@ $$
 
 We can express all fitted values as a matrix-vector product:
 $$
-\hat{\symbf{f}} = \symbf{S} \symbf{y}
+  \hat{\symbf{f}} = \symbf{S} \symbf{y}
 $$
 where $\symbf{y} = (y_1, \ldots, y_n)^T$ and $\symbf{S}$ is the **smoother
 matrix**.
@@ -372,7 +352,7 @@ matrix**.
 
 Each entry of $\symbf{S}$ is
 $$
-S_{ij} = \frac{1}{k} \cdot \symbf{1}_{\{j \in N_i\}}
+  S_{ij} = \frac{1}{k} \cdot \symbf{1}_{\{j \in N_i\}}
 $$
 where $\symbf{1}_{\{j \in N_i\}}$ is 1 if $j$ is a neighbor of $i$, 0 otherwise.
 
@@ -385,7 +365,7 @@ where $\symbf{1}_{\{j \in N_i\}}$ is 1 if $j$ is a neighbor of $i$, 0 otherwise.
 ## Linear Smoothers
 
 Smoothers of the form $\hat{\symbf{f}} = \symbf{S} \symbf{y}$ are called a
-_linear_ smoothers.
+*linear* smoothers.
 
 \pause\medskip
 
@@ -396,7 +376,7 @@ works for $x$-values in any metric space.
 
 The representation of a linear smoother as a matrix-vector product,
 $$
-\symbf{S} \symbf{y}
+  \symbf{S} \symbf{y}
 $$
 is theoretically useful, but often not the best way to actually compute
 $\hat{\symbf{f}}$.
@@ -404,9 +384,9 @@ $\hat{\symbf{f}}$.
 ## Running Mean
 
 When $x_i \in \mathbb{R}$ we can sort data according to $x$-values and then use
-a _symmetric_ neighbor definition:
+a *symmetric* neighbor definition:
 $$
-N_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
+  N_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
 $$
 (for $k$ odd.)
 
@@ -433,7 +413,9 @@ We don't need to keep track of metric comparisons. Only the order matters.
 
 Assume $y$ is sorted and $k$ is odd.
 
-```{r runmean-simple}
+```{r}
+#| label: runmean-simple
+
 run_mean_naive <- function(y, k) {
   n <- length(y)
   m <- (k - 1) / 2
@@ -456,12 +438,14 @@ run_mean_naive <- function(y, k) {
 
 We can achieve a more efficient implementation by noting that
 $$
-\hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)/2}}{k}.
+  \hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)/2}}{k}.
 $$
 
 . . .
 
-```{r run_mean_def}
+```{r}
+#| label: run_mean_def
+
 run_mean <- function(y, k) {
   n <- length(y)
   m <- floor((k - 1) / 2)
@@ -485,14 +469,15 @@ run_mean <- function(y, k) {
   Based on the idea of keeping and updating a running sum.
 }
 
-
 ## Visualization
 
-```{r nuuk-NN-plot2}
+```{r}
+#| label: nuuk-NN-plot2
 #| warning: false
 #| fig-width: 5
 #| fig-height: 2.2
 #| fig-cap: Running mean smoother with $k = 11$.
+
 f_hat <- run_mean(nuuk_year$Temperature, 11)
 nuuk_plot + geom_line(aes(y = f_hat), color = "blue")
 ```
@@ -507,19 +492,20 @@ nuuk_plot + geom_line(aes(y = f_hat), color = "blue")
 
 . . .
 
-```{r run-mean-nas, echo=2}
+```{r, echo=2}
+#| label: run-mean-nas
+
 op <- options(digits = 2)
-f_hat_filter <- stats::filter(
-  nuuk_year$Temperature,
-  rep(1 / 11, 11)
-)
+f_hat_filter <- stats::filter(nuuk_year$Temperature, rep(1 / 11, 11))
 f_hat_filter[c(1:10, 137:147)]
 options(digits = op$digits)
 ```
 
 . . .
 
-```{r runmean-test}
+```{r}
+#| label: runmean-test
+
 f_hat <- run_mean(nuuk_year$Temperature, 11)
 
 all.equal(f_hat, as.numeric(f_hat_filter))
@@ -533,27 +519,26 @@ all.equal(f_hat, as.numeric(f_hat_filter))
 
 ##
 
-```{r runMeanBench}
+```{r}
+#| label: runMeanBench
 #| echo: false
 #| warning: false
 #| message: false
 #| fig-width: 5.5
 #| fig-height: 3
-nn_bench <- bench::press(
-  n = c(512, 1024, 2048, 4196),
-  {
-    k <- 11
-    y <- rnorm(n)
-    w <- c(rep(1, k * n), rep(0, n * (n - k)))
-    S <- matrix(w, n, n, byrow = TRUE)
-    bench::mark(
-      S %*% y,
-      run_mean(y, k = k),
-      stats::filter(y, rep(1 / k, k)),
-      check = FALSE
-    )
-  }
-)
+
+nn_bench <- bench::press(n = c(512, 1024, 2048, 4196), {
+  k <- 11
+  y <- rnorm(n)
+  w <- c(rep(1, k * n), rep(0, n * (n - k)))
+  S <- matrix(w, n, n, byrow = TRUE)
+  bench::mark(
+    S %*% y,
+    run_mean(y, k = k),
+    stats::filter(y, rep(1 / k, k)),
+    check = FALSE
+  )
+})
 
 plot(nn_bench)
 ```
@@ -564,11 +549,10 @@ The Matrix-vector multiplication is $O(n^2)$.
 
 The two other algorithms are $O(n)$.
 
-
 ## Bias--Variance Trade-Off
 
-There is a bias-variance trade-off in nearest neighbor smoothing with respect
-to $k$.
+There is a bias-variance trade-off in nearest neighbor smoothing with respect to
+$k$.
 
 \medskip\pause
 
@@ -577,11 +561,11 @@ If data is i.i.d. with $V(Y \mid X) = \sigma^2$ and $f(x) = E(Y \mid X = x)$,
 \pause
 
 $$
-\begin{aligned}
-  \text{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\ \pause
-                & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\ \pause
-                & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \bigg( \underbrace{f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)}_{\text{bias}}\bigg)^2.
-\end{aligned}
+  \begin{aligned}
+    \text{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\ \pause
+                  & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\ \pause
+                  & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \bigg( \underbrace{f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)}_{\text{bias}}\bigg)^2.
+  \end{aligned}
 $$
 
 . . .
@@ -603,41 +587,32 @@ We know there is a bias-variance trade-off in $k$---so how do we choose $k$?
 Leave out one observation at a time, predict using remaining data, and measure
 the prediction error.
 
-
 \pause\medskip
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 The general LOOCV formula is
 $$
-\text{LOOCV} = \sum_{i=1}^n (y_i - \hat{f}^{-i}_i)^2.
+  \text{LOOCV} = \sum_{i=1}^n (y_i - \hat{f}^{-i}_i)^2.
 $$
 
 \pause
 
 For a *linear* smoother, we have
 $$
-\hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}},
+  \hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}},
 $$
-
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 This leads to the simplified formula
 $$
-\text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2.
+  \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2.
 $$
-
+:::::
 :::
-
-::::
-
 
 \pdfpcnote{
 Can for running mean in principle compute this without leaving anything out.
@@ -647,14 +622,16 @@ Can for running mean in principle compute this without leaving anything out.
 
 For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$, so
 $$
-\text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
+  \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
 $$
 
 . . .
 
 ### Implementation
 
-```{r LOOCV-runMean}
+```{r}
+#| label: LOOCV-runMean
+
 loocv <- function(k, y) {
   f_hat <- run_mean(y, k)
   mean(((y - f_hat) / (1 - 1 / k))^2, na.rm = TRUE)
@@ -677,7 +654,9 @@ this.
 
 ##
 
-```{r nuuk-running-loocv}
+```{r}
+#| label: nuuk-running-loocv
+
 k <- seq(3, 40, 2)
 cv_error <- sapply(k, function(kk) loocv(kk, nuuk_year$Temperature))
 k_opt <- k[which.min(cv_error)]
@@ -685,11 +664,13 @@ k_opt <- k[which.min(cv_error)]
 
 \medskip\pause
 
-```{r nuuk-running-loocv-plot}
+```{r}
+#| label: nuuk-running-loocv-plot
 #| fig-width: 5
 #| fig-height: 2
 #| echo: false
 #| fig-cap: LOOCV error for nearest neighbor smoothing as a function of $k$.
+
 ggplot(tibble(k, cv_error), aes(k, cv_error)) +
   geom_vline(xintercept = k_opt, color = "dark orange") +
   geom_line() +
@@ -699,12 +680,14 @@ ggplot(tibble(k, cv_error), aes(k, cv_error)) +
 
 ##
 
-```{r nuuk-NN-plot3}
+```{r}
+#| label: nuuk-NN-plot3
 #| warning: false
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2.5
 #| fig-cap: Nearest neighbor smoother with LOOCV-optimal $k=15$.
+
 nuuk_plot +
   geom_line(aes(y = run_mean(nuuk_year$Temperature, k_opt)), color = "blue")
 ```
@@ -731,7 +714,7 @@ We want a smooth function $f$ that balances goodness-of-fit and wiggliness.
 
 To do this, we minimize an objective function that penalizes wiggliness:
 $$
-L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \text{d} z}_{\lVert f''\rVert_2^2}
+  L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \text{d} z}_{\lVert f''\rVert_2^2}
 $$
 where $\lambda \geq 0$ is a tuning parameter that controls the trade-off.
 
@@ -744,7 +727,7 @@ points $x_i$.
 
 That is, a function
 $$
-f = \sum_j \beta_j \varphi_j
+  f = \sum_j \beta_j \varphi_j
 $$
 where $\varphi_j$ is a basis function for the $n$-dimensional space of such
 splines.
@@ -763,26 +746,25 @@ Penalty term penalizes solutions with large second derivatives (in norm).
 
 In vector notation
 $$
-\symbf{f} = \symbf{\Phi}\symbf{\beta}
+  \symbf{f} = \symbf{\Phi}\symbf{\beta}
 $$
 with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
 $$
-\begin{aligned}
-  L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\
-               & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
-\end{aligned}
+  \begin{aligned}
+    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\
+                 & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
+  \end{aligned}
 $$
 with
 $$
-\symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
+  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
 $$
-
 
 \pause
 
 ### Solution
 
-The solution is a _linear smoother_ with smoother matrix $\symbf{S}_{\lambda}$
+The solution is a *linear smoother* with smoother matrix $\symbf{S}_{\lambda}$
 and penalty matrix $\symbf{\Omega}$.
 
 \pdfpcnote{
@@ -795,9 +777,11 @@ and penalty matrix $\symbf{\Omega}$.
 
 ## Splines in R
 
-```{r splines}
+```{r}
+#| label: splines
 #| message: false
 #| warning: false
+
 knots <- c(0, 0, 0, seq(0, 1, 0.2), 1, 1, 1)
 xx <- seq(0, 1, 0.005)
 b_splines <- splines::splineDesign(knots, xx)
@@ -811,6 +795,7 @@ b_splines <- splines::splineDesign(knots, xx)
 #| fig-height: 2
 #| fig-cap: Cubic B-spline basis functions with knots at 0, 0.2, 0.4, 0.6, 0.8,
 #|   and 1.
+
 df <- data.frame(
   x = rep(xx, times = ncol(b_splines)),
   y = as.vector(b_splines),
@@ -833,12 +818,14 @@ control points and is smooth.
 
 ## Penalty Matrix $\symbf{\Omega}$
 
-```{r Omega-Simpson}
+```{r}
+#| label: Omega-Simpson
 #| echo: false
 #| fig-cap: The penalty matrix $\symbf{\Omega}$ for a cubic spline with knots at
 #|   0, 0.2, ..., 0.8, 1.
 #| fig-width: 5
 #| fig-height: 3
+
 library(Matrix)
 pen_mat <- function(inner_knots) {
   knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
@@ -854,19 +841,14 @@ pen_mat <- function(inner_knots) {
     6
 }
 
-omega <- pen_mat(
-  seq(0, 1, 0.1)
-)
+omega <- pen_mat(seq(0, 1, 0.1))
 
 omega_mat <- as.matrix(omega)
 
 n_row <- nrow(omega_mat)
 n_col <- ncol(omega_mat)
 
-omega_df <- expand.grid(
-  Row = seq_len(n_row),
-  Col = seq_len(n_col)
-)
+omega_df <- expand.grid(Row = seq_len(n_row), Col = seq_len(n_col))
 omega_df$Value <- as.vector(omega_mat)
 
 ggplot(omega_df, aes(x = Col, y = Row, fill = Value)) +
@@ -878,10 +860,12 @@ ggplot(omega_df, aes(x = Col, y = Row, fill = Value)) +
 
 ## Fitting a Smoothing Spline
 
-We implement the matrix-algebra directly for computing $\symbf{S}_{\lambda}
-\symbf{y}$.
+We implement the matrix-algebra directly for computing
+$\symbf{S}_{\lambda} \symbf{y}$.
 
-```{r nuuk-smooth-spline}
+```{r}
+#| label: nuuk-smooth-spline
+
 inner_knots <- nuuk_year$Year
 
 # Note that order does not matter
@@ -892,7 +876,9 @@ Phi <- splines::splineDesign(knots, inner_knots)
 
 . . .
 
-```{r nuuk-smooth-spline2}
+```{r}
+#| label: nuuk-smooth-spline2
+
 omega <- pen_mat(inner_knots) # Complicated, but depends only on knots
 smoother <- function(lambda) {
   Phi %*%
@@ -905,9 +891,11 @@ smoother <- function(lambda) {
 
 ##
 
-```{r nuuk-smoother-plot}
+```{r}
+#| label: nuuk-smoother-plot
 #| fig-width: 5
 #| fig-height: 2.5
+
 nuuk_plot +
   geom_line(aes(y = smoother(10)), color = "blue") +
   geom_line(aes(y = smoother(1000)), color = "red") +
@@ -916,25 +904,27 @@ nuuk_plot +
 
 ## Generalized Cross-Validation (GCV)
 
-For smoothing splines, $S_{ii}$ varies with $i$, which makes LOOCV expensive
-to compute.
+For smoothing splines, $S_{ii}$ varies with $i$, which makes LOOCV expensive to
+compute.
 
 \medskip\pause
 
 ### Idea
 
-Replace $S_{ii}$ in LOOCV by $\text{df} / n$, with $\text{df} =
-\text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$, to get the **generalized**
-cross-validation criterion
+Replace $S_{ii}$ in LOOCV by $\text{df} / n$, with
+$\text{df} = \text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$, to get the
+**generalized** cross-validation criterion
 $$
-\text{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \text{df} / n}\right)^2.
+  \text{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \text{df} / n}\right)^2.
 $$
 
 . . .
 
 ### Implementation
 
-```{r gcv-smooth-spline}
+```{r}
+#| label: gcv-smooth-spline
+
 gcv <- function(lambda, y) {
   S <- Phi %*% solve(crossprod(Phi) + lambda * omega, t(Phi))
   df <- sum(diag(S))
@@ -953,16 +943,20 @@ gcv <- function(lambda, y) {
 Apply `gcv()` across grid of $\lambda$-values and choose $\lambda$ that
 minimizes GCV.
 
-```{r nuuk-spline-gcv}
+```{r}
+#| label: nuuk-spline-gcv
+
 lambda <- seq(50, 250, 2)
 gcv <- sapply(lambda, gcv, y = nuuk_year$Temperature)
 lambda_opt <- lambda[which.min(gcv)]
 ```
 
-```{r gc-plot}
+```{r}
+#| label: gc-plot
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2
+
 tibble(lambda, gcv) |>
   ggplot(aes(lambda, gcv)) +
   geom_vline(xintercept = lambda_opt, color = "dark orange") +
@@ -972,18 +966,22 @@ tibble(lambda, gcv) |>
 
 ## GCV-Optimal Smoothing Spline
 
-```{r nuuk-spline-opt}
+```{r}
+#| label: nuuk-spline-opt
 #| fig-width: 5
 #| fig-height: 2.5
+
 smooth_opt <- smoother(lambda_opt)
 nuuk_plot + geom_line(aes(y = smooth_opt), color = "blue")
 ```
 
 ## Using `smooth.spline()`
 
-```{r nuuk-spline-opt2}
+```{r}
+#| label: nuuk-spline-opt2
 #| fig-width: 5
 #| fig-height: 2.5
+
 smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature)
 nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
 ```
@@ -999,8 +997,8 @@ expensive.
 
 \medskip\pause
 
-In practice, we therefore often use fewer basis functions than data points, $p
-< n$.
+In practice, we therefore often use fewer basis functions than data points,
+$p < n$.
 
 \pause
 
@@ -1008,15 +1006,15 @@ In practice, we therefore often use fewer basis functions than data points, $p
 
 Using the singular value decomposition
 $$
-\Phi = \symbf{U} D \symbf{V}^T
+  \Phi = \symbf{U} D \symbf{V}^T
 $$
 \pause we can rewrite the smoother matrix as
 $$
-\symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
+  \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
 $$
 where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and \pause
 $$
-D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
+  D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
 $$
 
 \medskip\pause
@@ -1034,15 +1032,15 @@ The columns of $\widetilde{\symbf{U}}$ form the **Demmler-Reinsch basis**.
 ## Interpretation
 
 Project the data $y$ onto the Demmler-Reinsch basis (columns of
-$\widetilde{\symbf{U}}$) to get coefficients $\hat{\symbf{\beta}} =
-\widetilde{\symbf{U}}^Ty$.
+$\widetilde{\symbf{U}}$) to get coefficients
+$\hat{\symbf{\beta}} = \widetilde{\symbf{U}}^Ty$.
 
 \pause\medskip
 
 Each coefficient is shrunk according to the corresponding eigenvalue $\gamma_i$
 and smoothing parameter $\lambda$:
 $$
-\hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
+  \hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
 $$
 
 \pause\medskip
@@ -1050,7 +1048,7 @@ $$
 The final smoothed values are reconstructed by combining the shrunk coefficients
 with the basis functions.
 $$
-\hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
+  \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
 $$
 
 \pdfpcnote{
@@ -1059,10 +1057,12 @@ $$
 
 ## The Demmler-Reinsch Basis (Columns of $\widetilde{\symbf{U}}$)
 
-```{r spline-diagonalization}
+```{r}
+#| label: spline-diagonalization
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 3
+
 inner_knots <- seq(1867, 2013, length.out = 18)
 Phi <- splines::splineDesign(
   c(rep(range(inner_knots), 3), inner_knots),
@@ -1070,12 +1070,7 @@ Phi <- splines::splineDesign(
 )
 omega <- pen_mat(inner_knots)
 Phi_svd <- svd(Phi)
-omega_tilde <- t(
-  t(
-    crossprod(Phi_svd$v, omega %*% Phi_svd$v)
-  ) /
-    Phi_svd$d
-) /
+omega_tilde <- t(t(crossprod(Phi_svd$v, omega %*% Phi_svd$v)) / Phi_svd$d) /
   Phi_svd$d
 
 Omega_tilde_svd <- svd(omega_tilde)
@@ -1093,12 +1088,14 @@ bind_cols(select(nuuk_year, Year), as_tibble(U_tilde)) |>
 
 ##
 
-```{r spline-gamma}
+```{r}
+#| label: spline-gamma
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 3
 #| fig-cap: The eigenvalues $\gamma_i$ of the penalty matrix in the
 #|   Demmler-Reinsch basis.
+
 library(patchwork)
 
 d <- Omega_tilde_svd$d
@@ -1127,6 +1124,7 @@ in parallel. Benchmark the parallel version against a regular `for` loop using
 ```{r}
 #| echo: false
 #| eval: false
+
 library(foreach)
 library(doParallel)
 library(bench)
@@ -1155,11 +1153,7 @@ parallel_square <- function(x) {
 cl <- makeCluster(detectCores() / 2)
 registerDoParallel(cl)
 
-bench::mark(
-  loop = loop_square(x),
-  parallel = parallel_square(x),
-  check = FALSE
-)
+bench::mark(loop = loop_square(x), parallel = parallel_square(x), check = FALSE)
 ```
 
 . . .
@@ -1173,6 +1167,7 @@ the value of the future before and after the computation is complete.
 ```{r}
 #| echo: false
 #| eval: false
+
 library(future)
 plan(multicore) # Not on Windows or RStudio!
 v %<-%

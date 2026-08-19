@@ -115,7 +115,6 @@ functions are running.
 \pause\medskip
 
 This is what R's profilers do.
-
 :::::
 
 ::::: {.column width="47%"}
@@ -126,9 +125,7 @@ Profilers record both time and memory usage.
 \pause\medskip
 
 In this course we focus mostly on time.
-
 :::::
-
 :::
 
 ## Profiling in R
@@ -139,6 +136,7 @@ not Positron)].
 
 ```{r}
 #| label: load_profvis
+
 library(profvis)
 ```
 
@@ -198,6 +196,7 @@ Now let's run the profiler.
 ```{r}
 #| label: kern-dens-prof
 #| eval: false
+
 source(here::here("R", "kernel.R"))
 
 x <- rnorm(1e5)
@@ -233,6 +232,7 @@ Fixing this is easy! We can \alert{vectorize} the inner loop.
 ```{r}
 #| label: kern-dens-vec-code
 #| eval: false
+
 # Old (Nested Loop)
 kern_dens_vec <- function(x, h, m = 512) {
   # ...
@@ -256,6 +256,7 @@ Fixing this is easy! We can \alert{vectorize} the inner loop.
 ```{r}
 #| label: kern-dens-vec-code-2
 #| eval: false
+
 # New (vectorized)
 kern_dens_vec <- function(x, h, m = 512) {
   # ...
@@ -275,6 +276,7 @@ How much faster is this? We'll \alert{benchmark} this soon.
 ```{r}
 #| label: kern-dens-vec-code-3
 #| echo: false
+
 kern_dens_vec <- function(x, h, m = 512) {
   rg <- range(x)
   xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = m)
@@ -333,6 +335,7 @@ benchmarking.
 
 ```{r}
 #| label: load_bench
+
 library(bench)
 ```
 
@@ -351,12 +354,10 @@ Also checks results for correctness, unless `check = FALSE`.
 
 ```{r}
 #| label: simple-bench
+
 x <- runif(100)
 
-sqrt_bench <- bench::mark(
-  sqrt(x),
-  x^0.5
-)
+sqrt_bench <- bench::mark(sqrt(x), x^0.5)
 
 sqrt_bench
 ```
@@ -367,6 +368,7 @@ sqrt_bench
 #| label: bee-bench
 #| fig-width: 5.3
 #| fig-cap: A beeswarm plot of the benchmark results.
+
 plot(sqrt_bench)
 ```
 
@@ -386,24 +388,23 @@ across outer product of its initial arguments.
 #| label: dens-bench
 #| message: false
 #| warning: false
-dens_bench <- bench::press(
-  n = 2^(6:9),
-  {
-    x <- rnorm(n)
-    bench::mark(
-      base = density(x, 0.2),
-      loop = kern_dens(x, 0.2),
-      vectorized = kern_dens_vec(x, 0.2),
-      check = FALSE # Why? Recall last lecture!
-    )
-  }
-)
+
+dens_bench <- bench::press(n = 2^(6:9), {
+  x <- rnorm(n)
+  bench::mark(
+    base = density(x, 0.2),
+    loop = kern_dens(x, 0.2),
+    vectorized = kern_dens_vec(x, 0.2),
+    check = FALSE # Why? Recall last lecture!
+  )
+})
 ```
 
 ## Bench Press Results
 
 ```{r}
 #| label: head-bench
+
 head(dens_bench, 6)
 ```
 
@@ -416,6 +417,7 @@ head(dens_bench, 6)
 #|   estimator.
 #| fig-width: 5.3
 #| fig-height: 2.6
+
 plot(dens_bench)
 ```
 
@@ -428,6 +430,7 @@ plot(dens_bench)
 #| fig-width: 3.4
 #| fig-cap: Custom plot of benchmark results for the three different
 #|   implementations.
+
 mutate(dens_bench, method = as.character(expression)) |>
   ggplot(aes(n, median, color = method)) +
   geom_point() +
@@ -488,7 +491,6 @@ Strategies that apply selectively to the R language, such as calling
 
 - vectorized (compiled) functions, or\pause
 - specialized functions.
-
 :::::
 
 . . .
@@ -498,9 +500,7 @@ Strategies that apply selectively to the R language, such as calling
 
 Strategies that are specific to the problem at hand, such as **binning** (later
 this lecture).
-
 :::::
-
 :::
 
 ## R Is Slow ...
@@ -576,18 +576,15 @@ Just because you ran a vectorized function, it doesn't make it fast.
 ```{r}
 #| label: bench-loop-bench
 
-loop_bench <- bench::mark(
-  sapply = sapply(x, function(x_i) 10 * x_i),
-  loop = {
-    y <- numeric(length(x))
+loop_bench <- bench::mark(sapply = sapply(x, function(x_i) 10 * x_i), loop = {
+  y <- numeric(length(x))
 
-    for (i in seq_along(x)) {
-      y[i] <- 10 * x[i]
-    }
-
-    y
+  for (i in seq_along(x)) {
+    y[i] <- 10 * x[i]
   }
-)
+
+  y
+})
 ```
 
 --------------------------------------------------------------------------------
@@ -598,6 +595,7 @@ loop_bench <- bench::mark(
 #| fig-height: 2
 #| fig-cap: The loop is slightly faster than the vectorized `sapply()`.
 #| echo: false
+
 plot(loop_bench)
 ```
 
@@ -611,11 +609,11 @@ we cannot optimize the kernel further.
 But we can use \alert{binning}: create $B$ bins and evaluate the kernel and
 replace
 $$
-\hat{f}(x) = \frac{1}{n h} \sum_{i=1}^n K\left( \frac{x - x_i}{h} \right)
+  \hat{f}(x) = \frac{1}{n h} \sum_{i=1}^n K\left( \frac{x - x_i}{h} \right)
 $$
 with
 $$
-\hat{f}(x) = \frac{1}{n h} \sum_{j=1}^B n_j K\left( \frac{x - c_j}{h} \right)
+  \hat{f}(x) = \frac{1}{n h} \sum_{j=1}^B n_j K\left( \frac{x - c_j}{h} \right)
 $$
 where $c_j$ is the center of the $j$th bin and $n_j$ is the number of data
 points in the $j$th bin.
@@ -653,6 +651,7 @@ each point checking which bin center is closest.
 
 ```{r}
 #| label: kern-bin-code
+
 kern_bin <- function(x, l, u, B) {
   w <- numeric(B)
   delta <- (u - l) / (B - 1)
@@ -670,6 +669,7 @@ kern_bin <- function(x, l, u, B) {
 
 ```{r}
 #| label: kern-dens-bin-code
+
 kern_dens_bin <- function(x, h, m = 512) {
   rg <- range(x) + c(-3 * h, 3 * h)
   xx <- seq(rg[1], rg[2], length.out = m)
@@ -696,26 +696,19 @@ points as bin centers.
 #| fig-cap: The relative benefit of binning increases with the size of the data.
 #| fig-height: 3
 
-res2 <- bench::press(
-  n = 2^(5:13),
-  {
-    h <- 0.2
-    x <- rnorm(n)
-    bench::mark(
-      base = density(x, h),
-      loop = kern_dens(x, h),
-      vectorized = kern_dens_vec(x, h),
-      binning = kern_dens_bin(x, h),
-      check = FALSE
-    )
-  }
-)
+res2 <- bench::press(n = 2^(5:13), {
+  h <- 0.2
+  x <- rnorm(n)
+  bench::mark(
+    base = density(x, h),
+    loop = kern_dens(x, h),
+    vectorized = kern_dens_vec(x, h),
+    binning = kern_dens_bin(x, h),
+    check = FALSE
+  )
+})
 
-mutate(
-  res2,
-  expr = as.character(expression),
-  median = as.numeric(median)
-) |>
+mutate(res2, expr = as.character(expression), median = as.numeric(median)) |>
   ggplot(aes(n, median, color = expr)) +
   geom_point() +
   geom_line() +
@@ -735,30 +728,19 @@ As always, we should test our code to ensure it works as expected.
 #| echo: false
 #| fig-cap: The standard density estimator as a black line and the binning
 #|   estimate as a filled area.
+
 set.seed(123)
 x <- rnorm(1e4) + rnorm(1e4, -3, 0.7)
 
 y1 <- kern_dens(x, 0.2)
 y2 <- kern_dens_bin(x, 0.2)
 
-df1 <- tibble(
-  x = y1$x,
-  y = y1$y,
-  method = "standard"
-)
+df1 <- tibble(x = y1$x, y = y1$y, method = "standard")
 
-df2 <- tibble(
-  x = y2$x,
-  y = y2$y,
-  method = "binning"
-)
+df2 <- tibble(x = y2$x, y = y2$y, method = "binning")
 
 ggplot(bind_rows(df1, df2), aes(x, y, fill = method, color = method)) +
-  geom_area(
-    alpha = 0.4,
-    position = "identity",
-    color = "transparent"
-  ) +
+  geom_area(alpha = 0.4, position = "identity", color = "transparent") +
   geom_line() +
   scale_fill_manual(values = c(standard = "transparent", binning = "blue")) +
   scale_color_manual(values = c(standard = "black", binning = "transparent")) +
@@ -773,6 +755,7 @@ ggplot(bind_rows(df1, df2), aes(x, y, fill = method, color = method)) +
 #| echo: false
 #| fig-cap: Absolute errors due to bining decrease with increasing length of
 #|   data sequence.
+
 x0 <- kern_dens(x, 0.2)$x
 df <- data.frame(
   x = rep(x0, 3),
@@ -799,6 +782,7 @@ good profiling results we use a 512 times longer data sequence.
 ```{r}
 #| label: line-prof-bin
 #| eval: false
+
 x <- rnorm(2^22)
 profvis(kern_dens_bin(x, 0.2))
 ```
@@ -829,6 +813,7 @@ profvis(kern_dens_bin(x, 0.2))
 
 ```{r}
 #| label: copy-on-write
+
 x <- rnorm(100)
 x <- c(x, 4) # 101 values are allocated
 ```
@@ -873,6 +858,7 @@ We access rows, then transpose.
 
 ```{r}
 #| label: f1-code
+
 f1 <- function(x, y) {
   n <- NROW(x)
   z <- double(n)
@@ -895,6 +881,7 @@ Transpose first, then access columns.
 
 ```{r}
 #| label: f2-code
+
 f2 <- function(x, y) {
   n <- NROW(x)
   x_t <- t(x)
@@ -907,7 +894,6 @@ f2 <- function(x, y) {
   z
 }
 ```
-
 :::::
 
 . . .
@@ -919,6 +905,7 @@ Access columns directly, update sums together.
 
 ```{r}
 #| label: f3-code
+
 f3 <- function(x, y) {
   n <- NROW(x)
   p <- NCOL(x)
@@ -931,9 +918,7 @@ f3 <- function(x, y) {
   z
 }
 ```
-
 :::::
-
 :::
 
 ##
@@ -945,6 +930,7 @@ f3 <- function(x, y) {
 #| fig-height: 2.8
 #| fig-cap: Benchmark results for three different implementations of
 #|   matrix-vector multiplication.
+
 n <- 1e3
 p <- 1e1
 
@@ -966,9 +952,8 @@ starting: which do you think will be faster?
 
 ```{r}
 #| label: gauss-code
-gauss <- function(x, h = 1) {
-  exp(-x^2 / (2 * h^2)) / (h * sqrt(2 * pi))
-}
+
+gauss <- function(x, h = 1) exp(-x^2 / (2 * h^2)) / (h * sqrt(2 * pi))
 ```
 
 . . .

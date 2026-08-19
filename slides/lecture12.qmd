@@ -13,10 +13,15 @@ library(patchwork)
 old_options <- options(digits = 4)
 ```
 
-```{Rcpp, source-rcpp, ref.label=knitr::all_rcpp_labels(), include=FALSE}
+```{Rcpp, ref.label=knitr::all_rcpp_labels()}
+//| label: source-rcpp
+//| include: false
 ```
 
-```{Rcpp, namespace, include=FALSE}
+```{Rcpp}
+//| label: namespace
+//| include: false
+
 #include <Rcpp.h>
 using namespace Rcpp;
 ```
@@ -71,18 +76,15 @@ We learn how to connect R and C++ using the Rcpp package.
 ## Why R?
 
 ::: {.columns}
-
 ::::: {.column width="30%"}
 Why are we even using R?
 
 \bigskip
 
 ![](../images/r-logo.svg)
-
 :::::
 
 ::::: {.column width="60%"}
-
 \pause
 
 Because R lets us
@@ -92,9 +94,7 @@ Because R lets us
 - easily retrieve or generate data,\pause
 - summarize and report (via RMarkdown/Quarto), and\pause
 - make use of a comprehensive ecosystem of packages.
-
 :::::
-
 :::
 
 ## Why *Not* R?
@@ -104,9 +104,7 @@ R is often slow because it is an **interpreted** language.
 . . .
 
 ::: {.columns}
-
 ::::: {.column width="47%"}
-
 ### Interpreted Languages
 
 <!-- TODO: Add flow chart to describe interpreted languages -->
@@ -120,13 +118,11 @@ Many functions are written in C, but you still have to call them from R.
 \medskip\pause
 
 **Examples:** R, Python, Matlab, Javascript.
-
 :::::
 
 . . .
 
 ::::: {.column width="47%"}
-
 ### Compiled Languages
 
 Code is translated into machine code before execution.
@@ -134,9 +130,7 @@ Code is translated into machine code before execution.
 \medskip\pause
 
 **Examples:** C, C++, Fortran, Java
-
 :::::
-
 :::
 
 ##
@@ -251,15 +245,11 @@ Compilation catches bugs early.
 . . .
 
 ::: {.columns align="center"}
-
 ::::: {.column width="47%"}
-
 ![](../images/compiling.png){width=100%}
-
 :::::
 
 ::::: {.column width="47%" align="center"}
-
 ### Why *Not* C++?
 
 Compiling adds overhead and complicates debugging.
@@ -267,9 +257,7 @@ Compiling adds overhead and complicates debugging.
 \medskip\pause
 
 Distributing code is more involved.
-
 :::::
-
 :::
 
 ## Bridging R and C++ with Rcpp
@@ -287,7 +275,10 @@ This has changed with the Rcpp package.
 
 ## The Sum Function in C++
 
-```{Rcpp, rcpp-sum, eval=FALSE}
+```{Rcpp}
+//| label: rcpp-sum
+//| eval: false
+
 // [[Rcpp::export]]
 double
 sum_cpp(Rcpp::NumericVector x) {
@@ -366,9 +357,7 @@ Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
 ## Side-By-Side Comparison
 
 ::: {.columns}
-
 ::::: {.column width="40%"}
-
 ### R
 
 ```{r}
@@ -386,13 +375,11 @@ sum_r <- function(x) {
   total
 }
 ```
-
 :::::
 
 . . .
 
 ::::: {.column width="54%"}
-
 ### C++
 
 ```cpp
@@ -411,9 +398,7 @@ sum_cpp(NumericVector x)
   return total;
 }
 ```
-
 :::::
-
 :::
 
 # Writing Code in C++ (Rcpp)
@@ -464,20 +449,16 @@ Statements end with a semicolon (`;`). A new line is not enough!
 You need to use `return` to return a value.
 
 ::: {.columns}
-
 ::::: {.column width="47%"}
-
 ```r
 f <- function(x) {
   y <- x + 1
   y
 }
 ```
-
 :::::
 
 ::::: {.column width="47%"}
-
 ```cpp
 int
 f(int x)
@@ -486,9 +467,7 @@ f(int x)
   return y;
 }
 ```
-
 :::::
-
 :::
 
 ## Zero-Based Indexing
@@ -604,7 +583,11 @@ g()
 }
 ```
 
-```{Rcpp, rcpp-sum-ref, eval=FALSE, echo=FALSE}
+```{Rcpp}
+//| label: rcpp-sum-ref
+//| eval: false
+//| echo: false
+
 // [[Rcpp::export]]
 double
 sum_cpp_ref(Rcpp::NumericVector& x) {
@@ -770,9 +753,7 @@ The C++ code can be passed directly to the `cppFunction()` as a text string for
 compilation and setting up an R interface.
 
 ```{r}
-cppFunction(
-  "int one() {return 1;}"
-)
+cppFunction("int one() {return 1;}")
 ```
 
 . . .
@@ -857,7 +838,10 @@ But no, `Rcpp::NumericVector` is a reference to the R object.
 
 ## Pitfall: Modifying R Objects
 
-```{Rcpp, rcpp-uhoh, eval=FALSE}
+```{Rcpp}
+//| label: rcpp-uhoh
+//| eval: false
+
 // [[Rcpp::export]]
 void
 uh_oh(Rcpp::NumericVector x)
@@ -887,7 +871,10 @@ If you don't want to modify the input, you can pass by const reference.
 
 . . .
 
-```{Rcpp, rcpp-sum-constref, eval=FALSE}
+```{Rcpp}
+//| label: rcpp-sum-constref
+//| eval: false
+
 // [[Rcpp::export]]
 double
 sum_cpp_const_ref(const Rcpp::NumericVector& x) {
@@ -908,7 +895,10 @@ In C++, this can make a big difference, but with Rcpp, it makes no difference.
 
 Printing to the R console can be done using `Rcpp::Rcout`.
 
-```{Rcpp, rcpp-print, eval=FALSE}
+```{Rcpp}
+//| label: rcpp-print
+//| eval: false
+
 // [[Rcpp::export]]
 void
 print_cpp(const Rcpp::NumericVector& x) {
@@ -926,7 +916,10 @@ print_cpp(1:5)
 
 You can signal errors and warnings using `Rcpp::stop()` and `Rcpp::warning()`.
 
-```{Rcpp, rcpp-error, eval=FALSE}
+```{Rcpp}
+//| label: rcpp-error
+//| eval: false
+
 // [[Rcpp::export]]
 double
 safe_log(double x) {
@@ -978,7 +971,10 @@ rvonmises <- function(n, kappa) {
 
 ### Rcpp Version
 
-```{Rcpp, vMsim-cpp, eval=FALSE}
+```{Rcpp}
+//| label: vMsim-cpp
+//| eval: false
+
 // [[Rcpp::export]]
 Rcpp::NumericVector
 rvonmises_cpp(const int n, const double kappa)
@@ -1125,22 +1121,17 @@ We will cover this in our final lecture.
 Not as complicated as you might think!
 
 ::: {.columns align="center"}
-
 ::::: {.column width="62%"}
 . . .
 
 ### R Packages
 
 Great book to get started; free and available online at <https://r-pkgs.org>.
-
 :::::
 
 ::::: {.column width="25%"}
-
 ![](../images/r-pkgs.png){width=100%}
-
 :::::
-
 :::
 
 ## The cpp11 Package
@@ -1155,29 +1146,23 @@ Won't cover it here, but has some advantages and disadvantages compared to Rcpp.
 . . .
 
 ::: {.columns}
-
 ::::: {.column width="47%"}
-
 ### Advantages
 
 - Compiles faster
 - Grows vectors efficiently
 - Enforces copy-on-write semantics (like R)
-
 :::::
 
 . . .
 
 ::::: {.column width="47%"}
-
 ### Disadvantages
 
 - Smaller ecosystem
 - Fewer built-in functions (sugar)
 - No (stable) Armadillo or Eigen bindings
-
 :::::
-
 :::
 
 ## Getting Help
@@ -1199,7 +1184,11 @@ Won't cover it here, but has some advantages and disadvantages compared to Rcpp.
 3. Benchmark your function against R's `sd()` function to see if it is faster.
 4. Handle cases when the input vector is of length 0 or 1.
 
-```{Rcpp, rcpp-sd, eval=FALSE, echo=FALSE}
+```{Rcpp}
+//| label: rcpp-sd
+//| eval: false
+//| echo: false
+
 // [[Rcpp::export]]
 double
 cpp_sd(NumericVector x) {

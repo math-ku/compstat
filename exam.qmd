@@ -64,9 +64,9 @@ yourself only. 
 
 ## Evaluation Criteria
 
-The evaluation is based on the
-[the learning outcomes](/overview.html#learning-outcomes), so do keep them in
-mind when preparing your presentation.
+The evaluation is based on the [the learning
+outcomes](/overview.html#learning-outcomes), so do keep them in mind when
+preparing your presentation.
 
 The exam performance is evaluated based on whether you have acquired
 these abilities in the course and are able to demonstrate that in the exam. That

@@ -1,0 +1,11 @@
+flavor = "gfm"
+
+extend-exclude = ["AGENTS.md"]
+
+[flavor-overrides]
+"README.md" = "gfm"
+"TODO.md" = "gfm"
+
+[formatters]
+r = "arity"
+cpp = "clang-format"

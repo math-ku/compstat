@@ -4,30 +4,35 @@ title: "Likelihood Optimization and the EM Algorithm"
 
 {{< include _common.qmd >}}
 
-```{r setup, include=FALSE}
+```{r}
+#| label: setup
+#| include: false
 
 error_hook <- knitr::knit_hooks$get("error")
-knitr::knit_hooks$set(error = function(x, options) {
-  n <- options$linewidth
-  if (!is.null(n)) {
-    x <- knitr:::split_lines(x)
-    if (any(nchar(x) > n)) {
-      x <- strwrap(x, width = n)
+knitr::knit_hooks$set(
+  error = function(x, options) {
+    n <- options$linewidth
+    if (!is.null(n)) {
+      x <- knitr:::split_lines(x)
+      if (any(nchar(x) > n)) {
+        x <- strwrap(x, width = n)
+      }
+      x <- paste(x, collapse = "\n\t")
     }
-    x <- paste(x, collapse = "\n\t")
+    error_hook(x, options)
   }
-  error_hook(x, options)
-})
+)
 
 library(patchwork)
 
 old_options <- options(digits = 4)
 ```
 
-```{r moth_likelihood2, echo = FALSE}
-M <- function(y, group) {
-  as.vector(tapply(y, group, sum))
-}
+```{r}
+#| label: moth_likelihood2
+#| echo: false
+
+M <- function(y, group) as.vector(tapply(y, group, sum))
 
 mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
   function(par) {
@@ -41,14 +46,7 @@ mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
 
 prob <- function(p) {
   p[3] <- 1 - p[1] - p[2]
-  c(
-    p[1]^2,
-    2 * p[1] * p[2],
-    2 * p[1] * p[3],
-    p[2]^2,
-    2 * p[2] * p[3],
-    p[3]^2
-  )
+  c(p[1]^2, 2 * p[1] * p[2], 2 * p[1] * p[3], p[2]^2, 2 * p[2] * p[3], p[3]^2)
 }
 
 constraint <- function(par) {
@@ -106,15 +104,13 @@ in the presence of missing data or latent variables.
 
 ## The Peppered Moth
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Alleles
 
 C, Ci, T with frequencies $p_C$, $p_I$, $p_T$ and
 $$
-p_C + p_I + p_T = 1.
+  p_C + p_I + p_T = 1.
 $$
 
 ### Genotypes
@@ -124,28 +120,22 @@ CC, CI, CT, II, IT, TT
 ### Phenotypes
 
 Black, mottled, light-colored
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ![](../images/peppered-moth.jpg){width=100%}
 
+  |       | **C** | **I**   | **T**         |
+  | ----- | ----- | ------- | ------------- |
+  | **C** | Black | Black   | Black         |
+  | **I** | Black | Mottled | Mottled       |
+  | **T** | Black | Mottled | Light-colored |
 
-: Genotype to Phenotype Map
-
-|       | **C** | **I**   | **T**         |
-| ----- | ----- | ------- | ------------- |
-| **C** | Black | Black   | Black         |
-| **I** | Black | Mottled | Mottled       |
-| **T** | Black | Mottled | Light-colored |
-
+  : Genotype to Phenotype Map
+:::::
 :::
 
-::::
-
 ::: {.notes}
-
 The Peppered Moth is called 'Birkemåler' in Danish. There is a nice collection
 of these in different colors in the Zoological Museum. The alleles are ordered
 in terms of dominance as C > I > T. Moths with genotype including C are dark.
@@ -158,34 +148,33 @@ variety. The dark color became advantageous due to the increased polution, where
 trees were darkened by soot.
 
 https://en.wikipedia.org/wiki/Peppered_moth_evolution
-
 :::
 
-## The Hardy–Weinberg Equilibrium
+## The Hardy--Weinberg Equilibrium
 
-According to the
-[Hardy–Weinberg equilibrium](https://en.wikipedia.org/wiki/Hardy%E2%80%93Weinberg_principle),
+According to the [Hardy--Weinberg
+equilibrium](https://en.wikipedia.org/wiki/Hardy%E2%80%93Weinberg_principle),
 the genotype frequencies are
 $$
-p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2.
+  p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2.
 $$
 
 . . .
 
 The complete multinomial log-likelihood is
 $$
-\begin{aligned}
-  & 2n_{CC} \log(p_C) + n_{CI} \log (2 p_C p_I) + n_{CT} \log(2 p_C p_T) \\
-  & + 2 n_{II} \log(p_I) + n_{IT} \log(2p_I p_T) + 2 n_{TT} \log(p_T),
-\end{aligned}
+  \begin{aligned}
+    & 2n_{CC} \log(p_C) + n_{CI} \log (2 p_C p_I) + n_{CT} \log(2 p_C p_T) \\
+    & + 2 n_{II} \log(p_I) + n_{IT} \log(2p_I p_T) + 2 n_{TT} \log(p_T),
+  \end{aligned}
 $$
 
 . . .
 
 We only observe $(n_C, n_I, n_T)$, where
 $$
-n = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{= n_C} +
-\underbrace{n_{IT} + n_{II}}_{=n_I} + \underbrace{n_{TT}}_{=n_T}.
+  n = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{= n_C} +
+  \underbrace{n_{IT} + n_{II}}_{=n_I} + \underbrace{n_{TT}}_{=n_T}.
 $$
 
 . . .
@@ -195,7 +184,7 @@ $n_T = 341.$
 
 ## Multinomial Cell Collapsing
 
-The Peppered Moth example is an example of _cell collapsing_ in a multinomial
+The Peppered Moth example is an example of *cell collapsing* in a multinomial
 model.
 
 \medskip\pause
@@ -203,18 +192,18 @@ model.
 In general, let $A_1 \cup \ldots \cup A_{K_0} = \{1, \ldots, K\}$ be a partition
 and let
 $$
-M : \mathbb{N}_0^K \to \mathbb{N}_0^{K_0}
+  M : \mathbb{N}_0^K \to \mathbb{N}_0^{K_0}
 $$
 be the map given by
 $$
-M((n_1, \ldots, n_K))_j = \sum_{i \in A_j} n_i.
+  M((n_1, \ldots, n_K))_j = \sum_{i \in A_j} n_i.
 $$
 
 ## Multinomial Distribution
 
 If $Y \sim \textrm{Mult}(p, n)$ with $p = (p_1, \ldots, p_K)$ then
 $$
-X = M(Y) \sim \textrm{Mult}(M(p), n).
+  X = M(Y) \sim \textrm{Mult}(M(p), n).
 $$
 
 . . .
@@ -222,48 +211,48 @@ $$
 For the peppered moths, $K = 6$ corresponding to the six genotypes, $K_0 = 3$
 and the partition corresponding to the phenotypes is
 $$
-\{1, 2, 3\} \cup \{4, 5\} \cup \{6\} = \{1, \ldots, 6\},
+  \{1, 2, 3\} \cup \{4, 5\} \cup \{6\} = \{1, \ldots, 6\},
 $$
 and
 $$
-M(n_1, \ldots, n_6) = (n_1 + n_2 + n_3, n_4 + n_5, n_6).
+  M(n_1, \ldots, n_6) = (n_1 + n_2 + n_3, n_4 + n_5, n_6).
 $$
 
 ## Cell Collapsing
 
 In terms of the $(p_C, p_I)$ parametrization, $p_T = 1 - p_C - p_I$ and
 $$
-p = (p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2).
+  p = (p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2).
 $$
 
 . . .
 
 Hence
 $$
-M(p) = (p_C^2 + 2p_Cp_I + 2p_Cp_T, p_I^2 +2p_Ip_T, p_T^2).
+  M(p) = (p_C^2 + 2p_Cp_I + 2p_Cp_T, p_I^2 +2p_Ip_T, p_T^2).
 $$
 
 . . .
 
 The log-likelihood is
 $$
-\begin{aligned}
-  \ell(p_C, p_I) & = n_C \log(p_C^2 + 2p_Cp_I + 2p_Cp_T) \\
-                 & \phantom{={}}+ n_I \log(p_I^2 +2p_Ip_T) + n_T \log (p_T^2)
-\end{aligned}
+  \begin{aligned}
+    \ell(p_C, p_I) & = n_C \log(p_C^2 + 2p_Cp_I + 2p_Cp_T) \\
+                   & \phantom{={}}+ n_I \log(p_I^2 +2p_Ip_T) + n_T \log (p_T^2)
+  \end{aligned}
 $$
 
 ## Standard Form
 
 This is an optimization problem of the following standard form:
 $$
-\begin{aligned}&\operatorname*{minimize}_{p_C,p_I} && -\ell(p_C, p_I) \\
-  &\textrm{subject to} && p_C + p_C - 1 \leq 0\\
-  &                    && -p_C \leq 0\\
-  &                    && -p_I \leq 0\\
-  &                    && p_I - 1 \leq 0\\
-  &                    && p_C -1 \leq 0.
-\end{aligned}
+  \begin{aligned}&\operatorname*{minimize}_{p_C,p_I} && -\ell(p_C, p_I) \\
+    &\textrm{subject to} && p_C + p_C - 1 \leq 0\\
+    &                    && -p_C \leq 0\\
+    &                    && -p_I \leq 0\\
+    &                    && p_I - 1 \leq 0\\
+    &                    && p_C -1 \leq 0.
+  \end{aligned}
 $$
 
 . . .
@@ -281,8 +270,10 @@ constraints (affine).
 
 **No** (not directly), since the problem is constrained.
 
-```{r likelihood}
+```{r}
+#| label: likelihood
 #| echo: false
+
 neg_loglik_pep <- function(par, x) {
   pC <- par[1]
   pI <- par[2]
@@ -302,12 +293,15 @@ neg_loglik_pep <- function(par, x) {
 
 ##
 
-```{r surface, echo = FALSE}
+```{r}
+#| label: surface
+#| echo: false
 #| fig-width: 3.9
 #| fig-height: 3.9
 #| fig-cap: "Contour plot of the negative log-likelihood for the peppered moths
 #|   example."
 #| warning: false
+
 n <- 100
 
 pC <- seq(0, 1, length.out = n)
@@ -332,13 +326,11 @@ contour(pC, pI, z, levels = levels, col = pal(30), asp = 1, drawlabels = FALSE)
 
 ## Change of Variables
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 Let
 $$
-p_j = \frac{\exp{(\theta_j)}}{\sum_{i = 1}^K \exp(\theta_i)}.
+  p_j = \frac{\exp{(\theta_j)}}{\sum_{i = 1}^K \exp(\theta_i)}.
 $$
 
 \medskip\pause
@@ -350,13 +342,14 @@ Seems like a good idea! Constraints are automatically satisfied.
 ### But is it Convex?
 
 **No**, $f$ is no longer convex.
+:::::
 
-:::
-
-::: {.column width="47%"}
-
-```{r, echo = FALSE, warning = FALSE}
+::::: {.column width="47%"}
+```{r}
+#| echo: false
+#| warning: false
 #| fig-height: 3
+
 other_negloglik <- function(theta, x) {
   theta <- c(theta, 0)
 
@@ -394,10 +387,8 @@ x2 <- c(-5, 6)
 points(x1, x2, pch = 19)
 lines(x1, x2, lty = "dotted", lwd = 2)
 ```
-
+:::::
 :::
-
-::::
 
 ## Optimization
 
@@ -422,17 +413,15 @@ problem.
 
 ## Extended-Value Extension
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 If $f$ is convex, its extended-value extension is
 $$
-\tilde{f}(x) =
-  \begin{cases}
-    f(x), & x \in \operatorname{dom} f, \\
-    +\infty, & \text{otherwise}.
-  \end{cases}
+  \tilde{f}(x) =
+    \begin{cases}
+      f(x), & x \in \operatorname{dom} f, \\
+      +\infty, & \text{otherwise}.
+    \end{cases}
 $$
 
 . . .
@@ -441,33 +430,29 @@ $$
 
 Consider the function
 $$
-f(p) = p (p - 1), \quad p \in [0, 1].
+  f(p) = p (p - 1), \quad p \in [0, 1].
 $$
 
 . . .
 
 Its extended-value extension is
 $$
-\tilde{f}(p) =
-  \begin{cases}
-    p (p - 1), & p \in [0, 1], \\
-    +\infty, & \text{otherwise}.
-  \end{cases}
+  \tilde{f}(p) =
+    \begin{cases}
+      p (p - 1), & p \in [0, 1], \\
+      +\infty, & \text{otherwise}.
+    \end{cases}
 $$
+:::::
 
-:::
-
-::: {.column width="47%"}
-
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-height: 3.4
 #| fig-cap: Extended-value extension of a simple function.
+
 p <- seq(-0.5, 1.5, length.out = 101)
-f <- function(p) {
-  ifelse(p < 0 | p > 1, 10, p * (p - 1))
-}
+f <- function(p) ifelse(p < 0 | p > 1, 10, p * (p - 1))
 plot(
   p,
   f(p),
@@ -477,18 +462,16 @@ plot(
   ylab = expression(tilde(f)(p))
 )
 ```
-
+:::::
 :::
-
-::::
-
 
 ##
 
 We can code a problem-specific (extended-value) version of the negative
 log-likelihood.
 
-```{r likelihood-again}
+```{r}
+#| label: likelihood-again
 #| ref-label: likelihood
 ```
 
@@ -512,10 +495,10 @@ Can supply gradient, but also compute it numerically (default).
 
 ## `optim()` Example
 
-```{r optim-ex}
-obj <- function(x) {
-  (x[1] - 1)^2 + (x[2] - 2.5)^2
-}
+```{r}
+#| label: optim-ex
+
+obj <- function(x) (x[1] - 1)^2 + (x[2] - 2.5)^2
 optim(c(0, 0), obj, method = "BFGS")
 ```
 
@@ -526,44 +509,39 @@ optim(c(0, 0), obj, method = "BFGS")
 - `nlm()` for unconstrained optimization\pause
 - The **optimx** package for more methods\pause
 
-See the
-[CRAN task view on optimization](https://cran.r-project.org/web/views/Optimization.html)
+See the [CRAN task view on
+optimization](https://cran.r-project.org/web/views/Optimization.html)
 
 ## Zero-Order Nelder-Mead
 
-:::: {.columns align="center"}
+::: {.columns align="center"}
+::::: {.column width="47%"}
+```{r}
+#| label: moth-optim-NM
 
-::: {.column width="47%"}
-
-```{r moth-optim-NM}
 x <- c(85, 196, 341)
 x0 <- c(1 / 3, 1 / 3)
 optim(x0, neg_loglik_pep, x = x)
 ```
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Feasible Starting Point
 
 Some thought has to go into the initial parameter choice.
 
 . . .
 
-```{r moth-error, error = TRUE, linewidth = 38}
-optim(
-  c(0, 0),
-  neg_loglik_pep,
-  x = x
-)
+```{r, linewidth=38}
+#| label: moth-error
+#| error: true
+
+optim(c(0, 0), neg_loglik_pep, x = x)
 ```
-
+:::::
 :::
-
-::::
 
 ## Barrier Function
 
@@ -573,20 +551,20 @@ Another option is to use the \alert{barrier method}.
 
 Transform
 $$
-\begin{aligned}
-  & \textrm{minimize}   &  & f(x)                                 \\
-  & \textrm{subject to} &  & g_i(x) \leq 0, & \quad i =1,\dots,m. \\
-\end{aligned}
+  \begin{aligned}
+    & \textrm{minimize}   &  & f(x)                                 \\
+    & \textrm{subject to} &  & g_i(x) \leq 0, & \quad i =1,\dots,m. \\
+  \end{aligned}
 $$
 \pause into
 $$
-\begin{aligned}
-  \textrm{minimize}   &  & tf(x) + \phi(x)
-\end{aligned}
+  \begin{aligned}
+    \textrm{minimize}   &  & tf(x) + \phi(x)
+  \end{aligned}
 $$
 with the barrier function
 $$
-\phi(z) = -\sum_{i=1}^m \log(-g_i(z)).
+  \phi(z) = -\sum_{i=1}^m \log(-g_i(z)).
 $$
 
 \medskip\pause
@@ -599,18 +577,13 @@ boundary.
 Increasing $t$ puts more weight on the original objective and the solution
 approaches the constrained optimum.
 
-
 ```{r}
 #| echo: false
 #| include: false
-f <- function(x1, x2) {
-  ((x1 - 2)^2 + (x2 - 1)^2)
-}
 
-g <- function(x1, x2) {
-  x1 - 1
-}
+f <- function(x1, x2) ((x1 - 2)^2 + (x2 - 1)^2)
 
+g <- function(x1, x2) x1 - 1
 
 log_barrier <- function(x1, x2) {
   out <- -(log(-g(x1, x2)))
@@ -663,10 +636,8 @@ plot_barrier(0.085)
 
 ## Example
 
-:::: {.columns align="center"}
-
-::: {.column width="47%"}
-
+::: {.columns align="center"}
+::::: {.column width="47%"}
 Let's assume we are solving
 $$
 \begin{aligned}
@@ -683,64 +654,65 @@ feasible.
 
 Using the barrier method, we solve a sequence of unconstrained problems
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_{x}              && tf(x) - \log(1 - x_1)
-\end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_{x}              && tf(x) - \log(1 - x_1)
+  \end{aligned}
 $$
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-cap: "Contour plots of the barrier-penalized objective."
 #| fig-height: 3.6
 #| fig-width: 3.2
+
 plot_barrier(0.085)
 ```
-
+:::::
 :::
 
-::::
-
-## 
+##
 
 ```{r}
 #| echo: false
 #| fig-cap: "Contour plots of the barrier-penalized objective."
 #| fig-height: 3.6
 #| fig-width: 3.2
+
 plot_barrier(0.1)
 ```
 
-## 
+##
 
 ```{r}
 #| echo: false
 #| fig-cap: "Contour plots of the barrier-penalized objective."
 #| fig-height: 3.6
 #| fig-width: 3.2
+
 plot_barrier(0.2)
 ```
 
-## 
+##
 
 ```{r}
 #| echo: false
 #| fig-cap: "Contour plots of the barrier-penalized objective."
 #| fig-height: 3.6
 #| fig-width: 3.2
+
 plot_barrier(0.5)
 ```
 
-## 
+##
 
 ```{r}
 #| echo: false
 #| fig-cap: "Contour plots of the barrier-penalized objective."
 #| fig-height: 3.6
 #| fig-width: 3.2
+
 plot_barrier(10)
 ```
 
@@ -768,48 +740,42 @@ The barrier method can be used via `constrOptim()`.
 
 Solves problems with affine/linear inequality constraints of the form
 $$
-Ax \succeq b
+  Ax \succeq b
 $$
 or, in terms of arguments: `ui %*% theta >= ci`.
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Moths Example
 
 $$
-A =
-\begin{bmatrix}
-  1 & 0\\-1 & 0\\0 & 1\\0 & -1\\ -1 & -1
-\end{bmatrix},
-\quad b =
-\begin{bmatrix}
-  0\\-1\\0\\-1\\-1
-\end{bmatrix}.
+  A =
+  \begin{bmatrix}
+    1 & 0\\-1 & 0\\0 & 1\\0 & -1\\ -1 & -1
+  \end{bmatrix},
+  \quad b =
+  \begin{bmatrix}
+    0\\-1\\0\\-1\\-1
+  \end{bmatrix}.
 $$
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Optimization Problem
 
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_{p} && -\ell(p)       \\
-  &\textrm{subject to}          && Ap  \succeq b.
-\end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_{p} && -\ell(p)       \\
+    &\textrm{subject to}          && Ap  \succeq b.
+  \end{aligned}
 $$
 with $p = (p_C, p_I)$.
-
+:::::
 :::
-
-::::
 
 . . .
 
@@ -817,14 +783,10 @@ with $p = (p_C, p_I)$.
 
 ## `constrOptim()`
 
-```{r constr-optim-ex}
-A <- rbind(
-  c(1, 0),
-  c(-1, 0),
-  c(0, 1),
-  c(0, -1),
-  c(-1, -1)
-)
+```{r}
+#| label: constr-optim-ex
+
+A <- rbind(c(1, 0), c(-1, 0), c(0, 1), c(0, -1), c(-1, -1))
 
 b <- c(0, -1, 0, -1, -1)
 
@@ -833,15 +795,11 @@ constrOptim(x0, neg_loglik_pep, NULL, ui = A, ci = b, x = x)$par
 
 ## Still Requires Feasible Initial Point
 
-```{r const-error, error = TRUE, linewidth = 80}
-constrOptim(
-  c(0.0, 0.3),
-  neg_loglik_pep,
-  NULL,
-  ui = A,
-  ci = b,
-  x = x
-)
+```{r, linewidth=80}
+#| label: const-error
+#| error: true
+
+constrOptim(c(0.0, 0.3), neg_loglik_pep, NULL, ui = A, ci = b, x = x)
 ```
 
 ## Interior-Point Method
@@ -855,8 +813,8 @@ The barrier method is the basis of the interior-point method.
 Find a feasible point $x^{(0)}$ by solving the optimization problem
 
 $$
-\begin{aligned}&\operatorname*{minimize}_{(x,s)} && s \\
-&\textrm{subject to} && g_i(x) \leq s, & \quad i = 1, \dots, m.\end{aligned}
+  \begin{aligned}&\operatorname*{minimize}_{(x,s)} && s \\
+  &\textrm{subject to} && g_i(x) \leq s, & \quad i = 1, \dots, m.\end{aligned}
 $$
 
 . . .
@@ -878,7 +836,7 @@ Use a barrier method to solve the constrained problem, starting at $x^{(0)}$.
 Distribution of $Y_{A_j} = (Y_i)_{i \in A_j}$ conditional on $X$ can be found
 too:
 $$
-Y_{A_j} \mid X = x \sim \textrm{Mult}\left( \frac{p_{A_j}}{M(p)_j}, x_j \right).
+  Y_{A_j} \mid X = x \sim \textrm{Mult}\left( \frac{p_{A_j}}{M(p)_j}, x_j \right).
 $$
 
 . . .
@@ -887,12 +845,14 @@ $$
 
 Hence for $k \in A_j$,
 $$
-\operatorname{E} (Y_k \mid X = x) = \frac{x_j p_k}{M(p)_j}.
+  \operatorname{E} (Y_k \mid X = x) = \frac{x_j p_k}{M(p)_j}.
 $$
 
 . . .
 
-```{r moth_cond_exp, echo=2:4}
+```{r, echo=2:4}
+#| label: moth_cond_exp
+
 old_options <- options(digits = 3)
 group <- c(1, 1, 1, 2, 2, 3)
 p <- prob(moth_optim$par)
@@ -904,15 +864,13 @@ options(digits = old_options$digits)
 
 ## The Expectation-Maximization (EM) Algorithm
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Goal
 
 What we want is the MLE
 $$
-\hat{\theta} = \arg\max_\theta \ell(\theta \mid X)
+  \hat{\theta} = \arg\max_\theta \ell(\theta \mid X)
 $$
 with $\ell(\theta \mid X) = \log p(X \mid \theta)$.
 
@@ -922,28 +880,24 @@ with $\ell(\theta \mid X) = \log p(X \mid \theta)$.
 
 The likelihood requires summing/integrating over unobserved variables Z:
 $$
-p(X \mid \theta) = \sum_Z p(X, Z \mid \theta).
+  p(X \mid \theta) = \sum_Z p(X, Z \mid \theta).
 $$
 
 \medskip\pause
 
 This is often computationally infeasible.
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Key Idea {.example}
 
 Work instead with the complete-data likelihood:
 $$
-p(X, Z \mid \theta),
+  p(X, Z \mid \theta),
 $$
 which is often easier to handle.
-
+:::::
 :::
-
-::::
 
 ## The Algorithm
 
@@ -951,7 +905,7 @@ which is often easier to handle.
 
 Compute expected complete log-likelihood:
 $$
-Q(\theta\mid\theta^{(t)})=\E_{Z \mid X,\theta^{(t)}}\left( \log p(X, Z \mid \theta) \right)
+  Q(\theta\mid\theta^{(t)})=\E_{Z \mid X,\theta^{(t)}}\left( \log p(X, Z \mid \theta) \right)
 $$
 
 \medskip\pause
@@ -960,7 +914,7 @@ $$
 
 Maximize expected complete log-likelihood:
 $$
-\theta^{(t+1)}=\arg\max_\theta Q(\theta\mid\theta^{(t)}).
+  \theta^{(t+1)}=\arg\max_\theta Q(\theta\mid\theta^{(t)}).
 $$
 
 ### Repeat
@@ -972,7 +926,7 @@ Until convergence.
 ### Key Inequality
 
 $$
-\ell(\theta) = \log p(X \mid \theta) \geq \E_{q(Z)}[\log p(X,Z \mid \theta)] - \E_{q(Z)}[\log q(Z)].
+  \ell(\theta) = \log p(X \mid \theta) \geq \E_{q(Z)}[\log p(X,Z \mid \theta)] - \E_{q(Z)}[\log q(Z)].
 $$
 
 . . .
@@ -981,14 +935,14 @@ $$
 
 Choose
 $$
-q^{(t)}(Z) = p(Z \mid X, \theta^{(t)}).
+  q^{(t)}(Z) = p(Z \mid X, \theta^{(t)}).
 $$
 
 \medskip\pause
 
 Then inequality is tight, since
 $$
-\kl(q^{(t)} || p(Z \mid X, \theta^{(t)})) = 0.
+  \kl(q^{(t)} || p(Z \mid X, \theta^{(t)})) = 0.
 $$
 
 . . .
@@ -998,7 +952,7 @@ $$
 Update $\theta$ by maximizing the bound. This guarantees non-decreasing
 log-likelihood:
 $$
-\ell(\theta^{(t+1)}) \geq \ell(\theta^{(t)}).
+  \ell(\theta^{(t+1)}) \geq \ell(\theta^{(t)}).
 $$
 
 ## From the Lower Bound to $Q$
@@ -1006,18 +960,18 @@ $$
 ### Variational Bound
 
 $$
-F(q,\theta) = \E_q\big(\log p(X,Z \mid \theta)\big) - \E_q\big[\log q(Z)\big].
+  F(q,\theta) = \E_q\big(\log p(X,Z \mid \theta)\big) - \E_q\big[\log q(Z)\big].
 $$
 
 \medskip\pause
 
 With
 $$
-q^{(t)}(Z) = p(Z \mid X, \theta^{(t)})
+  q^{(t)}(Z) = p(Z \mid X, \theta^{(t)})
 $$
 we have
 $$
-F(q^{(t)},\theta) = Q(\theta \mid \theta^{(t)}) + H(q^{(t)}),
+  F(q^{(t)},\theta) = Q(\theta \mid \theta^{(t)}) + H(q^{(t)}),
 $$
 where $H(q^{(t)})$ is entropy, independent of $\theta$.
 
@@ -1027,7 +981,7 @@ where $H(q^{(t)})$ is entropy, independent of $\theta$.
 
 M-step:
 $$
-\theta^{(t+1)} = \arg\max_\theta Q(\theta \mid \theta^{(t)}).
+  \theta^{(t+1)} = \arg\max_\theta Q(\theta \mid \theta^{(t)}).
 $$
 
 . . .
@@ -1043,8 +997,8 @@ So EM maximizes the variational lower bound.
 ### Setup
 
 - Two coins, A and B, unknown biases $\theta_A$ and $\theta_B$.\pause
-- Each experiment: pick a coin at random (latent variable $Z_i$) and flip it
-  10 times.\pause
+- Each experiment: pick a coin at random (latent variable $Z_i$) and flip it 10
+  times.\pause
 - Observed data: $X_i$: number of heads in each experiment.\pause
 
 . . .
@@ -1057,34 +1011,34 @@ Estimate $\theta_A$ and $\theta_B$ (MLE) using EM.
 
 ### Complete Likelihood
 
-If we knew which coin was used in each experiment, the complete-data
-likelihood would be
+If we knew which coin was used in each experiment, the complete-data likelihood
+would be
 $$
-p(X,Z \mid \theta) = \sum_i \left( \symbf{1}_{Z_i = A} \text{Binomial}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \text{Binomial}(X_i \mid 10, \theta_B) \right).
+  p(X,Z \mid \theta) = \sum_i \left( \symbf{1}_{Z_i = A} \text{Binomial}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \text{Binomial}(X_i \mid 10, \theta_B) \right).
 $$
 
 ## The E-Step: The Q-Function
 
 The log-likelihood of the complete data (for a single experiment) is
 $$
-\log p(X_i, Z_i \mid \theta) = \symbf{1}_{Z_i = A} \log \text{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \log \text{Bin}(X_i \mid 10, \theta_B).
+  \log p(X_i, Z_i \mid \theta) = \symbf{1}_{Z_i = A} \log \text{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \log \text{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
 
 Take expection over $Z_i$ given $X_i$ and current parameters:
 $$
-Q(\theta \mid \theta^{(t)}) = \sum_i \gamma_{i}^{(t)} \log \text{Bin}(X_i \mid 10, \theta_A)  + \sum_i (1 - \gamma_{i}^{(t)}) \log \text{Bin}(X_i \mid 10, \theta_B).
+  Q(\theta \mid \theta^{(t)}) = \sum_i \gamma_{i}^{(t)} \log \text{Bin}(X_i \mid 10, \theta_A)  + \sum_i (1 - \gamma_{i}^{(t)}) \log \text{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
 
 $$
-\begin{aligned}
-\gamma_i^{(t)} &= \E_Z\left(\symbf{1}_{Z_i = A} \mid X_i, \theta_A^{(t)}, \theta_B^{(t)}\right) \\
-               &= \Pr(Z_i = A \mid X_i, \theta_A^{(t)}, \theta_B^{(t)} )\\
-               &= \frac{\text{Binomial}(X_i \mid 10, \theta_A^{(t)})}{\text{Binomial}(X_i \mid 10, \theta_A^{(t)}) + \text{Binomial}(X_i \mid 10, \theta_B^{(t)})}.
-\end{aligned}
+  \begin{aligned}
+  \gamma_i^{(t)} &= \E_Z\left(\symbf{1}_{Z_i = A} \mid X_i, \theta_A^{(t)}, \theta_B^{(t)}\right) \\
+                 &= \Pr(Z_i = A \mid X_i, \theta_A^{(t)}, \theta_B^{(t)} )\\
+                 &= \frac{\text{Binomial}(X_i \mid 10, \theta_A^{(t)})}{\text{Binomial}(X_i \mid 10, \theta_A^{(t)}) + \text{Binomial}(X_i \mid 10, \theta_B^{(t)})}.
+  \end{aligned}
 $$
 
 \medskip\pause
@@ -1093,20 +1047,20 @@ This called the **responsibility** of coin $A$ for experiment $i$.
 
 ##
 
-: Example After One Iteration
+  | Experiment | Heads | $\gamma$ |
+  | ---------- | ----- | -------- |
+  | 1          | 7     | 0.78     |
+  | 2          | 4     | 0.35     |
+  | 3          | 9     | 0.90     |
 
-| Experiment | Heads | $\gamma$ | 
-|------------|-------|----------|
-| 1          |     7 |     0.78 |
-| 2          |     4 |     0.35 |
-| 3          |     9 |     0.90 |
+  : Example After One Iteration
 
 ## M-Step: Update Coin Biases
 
 Maximizing $Q$ with respect to $\theta_A$ and $\theta_B$ gives
 $$
-\theta_A^{(t+1)} = \frac{\sum_i \gamma_{i}^{(t)} X_i}{\sum_i 10 \cdot \gamma_{i}^{(t)}}, \quad
-\theta_B^{(t+1)} = \frac{\sum_i (1 - \gamma_{i}^{(t)}) X_i}{\sum_i 10 \cdot (1 - \gamma_{i}^{(t)})}.
+  \theta_A^{(t+1)} = \frac{\sum_i \gamma_{i}^{(t)} X_i}{\sum_i 10 \cdot \gamma_{i}^{(t)}}, \quad
+  \theta_B^{(t+1)} = \frac{\sum_i (1 - \gamma_{i}^{(t)}) X_i}{\sum_i 10 \cdot (1 - \gamma_{i}^{(t)})}.
 $$
 
 . . .
@@ -1117,12 +1071,12 @@ Compute expected # of heads for each coin and divide by expected # of flips.
 
 \medskip\pause
 
-: Example After One Iteration
+  | Coin | Updated $\theta$ |
+  | ---- | ---------------- |
+  | A    | 0.80             |
+  | B    | 0.42             |
 
-| Coin | Updated $\theta$ |
-|------|------------------|
-| A    |             0.80 |
-| B    |             0.42 |
+  : Example After One Iteration
 
 ##
 
@@ -1131,6 +1085,7 @@ Compute expected # of heads for each coin and divide by expected # of flips.
 #| fig-width: 5
 #| fig-height: 3.9
 #| fig-cap: "EM algorithm iterations for the two-coin example."
+
 set.seed(1)
 n <- 1000
 heads <- {
@@ -1169,11 +1124,7 @@ matplot(
   ylab = expression(hat(theta)),
   ylim = c(0, 1)
 )
-abline(
-  h = c(0.8, 0.4),
-  col = c("blue", "red"),
-  lty = 2
-)
+abline(h = c(0.8, 0.4), col = c("blue", "red"), lty = 2)
 legend(
   "bottomright",
   legend = c(expression(hat(theta)[A]), expression(hat(theta)[B])),
@@ -1183,13 +1134,14 @@ legend(
 )
 ```
 
-## 
+##
 
 ```{r}
 #| echo: false
 #| fig-width: 4
 #| fig-height: 3.5
 #| fig-cap: "Convergence of the log-likelihood in the two-coin EM example."
+
 plot(
   1:maxit,
   max(loglik) - loglik + 1e-10,
@@ -1205,16 +1157,16 @@ plot(
 
 Recall:
 $$
-Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X, \theta^{(t)}}[\log p(X,Z \mid \theta)]
+  Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X, \theta^{(t)}}[\log p(X,Z \mid \theta)]
 $$
 
 \medskip\pause
 
 In the coin-flip example:
 $$
-Q(\theta_A, \theta_B \mid \theta^{(t)}_A, \theta^{(t)}_B)
-= \sum_i \gamma_{i}^{(t)} \log \text{Bin}(X_i \mid 10, \theta_A)
-+ \sum_i (1 - \gamma_{i}^{(t)}) \log \text{Bin}(X_i \mid 10, \theta_B)
+  Q(\theta_A, \theta_B \mid \theta^{(t)}_A, \theta^{(t)}_B)
+  = \sum_i \gamma_{i}^{(t)} \log \text{Bin}(X_i \mid 10, \theta_A)
+  + \sum_i (1 - \gamma_{i}^{(t)}) \log \text{Bin}(X_i \mid 10, \theta_B)
 $$
 
 . . .
@@ -1252,15 +1204,14 @@ presence of missing data or latent variables.
 
 Each iteration is guaranteed to increase the observed data log-likelihood.
 
-
 ## Exercise: Absolute-Value Constraints
 
 Solve the following optimization problem:
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_{x}              && \frac{1}{2}(x - 2)^2 \\
-  &\textrm{subject to} && |x| \leq 1.
-\end{aligned}
+  \begin{aligned}
+    &\operatorname*{minimize}_{x}              && \frac{1}{2}(x - 2)^2 \\
+    &\textrm{subject to} && |x| \leq 1.
+  \end{aligned}
 $$
 
 ### Steps
@@ -1270,16 +1221,15 @@ $$
 3. Use `constrOptim()` with `ui` and `ci` to solve the problem. You need to
    provide the objective and gradient functions too.
 
-```{r exercise-optim, include = FALSE}
+```{r}
+#| label: exercise-optim
+#| include: false
+
 a <- 2
 
-f <- function(x, a) {
-  0.5 * (x - a)^2
-}
+f <- function(x, a) 0.5 * (x - a)^2
 
-g <- function(x, a) {
-  x - a
-}
+g <- function(x, a) x - a
 
 A <- rbind(1, -1)
 b <- c(-1, -1)

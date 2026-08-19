@@ -4,7 +4,10 @@ title: "Stochastic Gradient Descent"
 
 {{< include _common.qmd >}}
 
-```{r setup, include=FALSE}
+```{r}
+#| label: setup
+#| include: false
+
 library(tidyverse)
 library(patchwork)
 library(mvtnorm)
@@ -24,18 +27,18 @@ A general approach to maximum likelihood estimation with latent variables.
 
 ### Fisher Information
 
-We saw three different ways to define the Fisher information
-and how they relate to the EM algorithm.
+We saw three different ways to define the Fisher information and how they relate
+to the EM algorithm.
 
 ## Recap: The EM Algorithm
 
 The EM algorithm iteratively optimizes
 $$
-\theta^{(t+1)} = \argmax_\theta Q(\theta \mid \theta^{(t)}),
+  \theta^{(t+1)} = \argmax_\theta Q(\theta \mid \theta^{(t)}),
 $$
 with
 $$
-Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X,\theta^{(t)}}\log p(X, Z \mid \theta).
+  Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X,\theta^{(t)}}\log p(X, Z \mid \theta).
 $$
 
 \medskip\pause
@@ -46,7 +49,7 @@ Convergence is **linear** near a local maximum.
 
 The Fisher information is defined as
 $$
-i(\theta) = - \E\left( \frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta) \right).
+  i(\theta) = - \E\left( \frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta) \right).
 $$
 
 \medskip\pause
@@ -54,16 +57,16 @@ $$
 We mentioned three ways to compute the empirical observed Fisher information:
 
 1. Differentiate the score function (defined through $Q$).\pause
-2. Compute complete and missing information and using the information
-   identity. \pause
+2. Compute complete and missing information and using the information identity.
+   \pause
 3. Differentiate the EM mapping.
 
 ## Today
 
 ### Gaussian Mixture EM Example
 
-We pick up where we left off last time,
-focusing on the Gaussian mixture example.
+We pick up where we left off last time, focusing on the Gaussian mixture
+example.
 
 . . .
 
@@ -79,10 +82,8 @@ Can be used in a **mini-batch** version.
 
 ## A Mixture of Two Gaussians
 
-:::: {.columns align="center"}
-
-::: {.column width="47%"}
-
+::: {.columns align="center"}
+::::: {.column width="47%"}
 ### Goal
 
 Fit a two-component Gaussian mixture model to data.
@@ -93,17 +94,15 @@ Fit a two-component Gaussian mixture model to data.
 
 We assume that the data $X_i \sim \operatorname{\mathcal{N}}(\mu_k, \sigma_k^2)$
 with probability $\pi_k$, $k = 1, 2$.
+:::::
 
-:::
-
-::: {.column width="47%"}
-
-```{r, echo=FALSE}
+::::: {.column width="47%"}
+```{r}
+#| echo: false
 #| fig-cap: "A mixture of two Gaussian distributions."
+
 gausdens <- function(x, mu1, mu2, sigma1, sigma2, p) {
-  (p *
-    exp(-(x - mu1)^2 / (2 * sigma1^2)) /
-    sigma1 +
+  (p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1 +
     (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) /
     sqrt(2 * pi)
 }
@@ -131,18 +130,14 @@ pl <- ggplot(il_df, aes(x, ymix)) +
 
 pl
 ```
-
+:::::
 :::
-
-::::
-
-
 
 ## Finite Mixtures
 
 In a finite mixture, the marginal density of $X$ is
 $$
-p(x \mid \psi) = \sum_{k=1}^K \pi_k f_k(x \mid \psi_k)
+  p(x \mid \psi) = \sum_{k=1}^K \pi_k f_k(x \mid \psi_k)
 $$
 where $\pi_k \geq 0$, $\sum_k \pi_k = 1$, and $f_k$ are densities.
 
@@ -150,14 +145,14 @@ where $\pi_k \geq 0$, $\sum_k \pi_k = 1$, and $f_k$ are densities.
 
 ### Latent Variable
 
-Assume each $X_i$ comes from one of the $K$ components,
-but we don't know which one.
+Assume each $X_i$ comes from one of the $K$ components, but we don't know which
+one.
 
 \medskip\pause
 
 We introduce a latent variable $Z_i \in \{1, \ldots, K\}$ such that
 $$
-\Pr(Z_i = k) = \pi_k.
+  \Pr(Z_i = k) = \pi_k.
 $$
 
 . . .
@@ -166,51 +161,46 @@ $$
 
 Then the complete-data model is
 $$
-p(x_i, z_i \mid \psi) = \pi_{z_i} f_{z_i}(x_i \mid \psi_{z_i}).
+  p(x_i, z_i \mid \psi) = \pi_{z_i} f_{z_i}(x_i \mid \psi_{z_i}).
 $$
 
 ## Gaussian Mixture
 
 For Gaussian mixtures, the components are Gaussian:
 $$
-f_k(x \mid \mu_k, \sigma_k^2) = \frac{1}{\sqrt{2 \pi \sigma_k^2}} e^{-\frac{(x - \mu_k)^2}{2 \sigma_k^2}}.
+  f_k(x \mid \mu_k, \sigma_k^2) = \frac{1}{\sqrt{2 \pi \sigma_k^2}} e^{-\frac{(x - \mu_k)^2}{2 \sigma_k^2}}.
 $$
 with $\psi_k = (\mu_k, \sigma_k^2)$.
-
 
 \medskip\pause
 
 ### Complete-Data Log-Likelihood
 
-Letting $\theta = (\pi_1, \ldots, \pi_K, \psi_1, \ldots, \psi_K)$,
-the complete-data log-likelihood is
+Letting $\theta = (\pi_1, \ldots, \pi_K, \psi_1, \ldots, \psi_K)$, the
+complete-data log-likelihood is
 $$
-\begin{aligned}
-\ell_c (\theta) &= \sum_{i=1}^n \log p(x_i, z_i \mid \theta) \\ \pause
-                &= \sum_{i=1}^n \log \left( f(x_i \mid z_i, \theta) f(z_i \mid \theta) \right) \\ \pause
-                &= \sum_{i=1}^n \sum_{k=1}^K \symbf{1}(Z_i = k) \left( \log \pi_k + \log f_k(x_i \mid \mu_k, \sigma_k^2) \right) 
-\end{aligned}
+  \begin{aligned}
+  \ell_c (\theta) &= \sum_{i=1}^n \log p(x_i, z_i \mid \theta) \\ \pause
+                  &= \sum_{i=1}^n \log \left( f(x_i \mid z_i, \theta) f(z_i \mid \theta) \right) \\ \pause
+                  &= \sum_{i=1}^n \sum_{k=1}^K \symbf{1}(Z_i = k) \left( \log \pi_k + \log f_k(x_i \mid \mu_k, \sigma_k^2) \right) 
+  \end{aligned}
 $$
 
 ## Simple Case: Fixed Component Variances, $K=2$
 
-:::: {.columns align="center"}
-
-::: {.column width="47%"}
-
+::: {.columns align="center"}
+::::: {.column width="47%"}
 Let's simplify and assume $K=2$ and that $\sigma_1$ and $\sigma_2$ are known.
 
 \medskip\pause
 
 Then the model has three unknown parameters:
 $$
-\theta = (\pi, \mu_1, \mu_2).
+  \theta = (\pi, \mu_1, \mu_2).
 $$
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 \begin{tikzpicture}[
     node distance=1.6cm,
     latent/.style={circle,draw,minimum size=10mm,inner sep=0pt},
@@ -236,29 +226,27 @@ $$
   % Plate for data points
   \node[plate={below:{$i=1,\dots,n$}}, fit=(z)(x)] (plateN) {};
 \end{tikzpicture}
-
+:::::
 :::
-
-::::
 
 ## The E-Step
 
 The complete-data log-likelihood is now
 $$
-\begin{aligned}
-\ell_c(\theta) &= \sum_{i=1}^n \symbf{1}(Z_i = 1) \left( \log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) \\
-               &\phantom{= {}}+ \symbf{1}(Z_i = 2)\left( \log(1-\pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right) + \text{const}.
-\end{aligned}
+  \begin{aligned}
+  \ell_c(\theta) &= \sum_{i=1}^n \symbf{1}(Z_i = 1) \left( \log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) \\
+                 &\phantom{= {}}+ \symbf{1}(Z_i = 2)\left( \log(1-\pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right) + \text{const}.
+  \end{aligned}
 $$
 
 . . .
 
 Taking expectations gives
 $$
-Q(\theta \mid \theta') = \sum_{i=1}^n \tau_{i} \left(\log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + (1 - \tau_{i})\left( \log(1-\pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
+  Q(\theta \mid \theta') = \sum_{i=1}^n \tau_{i} \left(\log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + (1 - \tau_{i})\left( \log(1-\pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
 $$
-where $\tau_i = \Pr(Z_i = 1 \mid X_i = x_i, \theta')$ is the
-**responsibility** of component 1 for observation $i$.
+where $\tau_i = \Pr(Z_i = 1 \mid X_i = x_i, \theta')$ is the **responsibility**
+of component 1 for observation $i$.
 
 \medskip\pause
 
@@ -268,52 +256,48 @@ The responsibility tells us how responsible component 1 is for generating $x_i$.
 
 The conditional probability in a mixture model is generally
 $$
-\Pr(Z = z \mid X = x) = \frac{\pi_z f_z(x \mid \psi_z)}{\sum_{k = 1}^K \pi_k f_k(x \mid \psi_k)}.
+  \Pr(Z = z \mid X = x) = \frac{\pi_z f_z(x \mid \psi_z)}{\sum_{k = 1}^K \pi_k f_k(x \mid \psi_k)}.
 $$
 
 \medskip\pause
 
 For the $K = 2$ Gaussian case, this gives us
 $$
-\tau_i = \Pr(Z_i = 1 \mid X = x_i, \theta') =
-\frac{ \pi'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}}}{
-\left( \pi'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}} +
-\frac{\sigma_1}{\sigma_2} (1 - \pi'_1) e^{-\frac{(x_i - \mu_2')^2}{2 \sigma_2^2}}\right) }.
+  \tau_i = \Pr(Z_i = 1 \mid X = x_i, \theta') =
+  \frac{ \pi'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}}}{
+  \left( \pi'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}} +
+  \frac{\sigma_1}{\sigma_2} (1 - \pi'_1) e^{-\frac{(x_i - \mu_2')^2}{2 \sigma_2^2}}\right) }.
 $$
 
 ## The Q-Step
 
 The MLEs of $\theta$ given $Q(\theta \mid \theta')$ are
 $$
-\hat{\theta} = 
-\left(\frac{1}{n} \sum_{i=1}^n \tau_i, \quad \frac{1}{\sum_{i=1}^n \tau_i} \sum_{i=1}^n \tau_i x_i, \quad \frac{1}{\sum_{i=1}^n (1 - \tau_i)} \sum_{i=1}^n (1 - \tau_i) x_i \right).
+  \hat{\theta} = 
+  \left(\frac{1}{n} \sum_{i=1}^n \tau_i, \quad \frac{1}{\sum_{i=1}^n \tau_i} \sum_{i=1}^n \tau_i x_i, \quad \frac{1}{\sum_{i=1}^n (1 - \tau_i)} \sum_{i=1}^n (1 - \tau_i) x_i \right).
 $$
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Updating $\pi$
 
 We update $\pi$ as
 $$
-\hat{\pi} = \frac{1}{n} \sum_{i=1}^n \tau_i, 
+  \hat{\pi} = \frac{1}{n} \sum_{i=1}^n \tau_i,
 $$
 which is the fraction of all data points "assigned" to component 1.
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Updating $\mu_1$ and $\mu_2$
 
-We update $\mu_1$ as 
+We update $\mu_1$ as
 $$
-\hat{\mu}_1 = \frac{\sum_{i=1}^n \tau_i x_i}{\sum_{i=1}^n \tau_i},
+  \hat{\mu}_1 = \frac{\sum_{i=1}^n \tau_i x_i}{\sum_{i=1}^n \tau_i},
 $$
 and similarly for $\mu_2$.
 
@@ -321,17 +305,16 @@ and similarly for $\mu_2$.
 
 This is a weighted mean, weighted by how much each component is responsible for
 each observation.
-
+:::::
 :::
-
-::::
 
 ## Example: Simulation
 
 We start by setting the parameters.
 
+```{r}
+#| label: mixture-gaus-sim
 
-```{r mixture-gaus-sim}
 sigma1 <- 1
 sigma2 <- 2
 mu1 <- -0.5
@@ -354,10 +337,12 @@ x[!z] <- rnorm(n - n1, mu2, sigma2)
 
 ##
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 #| fig-cap: "Histogram of simulated data from a two-component Gaussian mixture model."
 #| fig-width: 4
 #| fig-height: 2.7
+
 pl <- ggplot(data.frame(x), aes(x)) +
   geom_histogram(aes(y = after_stat(density)), bins = 40, fill = "lightgray") +
   geom_line(
@@ -370,8 +355,10 @@ pl <- ggplot(data.frame(x), aes(x)) +
 pl
 ```
 
-```{r gaus-mix-loglik}
+```{r}
+#| label: gaus-mix-loglik
 #| echo: false
+
 neg_loglik <- function(par, x) {
   p <- par[1]
   mu1 <- par[2]
@@ -382,9 +369,7 @@ neg_loglik <- function(par, x) {
   }
 
   -sum(log(
-    p *
-      exp(-(x - mu1)^2 / (2 * sigma1^2)) /
-      sigma1 +
+    p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1 +
       (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2
   ))
 }
@@ -392,7 +377,9 @@ neg_loglik <- function(par, x) {
 
 ## General-Purpose Optimization
 
-```{r gaus-mix-example, dependson=c("gaus-mix-loglik")}
+```{r, dependson=c("gaus-mix-loglik")}
+#| label: gaus-mix-example
+
 optim_par <- optim(c(0.5, -0.5, 4), neg_loglik, x = x)
 optim_par[1:2]
 ```
@@ -401,14 +388,17 @@ optim_par[1:2]
 
 But the starting value matters!
 
-```{r gaus-mix-example-bad, dependson=c("gaus-mix-loglik")}
+```{r, dependson=c("gaus-mix-loglik")}
+#| label: gaus-mix-example-bad
+
 optim(c(0.9, 3, 1), neg_loglik, x = x)[1:2]
 ```
 
-
 ## The EM Algorithm
 
-```{r em-alg} 
+```{r}
+#| label: em-alg
+
 em <- function(par, em_step, eps = 1e-6, maxit = 20, cb = NULL) {
   for (i in seq_len(maxit)) {
     par0 <- par
@@ -431,9 +421,10 @@ em <- function(par, em_step, eps = 1e-6, maxit = 20, cb = NULL) {
 Next, we implement the E and M steps. Implementations are not shown here, but
 can be found in the [source code](./slides/lecture11.qmd)
 
-
-```{r source-em-mix}
+```{r}
+#| label: source-em-mix
 #| echo: false
+
 library(numDeriv)
 
 e_step_gauss <- function(par, x, sigma1 = 1, sigma2 = sigma1) {
@@ -466,8 +457,7 @@ Q <- function(par, par_prime) {
   mu1 <- par[2]
   mu2 <- par[3]
   sum(
-    p_hat *
-      (log(p) - (x - mu1)^2 / (2 * sigma1^2)) +
+    p_hat * (log(p) - (x - mu1)^2 / (2 * sigma1^2)) +
       (1 - p_hat) * (log(1 - p) - (x - mu2)^2 / (2 * sigma2^2))
   )
 }
@@ -480,13 +470,17 @@ em_gauss_step <- create_em_gauss_step(x, sigma1, sigma2)
 
 ## Testing
 
-```{r test-em-gauss-mix}
+```{r}
+#| label: test-em-gauss-mix
+
 em_par <- em(c(0.5, -0.5, 4), em_gauss_step)
 ```
 
 . . .
 
-```{r gaus-mix-example2, dependson=c("gaus-mix-loglik")}
+```{r, dependson=c("gaus-mix-loglik")}
+#| label: gaus-mix-example2
+
 testthat::test_that("EM and optim give similar results", {
   testthat::expect_equal(em_par, optim_par$par, tolerance = 1e-3)
 })
@@ -494,16 +488,20 @@ testthat::test_that("EM and optim give similar results", {
 
 . . .
 
-```{r run-em-gauss-mix-again}
+```{r}
+#| label: run-em-gauss-mix-again
+
 em(c(0.9, 3, 1), em_gauss_step) # Starting value still matters
 ```
 
 ## Tracing Convergence
 
-The `tracer` object from the **CSwR** package lets us evaluate
-arbitrary expressions at each iteration of the EM algorithm via `expr`.
+The `tracer` object from the **CSwR** package lets us evaluate arbitrary
+expressions at each iteration of the EM algorithm via `expr`.
 
-```{r tracing-convergence}
+```{r}
+#| label: tracing-convergence
+
 library(CSwR)
 em_tracer <- tracer(
   c("par0", "par", "nll"),
@@ -524,46 +522,41 @@ em_trace <- summary(em_tracer)
 
 ##
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
-**CSwR** contains an `autoplot` S3 method for `trace` objects. 
+::: {.columns}
+::::: {.column width="47%"}
+**CSwR** contains an `autoplot` S3 method for `trace` objects.
 
 . . .
 
-```{r gaussmix-convergence-plot}
+```{r}
+#| label: gaussmix-convergence-plot
 #| eval: false
-autoplot(
-  em_trace,
-  y = nll - min(nll)
-)
-```
 
-:::
+autoplot(em_trace, y = nll - min(nll))
+```
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
-```{r convergence-plots-2, warning=FALSE}
+::::: {.column width="47%"}
+```{r}
+#| label: convergence-plots-2
+#| warning: false
 #| echo: false
 #| ref-label: gaussmix-convergence-plot
 #| fig-cap: "Convergence of the EM algorithm for Gaussian mixture model."
 ```
-
+:::::
 :::
-
-::::
 
 ##
 
-```{r mixture-convergence}
+```{r}
+#| label: mixture-convergence
 #| echo: false
+
 gaussdens2 <- function(x, p, mu1, mu2) {
-  (p *
-    exp(-(x - mu1)^2 / (2 * sigma1^2)) /
-    sigma1 +
+  (p * exp(-(x - mu1)^2 / (2 * sigma1^2)) / sigma1 +
     (1 - p) * exp(-(x - mu2)^2 / (2 * sigma2^2)) / sigma2) /
     sqrt(2 * pi)
 }
@@ -589,6 +582,7 @@ em_gauss_illustration <- function(i, em_trace) {
 #| fig-height: 2.8
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
+
 em_gauss_illustration(1, em_trace)
 ```
 
@@ -599,6 +593,7 @@ em_gauss_illustration(1, em_trace)
 #| fig-height: 2.8
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
+
 em_gauss_illustration(4, em_trace)
 ```
 
@@ -609,6 +604,7 @@ em_gauss_illustration(4, em_trace)
 #| fig-height: 2.8
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
+
 em_gauss_illustration(8, em_trace)
 ```
 
@@ -619,6 +615,7 @@ em_gauss_illustration(8, em_trace)
 #| fig-height: 2.8
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
+
 em_gauss_illustration(12, em_trace)
 ```
 
@@ -629,6 +626,7 @@ em_gauss_illustration(12, em_trace)
 #| fig-height: 2.8
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
+
 em_gauss_illustration(16, em_trace)
 ```
 
@@ -639,16 +637,19 @@ em_gauss_illustration(16, em_trace)
 #| fig-height: 2.8
 #| echo: false
 #| fig-cap: "Iterations of the EM algorithm"
+
 em_gauss_illustration(20, em_trace)
 ```
 
 ## Benchmarking
 
-You might be inclined to wonder which method is faster: EM or `optim()`? 
+You might be inclined to wonder which method is faster: EM or `optim()`?
 
 \medskip\pause
 
-```{r benchmark-em-gauss-mix}
+```{r}
+#| label: benchmark-em-gauss-mix
+
 gauss_bm <- bench::mark(
   em = em(c(0.5, -0.5, 4), em_gauss_step),
   optim = optim(c(0.5, -0.5, 4), neg_loglik, x = x),
@@ -661,13 +662,13 @@ gauss_bm <- bench::mark(
 ```{r}
 #| fig-cap: "Benchmarking results for EM vs. optim() for Gaussian mixture model."
 #| fig-width: 4.5
+
 plot(gauss_bm)
 ```
 
 \medskip\pause
 
 But this comparison is flawed: **why?**
-
 
 ## Label Switching
 
@@ -677,23 +678,19 @@ $(1-p, \mu_2, \mu_1)$ give the same likelihood.
 
 \medskip\pause
 
-So the EM algorithm may converge to
-either of the two symmetric modes.
+So the EM algorithm may converge to either of the two symmetric modes.
 
-```{r mixture-gaus-sim2}
+```{r}
+#| label: mixture-gaus-sim2
 #| echo: false
+
 sigma1 <- 1
 sigma2 <- 1
 mu1 <- -0.5
 mu2 <- 4
 p <- 0.8
 n <- 5000
-z <- sample(
-  c(TRUE, FALSE),
-  n,
-  replace = TRUE,
-  prob = c(p, 1 - p)
-)
+z <- sample(c(TRUE, FALSE), n, replace = TRUE, prob = c(p, 1 - p))
 x <- numeric(n)
 n1 <- sum(z)
 x[z] <- rnorm(n1, mu1, sigma1)
@@ -724,55 +721,49 @@ In this example, we generated data with $p = 0.8$ and $\sigma_1 = \sigma_2$.
 
 Many of the functions we are trying to minimize are of the form
 $$
-\frac{1}{n} \sum_{i=1}^n f_i(x).
+  \frac{1}{n} \sum_{i=1}^n f_i(x).
 $$
 
 . . .
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ### Gradient Descent
 
 Since $\nabla \left(\sum_{i=1}^n f_i(x)\right) = \sum_{i=1}^n \nabla f_i(x)$, GD
 steps are
 $$
-x_{k+1} = x_k - t \sum_{i=1}^n \nabla f_i(x_k).
+  x_{k+1} = x_k - t \sum_{i=1}^n \nabla f_i(x_k).
 $$
-
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ### Stochastic Gradient Descent
 
 SGD instead takes steps
 $$
-x_{k+1} = x_k - t \nabla f_{i}(x_k)
+  x_{k+1} = x_k - t \nabla f_{i}(x_k)
 $$
 where $i$ is an index in $\{1, \ldots, n\}$.
-
+:::::
 :::
-
-::::
 
 ## Example: Ordinary Least Squares
 
 The loss function is
 $$
-f(\beta) = \frac{1}{2n} \sum_{i=1}^n (y_i - x_i^\intercal \beta)^2.
+  f(\beta) = \frac{1}{2n} \sum_{i=1}^n (y_i - x_i^\intercal \beta)^2.
 $$
 so
 $$
-f_i(\beta) = \frac{1}{2} (y_i - x_i^\intercal \beta)^2.
+  f_i(\beta) = \frac{1}{2} (y_i - x_i^\intercal \beta)^2.
 $$
 
 And the gradient is
 $$
-\nabla f_i(\beta) = - x_i (y_i - x_i^\intercal \beta).
+  \nabla f_i(\beta) = - x_i (y_i - x_i^\intercal \beta).
 $$
 
 ## Basic Implementation of SGD
@@ -781,9 +772,12 @@ $$
 sgd_basic <- function(
   par,
   grad,
-  n, # number of data points
-  t, # step size
-  sampler = sample, # function that samples indices
+  n,
+  # number of data points
+  t,
+  # step size
+  sampler = sample,
+  # function that samples indices
   maxit = 100,
   ...
 ) {
@@ -801,7 +795,7 @@ sgd_basic <- function(
 
 If $i$ is drawn uniformly at random from $\{1, \ldots, n\}$ then
 $$
-\E(\nabla f_i(x_k)) = \nabla f(x_k).
+  \E(\nabla f_i(x_k)) = \nabla f(x_k).
 $$
 
 So SGD gradients are **unbiased** estimates of the full gradient.
@@ -817,37 +811,34 @@ $O(p)$ vs. $O(np)$ (for full gradient descent with $p$ variables).
 
 ### Epoch
 
-When discussing SGD, we often refer to an **epoch** as $n$ iterations of SGD:
-a full pass over the data.
+When discussing SGD, we often refer to an **epoch** as $n$ iterations of SGD: a
+full pass over the data.
 
 ## Example: Logistic Regression
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 With $y_i \in \{0, 1\}$, the logistic regression loss is
 $$
-f_i(\beta) = -y_i x_i^\intercal \beta + \log\left(1 + e^{x_i^\intercal \beta}\right).
+  f_i(\beta) = -y_i x_i^\intercal \beta + \log\left(1 + e^{x_i^\intercal \beta}\right).
 $$
 and
 $$
-\nabla f_i(\beta) = x_i \left( \frac{e^{x_i^\intercal \beta}}{1 + e^{x_i^\intercal \beta}} - y_i \right).
+  \nabla f_i(\beta) = x_i \left( \frac{e^{x_i^\intercal \beta}}{1 + e^{x_i^\intercal \beta}} - y_i \right).
 $$
 
 . . .
 
-SGD typically converges quickly at the start but slows down as it approaches
-the minimum.
+SGD typically converges quickly at the start but slows down as it approaches the
+minimum.
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-height: 3.6
 #| fig-width: 3.2
+
 set.seed(123)
 
 n <- 1000
@@ -896,23 +887,11 @@ n1 <- length(loss1)
 n2 <- length(loss2)
 n3 <- length(loss3)
 
-
 pal <- palette.colors(palette = "Okabe-Ito")
 
-contour(
-  beta1,
-  beta2,
-  z,
-  col = "dark grey",
-  drawlabels = FALSE,
-  asp = 1
-)
+contour(beta1, beta2, z, col = "dark grey", drawlabels = FALSE, asp = 1)
 
-lines(
-  res_sgd$beta_history[1, ],
-  res_sgd$beta_history[2, ],
-  col = pal[3]
-)
+lines(res_sgd$beta_history[1, ], res_sgd$beta_history[2, ], col = pal[3])
 points(
   res_sgd$beta_history[1, ],
   res_sgd$beta_history[2, ],
@@ -921,11 +900,7 @@ points(
   cex = 0.5
 )
 
-lines(
-  res_gd$beta_history[1, ],
-  res_gd$beta_history[2, ],
-  col = pal[1]
-)
+lines(res_gd$beta_history[1, ], res_gd$beta_history[2, ], col = pal[1])
 points(
   res_gd$beta_history[1, ],
   res_gd$beta_history[2, ],
@@ -950,40 +925,30 @@ legend(
   cex = 0.8
 )
 ```
-
-
+:::::
 :::
-
-::::
-
 
 ## Step Size (Learning Rate)
 
-:::: {.columns align = "center"}
-
-::: {.column width="47%"}
-
+::: {.columns align = "center"}
+::::: {.column width="47%"}
 For gradient descent, we could use a fixed step size (learning rate), and
 guarantee convergence.
 
 \medskip\pause
 
 But this is **not** the case for SGD.
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| fig-cap: "Convergence of SGD for logistic regression with a fixed step size."
 #| echo: false
+
 res_sgd <- logreg_sgd(X, y, max_epochs = 200, batch_size = 1, t0 = 5)
 pal <- palette.colors(palette = "Okabe-Ito")
 
-loss <- loss_2d_vectorized(
-  res_sgd$beta_history[1, ],
-  res_sgd$beta_history[2, ]
-)
+loss <- loss_2d_vectorized(res_sgd$beta_history[1, ], res_sgd$beta_history[2, ])
 
 ggplot(
   tibble(iteration = seq_along(loss), loss = loss - loss_optim),
@@ -993,25 +958,24 @@ ggplot(
   scale_y_log10() +
   labs(y = "Suboptimality")
 ```
-
+:::::
 :::
-
-::::
 
 \medskip\pause
 
-Can we find conditions on the step sizes $t_k$ that ensure convergence of SGD? **Yes!**
+Can we find conditions on the step sizes $t_k$ that ensure convergence of SGD?
+**Yes!**
 
 \medskip
 
 But first, we need to introduce the concept of **strong convexity**.
 
-
 ## Strong Convexity
 
-A differentiable function $f: \mathbb{R}^p \to \mathbb{R}$ is **strongly convex** if
+A differentiable function $f: \mathbb{R}^p \to \mathbb{R}$ is **strongly
+convex** if
 $$
-f(x) \geq f(x_0) + \nabla f(x_0)^\intercal (x - x_0) + \frac{\mu}{2} \lVert x - x_0\rVert_2^2, \quad \forall x, x_0 \in \mathbb{R}^p.
+  f(x) \geq f(x_0) + \nabla f(x_0)^\intercal (x - x_0) + \frac{\mu}{2} \lVert x - x_0\rVert_2^2, \quad \forall x, x_0 \in \mathbb{R}^p.
 $$
 
 \medskip\pause
@@ -1048,18 +1012,17 @@ $$
 
 ## Example: Strong Convexity
 
-The function 
+The function
 $$
-f(x) = x^2
-$$\pause
-is strongly convex with $\mu = 2$ since
+  f(x) = x^2
 $$
+\pause is strongly convex with $\mu = 2$ since $$
 \begin{aligned}
 f(x) - f(x_0) - \nabla f(x_0)^\intercal (x - x_0) & = x^2 - x_0^2 - 2x_0(x - x_0) \\ \pause
                                         & = (x - x_0)^2 \\ \pause
                                         & \geq \frac{\mu}{2}(x - x_0)^2.
 \end{aligned}
-$$ 
+$$
 
 \medskip\pause
 
@@ -1070,7 +1033,7 @@ The inequality holds for $\mu \leq 2$, and in particular for $\mu = 2$.
 If $f$ is strongly convex with parameter $\mu$ and has Lipschitz gradient with
 constant $L$, then
 $$
-\mu I \preceq \nabla^2 f(x) \preceq L I.
+  \mu I \preceq \nabla^2 f(x) \preceq L I.
 $$
 
 \medskip\pause
@@ -1079,7 +1042,6 @@ $$
 - Lipschitz gradient provides an **upper** bound on the curvature of $f$
 
 . . .
-
 
 ### Example
 
@@ -1092,36 +1054,32 @@ This is *identical* to the strong convexity parameter.
 
 ## Example of Strong Convexity--Lipschitz Gap
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 Let's take the function
 $$
-f(x) = x^2 + \sin(x).
+  f(x) = x^2 + \sin(x).
 $$
 
 \medskip\pause
 
 This is twice differentiable with
 $$
-\nabla^2 f(x) = 2 - \sin(x).
+  \nabla^2 f(x) = 2 - \sin(x).
 $$
 
 \medskip\pause
 
 And since
 $$
-1 \leq 2 - \sin(x) \leq 3,
+  1 \leq 2 - \sin(x) \leq 3,
 $$
 $f$ is strongly convex with $\mu = 1$ and has Lipschitz gradient with $L = 3$.
 
 \medskip\pause
+:::::
 
-:::
-
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 \begin{figure}
   \begin{tikzpicture}
     \pgfmathsetmacro{\a}{1}
@@ -1168,18 +1126,15 @@ $f$ is strongly convex with $\mu = 1$ and has Lipschitz gradient with $L = 3$.
   \caption{The function $f(x) = x^2 + \sin(x)$ is strongly convex with $\mu = 1$
     and has Lipschitz gradient with $L = 3$.}
 \end{figure}
-
+:::::
 :::
-
-::::
-
 
 ## Conditioning
 
 The **condition number** of a strongly convex function with Lipschitz gradient
 is
 $$
-\kappa = \frac{L}{\mu} \geq 1.
+  \kappa = \frac{L}{\mu} \geq 1.
 $$
 
 . . .
@@ -1193,56 +1148,56 @@ conditioned.
 
 \medskip\pause
 
-We reach the minimum in one step with gradient descent and step size $t = 1/L = 1/2$.
+We reach the minimum in one step with gradient descent and step size
+$t = 1/L = 1/2$.
 
 ## The Robbins--Monro Convergence Theorem
 
-Suppose $f$ is strongly convex and we have
-unbiased stochastic estimates of the gradients, $g_k$, with
-$\E(g_k \mid x_k) = \nabla f(x_k)$ and 
+Suppose $f$ is strongly convex and we have unbiased stochastic estimates of the
+gradients, $g_k$, with $\E(g_k \mid x_k) = \nabla f(x_k)$ and
 $$
-\E\big(\rVert g_k \lVert_2^2 \, \mid x_k \big) \leq A + B \lVert x_k \rVert_2^2
+  \E\big(\rVert g_k \lVert_2^2 \, \mid x_k \big) \leq A + B \lVert x_k \rVert_2^2
 $$
-for some constants $A$ and $B$. 
+for some constants $A$ and $B$.
 
 \medskip\pause
 
 If $x^*$ is the global minimizer of $f$ then $x_n$ converges almost surely
 towards $x^*$ if
 $$
-\sum_{k=1}^{\infty} t_k^2 < \infty \quad \text{and} \quad
-\sum_{k=1}^{\infty} t_k = \infty.
+  \sum_{k=1}^{\infty} t_k^2 < \infty \quad \text{and} \quad
+  \sum_{k=1}^{\infty} t_k = \infty.
 $$
 
 . . .
 
 The theorem applies to learning rates satisfying
 $$
-t_k \propto \frac{1}{k}.
+  t_k \propto \frac{1}{k}.
 $$
 
 ## Diminishing Step Sizes
 
 Assume cyclic rule and set $t_k = t$ for $n$ updates. We get
 $$
-x_{k + n} = x_k - t \sum_{i=1}^n \nabla f_i(x_{k + i - 1}).
+  x_{k + n} = x_k - t \sum_{i=1}^n \nabla f_i(x_{k + i - 1}).
 $$
 
 . . .
 
 Meanwhile, **full** gradient descent with step size $nt$ would give
 $$
-x_{k + 1} = x_k - t \sum_{i=1}^n \nabla f_i(x_k).
+  x_{k + 1} = x_k - t \sum_{i=1}^n \nabla f_i(x_k).
 $$
 
 . . .
 
 Difference between the two is
 $$
-t \sum_{i=1}^n \Big( \nabla f_i(x_{k + i - 1}) - \nabla f_i(x_k) \Big)
+  t \sum_{i=1}^n \Big( \nabla f_i(x_{k + i - 1}) - \nabla f_i(x_k) \Big)
 $$
-which does not tend to zero for constant $t$. So the noise in
-the gradient estimates does not vanish as we approach the minimum.
+which does not tend to zero for constant $t$. So the noise in the gradient
+estimates does not vanish as we approach the minimum.
 
 ## Convergence Rates
 
@@ -1250,14 +1205,14 @@ the gradient estimates does not vanish as we approach the minimum.
 
 For convex $f$, GD with diminishing step sizes converges at rate
 $$
-f(x_k) - f^* = O\left(\frac{1}{\sqrt{k}}\right). 
+  f(x_k) - f^* = O\left(\frac{1}{\sqrt{k}}\right).
 $$
 
 . . .
 
 When $f$ is differentiable with Lipschitz gradient, we get
 $$
-f(x_k) - f^* = O\left(\frac{1}{k}\right). 
+  f(x_k) - f^* = O\left(\frac{1}{k}\right).
 $$
 
 . . .
@@ -1266,7 +1221,7 @@ $$
 
 For convex $f$ with diminishing step sizes, SGD converges at rate
 $$
-\E\big(f(x_k) - f^*\big) = O\left(\frac{1}{\sqrt{k}}\right).
+  \E\big(f(x_k) - f^*\big) = O\left(\frac{1}{\sqrt{k}}\right).
 $$
 
 . . .
@@ -1278,7 +1233,7 @@ gradient.
 
 When $f$ is strongly convex and has Lipschitz gradient, GD satisfies
 $$
-f(x_k) - f^* = O(\delta^k), \qquad \delta \in (0, 1)
+  f(x_k) - f^* = O(\delta^k), \qquad \delta \in (0, 1)
 $$
 and $\delta = 1 - \mu/L$
 
@@ -1286,15 +1241,14 @@ and $\delta = 1 - \mu/L$
 
 Under same conditions, SGD gives us
 $$
-\E(f(x_n) - f^*) = O\left(\frac{1}{k}\right).
+  \E(f(x_n) - f^*) = O\left(\frac{1}{k}\right).
 $$
 
 . . .
 
-So SGD does **not** enjoy linear convergence rates under strong
-convexity.
+So SGD does **not** enjoy linear convergence rates under strong convexity.
 
-## 
+##
 
 \begin{figure}
 \begin{tikzpicture}
@@ -1336,17 +1290,16 @@ convexity.
 
 Take mini-batch $A_k$ of size $b$ of the data and iterate through
 $$
-x_{k+1} = x_k - \frac{t}{b} \sum_{i \in A_k} \nabla f_i(x_k).
+  x_{k+1} = x_k - \frac{t}{b} \sum_{i \in A_k} \nabla f_i(x_k).
 $$
 
 . . .
 
 Estimates are still unbiased,
 $$
-\operatorname{E}\frac{1}{b}\sum_{i \in A_k}\nabla f_i(x) = \nabla f(x),
+  \operatorname{E}\frac{1}{b}\sum_{i \in A_k}\nabla f_i(x) = \nabla f(x),
 $$
-but variance is reduced by a factor of
-$1/b$.
+but variance is reduced by a factor of $1/b$.
 
 \medskip\pause
 
@@ -1371,6 +1324,7 @@ Connect to law of large numbers: averaging reduces variance.
 #| fig-cap: "Convergence of SGD on the logistic regression problem, with
 #|   different batch sizes. Note that batch size 1000 is standard gradient
 #|   descent."
+
 set.seed(123)
 
 n <- 1000
@@ -1395,14 +1349,7 @@ loss_2d <- function(beta1, beta2, X, y) {
 conv_data <- data.frame(b = NULL, epoch = NULL, loss = NULL)
 
 for (b in c(1, 10, 100, n)) {
-  res_sgd <- logreg_sgd(
-    X,
-    y,
-    max_epochs = 100,
-    batch_size = b,
-    a = 1,
-    t0 = 3
-  )
+  res_sgd <- logreg_sgd(X, y, max_epochs = 100, batch_size = b, a = 1, t0 = 3)
 
   conv_data <- rbind(
     conv_data,
@@ -1416,10 +1363,9 @@ ggplot(conv_data, aes(epoch, loss, col = as.factor(b))) +
   labs(color = "Batch size", y = "Suboptimality")
 ```
 
-
 ## So, Why Use SGD?
 
-We have seen that convergence rates of SGD are worse than those of GD. 
+We have seen that convergence rates of SGD are worse than those of GD.
 
 \medskip\pause
 
@@ -1446,8 +1392,9 @@ But in terms of epochs, SGD can be faster.
 #| fig-width: 5
 #| fig-height: 2.3
 #| fig-cap: "Convergence of gradient descent (GD) and stochastic gradient descent
-#|    (SGD) for logistic regression in terms of iterations and epochs."
+#|   (SGD) for logistic regression in terms of iterations and epochs."
 #| echo: false
+
 conv_data <- tibble(
   method = rep(c("GD", "SGD"), times = c(length(loss1), length(loss2))),
   epoch = c(seq_len(n1), seq_len(n2) / n),
@@ -1471,10 +1418,11 @@ ggpl <- epochs_plot +
 ggpl
 ```
 
-## 
+##
 
 ```{r}
 #| echo: false
+
 set.seed(1)
 
 f <- function(x) x^4 - 2 * x^2 + 1 * x
@@ -1495,7 +1443,6 @@ for (k in 1:(steps - 1)) {
   noise <- rnorm(1, sd = 4) # stochasticity
   x_sgd[k + 1] <- x_sgd[k] - eta * (df(x_sgd[k]) + noise)
 }
-
 
 plot_curves <- function(main) {
   curve(
@@ -1519,11 +1466,7 @@ plot_iteration <- function(i, x_gd, x_sgd) {
 
   opar <- par(no.readonly = TRUE)
 
-  par(
-    mfrow = c(1, 2),
-    oma = c(4.1, 4.1, 0.1, 0.3),
-    mai = c(0.1, 0.2, 0.5, 0.0)
-  )
+  par(mfrow = c(1, 2), oma = c(4.1, 4.1, 0.1, 0.3), mai = c(0.1, 0.2, 0.5, 0.0))
 
   plot_curves("GD")
   lines(x_gd_i, f(x_gd_i), col = "royalblue", lwd = 1)
@@ -1545,6 +1488,7 @@ plot_iteration <- function(i, x_gd, x_sgd) {
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+
 plot_iteration(1, x_gd, x_sgd)
 ```
 
@@ -1555,6 +1499,7 @@ plot_iteration(1, x_gd, x_sgd)
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+
 plot_iteration(2, x_gd, x_sgd)
 ```
 
@@ -1565,6 +1510,7 @@ plot_iteration(2, x_gd, x_sgd)
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+
 plot_iteration(3, x_gd, x_sgd)
 ```
 
@@ -1575,6 +1521,7 @@ plot_iteration(3, x_gd, x_sgd)
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+
 plot_iteration(5, x_gd, x_sgd)
 ```
 
@@ -1585,6 +1532,7 @@ plot_iteration(5, x_gd, x_sgd)
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+
 plot_iteration(10, x_gd, x_sgd)
 ```
 
@@ -1595,6 +1543,7 @@ plot_iteration(10, x_gd, x_sgd)
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+
 plot_iteration(15, x_gd, x_sgd)
 ```
 
@@ -1605,6 +1554,7 @@ plot_iteration(15, x_gd, x_sgd)
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+
 plot_iteration(20, x_gd, x_sgd)
 ```
 
@@ -1615,6 +1565,7 @@ plot_iteration(20, x_gd, x_sgd)
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+
 plot_iteration(steps, x_gd, x_sgd)
 ```
 
@@ -1631,7 +1582,7 @@ Convergence theorem only gives a few hints.
 ### A Class of Decay Schedules
 
 $$
-t_k = \frac{t_0 K}{K + k^a} = \frac{t_0 }{1 + K^{-1} k^{a}}
+  t_k = \frac{t_0 K}{K + k^a} = \frac{t_0 }{1 + K^{-1} k^{a}}
 $$
 with initial learning rate $t_0 > 0$ and constants $K, a > 0$.
 
@@ -1641,20 +1592,19 @@ Convergence is ensured by Robbins--Monro if $a \in (0.5, 1]$.
 
 \medskip\pause
 
-Fixing the exponent $a$ and picking a target rate, $t_1$, to be reached
-after $k_1$ steps, we can solve for $K$ and get
-$$K = \frac{k_1^a t_1}{t_0 - t_1}.$$
+Fixing the exponent $a$ and picking a target rate, $t_1$, to be reached after
+$k_1$ steps, we can solve for $K$ and get
+$$
+  K = \frac{k_1^a t_1}{t_0 - t_1}.
+$$
 
 ##
 
-```{r decay, cache = TRUE}
-decay_scheduler <- function(
-  t0 = 1,
-  a = 1,
-  K = 1,
-  t = NULL,
-  k1 = NULL
-) {
+```{r}
+#| label: decay
+#| cache: true
+
+decay_scheduler <- function(t0 = 1, a = 1, K = 1, t = NULL, k1 = NULL) {
   force(a)
 
   if (!is.null(t) && !is.null(k1)) {
@@ -1669,11 +1619,14 @@ decay_scheduler <- function(
 
 ##
 
-```{r decay-fig, echo=FALSE, dependson="decay"}
+```{r, dependson="decay"}
+#| label: decay-fig
+#| echo: false
 #| fig-height: 3
 #| fig-width: 4
 #| fig-cap: "Examples of learning rate schedules,
 #|   using $t_k = \\frac{t_0 }{1 + K^{-1} k^{a}}$."
+
 grid_par <- expand.grid(
   k = seq(0, 1000, 2),
   K = c(25, 50, 100),
@@ -1696,6 +1649,7 @@ No, not really, because it's still hard to pick $t_0$, $K$, and $a$.
 
 ```{r}
 #| echo: false
+
 set.seed(123)
 
 n <- 1000
@@ -1724,24 +1678,13 @@ loss_2d_vectorized <- Vectorize(function(b1, b2) loss_2d(b1, b2, X, y))
 z <- outer(beta1, beta2, loss_2d_vectorized)
 
 step_size_illustration <- function(a) {
-  res_sgd <- logreg_sgd(
-    X,
-    y,
-    max_epochs = 100,
-    batch_size = 1,
-    a = a,
-    t0 = 0.5
-  )
+  res_sgd <- logreg_sgd(X, y, max_epochs = 100, batch_size = 1, a = a, t0 = 0.5)
 
   pal <- palette.colors(palette = "Okabe-Ito")
 
   contour(beta1, beta2, z, col = "dark grey", drawlabels = FALSE, asp = 1)
 
-  lines(
-    res_sgd$beta_history[1, ],
-    res_sgd$beta_history[2, ],
-    col = pal[3]
-  )
+  lines(res_sgd$beta_history[1, ], res_sgd$beta_history[2, ], col = pal[3])
   points(
     res_sgd$beta_history[1, ],
     res_sgd$beta_history[2, ],
@@ -1760,36 +1703,31 @@ step_size_illustration <- function(a) {
 }
 ```
 
-:::: {.columns}
-
-::: {.column width="47%"}
-
+::: {.columns}
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-height: 3
-#| fig-cap: SGD on the logistic regression example with
-#|   $a = 0.6$ (slow decay).
+#| fig-cap: SGD on the logistic regression example with $a = 0.6$ (slow decay).
+
 step_size_illustration(0.6)
 ```
-:::
+:::::
 
 . . .
 
-::: {.column width="47%"}
-
+::::: {.column width="47%"}
 ```{r}
 #| echo: false
 #| fig-height: 3
-#| fig-cap: SGD on the logistic regression example with
-#|   $a = 0.9$ (fast decay).
+#| fig-cap: SGD on the logistic regression example with $a = 0.9$ (fast decay).
+
 step_size_illustration(0.9)
 ```
-
+:::::
 :::
 
-::::
-
-## 
+##
 
 \begin{algorithm}[H]
   \caption{Stochastic gradient descent (with mini-batches)}
@@ -1806,17 +1744,17 @@ step_size_illustration(0.9)
   }
 \end{algorithm}
 
-
 ## Implementation Details
 
 ### Nested Loops
 
-Implementing an SGD algorithm typically means implementing a nested loop,
-and we know this isn't R's strongest suite.
+Implementing an SGD algorithm typically means implementing a nested loop, and we
+know this isn't R's strongest suite.
 
 \medskip\pause
 
-Next lecture, when we turn to Rcpp, you will have the tools to solve this problem.
+Next lecture, when we turn to Rcpp, you will have the tools to solve this
+problem.
 
 . . .
 
@@ -1831,9 +1769,9 @@ first can help.
 
 ## Exercise: Single-Variable Ridge Regression
 
-Minimize 
+Minimize
 $$
-\frac{1}{n} \sum_{i=1}^n f_i(\beta), \quad\text{with}\quad f_i(\beta) = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2.
+  \frac{1}{n} \sum_{i=1}^n f_i(\beta), \quad\text{with}\quad f_i(\beta) = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2.
 $$
 
 . . .
@@ -1841,6 +1779,7 @@ $$
 ```{r}
 #| echo: false
 #| include: false
+
 f <- function(beta, xx, yy, lambda) {
   mean(0.5 * (xx * beta - yy)^2 + 0.5 * lambda * beta^2)
 }
@@ -1863,16 +1802,16 @@ plot(beta_grid, f_vec(beta_grid, x, y, 0.6), type = "l")
 
 ### Step 1
 
-Generate some data, for instance $x$ from `rnorm` and `y <- x * beta + rnorm(n)`.
-You can pick $\beta$ and $n$ however you want.
+Generate some data, for instance $x$ from `rnorm` and
+`y <- x * beta + rnorm(n)`. You can pick $\beta$ and $n$ however you want.
 
 . . .
 
 ### Step 2
 
 Solve this problem using stochastic gradient descent. Plot loss in terms of
-epochs and time. Test your method against `optimize()` or an
-analytical solution.
+epochs and time. Test your method against `optimize()` or an analytical
+solution.
 
 . . .
 
@@ -1882,13 +1821,12 @@ Profile your algorithm.
 
 ## Summary
 
-Stochastic gradient descent is a popular method for large-scale
-optimization.
+Stochastic gradient descent is a popular method for large-scale optimization.
 
 \medskip\pause
 
-Convergence results are relatively weak, but for many applications this does
-not matter.
+Convergence results are relatively weak, but for many applications this does not
+matter.
 
 \medskip\pause
 
@@ -1902,8 +1840,8 @@ We will look at how to use Rcpp to speed up R code.
 
 \medskip\pause
 
-Because SGD typically involves nested loops, these algorithms
-benefit greatly from relying on C++.
+Because SGD typically involves nested loops, these algorithms benefit greatly
+from relying on C++.
 
 . . .
 

@@ -9,9 +9,9 @@ exercises, and course information.
 
 **Repository Type:** Academic course website (Quarto-based static site
 generator) **Primary Language:** R (58 R files), Quarto Markdown (30 .qmd files)
-**Repository Size:** ~63 MB **Total Source Files:** ~101 files (.R, .qmd, .yml,
-.yaml, .md) **Target Audience:** Graduate students with prerequisite knowledge
-of statistics and R
+**Repository Size:** \~63 MB **Total Source Files:** \~101 files (.R, .qmd,
+.yml, .yaml, .md) **Target Audience:** Graduate students with prerequisite
+knowledge of statistics and R
 
 ### Course Structure
 
@@ -236,7 +236,9 @@ ensures Quarto's caching works correctly across CI runs.
 ### Adding a New Lecture Slide
 
 1. Create `slides/lectureX.qmd`
+
 2. Include common setup: `{{< include _common.qmd >}}`
+
 3. Use YAML frontmatter:
 
    ```yaml
@@ -247,6 +249,7 @@ ensures Quarto's caching works correctly across CI runs.
    ```
 
 4. Render to test: `quarto render slides/lectureX.qmd`
+
 5. PDF output: `slides/lectureX.pdf`
 
 ### Adding a New Assignment

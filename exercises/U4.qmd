@@ -8,7 +8,9 @@ description:
   "Keywords: currying, decorators, functional programming"
 ---
 
-```{r, include = F, output = F}
+```{r, output=F}
+#| include: f
+
 library(CSwR)
 library(ggplot2)
 library(reshape2)
@@ -16,13 +18,17 @@ library(Rcpp)
 library(bench)
 ```
 
-
 ## Exercise 25.2.6.1
-**Question**: 
-With the basics of C++ in hand, it’s now a great time to practice by reading and writing some simple C++ functions. For each of the following functions, read the code and figure out what the corresponding base R function is. You might not understand every part of the code yet, but you should be able to figure out the basics of what the function does.
+
+**Question**: With the basics of C++ in hand, it's now a great time to practice
+by reading and writing some simple C++ functions. For each of the following
+functions, read the code and figure out what the corresponding base R function
+is. You might not understand every part of the code yet, but you should be able
+to figure out the basics of what the function does.
 
 ```{r}
-cppFunction('
+cppFunction(
+  '
 double f1(NumericVector x) {
   int n = x.size();
   double y = 0;
@@ -32,9 +38,11 @@ double f1(NumericVector x) {
   }
   return y;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 NumericVector f2(NumericVector x) {
   int n = x.size();
   NumericVector out(n);
@@ -45,9 +53,11 @@ NumericVector f2(NumericVector x) {
   }
   return out;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 bool f3(LogicalVector x) {
   int n = x.size();
   bool any = false;
@@ -56,9 +66,11 @@ bool f3(LogicalVector x) {
   }
   return any;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 int f4(Function pred, List x) {
   int n = x.size();
 
@@ -68,9 +80,11 @@ int f4(Function pred, List x) {
   }
   return 0;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 NumericVector f5(NumericVector x, NumericVector y) {
   int n = std::max(x.size(), y.size());
   NumericVector x1 = rep_len(x, n);
@@ -84,11 +98,13 @@ NumericVector f5(NumericVector x, NumericVector y) {
 
   return out;
 }
-')
+'
+)
 ```
 
-**A**:
-We can try running each function and seeing what they do. For example, we can run the following code:
+**A**: We can try running each function and seeing what they do. For example, we
+can run the following code:
+
 ```{r}
 x <- 1:4
 f1(x) - mean(x) # f1 is the mean
@@ -99,15 +115,17 @@ f5(1:5, 6:10) == apply(rbind(1:5, 6:10), MARGIN = 2, min) # f5 applies the min f
 ```
 
 ## Exercise 25.2.6.2
-To practice your function writing skills, convert the following functions into C++. For now, assume the inputs have no missing values.
-+ `all()`.
-+ `cumprod()`, `cummin()`, `cummax()`.
-+ `diff()`. Start by assuming lag 1, and then generalise for lag n.
-+ `range()`.
-+ `var()`. 
-Read about the approaches you can take on Wikipedia. Whenever implementing a numerical algorithm, it’s always good to check what is already known about the problem.
+
+To practice your function writing skills, convert the following functions into
+C++. For now, assume the inputs have no missing values. + `all()`. +
+`cumprod()`, `cummin()`, `cummax()`. + `diff()`. Start by assuming lag 1, and
+then generalise for lag n. + `range()`. + `var()`. Read about the approaches you
+can take on Wikipedia. Whenever implementing a numerical algorithm, it's always
+good to check what is already known about the problem.
+
 ```{r}
-cppFunction('
+cppFunction(
+  '
 bool all_cpp(LogicalVector x) {
   int n = x.size();
   for(int i = 0; i < n; ++i) {
@@ -115,9 +133,11 @@ bool all_cpp(LogicalVector x) {
   }
   return true;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 double cumprod_cpp(NumericVector x) {
   int n = x.size();
   double prod = 1;
@@ -127,9 +147,11 @@ double cumprod_cpp(NumericVector x) {
   }
   return prod;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 NumericVector cummin_cpp(NumericVector x) {
   int n = x.size();
   double min = x[0];
@@ -143,9 +165,11 @@ NumericVector cummin_cpp(NumericVector x) {
   }
   return out;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 NumericVector diff_cpp(NumericVector x, int lag = 1) {
   int n = x.size();
   NumericVector out(n - lag);
@@ -155,9 +179,11 @@ NumericVector diff_cpp(NumericVector x, int lag = 1) {
   }
   return out;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 NumericVector range_cpp(NumericVector x) {
   double min = x[0], max = x[0];
   int n = x.size();
@@ -170,9 +196,11 @@ NumericVector range_cpp(NumericVector x) {
   NumericVector out = NumericVector::create(min, max);
   return out;
 }
-')
+'
+)
 
-cppFunction('
+cppFunction(
+  '
 double var_cpp(NumericVector x) {
   int n = x.size();
   double sum = 0, sumsq = 0;
@@ -184,10 +212,11 @@ double var_cpp(NumericVector x) {
 
   return (sumsq - sum * sum / n) / (n - 1);
 }
-')
+'
+)
 ```
-**Question**:
-See attached Rcpp file
+**Question**: See attached Rcpp file
+
 ```{r}
 all_cpp(c(F, T, T, T))
 cumprod_cpp(1:5)
@@ -198,12 +227,16 @@ range_cpp(1:10)
 var_cpp(rnorm(1e5))
 ```
 
-
 ## Exercise 25.4.5.1
-**Question**: Rewrite any of the functions from the first exercise of Section 25.2.6 to deal with missing values. If na.rm is true, ignore the missing values. If na.rm is false, return a missing value if the input contains any missing values. Some good functions to practice with are `min()`, `max()`, `range()`, `mean()`, and `var()`.
 
-**Answer**:
-Use the **decorator** design pattern, 
+**Question**: Rewrite any of the functions from the first exercise of Section
+25.2.6 to deal with missing values. If na.rm is true, ignore the missing values.
+If na.rm is false, return a missing value if the input contains any missing
+values. Some good functions to practice with are `min()`, `max()`, `range()`,
+`mean()`, and `var()`.
+
+**Answer**: Use the **decorator** design pattern,
+
 ```{r}
 .na.rm_decorator <- function(fun) {
   function(x, na.rm = FALSE, ...) {
@@ -228,8 +261,8 @@ Use the **decorator** design pattern,
 }
 ```
 Use our decorators
-```{r}
 
+```{r}
 mean_decorated <- .na.rm_decorator(f1)
 
 mean_decorated(c(1, 2, NA, 3, 4))
@@ -243,10 +276,12 @@ diff_decorated(c(1, 2, 3, 4), lag = 2)
 ```
 
 ## Exercise 25.4.5.2
-**Question**: Rewrite `cumsum()` and `diff()` so they can handle missing values. Note that these functions have slightly more complicated behaviour.
 
-**Answer**:
-Use the decorator pattern again.
+**Question**: Rewrite `cumsum()` and `diff()` so they can handle missing values.
+Note that these functions have slightly more complicated behaviour.
+
+**Answer**: Use the decorator pattern again.
+
 ```{r}
 # For cumsum: use the first decorator (treats NAs as 0 when na.rm = TRUE)
 cumsum_decorated <- .na.rm_decorator(f2)
@@ -258,20 +293,22 @@ diff_decorated <- .na.rm_decorator_2(diff_cpp)
 test_vec <- c(1, 2, NA, 4, 5)
 
 # Test cumsum
-cumsum_decorated(test_vec, na.rm = FALSE)  # Should return NAs
-cumsum_decorated(test_vec, na.rm = TRUE)   # Should treat NA as 0
+cumsum_decorated(test_vec, na.rm = FALSE) # Should return NAs
+cumsum_decorated(test_vec, na.rm = TRUE) # Should treat NA as 0
 
 # Test diff  
-diff_decorated(test_vec, lag = 1, na.rm = FALSE)  # Should return NAs
-diff_decorated(test_vec, lag = 1, na.rm = TRUE)   # Should work on non-NA values
+diff_decorated(test_vec, lag = 1, na.rm = FALSE) # Should return NAs
+diff_decorated(test_vec, lag = 1, na.rm = TRUE) # Should work on non-NA values
 ```
 
 ## Bonus Example: Currying with Kernel Density Estimation (AI generated)
 
-**Question**: How can we use **currying (function composition and partial application)** to create flexible and reusable kernel density estimation functions?
+**Question**: How can we use **currying (function composition and partial
+application)** to create flexible and reusable kernel density estimation
+functions?
 
-**A**:
-In U2.qmd, we implemented kernel density estimation with the Epanechnikov kernel. Now let's see how currying can make our code more modular and elegant.
+**A**: In U2.qmd, we implemented kernel density estimation with the Epanechnikov
+kernel. Now let's see how currying can make our code more modular and elegant.
 
 ### Step 1: Define Different Kernel Functions
 
@@ -279,7 +316,7 @@ First, let's define several kernel functions:
 
 ```{r}
 # Epanechnikov kernel (from U2.qmd)
-epanechnikov_kernel <- function(z) (abs(z) <= 1) * (1 - z^2) * 3 / 4 
+epanechnikov_kernel <- function(z) (abs(z) <= 1) * (1 - z^2) * 3 / 4
 
 # Gaussian kernel
 gaussian_kernel <- function(z) (1 / sqrt(2 * pi)) * exp(-0.5 * z^2)
@@ -301,7 +338,7 @@ kern_dens_general <- function(x, h, kernel_func, n = 512) {
   rg <- range(x)
   xx <- seq(rg[1] - 3 * h, rg[2] + 3 * h, length.out = n)
   y <- numeric(n)
-  
+
   for (i in seq_along(xx)) {
     y[i] <- mean(kernel_func((xx[i] - x) / h)) / h
   }
@@ -311,15 +348,22 @@ kern_dens_general <- function(x, h, kernel_func, n = 512) {
 
 ### Step 3: Using Currying to Create Specialized Functions
 
-Now comes the magic of currying! We can create specialized functions by "currying" our general function:
+Now comes the magic of currying! We can create specialized functions by
+"currying" our general function:
 
 ```{r}
 # Curry by kernel type - creates functions that use specific kernels
-epanechnikov_kde <- function(x, h, n = 512) kern_dens_general(x, h, epanechnikov_kernel, n)
+epanechnikov_kde <- function(x, h, n = 512) {
+  kern_dens_general(x, h, epanechnikov_kernel, n)
+}
 
-gaussian_kde <- function(x, h, n = 512) kern_dens_general(x, h, gaussian_kernel, n)
+gaussian_kde <- function(x, h, n = 512) {
+  kern_dens_general(x, h, gaussian_kernel, n)
+}
 
-uniform_kde <- function(x, h, n = 512) kern_dens_general(x, h, uniform_kernel, n)
+uniform_kde <- function(x, h, n = 512) {
+  kern_dens_general(x, h, uniform_kernel, n)
+}
 
 # Curry by bandwidth - creates functions with fixed bandwidths
 epanechnikov_bw_half <- function(x, n = 512) epanechnikov_kde(x, h = 0.5, n)
@@ -377,34 +421,50 @@ dens_uniform <- make_kernel_kde(uniform_kernel)(log_F12, h = 0.8)
 
 ### Step 6: Visualization
 
-```{r, warning=FALSE}
+```{r}
+#| warning: false
+
 library(ggplot2)
 
 # Create data frames for plotting
 df_bandwidths <- data.frame(
   x = rep(dens_narrow$x, 3),
   y = c(dens_narrow$y, dens_medium$y, dens_wide$y),
-  bandwidth = rep(c("Narrow (0.3)", "Medium (0.8)", "Wide (1.5)"), each = length(dens_narrow$x))
+  bandwidth = rep(
+    c("Narrow (0.3)", "Medium (0.8)", "Wide (1.5)"),
+    each = length(dens_narrow$x)
+  )
 )
 
 df_kernels <- data.frame(
   x = rep(dens_epa$x, 3),
   y = c(dens_epa$y, dens_gauss$y, dens_uniform$y),
-  kernel = rep(c("Epanechnikov", "Gaussian", "Uniform"), each = length(dens_epa$x))
+  kernel = rep(
+    c("Epanechnikov", "Gaussian", "Uniform"),
+    each = length(dens_epa$x)
+  )
 )
 
 # Plot different bandwidths
 p1 <- ggplot(df_bandwidths, aes(x = x, y = y, color = bandwidth)) +
   geom_line(size = 1) +
-  labs(title = "Effect of Bandwidth (Epanechnikov Kernel)",
-       x = "log(F12)", y = "Density", color = "Bandwidth") +
+  labs(
+    title = "Effect of Bandwidth (Epanechnikov Kernel)",
+    x = "log(F12)",
+    y = "Density",
+    color = "Bandwidth"
+  ) +
   theme_minimal()
 
 # Plot different kernels
 p2 <- ggplot(df_kernels, aes(x = x, y = y, color = kernel)) +
   geom_line(size = 1) +
-  labs(title = "Different Kernels (h = 0.8)",
-       x = "log(F12)", y = "Density", color = "Kernel") +
+  labs(
+    title = "Different Kernels (h = 0.8)",
+    x = "log(F12)",
+    y = "Density",
+    color = "Kernel"
+  ) +
   theme_minimal()
 
 print(p1)
@@ -413,21 +473,25 @@ print(p2)
 
 ### Key Benefits of This Currying Approach:
 
-1. **Modularity**: Each component (kernel, bandwidth) can be modified independently
+1. **Modularity**: Each component (kernel, bandwidth) can be modified
+   independently
 2. **Reusability**: Once created, curried functions can be reused multiple times
-3. **Readability**: Code becomes more self-documenting (e.g., `epa_narrow` clearly indicates both kernel and bandwidth)
+3. **Readability**: Code becomes more self-documenting (e.g., `epa_narrow`
+   clearly indicates both kernel and bandwidth)
 4. **Flexibility**: Easy to create new combinations without rewriting core logic
-5. **Functional Programming**: Demonstrates higher-order functions and partial application
+5. **Functional Programming**: Demonstrates higher-order functions and partial
+   application
 
 ### Advanced Example: Pipeline Processing
 
 ```{r}
 # Create a pipeline for comparing multiple bandwidth settings
 bandwidth_comparison <- function(data, bandwidths) {
-  kde_functions <- lapply(bandwidths, function(bw) {
-    make_bandwidth_kde(epa_kde, bw)
-  })
-  
+  kde_functions <- lapply(
+    bandwidths,
+    function(bw) make_bandwidth_kde(epa_kde, bw)
+  )
+
   results <- lapply(kde_functions, function(f) f(data))
   names(results) <- paste("bw", bandwidths, sep = "_")
   return(results)
@@ -442,4 +506,7 @@ str(comparison_results$bw_1.0, max.level = 1)
 str(comparison_results$bw_1.5, max.level = 1)
 ```
 
-This example shows how currying transforms our kernel density estimation from a monolithic function into a flexible, composable system. It's the same principle we used with the `.na.rm_decorator` - we're creating specialized functions from more general ones!
+This example shows how currying transforms our kernel density estimation from a
+monolithic function into a flexible, composable system. It's the same principle
+we used with the `.na.rm_decorator` - we're creating specialized functions from
+more general ones!

@@ -7,7 +7,10 @@ date: today
 description:
   "Keywords: branch prediction"
 ---
-We have already covered the majority of the exercises in week 4. This week, we will focus on an advanced performance concept that is not covered anywhere else in the course: branch prediction. 
+
+We have already covered the majority of the exercises in week 4. This week, we
+will focus on an advanced performance concept that is not covered anywhere else
+in the course: branch prediction.
 
 Take a look at the following Rcpp code:
 
@@ -15,16 +18,21 @@ Take a look at the following Rcpp code:
 #include <Rcpp.h>
 
 // Count > threshold with a hard branch
-int count_branchy(Rcpp::NumericVector x, double t) {
+int
+count_branchy(Rcpp::NumericVector x, double t)
+{
   int n = x.size(), cnt = 0;
   for (int i = 0; i < n; ++i) {
-    if (x[i] > t) ++cnt;
+    if (x[i] > t)
+      ++cnt;
   }
   return cnt;
 }
 
 // Count > threshold without a hard branch
-int count_branchless(Rcpp::NumericVector x, double t) {
+int
+count_branchless(Rcpp::NumericVector x, double t)
+{
   int n = x.size(), cnt = 0;
   for (int i = 0; i < n; ++i) {
     cnt += (x[i] > t);
@@ -33,17 +41,24 @@ int count_branchless(Rcpp::NumericVector x, double t) {
 }
 
 // Two-path summation (branchy)
-double sum_branchy(Rcpp::NumericVector x, double thr) {
+double
+sum_branchy(Rcpp::NumericVector x, double thr)
+{
   double s = 0.0;
   for (int i = 0; i < x.size(); ++i) {
     double xi = x[i];
-    if (xi >= thr) s += xi; else s += 2.0 * xi;
+    if (xi >= thr)
+      s += xi;
+    else
+      s += 2.0 * xi;
   }
   return s;
 }
 
 // Two-path summation (branchless)
-double sum_branchless(Rcpp::NumericVector x, double thr) {
+double
+sum_branchless(Rcpp::NumericVector x, double thr)
+{
   double s = 0.0;
   for (int i = 0; i < x.size(); ++i) {
     double xi = x[i];
@@ -53,26 +68,48 @@ double sum_branchless(Rcpp::NumericVector x, double thr) {
   return s;
 }
 ```
-In the code above, we have two functions that count the number of elements in a vector that are greater than a threshold, and two functions that sum the elements in a vector that are greater than a threshold. The functions come in two flavors: one that uses an if statement, and another that uses a mask. 
+In the code above, we have two functions that count the number of elements in a
+vector that are greater than a threshold, and two functions that sum the
+elements in a vector that are greater than a threshold. The functions come in
+two flavors: one that uses an if statement, and another that uses a mask.
 
-In the if statement version, code is executed conditionally based on the result of a comparison. In the mask version, one applies a mask to the elements of the vector, and then adds the mask to the sum.
+In the if statement version, code is executed conditionally based on the result
+of a comparison. In the mask version, one applies a mask to the elements of the
+vector, and then adds the mask to the sum.
 
 ## What exactly is *branch prediction*?
 
-When a computer runs code with an `if` statement (a "branch"), it has to decide what to do next: take one path, or the other. Modern computer processors (CPUs) are designed to run instructions very quickly and efficiently. But when they reach a branch (like an `if` statement), they attempt to *guess* which direction the code will take. This is called *branch prediction*.
+When a computer runs code with an `if` statement (a "branch"), it has to decide
+what to do next: take one path, or the other. Modern computer processors (CPUs)
+are designed to run instructions very quickly and efficiently. But when they
+reach a branch (like an `if` statement), they attempt to *guess* which direction
+the code will take. This is called *branch prediction*.
 
-If the CPU's guess is correct, everything runs smoothly and quickly. However, if the guess is wrong, the processor has to throw away some of the work it started and do it over. This can slow down your code, especially if there are many unpredictable branches.
+If the CPU's guess is correct, everything runs smoothly and quickly. However, if
+the guess is wrong, the processor has to throw away some of the work it started
+and do it over. This can slow down your code, especially if there are many
+unpredictable branches.
 
-For statisticians, this matters because many statistical and data-wrangling tasks involve checking conditions repeatedly (like whether data points pass a threshold, or which group an observation belongs to). Understanding branch prediction helps us write code that the computer can run faster—especially for large datasets or simulations.
+For statisticians, this matters because many statistical and data-wrangling
+tasks involve checking conditions repeatedly (like whether data points pass a
+threshold, or which group an observation belongs to). Understanding branch
+prediction helps us write code that the computer can run faster---especially for
+large datasets or simulations.
 
-The code above illustrates two styles: one that uses explicit branches (`if` statements), and another that uses arithmetic "masks" to avoid branches. The version without branches can run faster on modern CPUs, especially when the branch direction is hard to predict.
+The code above illustrates two styles: one that uses explicit branches (`if`
+statements), and another that uses arithmetic "masks" to avoid branches. The
+version without branches can run faster on modern CPUs, especially when the
+branch direction is hard to predict.
 
-```{r, echo = FALSE}
+```{r}
+#| echo: false
+
 # install.packages(c("Rcpp","bench"))
 library(Rcpp)
 library(bench)
 
-Rcpp::sourceCpp(code = "
+Rcpp::sourceCpp(
+  code = "
 #include <Rcpp.h>
 using namespace Rcpp;
 
@@ -114,7 +151,8 @@ double sum_branchless(NumericVector x, double thr) {
   }
   return s;
 }
-")
+"
+)
 ```
 
 ```{r}
@@ -147,7 +185,9 @@ bench_easy_counts <- bench::mark(
   branchless_all_true = count_branchless(x_any, thr_all_true),
   branchy_singleflip = count_branchy(x_easy, thr_split),
   branchless_singleflip = count_branchless(x_easy, thr_split),
-  iterations = 30, check = FALSE, min_time = 0.5
+  iterations = 30,
+  check = FALSE,
+  min_time = 0.5
 )
 
 bench_easy_sums <- bench::mark(
@@ -155,20 +195,26 @@ bench_easy_sums <- bench::mark(
   sum_branchless_all_true = sum_branchless(x_any, thr_all_true),
   sum_branchy_singleflip = sum_branchy(x_easy, thr_split),
   sum_branchless_singleflip = sum_branchless(x_easy, thr_split),
-  iterations = 30, check = FALSE, min_time = 0.5
+  iterations = 30,
+  check = FALSE,
+  min_time = 0.5
 )
 
 # Contrast: hard 50/50 case where BRANCHLESS SHOULD WIN
 bench_hard_counts <- bench::mark(
   branchy_random = count_branchy(x_rand, thr_med),
   branchless_random = count_branchless(x_rand, thr_med),
-  iterations = 30, check = FALSE, min_time = 0.5
+  iterations = 30,
+  check = FALSE,
+  min_time = 0.5
 )
 
 bench_hard_sums <- bench::mark(
   sum_branchy_random = sum_branchy(x_rand, thr_med),
   sum_branchless_random = sum_branchless(x_rand, thr_med),
-  iterations = 30, check = FALSE, min_time = 0.5
+  iterations = 30,
+  check = FALSE,
+  min_time = 0.5
 )
 
 bench_easy_counts
@@ -176,17 +222,27 @@ bench_easy_sums
 bench_hard_counts
 bench_hard_sums
 ```
-From the results, we see that the branchless version is faster than the branchy version in all cases. The prformance difference is double in the random cases, since the branch direction is completely unpredictable. Whereas in the easy cases, where one branch is taken >99% of the time, we see that the difference is quite small. 
+From the results, we see that the branchless version is faster than the branchy
+version in all cases. The prformance difference is double in the random cases,
+since the branch direction is completely unpredictable. Whereas in the easy
+cases, where one branch is taken >99% of the time, we see that the difference is
+quite small.
 
-It is important to keep in mind that this is a very simple example, and in certain real world cases, **the branchy version may be faster!** 
+It is important to keep in mind that this is a very simple example, and in
+certain real world cases, **the branchy version may be faster!**
 
 ## Rejection sampling and branch prediction
 
-Now let's apply the branch prediction concept to rejection sampling. In rejection sampling, we repeatedly generate proposals and accept or reject them based on some criterion. This naturally involves branching - either we accept the proposal or we reject it and try again.
+Now let's apply the branch prediction concept to rejection sampling. In
+rejection sampling, we repeatedly generate proposals and accept or reject them
+based on some criterion. This naturally involves branching - either we accept
+the proposal or we reject it and try again.
 
 ## Visualizing the Target Density and Proposal Distribution
 
-To better understand how rejection sampling works, let's first visualize the target density and the proposal distribution together. This helps us see how well the proposal distribution "envelopes" the target density.
+To better understand how rejection sampling works, let's first visualize the
+target density and the proposal distribution together. This helps us see how
+well the proposal distribution "envelopes" the target density.
 
 ```{r}
 # Load the data
@@ -195,7 +251,13 @@ x <- poisson_data$x
 z <- poisson_data$z
 
 # Check that data loaded correctly
-cat("Data loaded successfully. x has", length(x), "values, z has", length(z), "values\n")
+cat(
+  "Data loaded successfully. x has",
+  length(x),
+  "values, z has",
+  length(z),
+  "values\n"
+)
 
 # Define the target density function (unnormalized) - same as in presentation
 f_dens1 <- function(y, x, z) prod(exp(y * z * x - exp(y * x)))
@@ -215,7 +277,8 @@ rejection_rate <- function(s) {
   alpha_star <- min(dnorm(x_seq, mu_opt, s) / f_dens1(x_seq, x, z))
   integrate(
     function(y) dnorm(y, mu_opt, s) - f_dens1(y, x, z) * alpha_star,
-    lower = 0, upper = 1
+    lower = 0,
+    upper = 1
   )$value
 }
 
@@ -231,31 +294,37 @@ alpha_opt <- min(dnorm(x_seq, mu_opt, sd_opt) / f_dens1(x_seq, x, z))
 cat("Optimal alpha (alpha_opt):", alpha_opt, "\n")
 
 # Sanity check: envelope should be larger than target
-envelope_check <- min(dnorm(x_seq, mu_opt, sd_opt) - f_dens1(x_seq, x, z) * alpha_opt)
+envelope_check <- min(
+  dnorm(x_seq, mu_opt, sd_opt) - f_dens1(x_seq, x, z) * alpha_opt
+)
 cat("Envelope check (should be >= 0):", envelope_check, "\n")
 
 # Create the plot showing target density and optimal Gaussian envelope
-plot(x_seq, f_dens1(x_seq, x, z) * alpha_opt,
-     type = "l",
-     lwd = 2,
-     col = "blue",
-     ylab = "Density", 
-     xlab = "x",
-     main = "Target Density vs Optimal Gaussian Envelope")
+plot(
+  x_seq,
+  f_dens1(x_seq, x, z) * alpha_opt,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  ylab = "Density",
+  xlab = "x",
+  main = "Target Density vs Optimal Gaussian Envelope"
+)
 
 # Add the optimal Gaussian envelope
-lines(x_seq, dnorm(x_seq, mu_opt, sd_opt), 
-      col = "red", 
-      lwd = 2, 
-      lty = 2)
+lines(x_seq, dnorm(x_seq, mu_opt, sd_opt), col = "red", lwd = 2, lty = 2)
 
 # Add legend
-legend("topright", 
-       legend = c(expression(alpha^opt ~ f[dens] ~ (x)), 
-                  expression(phi(x ~ ";" ~ mu^opt ~ "," ~ sigma^opt))), 
-       lty = c(1, 2), 
-       col = c("blue", "red"),
-       lwd = 2)
+legend(
+  "topright",
+  legend = c(
+    expression(alpha^opt ~ f[dens] ~ (x)),
+    expression(phi(x ~ ";" ~ mu^opt ~ "," ~ sigma^opt))
+  ),
+  lty = c(1, 2),
+  col = c("blue", "red"),
+  lwd = 2
+)
 
 # Add grid for better readability
 grid()
@@ -263,19 +332,25 @@ grid()
 
 This plot shows:
 
-1. **Blue line**: The target density scaled by the optimal constant α^opt. This is the distribution we want to sample from.
-2. **Red dashed line**: The optimal Gaussian envelope φ(x; μ^opt, σ^opt). This is what we use to generate candidate samples.
+1. **Blue line**: The target density scaled by the optimal constant α^opt. This
+   is the distribution we want to sample from.
+2. **Red dashed line**: The optimal Gaussian envelope φ(x; μ^opt, σ^opt). This
+   is what we use to generate candidate samples.
 
-For rejection sampling to work properly, the proposal distribution must be greater than or equal to the target density everywhere. Here we see that:
+For rejection sampling to work properly, the proposal distribution must be
+greater than or equal to the target density everywhere. Here we see that:
 
 - **μ^opt** is the optimal mean that maximizes the target density
 - **σ^opt** is the optimal standard deviation that minimizes the rejection rate
-- **α^opt** is the optimal scaling constant that ensures the envelope covers the target
+- **α^opt** is the optimal scaling constant that ensures the envelope covers the
+  target
 
-The optimization process finds the best Gaussian envelope that minimizes the rejection rate while ensuring the envelope properly covers the target density. This makes the rejection sampling as efficient as possible.
+The optimization process finds the best Gaussian envelope that minimizes the
+rejection rate while ensuring the envelope properly covers the target density.
+This makes the rejection sampling as efficient as possible.
 
-Let's implement two versions of rejection sampling for a Poisson regression model:
-
+Let's implement two versions of rejection sampling for a Poisson regression
+model:
 
 ```cpp
 #include <Rcpp.h>
@@ -288,20 +363,22 @@ using namespace Rcpp;
 
 // Branchy version - uses explicit if statement for acceptance/rejection
 // [[Rcpp::export]]
-NumericVector rejection_sampling_branchy(int n_samples, 
-                                       const NumericVector& x, 
-                                       const NumericVector& z, 
-                                       double alpha_log) {
+NumericVector
+rejection_sampling_branchy(int n_samples,
+                           const NumericVector& x,
+                           const NumericVector& z,
+                           double alpha_log)
+{
   NumericVector samples(n_samples);
   std::mt19937 generator(std::random_device{}());
   std::normal_distribution<double> normal(0.0, 1.0);
   std::uniform_real_distribution<double> uniform(0.0, 1.0);
-  
+
   int count = 0;
   while (count < n_samples) {
     double y_proposal = normal(generator);
     double u = uniform(generator);
-    
+
     // Calculate log ratio: log(f(y)/g(y)) where g(y) is N(0,1)
     double sum_xz = 0.0;
     double sum_exp = 0.0;
@@ -309,34 +386,37 @@ NumericVector rejection_sampling_branchy(int n_samples,
       sum_xz += x[i] * z[i];
       sum_exp += exp(y_proposal * x[i]);
     }
-    double log_ratio = y_proposal * sum_xz - sum_exp + 0.5 * y_proposal * y_proposal;
-    
+    double log_ratio =
+      y_proposal * sum_xz - sum_exp + 0.5 * y_proposal * y_proposal;
+
     // Branch: accept or reject
     if (log(u) <= alpha_log + log_ratio) {
       samples[count] = y_proposal;
       count++;
     }
   }
-  
+
   return samples;
 }
 
 // Branchless version - uses arithmetic masking to avoid branching
 // [[Rcpp::export]]
-NumericVector rejection_sampling_branchless(int n_samples, 
-                                          const NumericVector& x, 
-                                          const NumericVector& z, 
-                                          double alpha_log) {
+NumericVector
+rejection_sampling_branchless(int n_samples,
+                              const NumericVector& x,
+                              const NumericVector& z,
+                              double alpha_log)
+{
   NumericVector samples(n_samples);
   std::mt19937 generator(std::random_device{}());
   std::normal_distribution<double> normal(0.0, 1.0);
   std::uniform_real_distribution<double> uniform(0.0, 1.0);
-  
+
   int count = 0;
   while (count < n_samples) {
     double y_proposal = normal(generator);
     double u = uniform(generator);
-    
+
     // Calculate log ratio: log(f(y)/g(y)) where g(y) is N(0,1)
     double sum_xz = 0.0;
     double sum_exp = 0.0;
@@ -344,14 +424,15 @@ NumericVector rejection_sampling_branchless(int n_samples,
       sum_xz += x[i] * z[i];
       sum_exp += exp(y_proposal * x[i]);
     }
-    double log_ratio = y_proposal * sum_xz - sum_exp + 0.5 * y_proposal * y_proposal;
-    
+    double log_ratio =
+      y_proposal * sum_xz - sum_exp + 0.5 * y_proposal * y_proposal;
+
     // Branchless: use arithmetic to conditionally accept
     double accept = (log(u) <= alpha_log + log_ratio);
-    samples[count] = y_proposal * accept;  // Only store if accepted, otherwise 0
-    count += accept;  // Only increment if accepted
+    samples[count] = y_proposal * accept; // Only store if accepted, otherwise 0
+    count += accept;                      // Only increment if accepted
   }
-  
+
   return samples;
 }
 ```
@@ -360,7 +441,8 @@ Now let's test these implementations:
 
 ```{r}
 # Source the C++ code
-Rcpp::sourceCpp(code = "
+Rcpp::sourceCpp(
+  code = "
 #include <Rcpp.h>
 #include <random>
 using namespace Rcpp;
@@ -448,17 +530,32 @@ NumericVector rejection_sampling_branchless(int n_samples,
   
   return samples;
 }
-")
+"
+)
 ```
 
 ```{r}
 # Test both implementations using the optimal parameters from earlier
 set.seed(123)
-n_test <- 5000  # More samples for better timing
+n_test <- 5000 # More samples for better timing
 
 # Use the optimal parameters calculated earlier
-samples_branchy <- rejection_sampling_branchy(n_test, x, z, mu_opt, sd_opt, alpha_opt)
-samples_branchless <- rejection_sampling_branchless(n_test, x, z, mu_opt, sd_opt, alpha_opt)
+samples_branchy <- rejection_sampling_branchy(
+  n_test,
+  x,
+  z,
+  mu_opt,
+  sd_opt,
+  alpha_opt
+)
+samples_branchless <- rejection_sampling_branchless(
+  n_test,
+  x,
+  z,
+  mu_opt,
+  sd_opt,
+  alpha_opt
+)
 
 # Compare results (first 10 samples)
 cat("Branchy version - first 10 samples:\n")
@@ -467,45 +564,94 @@ cat("\nBranchless version - first 10 samples:\n")
 print(head(samples_branchless, 10))
 
 # Check that both methods produce similar results
-cat("\nMean difference between methods:", mean(samples_branchy - samples_branchless), "\n")
-cat("Max difference between methods:", max(abs(samples_branchy - samples_branchless)), "\n")
+cat(
+  "\nMean difference between methods:",
+  mean(samples_branchy - samples_branchless),
+  "\n"
+)
+cat(
+  "Max difference between methods:",
+  max(abs(samples_branchy - samples_branchless)),
+  "\n"
+)
 
 # Visual verification that both methods produce the same distribution
 par(mfrow = c(2, 2))
 
 # Histograms
-hist(samples_branchy, breaks = 30, main = "Branchy Version", 
-     xlab = "Sample Value", col = "lightblue", border = "black")
-hist(samples_branchless, breaks = 30, main = "Branchless Version", 
-     xlab = "Sample Value", col = "lightcoral", border = "black")
+hist(
+  samples_branchy,
+  breaks = 30,
+  main = "Branchy Version",
+  xlab = "Sample Value",
+  col = "lightblue",
+  border = "black"
+)
+hist(
+  samples_branchless,
+  breaks = 30,
+  main = "Branchless Version",
+  xlab = "Sample Value",
+  col = "lightcoral",
+  border = "black"
+)
 
 # Q-Q plot to compare distributions
-qqplot(samples_branchy, samples_branchless, 
-       main = "Q-Q Plot: Branchy vs Branchless",
-       xlab = "Branchy Quantiles", 
-       ylab = "Branchless Quantiles")
-abline(0, 1, col = "red", lwd = 2)  # Perfect correlation line
+qqplot(
+  samples_branchy,
+  samples_branchless,
+  main = "Q-Q Plot: Branchy vs Branchless",
+  xlab = "Branchy Quantiles",
+  ylab = "Branchless Quantiles"
+)
+abline(0, 1, col = "red", lwd = 2) # Perfect correlation line
 
 # Overlaid histograms for direct comparison
-hist(samples_branchy, breaks = 30, main = "Overlaid Histograms", 
-     xlab = "Sample Value", col = rgb(0, 0, 1, 0.5), border = "black",
-     ylim = c(0, max(c(hist(samples_branchy, plot = FALSE)$counts,
-                      hist(samples_branchless, plot = FALSE)$counts))))
-hist(samples_branchless, breaks = 30, add = TRUE, 
-     col = rgb(1, 0, 0, 0.5), border = "black")
-legend("topright", legend = c("Branchy", "Branchless"), 
-       fill = c(rgb(0, 0, 1, 0.5), rgb(1, 0, 0, 0.5)))
+hist(
+  samples_branchy,
+  breaks = 30,
+  main = "Overlaid Histograms",
+  xlab = "Sample Value",
+  col = rgb(0, 0, 1, 0.5),
+  border = "black",
+  ylim = c(
+    0,
+    max(c(
+      hist(samples_branchy, plot = FALSE)$counts,
+      hist(samples_branchless, plot = FALSE)$counts
+    ))
+  )
+)
+hist(
+  samples_branchless,
+  breaks = 30,
+  add = TRUE,
+  col = rgb(1, 0, 0, 0.5),
+  border = "black"
+)
+legend(
+  "topright",
+  legend = c("Branchy", "Branchless"),
+  fill = c(rgb(0, 0, 1, 0.5), rgb(1, 0, 0, 0.5))
+)
 
-par(mfrow = c(1, 1))  # Reset to single plot
+par(mfrow = c(1, 1)) # Reset to single plot
 
 # Performance comparison with more iterations
 library(bench)
 bench_results <- bench::mark(
   branchy = rejection_sampling_branchy(n_test, x, z, mu_opt, sd_opt, alpha_opt),
-  branchless = rejection_sampling_branchless(n_test, x, z, mu_opt, sd_opt, alpha_opt),
-  iterations = 100,  # More iterations for better statistics
+  branchless = rejection_sampling_branchless(
+    n_test,
+    x,
+    z,
+    mu_opt,
+    sd_opt,
+    alpha_opt
+  ),
+  iterations = 100, # More iterations for better statistics
   check = FALSE,
-  min_time = 1.0     # Longer minimum time for more stable results
+  min_time = 1.0 # Longer minimum time for more stable results
 )
 
 print(bench_results)
@@ -515,8 +661,22 @@ cat("\n=== Testing with smaller sample size ===\n")
 
 # Test with smaller sample size to see if performance differences are consistent
 bench_small <- bench::mark(
-  branchy_small = rejection_sampling_branchy(1000, x, z, mu_opt, sd_opt, alpha_opt),
-  branchless_small = rejection_sampling_branchless(1000, x, z, mu_opt, sd_opt, alpha_opt),
+  branchy_small = rejection_sampling_branchy(
+    1000,
+    x,
+    z,
+    mu_opt,
+    sd_opt,
+    alpha_opt
+  ),
+  branchless_small = rejection_sampling_branchless(
+    1000,
+    x,
+    z,
+    mu_opt,
+    sd_opt,
+    alpha_opt
+  ),
   iterations = 50,
   check = FALSE
 )
@@ -525,10 +685,23 @@ print(bench_small)
 
 The key differences between the two approaches:
 
-1. **Branchy version**: Uses an explicit `if` statement to decide whether to accept or reject each proposal. This creates a branch that the CPU must predict.
+1. **Branchy version**: Uses an explicit `if` statement to decide whether to
+   accept or reject each proposal. This creates a branch that the CPU must
+   predict.
 
-2. **Branchless version**: Uses arithmetic operations (`(log(u) <= alpha_log + log_ratio)`) to create a boolean mask, then uses this mask to conditionally increment the counter. This avoids the explicit branch.
+2. **Branchless version**: Uses arithmetic operations
+   (`(log(u) <= alpha_log + log_ratio)`) to create a boolean mask, then uses
+   this mask to conditionally increment the counter. This avoids the explicit
+   branch.
 
-In rejection sampling, the acceptance rate can vary significantly depending on how well the proposal distribution matches the target distribution. When the acceptance rate is low (many rejections), the branchy version may perform poorly due to branch mispredictions. The branchless version should be more consistent in performance regardless of the acceptance rate.
+In rejection sampling, the acceptance rate can vary significantly depending on
+how well the proposal distribution matches the target distribution. When the
+acceptance rate is low (many rejections), the branchy version may perform poorly
+due to branch mispredictions. The branchless version should be more consistent
+in performance regardless of the acceptance rate.
 
-The branchless version correctly implements rejection sampling by using arithmetic operations instead of explicit branching. The `count += accept` line only increments the counter when `accept = 1.0` (proposal accepted), and keeps it unchanged when `accept = 0.0` (proposal rejected). This avoids the branch prediction overhead while maintaining the correct rejection sampling algorithm.
+The branchless version correctly implements rejection sampling by using
+arithmetic operations instead of explicit branching. The `count += accept` line
+only increments the counter when `accept = 1.0` (proposal accepted), and keeps
+it unchanged when `accept = 0.0` (proposal rejected). This avoids the branch
+prediction overhead while maintaining the correct rejection sampling algorithm.
