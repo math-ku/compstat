@@ -10,7 +10,7 @@ description:
 
 ```{r}
 #| label: setup
-#| include: f
+#| include: false
 
 library(ggplot2)
 theme_set(theme_bw()) # this line is very important

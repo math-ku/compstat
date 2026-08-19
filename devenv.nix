@@ -3,13 +3,18 @@
   ...
 }:
 
+let
+  pandoc = pkgs.callPackage ./pandoc-bin.nix { };
+  quarto = pkgs.quartoMinimal.override { inherit pandoc; };
+in
 {
   packages = [
     pkgs.git
     pkgs.bashInteractive
     pkgs.go-task
     pkgs.librsvg
-    pkgs.quartoMinimal
+    pandoc
+    quarto
     pkgs.texliveFull
     pkgs.arity
     (pkgs.rstudioWrapper.override {
@@ -36,6 +41,7 @@
       package = pkgs.rWrapper.override {
         packages = with pkgs.rPackages; [
           bench
+          svglite
           CSwR
           lme4
           Matrix

@@ -9,7 +9,7 @@ description:
 ---
 
 ```{r, output=F}
-#| include: f
+#| include: false
 
 library(CSwR) # provides the greenland dataset
 library(ggplot2)
@@ -130,12 +130,12 @@ plot_matrix <- function(S) {
 Plot the two matrices
 
 ```{r}
-#| cache: t
+#| cache: true
 
 plot_matrix(S1)
 ```
 ```{r}
-#| cache: t
+#| cache: true
 
 plot_matrix(S2)
 ```
@@ -190,7 +190,7 @@ legend(
 Looks pretty good. Now for the benchmarking
 
 ```{r}
-#| cache: t
+#| cache: true
 
 N <- c(10e2, 10e3, 10e4, 10e5)
 res <- bench::press(N = N, {
