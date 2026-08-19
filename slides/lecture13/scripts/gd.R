@@ -1,9 +1,4 @@
-gd <- function(
-  X,
-  y,
-  mu = 0,
-  maxit = 100
-) {
+gd <- function(X, y, mu = 0, maxit = 100) {
   loss <- double(maxit)
 
   p <- ncol(X)
@@ -11,11 +6,7 @@ gd <- function(
   L <- norm(crossprod(X), "2")
   gamma <- 1 / L
 
-  betas <- matrix(
-    0,
-    nrow = p,
-    ncol = maxit
-  )
+  betas <- matrix(0, nrow = p, ncol = maxit)
 
   for (k in 2:maxit) {
     eta <- X %*% betas[, k - 1]
@@ -31,7 +22,6 @@ gd <- function(
 
   list(coefficients = betas[, maxit], loss = loss, betas = betas)
 }
-
 
 gd_general <- function(
   par,

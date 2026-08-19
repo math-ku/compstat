@@ -18,11 +18,4 @@ gradient_descent(
 
 glm(y ~ x, family = "poisson")
 
-newton_method(
-  c(0, 0),
-  objective,
-  gradient,
-  hessian,
-  X = X,
-  y = y
-)
+newton_method(c(0, 0), objective, gradient, hessian, X = X, y = y)

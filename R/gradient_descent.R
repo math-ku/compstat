@@ -1,11 +1,4 @@
-gd <- function(
-  X,
-  y,
-  mu = 0,
-  t = NULL,
-  line_search = FALSE,
-  maxit = 100
-) {
+gd <- function(X, y, mu = 0, t = NULL, line_search = FALSE, maxit = 100) {
   loss <- double(maxit)
 
   p <- ncol(X)
@@ -17,11 +10,7 @@ gd <- function(
 
   t0 <- t
 
-  betas <- matrix(
-    0,
-    nrow = p,
-    ncol = maxit
-  )
+  betas <- matrix(0, nrow = p, ncol = maxit)
 
   loss[1] <- 0.5 * norm(y - X %*% betas[, 1], "2")^2
 
@@ -54,13 +43,7 @@ gd <- function(
   list(coefficients = betas[, maxit], loss = loss, betas = betas)
 }
 
-newton <- function(
-  X,
-  y,
-  maxit = 100,
-  t = NULL,
-  line_search = TRUE
-) {
+newton <- function(X, y, maxit = 100, t = NULL, line_search = TRUE) {
   loss <- double(maxit)
   p <- ncol(X)
   betas <- matrix(0, nrow = p, ncol = maxit)
@@ -105,7 +88,6 @@ newton <- function(
 
   list(coefficients = betas[, maxit], loss = loss, betas = betas)
 }
-
 
 gd_general <- function(
   par,

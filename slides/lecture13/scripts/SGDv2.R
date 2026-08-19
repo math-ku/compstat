@@ -4,23 +4,30 @@ library(CSwR)
 
 SG <- function(
   par,
-  N,                 # Sample size
-  gamma,             # Decay schedule or a fixed learning rate
-  epoch = batch,     # Epoch update function 
-  ...,               # Other arguments passed to epoch updates 
-  maxiter = 100,     # Max epoch iterations
-  sampler = sample,  # How data is resampled. Default is a random permutation
+  N,
+  # Sample size
+  gamma,
+  # Decay schedule or a fixed learning rate
+  epoch = batch,
+  # Epoch update function
+  ...,
+  # Other arguments passed to epoch updates
+  maxiter = 100,
+  # Max epoch iterations
+  sampler = sample,
+  # How data is resampled. Default is a random permutation
   cb = NULL
 ) {
-  gamma <- if (is.function(gamma)) gamma(1:maxiter) else rep(gamma, maxiter) 
-  for(k in 1:maxiter) {
-    if(!is.null(cb)) cb()
+  gamma <- if (is.function(gamma)) gamma(1:maxiter) else rep(gamma, maxiter)
+  for (k in 1:maxiter) {
+    if (!is.null(cb)) {
+      cb()
+    }
     samp <- sampler(N)
-    par <- epoch(par, samp, gamma[k], ...) 
+    par <- epoch(par, samp, gamma[k], ...)
   }
   par
 }
-
 
 #### mini-batch ----
 
@@ -28,13 +35,15 @@ batch <- function(
   par,
   samp,
   gamma,
-  grad,              # Function of parameter and observation index
-  m = 50,            # Mini-batch size 
+  grad,
+  # Function of parameter and observation index
+  m = 50,
+  # Mini-batch size
   ...
 ) {
-  M <- floor(length(samp) / m) 
-  for(j in 0:(M - 1)) {
-    i <- samp[(j * m + 1):(j * m + m)] 
+  M <- floor(length(samp) / m)
+  for (j in 0:(M - 1)) {
+    i <- samp[(j * m + 1):(j * m + m)]
     par <- par - gamma * grad(par, i, ...)
   }
   par
@@ -49,8 +58,10 @@ momentum <- function() {
     samp,
     gamma,
     grad,
-    m = 50,             # Mini-batch size
-    beta = 0.95,        # Momentum memory 
+    m = 50,
+    # Mini-batch size
+    beta = 0.95,
+    # Momentum memory
     ...
   ) {
     M <- floor(length(samp) / m)
@@ -72,9 +83,12 @@ adam <- function() {
     samp,
     gamma,
     grad,
-    m = 50,          # Mini-batch size
-    beta1 = 0.9,     # Momentum memory
-    beta2 = 0.9,     # Second moment memory
+    m = 50,
+    # Mini-batch size
+    beta1 = 0.9,
+    # Momentum memory
+    beta2 = 0.9,
+    # Second moment memory
     ...
   ) {
     M <- floor(length(samp) / m)

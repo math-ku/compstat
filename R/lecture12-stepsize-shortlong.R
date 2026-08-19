@@ -33,7 +33,14 @@ loss_2d_vectorized <- Vectorize(function(b1, b2) loss_2d(b1, b2, X, y))
 z <- outer(beta1, beta2, loss_2d_vectorized)
 
 for (a in c(0.5, 1)) {
-  res_sgd <- logreg_sgd(X, y, max_epochs = 100, batch_size = 1, a = a, gamma0 = 0.5)
+  res_sgd <- logreg_sgd(
+    X,
+    y,
+    max_epochs = 100,
+    batch_size = 1,
+    a = a,
+    gamma0 = 0.5
+  )
 
   pal <- palette.colors(palette = "Okabe-Ito")
 
@@ -43,11 +50,7 @@ for (a in c(0.5, 1)) {
   png(fn, width = 2.6, height = 2.9, res = 192, units = "in", pointsize = 8)
   contour(beta1, beta2, z, col = "dark grey", drawlabels = FALSE, asp = 1)
 
-  lines(
-    res_sgd$beta_history[1, ],
-    res_sgd$beta_history[2, ],
-    col = pal[3]
-  )
+  lines(res_sgd$beta_history[1, ], res_sgd$beta_history[2, ], col = pal[3])
   points(
     res_sgd$beta_history[1, ],
     res_sgd$beta_history[2, ],

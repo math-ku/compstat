@@ -9,6 +9,4 @@ fooFactory <- function(y) {
 
 foo <- fooFactory(2)
 
-fooCaller <- function() {
-  foo(1)
-}
+fooCaller <- function() foo(1)

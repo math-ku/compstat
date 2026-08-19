@@ -2,9 +2,7 @@ library(mvtnorm)
 library(tikzDevice)
 
 draw_canvas_bg <- function(col = "white") {
-  rect(par("usr")[1], par("usr")[3],
-      par("usr")[2], par("usr")[4],
-      col = col)
+  rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = col)
 }
 
 set.seed(622)
@@ -101,7 +99,14 @@ b <- res$beta
 text(b[1, 1], b[2, 1], expression(x[k - 1]), pos = 2)
 text(b[1, 3], b[2, 3], expression(x[k]), pos = 3)
 
-arrows(rm$beta[1, 3], rm$beta[2, 3], rm$r[1, 3], rm$r[2, 3], lty = 2, length = 0.15)
+arrows(
+  rm$beta[1, 3],
+  rm$beta[2, 3],
+  rm$r[1, 3],
+  rm$r[2, 3],
+  lty = 2,
+  length = 0.15
+)
 
 points(b[1, ], b[2, ], pch = 19)
 lines(b[1, ], b[2, ], pch = 19)
@@ -127,7 +132,13 @@ lines(
   col = "steelblue4"
 )
 points(rn$beta[1, 4], rn$beta[2, 4], col = "steelblue4", pch = 19)
-legend("topright", c("GD", "Polyak", "Nesterov"), col = c("black", "dark orange", "steelblue4"), pch = 19, bg = "white")
+legend(
+  "topright",
+  c("GD", "Polyak", "Nesterov"),
+  col = c("black", "dark orange", "steelblue4"),
+  pch = 19,
+  bg = "white"
+)
 dev.off()
 knitr::plot_crop(fn)
 

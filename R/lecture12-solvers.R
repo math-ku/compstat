@@ -44,11 +44,7 @@ fn <- "images/lecture12-gd-vs-sgd.png"
 png(fn, width = 2.8, height = 3.2, res = 192, units = "in", pointsize = 8)
 contour(beta1, beta2, z, col = "dark grey", drawlabels = FALSE)
 
-lines(
-  res_sgd$beta_history[1, ],
-  res_sgd$beta_history[2, ],
-  col = pal[3]
-)
+lines(res_sgd$beta_history[1, ], res_sgd$beta_history[2, ], col = pal[3])
 points(
   res_sgd$beta_history[1, ],
   res_sgd$beta_history[2, ],
@@ -57,11 +53,7 @@ points(
   cex = 0.5
 )
 
-lines(
-  res_gd$beta_history[1, ],
-  res_gd$beta_history[2, ],
-  col = pal[1]
-)
+lines(res_gd$beta_history[1, ], res_gd$beta_history[2, ], col = pal[1])
 points(
   res_gd$beta_history[1, ],
   res_gd$beta_history[2, ],
@@ -91,8 +83,14 @@ knitr::plot_crop(fn)
 
 loss_optim <- loss_2d(res_glm$coefficients[1], res_glm$coefficients[2], X, y)
 loss1 <- loss_2d_vectorized(res_gd$beta_history[1, ], res_gd$beta_history[2, ])
-loss2 <- loss_2d_vectorized(res_sgd$beta_history[1, ], res_sgd$beta_history[2, ])
-loss3 <- loss_2d_vectorized(res_sgd2$beta_history[1, ], res_sgd2$beta_history[2, ])
+loss2 <- loss_2d_vectorized(
+  res_sgd$beta_history[1, ],
+  res_sgd$beta_history[2, ]
+)
+loss3 <- loss_2d_vectorized(
+  res_sgd2$beta_history[1, ],
+  res_sgd2$beta_history[2, ]
+)
 
 n1 <- length(loss1)
 n2 <- length(loss2)
@@ -115,9 +113,17 @@ iteration_plot <- ggplot(conv_data, aes(iteration, loss, col = method)) +
   scale_y_log10() +
   labs(y = "Suboptimality", color = NULL)
 
-ggpl <- epochs_plot + iteration_plot + plot_layout(axes = "collect_y", guides = "collect")
+ggpl <- epochs_plot +
+  iteration_plot +
+  plot_layout(axes = "collect_y", guides = "collect")
 
-ggsave("images/lecture12-gd-sgd-convergence1.png", ggpl, width = 6, height = 3.5, dpi = 192)
+ggsave(
+  "images/lecture12-gd-sgd-convergence1.png",
+  ggpl,
+  width = 6,
+  height = 3.5,
+  dpi = 192
+)
 
 conv_data2 <- tibble(
   method = rep(c("GD", "SGD"), times = c(length(loss1), length(loss3))),
@@ -136,5 +142,13 @@ iteration_plot <- ggplot(conv_data2, aes(iteration, loss, col = method)) +
   scale_y_log10() +
   labs(y = "Suboptimality", color = NULL)
 
-ggpl2 <- epochs_plot + iteration_plot + plot_layout(axes = "collect_y", guides = "collect")
-ggsave("images/lecture12-gd-sgd-convergence2.png", ggpl2, width = 6, height = 3.5, dpi = 192)
+ggpl2 <- epochs_plot +
+  iteration_plot +
+  plot_layout(axes = "collect_y", guides = "collect")
+ggsave(
+  "images/lecture12-gd-sgd-convergence2.png",
+  ggpl2,
+  width = 6,
+  height = 3.5,
+  dpi = 192
+)

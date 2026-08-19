@@ -1,10 +1,4 @@
-gd <- function(
-  X,
-  y,
-  mu = 0,
-  maxit = 100,
-  type = c("polyak", "nesterov")
-) {
+gd <- function(X, y, mu = 0, maxit = 100, type = c("polyak", "nesterov")) {
   loss <- double(maxit)
   type <- match.arg(type)
 
@@ -13,11 +7,7 @@ gd <- function(
   L <- norm(crossprod(X), "2")
   gamma <- 1 / L
 
-  betas <- matrix(
-    0,
-    nrow = p,
-    ncol = maxit
-  )
+  betas <- matrix(0, nrow = p, ncol = maxit)
 
   mu_nesterov <- a <- double(maxit)
   a[1] <- 1
@@ -28,8 +18,7 @@ gd <- function(
 
     beta_update <- switch(
       type,
-      polyak = -gamma *
-        gradient +
+      polyak = -gamma * gradient +
         mu * (betas[, k - 1] - betas[, max(1, k - 2)]),
       nesterov = {
         a[k] <- (1 + sqrt(1 + 4 * a[k - 1]^2)) / 2
@@ -48,7 +37,6 @@ gd <- function(
 
   list(coefficients = betas[, maxit], loss = loss, betas = betas)
 }
-
 
 gd_general <- function(
   par,

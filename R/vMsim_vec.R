@@ -1,22 +1,23 @@
 vMsim_vec_ran <- function(m, kappa) {
-  y <- runif(m, - pi, pi)
+  y <- runif(m, -pi, pi)
   u <- runif(m)
   accept <- u <= exp(kappa * (cos(y) - 1))
-  y[accept] 
+  y[accept]
 }
 
 vec_sim <- function(generator) {
   j <- 1
-  l <- 0  # The number of accepted samples
-  alpha <- 1 
+  l <- 0 # The number of accepted samples
+  alpha <- 1
   y <- list()
   function(n, ...) {
-    while(l < n) {
-      m <- ceiling((n - l) / alpha)  
+    while (l < n) {
+      m <- ceiling((n - l) / alpha)
       y[[j]] <- generator(m, ...)
       l <- l + length(y[[j]])
-      if (j == 1)
-        alpha <<- (l + 1) / m  # Estimate of alpha
+      if (j == 1) {
+        alpha <<- (l + 1) / m
+      } # Estimate of alpha
       j <- j + 1
     }
     unlist(y)[1:n]

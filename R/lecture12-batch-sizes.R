@@ -31,7 +31,14 @@ loss_2d <- function(beta1, beta2, X, y) {
 conv_data <- data.frame(b = NULL, epoch = NULL, loss = NULL)
 
 for (b in c(1, 10, 100, n)) {
-  res_sgd <- logreg_sgd(X, y, max_epochs = 100, batch_size = b, a = 1, gamma0 = 3)
+  res_sgd <- logreg_sgd(
+    X,
+    y,
+    max_epochs = 100,
+    batch_size = b,
+    a = 1,
+    gamma0 = 3
+  )
 
   conv_data <- rbind(
     conv_data,

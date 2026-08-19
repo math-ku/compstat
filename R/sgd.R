@@ -1,10 +1,4 @@
-decay_scheduler <- function(
-  t0 = 1,
-  a = 1,
-  K = 1,
-  t1 = NULL,
-  k1 = NULL
-) {
+decay_scheduler <- function(t0 = 1, a = 1, K = 1, t1 = NULL, k1 = NULL) {
   force(a)
 
   if (!is.null(t1) && !is.null(k1)) {
@@ -16,7 +10,6 @@ decay_scheduler <- function(
   function(k) b / (K + k^a)
 }
 
-
 logreg_sgd <- function(
   X,
   y,
@@ -26,7 +19,8 @@ logreg_sgd <- function(
   loss_optim = 0,
   K = 5,
   a = 1,
-  mu = 0, # momentum parameter (0 = no momentum)
+  mu = 0,
+  # momentum parameter (0 = no momentum)
   momentum_type = "polyak" # "polyak" or "nesterov"
 ) {
   loss <- double(max_epochs)
@@ -93,9 +87,7 @@ logreg_sgd <- function(
       # Update the coefficients with momentum
       if (mu > 0) {
         if (momentum_type == "polyak") {
-          beta_new <- beta -
-            learning_rate * gradient +
-            mu * (beta - beta_prev)
+          beta_new <- beta - learning_rate * gradient + mu * (beta - beta_prev)
         } else if (momentum_type == "nesterov") {
           # Nesterov momentum: v = momentum * v + lr * grad, beta = beta - v
           v_new <- mu * v_prev + learning_rate * gradient

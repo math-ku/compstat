@@ -1,7 +1,7 @@
 library(tidyverse)
 library(plotly)
 library(viridis)
-library(zeallot)  # For the '%<-%' assignment operator
+library(zeallot) # For the '%<-%' assignment operator
 library(numDeriv)
 library(CSwR)
 library(here)
@@ -19,25 +19,22 @@ source("scripts/SGDv2.R")
 
 ## -----------------------------------------------------------------------------
 Loss <- function(data, f, df) {
-  force(data); force(f); force(df)
-  loss <- function(par, ...) {
-    mean((data$y - f(data$x, par))^2) / 2
-  }
+  force(data)
+  force(f)
+  force(df)
+  loss <- function(par, ...) mean((data$y - f(data$x, par))^2) / 2
   gradient <- function(par, ...) {
     df <- df(data$x, par)
-    dq <- (f(data$x, par) - data$y) 
+    dq <- (f(data$x, par) - data$y)
     drop(df %*% dq) / nrow(data)
   }
   gradient_batch <- function(par, i, ...) {
     df <- df(data$x[i], par)
-    dq <- (f(data$x[i], par) - data$y[i]) 
+    dq <- (f(data$x[i], par) - data$y[i])
     drop(df %*% dq) / length(i)
   }
-  list(loss = loss, 
-       gradient = gradient, 
-       gradient_batch = gradient_batch)
+  list(loss = loss, gradient = gradient, gradient_batch = gradient_batch)
 }
-
 
 ## ----sim_oscillation----------------------------------------------------------
 N <- 1000
@@ -45,14 +42,13 @@ alpha <- 1
 beta <- 10
 sigma <- 0.1
 
-f <- function(x, par)
- par[1] * cos(par[2] * x)
+f <- function(x, par) par[1] * cos(par[2] * x)
 
 osc <- tibble::tibble(
   x = seq(0, 5, length.out = N),
   f = f(x, c(alpha, beta)),
   y = f + rnorm(N, sd = sigma)
-)    
+)
 
 fn1 <- here("images", "nonlinear-data.pdf")
 pdf(fn1, width = 2.9, height = 2.6, pointsize = 8)
@@ -69,8 +65,7 @@ lines(osc$x, osc$f)
 dev.off()
 knitr::plot_crop(fn1)
 
-df <- function(x, par)
-  rbind(cos(par[2] * x), - par[1] * x * sin(par[2] * x))
+df <- function(x, par) rbind(cos(par[2] * x), -par[1] * x * sin(par[2] * x))
 
 lossList <- Loss(osc, f, df)
 
@@ -101,7 +96,7 @@ persp(
   phi = 50,
   xlab = expression(beta),
   ylab = expression(alpha),
-  zlab = expression(f(alpha,beta))
+  zlab = expression(f(alpha, beta))
 )
 dev.off()
 knitr::plot_crop(fn2)
@@ -133,7 +128,6 @@ colnames(Heval_df) <- c("alpha", "beta", "H")
 #   xlab(quote(alpha)) + ylab(quote(beta))
 # p
 
-
 # alpha_seq <- seq(-0.5, 0.25, 0.005)
 # beta_seq <- seq(8, 12, 0.02)
 # z <- outer(alpha_seq, beta_seq, Vectorize(function(a, b) H(c(a, b))))
@@ -154,7 +148,8 @@ gamma <- 1e-2
 par_init <- expand.grid(
   alpha = c(-1, -0.5, 0, 1.5),
   beta = c(8.4, 9.3, 10.7, 11.2, 11.6)
-) %>% as.matrix()
+) %>%
+  as.matrix()
 SG_tracer <- tracer(
   c("value", "par"),
   Delta = 50,
@@ -165,7 +160,7 @@ set.seed(123)
 
 paths <- vector("list", nrow(par_init))
 
-for(i in seq_len(nrow(par_init))) {
+for (i in seq_len(nrow(par_init))) {
   SG(
     par_init[i, ],
     grad = grad_batch,
@@ -271,7 +266,12 @@ beta_plot <- bind_cols(par_init, init = 1:20) %>%
   scale_x_continuous("time", breaks = c(0, 0.01, 0.02)) +
   scale_y_continuous(quote(beta))
 
-ggsave(here("images", "nonlinear-beta.pdf"), beta_plot, width = 5.4, height = 3.1)
+ggsave(
+  here("images", "nonlinear-beta.pdf"),
+  beta_plot,
+  width = 5.4,
+  height = 3.1
+)
 
 cols <- c("steelblue4", "dark orange", "black")
 algs <- c("ADAM", "momentum", "batch")
