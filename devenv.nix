@@ -6,11 +6,27 @@
 {
   packages = [
     pkgs.git
+    pkgs.bashInteractive
     pkgs.go-task
     pkgs.librsvg
     pkgs.quartoMinimal
     pkgs.texliveFull
     pkgs.arity
+    (pkgs.rstudioWrapper.override {
+      packages = with pkgs.rPackages; [
+        Rcpp
+        RcppArmadillo
+        RcppEigen
+        devtools
+        knitr
+        numDeriv
+        rmarkdown
+        testthat
+        tidyverse
+        usethis
+        roxygen2
+      ];
+    })
   ];
 
   # https://devenv.sh/languages/
@@ -48,6 +64,7 @@
           zeallot
           future
           cowplot
+          cyclocomp
         ];
       };
     };
