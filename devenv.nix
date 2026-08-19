@@ -6,6 +6,10 @@
 {
   packages = [
     pkgs.git
+    pkgs.go-task
+    pkgs.librsvg
+    pkgs.quartoMinimal
+    pkgs.texliveFull
     pkgs.arity
   ];
 
