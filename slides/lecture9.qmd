@@ -156,7 +156,7 @@ According to the [Hardy--Weinberg
 equilibrium](https://en.wikipedia.org/wiki/Hardy%E2%80%93Weinberg_principle),
 the genotype frequencies are
 $$
-  p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2.
+  p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2, 2p_Ip_T, p_T^2.
 $$
 
 . . .
@@ -164,8 +164,8 @@ $$
 The complete multinomial log-likelihood is
 $$
   \begin{aligned}
-    & 2n_{CC} \log(p_C) + n_{CI} \log (2 p_C p_I) + n_{CT} \log(2 p_C p_T) \\
-    & + 2 n_{II} \log(p_I) + n_{IT} \log(2p_I p_T) + 2 n_{TT} \log(p_T),
+     & 2n_{CC} \log(p_C) + n_{CI} \log (2 p_C p_I) + n_{CT} \log(2 p_C p_T) \\
+     & +2 n_{II} \log(p_I) + n_{IT} \log(2p_I p_T) + 2 n_{TT} \log(p_T),
   \end{aligned}
 $$
 
@@ -173,13 +173,14 @@ $$
 
 We only observe $(n_C, n_I, n_T)$, where
 $$
-  n = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{= n_C} +
-  \underbrace{n_{IT} + n_{II}}_{=n_I} + \underbrace{n_{TT}}_{=n_T}.
+  n = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{ = n_C}
+      + \underbrace{n_{IT} + n_{II}}_{ = n_I}
+      + \underbrace{n_{TT}}_{ = n_T}.
 $$
 
 . . .
 
-As a specific data example we have the observation $n_C= 85$, $n_I = 196$, and
+As a specific data example we have the observation $n_C = 85$, $n_I = 196$, and
 $n_T = 341.$
 
 ## Multinomial Cell Collapsing
@@ -222,14 +223,14 @@ $$
 
 In terms of the $(p_C, p_I)$ parametrization, $p_T = 1 - p_C - p_I$ and
 $$
-  p = (p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2,  2p_Ip_T, p_T^2).
+  p = (p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2, 2p_Ip_T, p_T^2).
 $$
 
 . . .
 
 Hence
 $$
-  M(p) = (p_C^2 + 2p_Cp_I + 2p_Cp_T, p_I^2 +2p_Ip_T, p_T^2).
+  M(p) = (p_C^2 + 2p_Cp_I + 2p_Cp_T, p_I^2 + 2p_Ip_T, p_T^2).
 $$
 
 . . .
@@ -237,8 +238,8 @@ $$
 The log-likelihood is
 $$
   \begin{aligned}
-    \ell(p_C, p_I) & = n_C \log(p_C^2 + 2p_Cp_I + 2p_Cp_T) \\
-                   & \phantom{={}}+ n_I \log(p_I^2 +2p_Ip_T) + n_T \log (p_T^2)
+    \ell(p_C, p_I) & = n_C \log(p_C^2 + 2p_Cp_I + 2p_Cp_T)                          \\
+                   & \phantom{ = {}} + n_I \log(p_I^2 + 2p_Ip_T) + n_T \log (p_T^2)
   \end{aligned}
 $$
 
@@ -246,12 +247,13 @@ $$
 
 This is an optimization problem of the following standard form:
 $$
-  \begin{aligned}&\operatorname*{minimize}_{p_C,p_I} && -\ell(p_C, p_I) \\
-    &\textrm{subject to} && p_C + p_C - 1 \leq 0\\
-    &                    && -p_C \leq 0\\
-    &                    && -p_I \leq 0\\
-    &                    && p_I - 1 \leq 0\\
-    &                    && p_C -1 \leq 0.
+  \begin{aligned}
+     & \operatorname*{minimize}_{p_C,p_I} &  & H(p_C,p_I) = -\ell(p_C, p_I) \\
+     & \textrm{subject to}                  &  & p_C + p_I - 1 \leq 0         \\
+     &                                      &  & -p_C \leq 0                  \\
+     &                                      &  & -p_I \leq 0                  \\
+     &                                      &  & p_I - 1 \leq 0               \\
+     &                                      &  & p_C - 1 \leq 0.
   \end{aligned}
 $$
 
@@ -341,7 +343,7 @@ Seems like a good idea! Constraints are automatically satisfied.
 
 ### But is it Convex?
 
-**No**, $f$ is no longer convex.
+**No**, $H$ is no longer convex.
 :::::
 
 ::::: {.column width="47%"}
@@ -415,13 +417,13 @@ problem.
 
 ::: {.columns}
 ::::: {.column width="47%"}
-If $f$ is convex, its extended-value extension is
+If $H$ is convex, its extended-value extension is
 $$
-  \tilde{f}(x) =
-    \begin{cases}
-      f(x), & x \in \operatorname{dom} f, \\
-      +\infty, & \text{otherwise}.
-    \end{cases}
+    \widetilde{H}(\theta) =
+  \begin{cases}
+    H(\theta), & \theta \in \Theta, \\
+    +\infty,   & \text{otherwise}.
+  \end{cases}
 $$
 
 . . .
@@ -430,18 +432,18 @@ $$
 
 Consider the function
 $$
-  f(p) = p (p - 1), \quad p \in [0, 1].
+  H(p) = p (p - 1), \quad p \in [0, 1].
 $$
 
 . . .
 
 Its extended-value extension is
 $$
-  \tilde{f}(p) =
-    \begin{cases}
-      p (p - 1), & p \in [0, 1], \\
-      +\infty, & \text{otherwise}.
-    \end{cases}
+    \widetilde{H}(p) =
+  \begin{cases}
+    p (p - 1), & p \in [0, 1],     \\
+    +\infty,   & \text{otherwise}.
+  \end{cases}
 $$
 :::::
 
@@ -459,7 +461,7 @@ plot(
   type = "l",
   ylim = c(-0.3, 0.1),
   xlab = "p",
-  ylab = expression(tilde(f)(p))
+  ylab = expression(tilde(H)(p))
 )
 ```
 :::::
@@ -552,19 +554,19 @@ Another option is to use the \alert{barrier method}.
 Transform
 $$
   \begin{aligned}
-    & \textrm{minimize}   &  & f(x)                                 \\
-    & \textrm{subject to} &  & g_i(x) \leq 0, & \quad i =1,\dots,m. \\
+     & \textrm{minimize}   &  & H(\theta)           \\
+     & \textrm{subject to} &  & g_i(\theta) \leq 0, & \quad i = 1,\dots,m. \\
   \end{aligned}
 $$
 \pause into
 $$
   \begin{aligned}
-    \textrm{minimize}   &  & tf(x) + \phi(x)
+    \textrm{minimize} &  & tH(\theta) + \phi(\theta)
   \end{aligned}
 $$
 with the barrier function
 $$
-  \phi(z) = -\sum_{i=1}^m \log(-g_i(z)).
+  \phi(\theta) = -\sum_{i = 1}^m \log(-g_i(\theta)).
 $$
 
 \medskip\pause
@@ -611,8 +613,8 @@ plot_barrier <- function(t) {
     drawlabels = FALSE,
     col = cols,
     asp = 1,
-    xlab = expression(x[1]),
-    ylab = expression(x[2])
+    xlab = expression(theta[1]),
+    ylab = expression(theta[2])
   )
   abline(v = 1, lty = "dashed", col = "black", lwd = 2)
   points(
@@ -641,8 +643,8 @@ plot_barrier(0.085)
 Let's assume we are solving
 $$
 \begin{aligned}
-  &\operatorname*{minimize}_{x}              && f(x) = (x_1 - 2)^2 + (x_2 - 1)^2 \\
-  &\textrm{subject to} && x_1 - 1 \leq 0.
+  &\operatorname*{minimize}_{\theta \in \mathbb{R}^2} && H(\theta) = (\theta_1 - 2)^2 + (\theta_2 - 1)^2 \\
+  &\textrm{subject to} && \theta_1 - 1 \leq 0.
 \end{aligned}
 $$
 \pause\bigskip
@@ -655,7 +657,7 @@ feasible.
 Using the barrier method, we solve a sequence of unconstrained problems
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_{x}              && tf(x) - \log(1 - x_1)
+     & \operatorname*{minimize}_{\theta \in \mathbb{R}^2} &  & tH(\theta) - \log(1 - \theta_1)
   \end{aligned}
 $$
 :::::
@@ -720,12 +722,12 @@ plot_barrier(10)
 
 \begin{algorithm}[H]
   \caption{Barrier Method}
-  \KwData{$t > 0$, $x$ strictly feasible, $\mu > 1$,, $\varepsilon > 0$, $m$ number of constraints}
+  \KwData{$t > 0$, $\theta$ strictly feasible, $\mu > 1$, $\varepsilon > 0$, and $m$ constraints}
   \Repeat{$m/t < \varepsilon$ }{
-    $x \gets \operatorname*{argmin}_x tf(x) + \phi(x)$\;
+    $\theta \gets \operatorname*{argmin}_{\vartheta} tH(\vartheta) + \phi(\vartheta)$\;
     $t \gets \mu t$\;
   }
-  \Return{$x$}
+  \Return{$\theta$}
 \end{algorithm}
 
 \medskip\pause
@@ -740,7 +742,7 @@ The barrier method can be used via `constrOptim()`.
 
 Solves problems with affine/linear inequality constraints of the form
 $$
-  Ax \succeq b
+  A\theta \succeq b
 $$
 or, in terms of arguments: `ui %*% theta >= ci`.
 
@@ -751,14 +753,23 @@ or, in terms of arguments: `ui %*% theta >= ci`.
 ### Moths Example
 
 $$
-  A =
+    A =
   \begin{bmatrix}
-    1 & 0\\-1 & 0\\0 & 1\\0 & -1\\ -1 & -1
-  \end{bmatrix},
-  \quad b =
+    1  & 0  \\
+    -1 & 0  \\
+    0  & 1  \\
+    0  & -1 \\
+    -1 & -1
+  \end{bmatrix}
+    , \quad b =
   \begin{bmatrix}
-    0\\-1\\0\\-1\\-1
-  \end{bmatrix}.
+    0 \\
+    -1 \\
+    0 \\
+    -1 \\
+    -1
+  \end{bmatrix}
+    .
 $$
 :::::
 
@@ -769,8 +780,8 @@ $$
 
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_{p} && -\ell(p)       \\
-    &\textrm{subject to}          && Ap  \succeq b.
+     & \operatorname*{minimize}_{p} &  & H(p) = -\ell(p) \\
+     & \textrm{subject to}            &  & Ap \succeq b.
   \end{aligned}
 $$
 with $p = (p_C, p_I)$.
@@ -810,16 +821,18 @@ The barrier method is the basis of the interior-point method.
 
 ### Phase I: Initialization
 
-Find a feasible point $x^{(0)}$ by solving the optimization problem
+Find a feasible point $\theta_0$ by solving the optimization problem
 
 $$
-  \begin{aligned}&\operatorname*{minimize}_{(x,s)} && s \\
-  &\textrm{subject to} && g_i(x) \leq s, & \quad i = 1, \dots, m.\end{aligned}
+  \begin{aligned}
+     & \operatorname*{minimize}_{(\theta,s)} &  & s                   \\
+     & \textrm{subject to}                     &  & g_i(\theta) \leq s, & \quad i = 1, \dots, m.
+  \end{aligned}
 $$
 
 . . .
 
-If $s^* \leq 0$, then $x^* = x^{(0)}$ is feasible.
+If $s^* \leq 0$, then $\theta_0$ is feasible.
 
 \medskip\pause
 
@@ -829,14 +842,16 @@ Easy in the peppered moths case! But this is not always the case.
 
 ### Phase II: Barrier Method
 
-Use a barrier method to solve the constrained problem, starting at $x^{(0)}$.
+Use a barrier method to solve the constrained problem, starting at $\theta_0$.
 
 ## Multinomial Conditional Distributions
 
 Distribution of $Y_{A_j} = (Y_i)_{i \in A_j}$ conditional on $X$ can be found
 too:
 $$
-  Y_{A_j} \mid X = x \sim \textrm{Mult}\left( \frac{p_{A_j}}{M(p)_j}, x_j \right).
+  Y_{A_j} \mid X
+          = x
+          \sim \textrm{Mult}\left( \frac{p_{A_j}}{M(p)_j}, x_j \right).
 $$
 
 . . .
@@ -870,9 +885,9 @@ options(digits = old_options$digits)
 
 What we want is the MLE
 $$
-  \hat{\theta} = \arg\max_\theta \ell(\theta \mid X)
+  \hat{\theta} = \operatorname{argmax}_{\theta \in \Theta} \ell(\theta)
 $$
-with $\ell(\theta \mid X) = \log p(X \mid \theta)$.
+with $\ell(\theta) = \log p(X \mid \theta)$.
 
 . . .
 
@@ -905,7 +920,7 @@ which is often easier to handle.
 
 Compute expected complete log-likelihood:
 $$
-  Q(\theta\mid\theta^{(t)})=\E_{Z \mid X,\theta^{(t)}}\left( \log p(X, Z \mid \theta) \right)
+  Q(\theta \mid \theta_n) = \E_{\theta_n}\left( \log p(X, Z \mid \theta) \mid X \right).
 $$
 
 \medskip\pause
@@ -914,7 +929,7 @@ $$
 
 Maximize expected complete log-likelihood:
 $$
-  \theta^{(t+1)}=\arg\max_\theta Q(\theta\mid\theta^{(t)}).
+  \theta_{n + 1} = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta_n).
 $$
 
 ### Repeat
@@ -926,7 +941,8 @@ Until convergence.
 ### Key Inequality
 
 $$
-  \ell(\theta) = \log p(X \mid \theta) \geq \E_{q(Z)}[\log p(X,Z \mid \theta)] - \E_{q(Z)}[\log q(Z)].
+  \ell(\theta) = \log p(X \mid \theta)
+               \geq \E_{q(Z)}[\log p(X,Z \mid \theta)] - \E_{q(Z)}[\log q(Z)].
 $$
 
 . . .
@@ -935,14 +951,14 @@ $$
 
 Choose
 $$
-  q^{(t)}(Z) = p(Z \mid X, \theta^{(t)}).
+  q_n(Z) = p(Z \mid X, \theta_n).
 $$
 
 \medskip\pause
 
 Then inequality is tight, since
 $$
-  \kl(q^{(t)} || p(Z \mid X, \theta^{(t)})) = 0.
+  \kl(q_n || p(Z \mid X, \theta_n)) = 0.
 $$
 
 . . .
@@ -952,7 +968,7 @@ $$
 Update $\theta$ by maximizing the bound. This guarantees non-decreasing
 log-likelihood:
 $$
-  \ell(\theta^{(t+1)}) \geq \ell(\theta^{(t)}).
+  \ell(\theta_{n + 1}) \geq \ell(\theta_n).
 $$
 
 ## From the Lower Bound to $Q$
@@ -967,13 +983,13 @@ $$
 
 With
 $$
-  q^{(t)}(Z) = p(Z \mid X, \theta^{(t)})
+  q_n(Z) = p(Z \mid X, \theta_n)
 $$
 we have
 $$
-  F(q^{(t)},\theta) = Q(\theta \mid \theta^{(t)}) + H(q^{(t)}),
+  F(q_n,\theta) = Q(\theta \mid \theta_n) + \mathcal{H}(q_n),
 $$
-where $H(q^{(t)})$ is entropy, independent of $\theta$.
+where $\mathcal{H}(q_n)$ is entropy, independent of $\theta$.
 
 \medskip\pause
 
@@ -981,7 +997,7 @@ where $H(q^{(t)})$ is entropy, independent of $\theta$.
 
 M-step:
 $$
-  \theta^{(t+1)} = \arg\max_\theta Q(\theta \mid \theta^{(t)}).
+  \theta_{n + 1} = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta_n).
 $$
 
 . . .
@@ -1021,23 +1037,25 @@ $$
 
 The log-likelihood of the complete data (for a single experiment) is
 $$
-  \log p(X_i, Z_i \mid \theta) = \symbf{1}_{Z_i = A} \log \text{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \log \text{Bin}(X_i \mid 10, \theta_B).
+  \log p(X_i, Z_i \mid \theta) = \symbf{1}_{Z_i = A} \log \text{Bin}(X_i \mid 10, \theta_A)
+                                 + \symbf{1}_{Z_i = B} \log \text{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
 
 Take expection over $Z_i$ given $X_i$ and current parameters:
 $$
-  Q(\theta \mid \theta^{(t)}) = \sum_i \gamma_{i}^{(t)} \log \text{Bin}(X_i \mid 10, \theta_A)  + \sum_i (1 - \gamma_{i}^{(t)}) \log \text{Bin}(X_i \mid 10, \theta_B).
+  Q(\theta \mid \theta_n) = \sum_i \gamma_{i,n} \log \text{Bin}(X_i \mid 10, \theta_A)
+                            + \sum_i (1 - \gamma_{i,n}) \log \text{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
 
 $$
   \begin{aligned}
-  \gamma_i^{(t)} &= \E_Z\left(\symbf{1}_{Z_i = A} \mid X_i, \theta_A^{(t)}, \theta_B^{(t)}\right) \\
-                 &= \Pr(Z_i = A \mid X_i, \theta_A^{(t)}, \theta_B^{(t)} )\\
-                 &= \frac{\text{Binomial}(X_i \mid 10, \theta_A^{(t)})}{\text{Binomial}(X_i \mid 10, \theta_A^{(t)}) + \text{Binomial}(X_i \mid 10, \theta_B^{(t)})}.
+    \gamma_{i,n} & = \E_{\theta_n}\left(\symbf{1}_{Z_i = A} \mid X_i\right)                                                                                      \\
+                 & = \Pr_{\theta_n}(Z_i = A \mid X_i)                                                                                                            \\
+                 & = \frac{\text{Binomial}(X_i \mid 10, \theta_{A,n})}{\text{Binomial}(X_i \mid 10, \theta_{A,n}) + \text{Binomial}(X_i \mid 10, \theta_{B,n})}.
   \end{aligned}
 $$
 
@@ -1059,8 +1077,8 @@ This called the **responsibility** of coin $A$ for experiment $i$.
 
 Maximizing $Q$ with respect to $\theta_A$ and $\theta_B$ gives
 $$
-  \theta_A^{(t+1)} = \frac{\sum_i \gamma_{i}^{(t)} X_i}{\sum_i 10 \cdot \gamma_{i}^{(t)}}, \quad
-  \theta_B^{(t+1)} = \frac{\sum_i (1 - \gamma_{i}^{(t)}) X_i}{\sum_i 10 \cdot (1 - \gamma_{i}^{(t)})}.
+  \theta_{A,n + 1} = \frac{\sum_i \gamma_{i,n} X_i}{\sum_i 10 \gamma_{i,n}}, \quad \theta_{B,n + 1}
+                   = \frac{\sum_i (1 - \gamma_{i,n}) X_i}{\sum_i 10 (1 - \gamma_{i,n})}.
 $$
 
 . . .
@@ -1121,13 +1139,13 @@ matplot(
   col = c("blue", "red"),
   lty = 1,
   xlab = "Iteration",
-  ylab = expression(hat(theta)),
+  ylab = expression(theta[n]),
   ylim = c(0, 1)
 )
 abline(h = c(0.8, 0.4), col = c("blue", "red"), lty = 2)
 legend(
   "bottomright",
-  legend = c(expression(hat(theta)[A]), expression(hat(theta)[B])),
+  legend = c(expression(theta[A * "," * n]), expression(theta[B * "," * n])),
   col = c("blue", "red"),
   lty = c(1, 1),
   pch = c(19, 19)
@@ -1157,22 +1175,21 @@ plot(
 
 Recall:
 $$
-  Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X, \theta^{(t)}}[\log p(X,Z \mid \theta)]
+  Q(\theta \mid \theta_n) = \E_{\theta_n}[\log p(X,Z \mid \theta) \mid X]
 $$
 
 \medskip\pause
 
 In the coin-flip example:
 $$
-  Q(\theta_A, \theta_B \mid \theta^{(t)}_A, \theta^{(t)}_B)
-  = \sum_i \gamma_{i}^{(t)} \log \text{Bin}(X_i \mid 10, \theta_A)
-  + \sum_i (1 - \gamma_{i}^{(t)}) \log \text{Bin}(X_i \mid 10, \theta_B)
+  Q(\theta \mid \theta_n) = \sum_i \gamma_{i,n} \log \text{Bin}(X_i \mid 10, \theta_A)
+                            + \sum_i (1 - \gamma_{i,n}) \log \text{Bin}(X_i \mid 10, \theta_B)
 $$
 
 . . .
 
-- **E-step:** compute $\gamma_{i}^{(t)}$, the expected values (responsibilities)
-  of the latent variables.
+- **E-step:** compute $\gamma_{i,n}$, the expected values (responsibilities) of
+  the latent variables.
 - **M-step:** maximize $Q$ with respect to $\theta_A$ and $\theta_B$: weighted
   averages of heads.
 
@@ -1206,11 +1223,11 @@ Each iteration is guaranteed to increase the observed data log-likelihood.
 
 ## Exercise: Absolute-Value Constraints
 
-Solve the following optimization problem:
+Solve the following optimization problem:\
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_{x}              && \frac{1}{2}(x - 2)^2 \\
-    &\textrm{subject to} && |x| \leq 1.
+     & \operatorname*{minimize}_{\theta \in \mathbb{R}} &  & H(\theta) = \frac{1}{2}(\theta - 2)^2 \\
+     & \textrm{subject to}                                &  & |\theta| \leq 1.
   \end{aligned}
 $$
 

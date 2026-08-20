@@ -78,11 +78,11 @@ optimization when the likelihood is complicated.
 
 The EM algorithm iteratively optimizes
 $$
-  \theta^{(t+1)} = \argmax_\theta Q(\theta \mid \theta^{(t)}),
+  \theta_{n + 1} = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta_n),
 $$
 with
 $$
-  Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X,\theta^{(t)}}\big(\log p(X, Z \mid \theta)\big).
+  Q(\theta \mid \theta_n) = \E_{\theta_n}\big(\log p(X, Z \mid \theta) \mid X\big).
 $$
 
 \medskip\pause
@@ -146,7 +146,7 @@ Black, Mottled, Light-Colored
 
 ### Genotype Labels
 
-Let each moth $i=1,\ldots,n$ have an (unobserved) genotype label
+Let each moth $i = 1,\ldots,n$ have an (unobserved) genotype label
 $$
   Z_i \in \{1,2,3,4,5,6\} \quad\text{(CC, CI, CT, II, IT, TT)}.
 $$
@@ -165,7 +165,9 @@ $$
 The genotype counts $Y_k$ are the sufficient statistics for the complete data,
 and also latent, with
 $$
-  Y_k = \sum_{i=1}^n \mathbf{1}(Z_i = k), \quad Y = (Y_1,\ldots,Y_6), \quad \sum_k Y_k = n.
+  Y_k = \sum_{i = 1}^n \mathbf{1}(Z_i = k), \quad Y
+      = (Y_1,\ldots,Y_6), \quad \sum_k Y_k
+      = n.
 $$
 
 ## Observed Data
@@ -176,7 +178,9 @@ $$
 $$
 with partitions
 $$
-  A_1=\{1,2,3\}\ (\text{Black}),\quad A_2=\{4,5\}\ (\text{Mottled}),\quad A_3=\{6\}\ (\text{Light}),
+  A_1 = \{1,2,3\}\ (\text{Black}),\quad A_2
+      = \{4,5\}\ (\text{Mottled}),\quad A_3
+      = \{6\}\ (\text{Light}),
 $$
 
 . . .
@@ -199,7 +203,7 @@ $$
 
 Using the genotype counts $Y$, the complete-data log-likelihood is
 $$
-  \ell(p \mid Y) = \sum_{k=1}^6 Y_k \log p_k.
+  \ell(p \mid Y) = \sum_{k = 1}^6 Y_k \log p_k.
 $$
 
 . . .
@@ -217,26 +221,28 @@ Let's define the function $\pi$, that maps $\theta$ to the genotype
 probabilities
 $$
   \pi(\theta) =
-    \begin{bmatrix}
-      p_C^2 \\
-      2 p_C p_I \\
-      2 p_C (1 - p_C - p_I) \\
-      p_I^2 \\
-      2 p_I (1 - p_C - p_I) \\
-      (1 - p_C - p_I)^2
-    \end{bmatrix}
+\begin{bmatrix}
+  p_C^2 \\
+  2 p_C p_I \\
+  2 p_C (1 - p_C - p_I) \\
+  p_I^2 \\
+  2 p_I (1 - p_C - p_I) \\
+  (1 - p_C - p_I)^2
+\end{bmatrix}
 $$
 
 ## The Q Function
 
 EM $Q$-function:
 $$
-  \begin{aligned}
+\begin{aligned}
   Q(\theta \mid \theta')
-    &= \E_{Y \mid X, \theta'} \log p (Y \mid \theta) \\ \pause
-    &= \sum_{k=1}^6 \E_{Y \mid X, \theta'}(Y_k) \log \pi_k(\theta) \\ \pause
-    &= \sum_{k=1}^6 \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \log \pi_k(\theta) \quad \text{where } k \in A_{j(k)}.
-  \end{aligned}
+   & = \E_{Y \mid X, \theta'} \log p (Y \mid \theta)                                                                                \\
+  \pause
+   & = \sum_{k = 1}^6 \E_{Y \mid X, \theta'}(Y_k) \log \pi_k(\theta)                                                                \\
+  \pause
+   & = \sum_{k = 1}^6 \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \log \pi_k(\theta) \quad \text{where } k \in A_{j(k)}.
+\end{aligned}
 $$
 
 . . .
@@ -292,10 +298,10 @@ We need to maximize $Q(\theta \mid \theta')$ w.r.t. $\theta$.
 With $y = (n_{CC}, n_{CI}, n_{CT}, n_{II}, n_{IT}, n_{TT})^T$ a complete
 observation, it can be shown that the MLE is
 $$
-  \begin{aligned}
-    \hat{p}_C & = \frac{n_{CC} + (n_{CI} + n_{CT}) / 2}{n} \\
-    \hat{p}_I & = \frac{n_{II} + (n_{CI} + n_{IT}) / 2}{n}
-  \end{aligned}
+\begin{aligned}
+  \hat{p}_C & = \frac{n_{CC} + (n_{CI} + n_{CT}) / 2}{n} \\
+  \hat{p}_I & = \frac{n_{II} + (n_{CI} + n_{IT}) / 2}{n}
+\end{aligned}
 $$
 where $n = \symbf{1}^T y$ is the total number of observations.
 
@@ -567,18 +573,7 @@ ggplot(df_all, aes(pC, pI)) +
 ggplot(em_trace, aes(n, par_norm_diff)) +
   geom_point() +
   geom_line() +
-  labs(
-    y = expression(paste(
-      "||",
-      theta^{
-        (n)
-      } -
-        theta^{
-          (n - 1)
-        },
-      "||"
-    ))
-  ) +
+  labs(y = expression(group("||", theta[n] - theta[n - 1], "||"))) +
   scale_y_log10()
 ```
 
@@ -632,8 +627,9 @@ estimates.
 
 The Fisher information is a key quantity for this. It is defined as
 $$
-  i(\theta) = - \E\left( \frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta) \right).
+  \mathcal{I}(\theta) = -\E_\theta\left(D_\theta^2 \ell(\theta)\right),
 $$
+where $\ell(\theta) = \log p(X \mid \theta)$.
 
 . . .
 
@@ -644,9 +640,10 @@ This is the expected curvature of the log-likelihood.
 In the presence of latent variables, we can define three types of Fisher
 information:
 
-- **Complete-data information** $i_Y(\theta)$
-- **Observed-data information** $i_X(\theta)$
-- **Missing information** $i_{Y \mid X}(\theta) = i_Y(\theta) - i_X(\theta)$
+- **Complete-data information** $\mathcal{I}_Y(\theta)$
+- **Observed-data information** $\mathcal{I}_X(\theta)$
+- **Missing information**
+  $\mathcal{I}_{Y \mid X}(\theta) = \mathcal{I}_Y(\theta) - \mathcal{I}_X(\theta)$
 
 ```{r}
 #| echo: false
@@ -680,13 +677,15 @@ score <- function(theta, x = c(85, 196, 341)) {
 }
 ```
 
-## Empirical Fisher Information
+## Observed Fisher Information
 
-The empirical observed Fisher information is defined as
+The observed Fisher information is defined as
 $$
-  \hat{i}(\theta) = -\frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta)
+  \hat{i}_X(\theta) = -D_\theta^2 \ell(\theta).
 $$
-where $\ell_i(\theta)$ is the log-likelihood of observation $i$.
+
+At the MLE, it estimates the expected Fisher information
+$\mathcal{I}_X(\theta)$.
 
 \medskip\pause
 
@@ -726,18 +725,17 @@ $$
 
 \medskip\pause
 
-Setting $\theta'=\theta$ gives Fisher's (score) identity
+Setting $\theta' = \theta$ gives Fisher's (score) identity
 $$
-  \nabla_\theta Q(\theta \mid \theta)
-  = \E_{Y \mid X,\theta}\nabla_{\theta} \log p(X, Y \mid \theta)
-  = \nabla_\theta \log p(X \mid \theta).
+  \nabla_\theta Q(\theta \mid \theta) = \E_{Y \mid X,\theta}\nabla_{\theta} \log p(X, Y \mid \theta)
+                                      = \nabla_\theta \log p(X \mid \theta).
 $$
 
 ## Gradient of $Q$ for the Multinomial Model
 
 For the multinomial model, the Q function is
 $$
-  Q(\theta \mid \theta')  = \sum_{i} \frac{x_{j(i)} \pi_i(\theta')}{M(\pi(\theta'))_{j(i)}} \log \pi_i(\theta),
+  Q(\theta \mid \theta') = \sum_{i} \frac{x_{j(i)} \pi_i(\theta')}{M(\pi(\theta'))_{j(i)}} \log \pi_i(\theta),
 $$
 where $j(i)$ is defined by $i \in A_{j(i)}$.
 
@@ -814,7 +812,7 @@ ihat
 
 ## Second Way: The Information Identity
 
-Recall that with $\theta'=\theta$,
+Recall that with $\theta' = \theta$,
 $$
   \nabla_\theta Q(\theta \mid \theta) = \nabla_\theta \log p(X \mid \theta).
 $$
@@ -823,40 +821,42 @@ $$
 
 Differentiating again (w.r.t to $\theta$) gives
 $$
-  -\nabla_\theta^2 Q(\theta \mid \theta') = -\E_{Y \mid X, \theta'} \nabla_\theta^2 \log p(X, Y \mid \theta).
+  -D_\theta^2 Q(\theta \mid \theta') = -\E_{Y \mid X, \theta'} D_\theta^2 \log p(X, Y \mid \theta).
 $$
 
 . . .
 
-At $\theta'=\theta$, using
+At $\theta' = \theta$, using
 $\log p(X, Y \mid \theta) = \log p(X \mid \theta) + \log p(Y \mid X, \theta)$,
 we have
 $$
-  -\nabla_\theta^2 Q(\theta \mid \theta) = -\nabla_\theta^2 \log p(X\mid \theta) - \E_{Y \mid X,\theta}\nabla_\theta^2 \log p(Y \mid X,\theta).
+  -D_\theta^2 Q(\theta \mid \theta) = -D_\theta^2 \log p(X \mid \theta)
+                                      - \E_{Y \mid X,\theta}D_\theta^2 \log p(Y \mid X,\theta).
 $$
 
 . . .
 
 Taking expectation also over $X$ recovers the decomposition
 $$
-  i_Y(\theta)= i_X(\theta)+ i_{Y\mid X}(\theta),
+  \mathcal{I}_Y(\theta) = \mathcal{I}_X(\theta)
+                          + \mathcal{I}_{Y \mid X}(\theta),
 $$
 with
 $$
-  \begin{aligned}
-    i_Y(\theta)&= -\E_{X,Y\mid\theta}\nabla_\theta^2 \log p(X,Y\mid\theta),                           \\
-    i_X(\theta)&= -\E_{X\mid\theta}\nabla_\theta^2 \log p(X\mid\theta),                               \\
-    i_{Y\mid X}(\theta)&= -\E_{X\mid\theta}\E_{Y\mid X,\theta}\nabla_\theta^2 \log p(Y\mid X,\theta).
-  \end{aligned}
+\begin{aligned}
+  \mathcal{I}_Y(\theta)          & = -\E_{X,Y \mid \theta}D_\theta^2 \log p(X,Y \mid \theta),                   \\
+  \mathcal{I}_X(\theta)          & = -\E_{X \mid \theta}D_\theta^2 \log p(X \mid \theta),                       \\
+  \mathcal{I}_{Y \mid X}(\theta) & = -\E_{X \mid \theta}\E_{Y \mid X,\theta}D_\theta^2 \log p(Y \mid X,\theta).
+\end{aligned}
 $$
 
 ## The Information Identity
 
 At the MLE $\hat{\theta}$,
 $$
-  \hat{i}_X = - \nabla^2_{\theta} \ell(\hat{\theta}) =
-  \underbrace{-\nabla^2_{\theta} Q(\hat{\theta} \mid \hat\theta)}_{\hat{i}_Y} -
-  \underbrace{\nabla^2_{\theta} H(\hat{\theta} \mid \hat\theta)}_{\hat{i}_{Y \mid X}}.
+  \hat{i}_X = -D^2_{\theta} \ell(\hat{\theta})
+            = \underbrace{-D^2_{\theta} Q(\hat{\theta} \mid \hat\theta)}_{\hat{i}_Y}
+              - \underbrace{D^2_{\theta} H(\hat{\theta} \mid \hat\theta)}_{\hat{i}_{Y \mid X}}.
 $$
 
 \medskip\pause
@@ -871,7 +871,7 @@ $$
 ### Interpretation
 
 - $\hat{i}_Y$ is the Fisher information for complete $Y$.
-- $\hat{i}_{Y \mid X}$ is the information "lost" from not observing full $X$.
+- $\hat{i}_{Y \mid X}$ is the information "lost" from not observing $Y$.
 
 ## The Complete-Data Information
 
@@ -884,8 +884,7 @@ how do we compute the missing information?
 
 The second **Bartlett identity** can be used to show that
 $$
-  \nabla_{\theta} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta})
-  = - \nabla_{\theta'} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta}).
+  D_{\theta}^2 H(\hat{\theta} \mid \hat{\theta}) = -D_{\theta'}D_{\theta} H(\hat{\theta} \mid \hat{\theta}).
 $$
 
 \medskip\pause
@@ -893,16 +892,15 @@ $$
 And since we also have $Q = \ell - H$ and because $\ell(\theta)$ does not depend
 on $\theta'$, we get
 $$
-  \nabla_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\theta}) =  -
-  \nabla_{\theta'} \nabla_{\theta} H(\hat{\theta} \mid \hat{\theta}) =
-  \nabla^2_{\theta} H(\hat{\theta} \mid \hat{\theta}).
+  D_{\theta'}D_{\theta} Q(\hat{\theta} \mid \hat{\theta}) = -D_{\theta'}D_{\theta} H(\hat{\theta} \mid \hat{\theta})
+                                                          = D^2_{\theta} H(\hat{\theta} \mid \hat{\theta}).
 $$
 
 \medskip\pause
 
 Thus
 $$
-  \hat{i}_{Y \mid X} = \nabla_{\theta'} \nabla_{\theta} Q(\hat{\theta} \mid \hat{\theta}).
+  \hat{i}_{Y \mid X} = D_{\theta'}D_{\theta} Q(\hat{\theta} \mid \hat{\theta}).
 $$
 
 ## Implementations of $Q$
@@ -963,9 +961,9 @@ iX <- iY - iYX
 
 ## Third Way: The EM-Mapping
 
-Define $\Phi : \Theta \mapsto \Theta$ by
+Define $\Phi : \Theta \to \Theta$ by
 $$
-  \Phi(\theta') = \textrm{arg max}_{\theta} \ Q(\theta \mid \theta').
+  \Phi(\theta') = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta').
 $$
 
 \medskip\pause
@@ -978,16 +976,16 @@ $\Phi(\hat{\theta}) = \hat{\theta}.$
 Since the limit of the EM algorithm, $\hat{\theta}$, is a fixed point and other
 identities above, it can be shown that
 $$
-  \nabla_{\theta} \Phi(\hat{\theta})^T = \hat{i}_{Y\mid X} \left(\hat{i}_Y\right)^{-1}.
+  D_{\theta} \Phi(\hat{\theta})^T = \hat{i}_{Y \mid X} \left(\hat{i}_Y\right)^{-1}.
 $$
 
 \medskip\pause
 
 Hence
 $$
-  \begin{aligned} \hat{i}_X & = \left(I - \hat{i}_{Y\mid X}
-  \left(\hat{i}_Y\right)^{-1}\right) \hat{i}_Y = \left(I - \nabla_{\theta}
-  \Phi(\hat{\theta})^T\right) \hat{i}_Y. \end{aligned}
+\begin{aligned}
+  \hat{i}_X & = \left(I - \hat{i}_{Y \mid X} \left(\hat{i}_Y\right)^{-1}\right) \hat{i}_Y = \left(I - D_{\theta} \Phi(\hat{\theta})^T\right) \hat{i}_Y.
+\end{aligned}
 $$
 
 ## EM Step Fixed Point
@@ -1097,7 +1095,7 @@ ggplot() +
 We have already shown that the EM algorithm monotonically increases the observed
 data log-likelihood:
 $$
-  \ell(\theta^{(t+1)}) \ge \ell(\theta^{(t)}).
+  \ell(\theta_{n + 1}) \ge \ell(\theta_n).
 $$
 
 . . .
@@ -1105,25 +1103,25 @@ $$
 We have also just shown that the EM algorithm converges to a fixed point of the
 EM mapping:
 $$
-  \theta^{(t+1)} = \Phi(\theta^{(t)}), \quad \hat{\theta} = \Phi(\hat{\theta}).
+  \theta_{n + 1} = \Phi(\theta_n), \quad \hat{\theta} = \Phi(\hat{\theta}).
 $$
 
 . . .
 
 By the Taylor expansion of $\Phi$ around $\hat{\theta}$, we have
 $$
-  \theta^{(t+1)} - \hat{\theta} \approx \nabla \Phi(\hat{\theta}) (\theta^{(t)} - \hat{\theta})
+  \theta_{n + 1}
+  - \hat{\theta} \approx D\Phi(\hat{\theta}) (\theta_n - \hat{\theta}).
 $$
 
 . . .
 
-So the error at step $t+1$ is approximately a linear transformation of the error
-at step $t$.
+So the error at iteration $n + 1$ is approximately a linear transformation of
+the error at iteration $n$.
 
 \medskip\pause
 
-And the rate of convergence is determined by the matrix
-$\nabla \Phi(\hat{\theta})$.
+And the rate of convergence is determined by the matrix $D\Phi(\hat{\theta})$.
 
 ## Convergence: Connection to Fisher Information
 
@@ -1134,12 +1132,12 @@ value of its eigenvalues.
 
 This means that the convergence rate of the EM algorithm is governed by
 $$
-  \rho(\nabla \Phi(\hat{\theta})) = \rho\left(\hat{i}_{Y \mid X} \left(\hat{i}_Y\right)^{-1}\right).
+  \rho(D\Phi(\hat{\theta})) = \rho\left(\hat{i}_{Y \mid X} \left(\hat{i}_Y\right)^{-1}\right).
 $$
 
 \medskip\pause
 
-If $\rho(\nabla \Phi(\hat{\theta}))$ is close to 0, the EM algorithm converges
+If $\rho(D\Phi(\hat{\theta}))$ is close to 0, the EM algorithm converges
 quickly, and if it is close to 1, the EM algorithm converges slowly.
 
 . . .
@@ -1147,14 +1145,18 @@ quickly, and if it is close to 1, the EM algorithm converges slowly.
 ### Relation to Missing Information
 
 If there is little missing information, i.e., $\hat{i}_{Y \mid X}$ is small,
-then $\rho(\nabla \Phi(\hat{\theta}))$ is small and the EM algorithm converges
+then $\rho(D\Phi(\hat{\theta}))$ is small and the EM algorithm converges
 quickly.\
 
 ## Convergence Estimation
 
 The EM algorithm converges linearly near the optimum:\
 $$
-  \lVert\theta^{(t+1)} - \hat{\theta}\rVert \approx \rho \lVert\theta^{(t)} - \hat{\theta}\rVert, \qquad 0 < \rho < 1.
+  \lVert\theta_{n + 1}
+  - \hat{\theta}\rVert \approx \rho \lVert\theta_n
+  - \hat{\theta}\rVert, \qquad 0
+                                            < \rho
+                                            < 1.
 $$
 
 \medskip\pause
@@ -1162,8 +1164,14 @@ $$
 Rate can be estimated by fitting a linear model to the log of the parameter
 differences:
 $$
-  \log \lVert\theta^{(t+1)} - \hat{\theta}\rVert \approx \log \rho + \log \lVert \theta^{(t)} - \hat{\theta}\rVert
-  \implies \log \lVert \theta^{(t)} - \hat{\theta}\rVert \approx t \log \rho + \text{constant}.
+  \log \lVert\theta_{n + 1}
+  - \hat{\theta}\rVert \approx \log \rho
+  + \log \lVert \theta_n
+  - \hat{\theta}\rVert
+                                                 \implies \log \lVert \theta_n
+                                                          - \hat{\theta}\rVert
+                                                 \approx n \log \rho
+                                                         + \text{constant}.
 $$
 
 . . .
@@ -1172,7 +1180,7 @@ $$
 #| label: linear-convergence
 
 log_lm <- lm(log(par_norm_diff) ~ n, data = em_trace)
-exp(coefficients(log_lm)["n"]) # n: iteration (t above)
+exp(coefficients(log_lm)["n"])
 ```
 
 \medskip\pause
@@ -1185,10 +1193,10 @@ It is small in this case, implying fast convergence.
 ::::: {.column width="47%"}
 ### Key Idea
 
-Relax the M-step: instead of fully maximizing $Q(\theta \mid \theta^{(t)})$, we
-just require an **increase**:
+Relax the M-step: instead of fully maximizing $Q(\theta \mid \theta_n)$, we just
+require an **increase**:
 $$
-  Q(\theta^{(t+1)} \mid \theta^{(t)}) \ge Q(\theta^{(t)} \mid \theta^{(t)}).
+  Q(\theta_{n + 1} \mid \theta_n) \ge Q(\theta_n \mid \theta_n).
 $$
 
 . . .
@@ -1204,7 +1212,7 @@ Full maximization may be **hard or computationally expensive**. GEM allows
 
 E-step is unchanged and the **log-likelihood is still non-decreasing**:
 $$
-  \ell(\theta^{(t+1)}) \ge \ell(\theta^{(t)}).
+  \ell(\theta_{n + 1}) \ge \ell(\theta_n).
 $$
 
 \medskip\pause
@@ -1230,7 +1238,7 @@ x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
 Assume that $X_i \sim \text{Bernoulli}(\theta)$ i.i.d. and that the data are
 missing at random. The complete data log-likelihood is
 $$
-  \ell_C(\theta) = \sum_{i=1}^n \left( X_i \log(\theta) + (1 - X_i) \log(1 - \theta) \right).
+  \ell_C(\theta) = \sum_{i = 1}^n \left( X_i \log(\theta) + (1 - X_i) \log(1 - \theta) \right).
 $$
 
 . . .
@@ -1238,15 +1246,15 @@ $$
 ### Step 1 (Derive)
 
 - E-step: Compute
-  $Q(\theta \mid \theta') = \E_{X_\text{miss} \mid X_\text{obs}, \theta'}\left( \log p(X_\text{obs}, X_\text{miss} \mid \theta)\right)$.
-- M-step: Maximize $Q(\theta \mid \theta')$ over $\theta$.
+  $Q(\theta \mid \theta_n) = \E_{\theta_n}\left( \log p(X_\text{obs}, X_\text{miss} \mid \theta) \mid X_\text{obs}\right)$.
+- M-step: Maximize $Q(\theta \mid \theta_n)$ over $\theta$.
 
 . . .
 
 ### Step 2 (Implement)
 
 Implement the EM algorithm and run it from two different starting points. Record
-the path of $\theta^{(t)}$ and the log-likelihood values $\ell(\theta^{(t)})$.
+the path of $\theta_n$ and the log-likelihood values $\ell(\theta_n)$.
 
 ```{r}
 #| include: false

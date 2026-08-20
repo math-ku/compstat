@@ -34,11 +34,11 @@ to the EM algorithm.
 
 The EM algorithm iteratively optimizes
 $$
-  \theta^{(t+1)} = \argmax_\theta Q(\theta \mid \theta^{(t)}),
+  \theta_{n + 1} = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta_n),
 $$
 with
 $$
-  Q(\theta \mid \theta^{(t)}) = \E_{Z \mid X,\theta^{(t)}}\log p(X, Z \mid \theta).
+  Q(\theta \mid \theta_n) = \E_{\theta_n}\big(\log p(X, Z \mid \theta) \mid X\big).
 $$
 
 \medskip\pause
@@ -49,12 +49,13 @@ Convergence is **linear** near a local maximum.
 
 The Fisher information is defined as
 $$
-  i(\theta) = - \E\left( \frac{\partial^2}{\partial \theta^2} \log p(X \mid \theta) \right).
+  \mathcal{I}(\theta) = -\E_\theta\left(D_\theta^2 \ell(\theta)\right),
 $$
+where $\ell(\theta) = \log p(X \mid \theta)$.
 
 \medskip\pause
 
-We mentioned three ways to compute the empirical observed Fisher information:
+We mentioned three ways to compute the observed Fisher information:
 
 1. Differentiate the score function (defined through $Q$).\pause
 2. Compute complete and missing information and using the information identity.
@@ -137,7 +138,7 @@ pl
 
 In a finite mixture, the marginal density of $X$ is
 $$
-  p(x \mid \psi) = \sum_{k=1}^K \pi_k f_k(x \mid \psi_k)
+  p(x \mid \psi) = \sum_{k = 1}^K \pi_k f_k(x \mid \psi_k)
 $$
 where $\pi_k \geq 0$, $\sum_k \pi_k = 1$, and $f_k$ are densities.
 
@@ -179,18 +180,20 @@ with $\psi_k = (\mu_k, \sigma_k^2)$.
 Letting $\theta = (\pi_1, \ldots, \pi_K, \psi_1, \ldots, \psi_K)$, the
 complete-data log-likelihood is
 $$
-  \begin{aligned}
-  \ell_c (\theta) &= \sum_{i=1}^n \log p(x_i, z_i \mid \theta) \\ \pause
-                  &= \sum_{i=1}^n \log \left( f(x_i \mid z_i, \theta) f(z_i \mid \theta) \right) \\ \pause
-                  &= \sum_{i=1}^n \sum_{k=1}^K \symbf{1}(Z_i = k) \left( \log \pi_k + \log f_k(x_i \mid \mu_k, \sigma_k^2) \right) 
-  \end{aligned}
+\begin{aligned}
+  \ell_c (\theta) & = \sum_{i = 1}^n \log p(x_i, z_i \mid \theta)                                                                       \\
+  \pause
+                  & = \sum_{i = 1}^n \log \left( f(x_i \mid z_i, \theta) f(z_i \mid \theta) \right)                                     \\
+  \pause
+                  & = \sum_{i = 1}^n \sum_{k = 1}^K \symbf{1}(Z_i = k) \left( \log \pi_k + \log f_k(x_i \mid \mu_k, \sigma_k^2) \right)
+\end{aligned}
 $$
 
-## Simple Case: Fixed Component Variances, $K=2$
+## Simple Case: Fixed Component Variances, $K = 2$
 
 ::: {.columns align="center"}
 ::::: {.column width="47%"}
-Let's simplify and assume $K=2$ and that $\sigma_1$ and $\sigma_2$ are known.
+Let's simplify and assume $K = 2$ and that $\sigma_1$ and $\sigma_2$ are known.
 
 \medskip\pause
 
@@ -233,17 +236,18 @@ $$
 
 The complete-data log-likelihood is now
 $$
-  \begin{aligned}
-  \ell_c(\theta) &= \sum_{i=1}^n \symbf{1}(Z_i = 1) \left( \log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) \\
-                 &\phantom{= {}}+ \symbf{1}(Z_i = 2)\left( \log(1-\pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right) + \text{const}.
-  \end{aligned}
+\begin{aligned}
+  \ell_c(\theta) & = \sum_{i = 1}^n \symbf{1}(Z_i = 1) \left( \log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right)                     \\
+                 & \phantom{ = {}} + \symbf{1}(Z_i = 2)\left( \log(1 - \pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right) + \text{const}.
+\end{aligned}
 $$
 
 . . .
 
 Taking expectations gives
 $$
-  Q(\theta \mid \theta') = \sum_{i=1}^n \tau_{i} \left(\log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right) + (1 - \tau_{i})\left( \log(1-\pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
+  Q(\theta \mid \theta') = \sum_{i = 1}^n \tau_{i} \left(\log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right)
+                           + (1 - \tau_{i})\left( \log(1 - \pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
 $$
 where $\tau_i = \Pr(Z_i = 1 \mid X_i = x_i, \theta')$ is the **responsibility**
 of component 1 for observation $i$.
@@ -263,18 +267,15 @@ $$
 
 For the $K = 2$ Gaussian case, this gives us
 $$
-  \tau_i = \Pr(Z_i = 1 \mid X = x_i, \theta') =
-  \frac{ \pi'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}}}{
-  \left( \pi'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}} +
-  \frac{\sigma_1}{\sigma_2} (1 - \pi'_1) e^{-\frac{(x_i - \mu_2')^2}{2 \sigma_2^2}}\right) }.
+  \tau_i = \Pr(Z_i = 1 \mid X = x_i, \theta')
+         = \frac{\pi'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}}}{\left( \pi'_1 e^{-\frac{(x_i - \mu_1')^2}{2 \sigma_1^2}} + \frac{\sigma_1}{\sigma_2} (1 - \pi'_1) e^{-\frac{(x_i - \mu_2')^2}{2 \sigma_2^2}}\right)}.
 $$
 
 ## The Q-Step
 
 The MLEs of $\theta$ given $Q(\theta \mid \theta')$ are
 $$
-  \hat{\theta} = 
-  \left(\frac{1}{n} \sum_{i=1}^n \tau_i, \quad \frac{1}{\sum_{i=1}^n \tau_i} \sum_{i=1}^n \tau_i x_i, \quad \frac{1}{\sum_{i=1}^n (1 - \tau_i)} \sum_{i=1}^n (1 - \tau_i) x_i \right).
+  \hat{\theta} = \left(\frac{1}{n} \sum_{i = 1}^n \tau_i, \quad \frac{1}{\sum_{i = 1}^n \tau_i} \sum_{i = 1}^n \tau_i x_i, \quad \frac{1}{\sum_{i = 1}^n (1 - \tau_i)} \sum_{i = 1}^n (1 - \tau_i) x_i \right).
 $$
 
 . . .
@@ -285,7 +286,7 @@ $$
 
 We update $\pi$ as
 $$
-  \hat{\pi} = \frac{1}{n} \sum_{i=1}^n \tau_i,
+  \hat{\pi} = \frac{1}{n} \sum_{i = 1}^n \tau_i,
 $$
 which is the fraction of all data points "assigned" to component 1.
 :::::
@@ -297,7 +298,7 @@ which is the fraction of all data points "assigned" to component 1.
 
 We update $\mu_1$ as
 $$
-  \hat{\mu}_1 = \frac{\sum_{i=1}^n \tau_i x_i}{\sum_{i=1}^n \tau_i},
+  \hat{\mu}_1 = \frac{\sum_{i = 1}^n \tau_i x_i}{\sum_{i = 1}^n \tau_i},
 $$
 and similarly for $\mu_2$.
 
@@ -674,7 +675,7 @@ But this comparison is flawed: **why?**
 
 If we set $\sigma_1 = \sigma_2$, then the likelihood is invariant under
 switching the labels of the components, i.e., $(p, \mu_1, \mu_2)$ and
-$(1-p, \mu_2, \mu_1)$ give the same likelihood.
+$(1 - p, \mu_2, \mu_1)$ give the same likelihood.
 
 \medskip\pause
 
@@ -717,11 +718,11 @@ In this example, we generated data with $p = 0.8$ and $\sigma_1 = \sigma_2$.
 
 # Stochastic Gradient Descent
 
-## Minimizing Sums
+## Empirical Risk Minimization
 
-Many of the functions we are trying to minimize are of the form
+For data $(y_i,x_i)$, $i = 1,\ldots,N$, the empirical risk is
 $$
-  \frac{1}{n} \sum_{i=1}^n f_i(x).
+  H_N(\theta) = \frac{1}{N} \sum_{i = 1}^N L(y_i,x_i,\theta).
 $$
 
 . . .
@@ -730,10 +731,9 @@ $$
 ::::: {.column width="47%"}
 ### Gradient Descent
 
-Since $\nabla \left(\sum_{i=1}^n f_i(x)\right) = \sum_{i=1}^n \nabla f_i(x)$, GD
-steps are
+Gradient descent uses the full gradient:
 $$
-  x_{k+1} = x_k - t \sum_{i=1}^n \nabla f_i(x_k).
+  \theta_{n + 1} = \theta_n - \gamma_n \nabla H_N(\theta_n).
 $$
 :::::
 
@@ -742,28 +742,28 @@ $$
 ::::: {.column width="47%"}
 ### Stochastic Gradient Descent
 
-SGD instead takes steps
+Sample $J_n$ uniformly from $\{1,\ldots,N\}$, compute
 $$
-  x_{k+1} = x_k - t \nabla f_{i}(x_k)
+  \rho_n = \nabla_\theta L(y_{J_n},x_{J_n},\theta_n),
 $$
-where $i$ is an index in $\{1, \ldots, n\}$.
+and update $\theta_{n + 1} = \theta_n - \gamma_n\rho_n$.
 :::::
 :::
 
 ## Example: Ordinary Least Squares
 
-The loss function is
+The empirical risk is
 $$
-  f(\beta) = \frac{1}{2n} \sum_{i=1}^n (y_i - x_i^\intercal \beta)^2.
+  H_N(\beta) = \frac{1}{N} \sum_{i = 1}^N L(y_i,x_i,\beta),
 $$
-so
+where
 $$
-  f_i(\beta) = \frac{1}{2} (y_i - x_i^\intercal \beta)^2.
+  L(y_i,x_i,\beta) = \frac{1}{2} (y_i - \beta^T x_i)^2.
 $$
 
 And the gradient is
 $$
-  \nabla f_i(\beta) = - x_i (y_i - x_i^\intercal \beta).
+  \nabla_\beta L(y_i,x_i,\beta) = -x_i(y_i - \beta^T x_i).
 $$
 
 ## Basic Implementation of SGD
@@ -774,8 +774,8 @@ sgd_basic <- function(
   grad,
   n,
   # number of data points
-  t,
-  # step size
+  gamma,
+  # learning rate
   sampler = sample,
   # function that samples indices
   maxit = 100,
@@ -784,7 +784,7 @@ sgd_basic <- function(
   for (k in seq_len(maxit)) {
     for (i in seq_len(n)) {
       ind <- sampler(n)
-      par <- par - t * grad(par, ind, ...)
+      par <- par - gamma * grad(par, ind, ...)
     }
   }
   par
@@ -793,9 +793,9 @@ sgd_basic <- function(
 
 ## Unbiasedness
 
-If $i$ is drawn uniformly at random from $\{1, \ldots, n\}$ then
+If $J_n$ is drawn uniformly from $\{1, \ldots, N\}$, then
 $$
-  \E(\nabla f_i(x_k)) = \nabla f(x_k).
+  \E(\rho_n \mid \theta_n) = \nabla H_N(\theta_n).
 $$
 
 So SGD gradients are **unbiased** estimates of the full gradient.
@@ -805,13 +805,13 @@ So SGD gradients are **unbiased** estimates of the full gradient.
 ### Iteration Cost
 
 The main benefit of this is that the cost of each iteration is much lower:
-$O(p)$ vs. $O(np)$ (for full gradient descent with $p$ variables).
+$O(p)$ vs. $O(Np)$ (for full gradient descent with $p$ variables).
 
 . . .
 
 ### Epoch
 
-When discussing SGD, we often refer to an **epoch** as $n$ iterations of SGD: a
+When discussing SGD, we often refer to an **epoch** as $N$ iterations of SGD: a
 full pass over the data.
 
 ## Example: Logistic Regression
@@ -820,11 +820,11 @@ full pass over the data.
 ::::: {.column width="47%"}
 With $y_i \in \{0, 1\}$, the logistic regression loss is
 $$
-  f_i(\beta) = -y_i x_i^\intercal \beta + \log\left(1 + e^{x_i^\intercal \beta}\right).
+  L(y_i,x_i,\beta) = -y_i \beta^T x_i + \log\left(1 + e^{\beta^T x_i}\right).
 $$
 and
 $$
-  \nabla f_i(\beta) = x_i \left( \frac{e^{x_i^\intercal \beta}}{1 + e^{x_i^\intercal \beta}} - y_i \right).
+  \nabla_\beta L(y_i,x_i,\beta) = x_i \left( \frac{e^{\beta^T x_i}}{1 + e^{\beta^T x_i}} - y_i \right).
 $$
 
 . . .
@@ -928,12 +928,12 @@ legend(
 :::::
 :::
 
-## Step Size (Learning Rate)
+## Learning Rate
 
 ::: {.columns align = "center"}
 ::::: {.column width="47%"}
-For gradient descent, we could use a fixed step size (learning rate), and
-guarantee convergence.
+For gradient descent, we can use a fixed step length and still guarantee
+convergence.
 
 \medskip\pause
 
@@ -942,7 +942,7 @@ But this is **not** the case for SGD.
 
 ::::: {.column width="47%"}
 ```{r}
-#| fig-cap: "Convergence of SGD for logistic regression with a fixed step size."
+#| fig-cap: "Convergence of SGD for logistic regression with a fixed learning rate."
 #| echo: false
 
 res_sgd <- logreg_sgd(X, y, max_epochs = 200, batch_size = 1, t0 = 5)
@@ -963,8 +963,8 @@ ggplot(
 
 \medskip\pause
 
-Can we find conditions on the step sizes $t_k$ that ensure convergence of SGD?
-**Yes!**
+Can we find conditions on the learning rates $\gamma_n$ that ensure convergence
+of SGD? **Yes!**
 
 \medskip
 
@@ -972,11 +972,15 @@ But first, we need to introduce the concept of **strong convexity**.
 
 ## Strong Convexity
 
-A differentiable function $f: \mathbb{R}^p \to \mathbb{R}$ is **strongly
+A differentiable function $H: \mathbb{R}^p \to \mathbb{R}$ is **strongly
 convex** if
 $$
-  f(x) \geq f(x_0) + \nabla f(x_0)^\intercal (x - x_0) + \frac{\mu}{2} \lVert x - x_0\rVert_2^2, \quad \forall x, x_0 \in \mathbb{R}^p.
+  H(\theta) \geq H(\theta')
+                 + \nabla H(\theta')^T (\theta - \theta')
+                 + \frac{l}{2} \lVert \theta
+                 - \theta'\rVert_2^2
 $$
+for all $\theta,\theta' \in \mathbb{R}^p$ and some $l > 0$.
 
 \medskip\pause
 
@@ -986,8 +990,8 @@ $$
     \begin{axis}[
         width=7cm, height=4.3cm,
         axis lines=none,
-        xlabel={$x$},
-        ylabel={$f(x)$},
+        xlabel={$\theta$},
+        ylabel={$H(\theta)$},
         ymin=-0.5, ymax=4,
         xmin=-1, xmax=2.2,
         samples=200,
@@ -1003,9 +1007,9 @@ $$
       % Point at (1,1)
       \addplot[only marks, mark=*] coordinates {(1,1)};
       % Annotations
-      \node[anchor=west] at (axis cs:2.2,5) {$f(x)$};
-      \node[anchor=west, RoyalBlue] at (axis cs:2.2,4.3) {$f(x_0) + \nabla f(x_0)^\intercal (x-x_0) + \frac{\mu}{2}\lVert x-x_0 \rVert^2$};
-      \node[anchor=west, DarkOrange] at (axis cs:2.2,3.5) {$f(x_0) + \nabla f(x_0)^\intercal (x-x_0)$};
+      \node[anchor=west] at (axis cs:2.2,5) {$H(\theta)$};
+      \node[anchor=west, RoyalBlue] at (axis cs:2.2,4.3) {$H(\theta') + \nabla H(\theta')^T(\theta-\theta') + \frac{l}{2}\lVert\theta-\theta' \rVert^2$};
+      \node[anchor=west, DarkOrange] at (axis cs:2.2,3.5) {$H(\theta') + \nabla H(\theta')^T(\theta-\theta')$};
     \end{axis}
   \end{tikzpicture}
 \end{figure}
@@ -1014,39 +1018,39 @@ $$
 
 The function
 $$
-  f(x) = x^2
+  H(\theta) = \theta^2
 $$
-\pause is strongly convex with $\mu = 2$ since $$
+\pause is strongly convex with $l = 2$ since $$
 \begin{aligned}
-f(x) - f(x_0) - \nabla f(x_0)^\intercal (x - x_0) & = x^2 - x_0^2 - 2x_0(x - x_0) \\ \pause
-                                        & = (x - x_0)^2 \\ \pause
-                                        & \geq \frac{\mu}{2}(x - x_0)^2.
+H(\theta) - H(\theta') - \nabla H(\theta')^T(\theta - \theta') & = \theta^2 - (\theta')^2 - 2\theta'(\theta - \theta') \\ \pause
+                                         & = (\theta - \theta')^2 \\ \pause
+                                         & \geq \frac{l}{2}(\theta - \theta')^2.
 \end{aligned}
 $$
 
 \medskip\pause
 
-The inequality holds for $\mu \leq 2$, and in particular for $\mu = 2$.
+The inequality holds for $l \leq 2$, and in particular for $l = 2$.
 
 ## Relationship to Lipschitz Gradient
 
-If $f$ is strongly convex with parameter $\mu$ and has Lipschitz gradient with
+If $H$ is strongly convex with parameter $l$ and has Lipschitz gradient with
 constant $L$, then
 $$
-  \mu I \preceq \nabla^2 f(x) \preceq L I.
+  l I \preceq D^2H(\theta) \preceq L I.
 $$
 
 \medskip\pause
 
-- Strong convexity provides a **lower** bound on the curvature of $f$\pause
-- Lipschitz gradient provides an **upper** bound on the curvature of $f$
+- Strong convexity provides a **lower** bound on the curvature of $H$\pause
+- Lipschitz gradient provides an **upper** bound on the curvature of $H$
 
 . . .
 
 ### Example
 
-The function $f(x) = x^2$ is strongly convex with $\mu = 2$ and has Lipschitz
-gradient with $L = 2$, since $\nabla^2 f(x) = 2$.
+The function $H(\theta) = \theta^2$ is strongly convex with $l = 2$ and has
+Lipschitz gradient with $L = 2$, since $D^2H(\theta) = 2$.
 
 \medskip\pause
 
@@ -1058,14 +1062,14 @@ This is *identical* to the strong convexity parameter.
 ::::: {.column width="47%"}
 Let's take the function
 $$
-  f(x) = x^2 + \sin(x).
+  H(\theta) = \theta^2 + \sin(\theta).
 $$
 
 \medskip\pause
 
 This is twice differentiable with
 $$
-  \nabla^2 f(x) = 2 - \sin(x).
+  D^2H(\theta) = 2 - \sin(\theta).
 $$
 
 \medskip\pause
@@ -1074,7 +1078,7 @@ And since
 $$
   1 \leq 2 - \sin(x) \leq 3,
 $$
-$f$ is strongly convex with $\mu = 1$ and has Lipschitz gradient with $L = 3$.
+$H$ is strongly convex with $l = 1$ and has Lipschitz gradient with $L = 3$.
 
 \medskip\pause
 :::::
@@ -1095,12 +1099,12 @@ $f$ is strongly convex with $\mu = 1$ and has Lipschitz gradient with $L = 3$.
         clip=false,
         samples=200,
         axis lines=none,
-        xlabel={$x$},
-        ylabel={$f(x)$},
+        xlabel={$\theta$},
+        ylabel={$H(\theta)$},
         legend style={draw=none,at={(0.02,0.98)},anchor=north west}
       ]
       % f
-      \addplot[thick, line label={$f(x)$}] {x^2 + sin(deg(x))};
+      \addplot[thick, line label={$H(\theta)$}] {x^2 + sin(deg(x))};
       % lower quadratic
       \addplot[
         DarkOrange,
@@ -1123,7 +1127,7 @@ $f$ is strongly convex with $\mu = 1$ and has Lipschitz gradient with $L = 3$.
       \addplot[only marks,mark=*] coordinates {(\xzero,\fz)};
     \end{axis}
   \end{tikzpicture}
-  \caption{The function $f(x) = x^2 + \sin(x)$ is strongly convex with $\mu = 1$
+  \caption{The function $H(\theta) = \theta^2 + \sin(\theta)$ is strongly convex with $l = 1$
     and has Lipschitz gradient with $L = 3$.}
 \end{figure}
 :::::
@@ -1134,7 +1138,7 @@ $f$ is strongly convex with $\mu = 1$ and has Lipschitz gradient with $L = 3$.
 The **condition number** of a strongly convex function with Lipschitz gradient
 is
 $$
-  \kappa = \frac{L}{\mu} \geq 1.
+  \kappa = \frac{L}{l} \geq 1.
 $$
 
 . . .
@@ -1143,105 +1147,108 @@ The closer $\kappa$ is to $1$, the better conditioned the problem is.
 
 ### Example
 
-For $f(x) = x^2$, we have $\kappa = 2/2 = 1$, so the problem is perfectly
-conditioned.
+For $H(\theta) = \theta^2$, we have $\kappa = 2/2 = 1$, so the problem is
+perfectly conditioned.
 
 \medskip\pause
 
-We reach the minimum in one step with gradient descent and step size
+We reach the minimum in one step with gradient descent and step length
 $t = 1/L = 1/2$.
 
 ## The Robbins--Monro Convergence Theorem
 
-Suppose $f$ is strongly convex and we have unbiased stochastic estimates of the
-gradients, $g_k$, with $\E(g_k \mid x_k) = \nabla f(x_k)$ and
+Let $H(\theta) = \E L(Y,\theta)$ be the population risk. Suppose $H$ is strongly
+convex and
 $$
-  \E\big(\rVert g_k \lVert_2^2 \, \mid x_k \big) \leq A + B \lVert x_k \rVert_2^2
+  \E\left(\lVert\nabla_\theta L(Y,\theta)\rVert_2^2\right) \leq A
+                                                                + B \lVert \theta \rVert_2^2
 $$
 for some constants $A$ and $B$.
 
 \medskip\pause
 
-If $x^*$ is the global minimizer of $f$ then $x_n$ converges almost surely
-towards $x^*$ if
+If $\theta^*$ is the global minimizer of $H$, then $\theta_n$ converges almost
+surely toward $\theta^*$ if
 $$
-  \sum_{k=1}^{\infty} t_k^2 < \infty \quad \text{and} \quad
-  \sum_{k=1}^{\infty} t_k = \infty.
+  \sum_{n = 1}^{\infty} \gamma_n^2 < \infty \quad \text{and} \quad \sum_{n = 1}^{\infty} \gamma_n
+                                   = \infty.
 $$
 
 . . .
 
 The theorem applies to learning rates satisfying
 $$
-  t_k \propto \frac{1}{k}.
+  \gamma_n \propto \frac{1}{n}.
 $$
 
-## Diminishing Step Sizes
+## Diminishing Learning Rates
 
-Assume cyclic rule and set $t_k = t$ for $n$ updates. We get
+Assume a cyclic rule and set $\gamma_n = \gamma$ for $N$ updates. We get
 $$
-  x_{k + n} = x_k - t \sum_{i=1}^n \nabla f_i(x_{k + i - 1}).
+  \theta_{n + N} = \theta_n
+                   - \gamma \sum_{i = 1}^N \nabla_\theta L(y_i,x_i,\theta_{n + i - 1}).
 $$
 
 . . .
 
-Meanwhile, **full** gradient descent with step size $nt$ would give
+Meanwhile, **full** gradient descent with step length $N\gamma$ would give
 $$
-  x_{k + 1} = x_k - t \sum_{i=1}^n \nabla f_i(x_k).
+  \theta_{n + 1} = \theta_n
+                   - \gamma \sum_{i = 1}^N \nabla_\theta L(y_i,x_i,\theta_n).
 $$
 
 . . .
 
 Difference between the two is
 $$
-  t \sum_{i=1}^n \Big( \nabla f_i(x_{k + i - 1}) - \nabla f_i(x_k) \Big)
+  \gamma \sum_{i = 1}^N \left( \nabla_\theta L(y_i,x_i,\theta_{n + i - 1}) - \nabla_\theta L(y_i,x_i,\theta_n) \right)
 $$
-which does not tend to zero for constant $t$. So the noise in the gradient
+which does not tend to zero for constant $\gamma$. So the noise in the gradient
 estimates does not vanish as we approach the minimum.
 
 ## Convergence Rates
 
 ### Gradient Descent
 
-For convex $f$, GD with diminishing step sizes converges at rate
+For convex $H_N$, GD with diminishing step lengths converges at rate
 $$
-  f(x_k) - f^* = O\left(\frac{1}{\sqrt{k}}\right).
+  H_N(\theta_n) - H_N^* = O\left(\frac{1}{\sqrt{n}}\right).
 $$
 
 . . .
 
-When $f$ is differentiable with Lipschitz gradient, we get
+When $H_N$ is differentiable with Lipschitz gradient, we get
 $$
-  f(x_k) - f^* = O\left(\frac{1}{k}\right).
+  H_N(\theta_n) - H_N^* = O\left(\frac{1}{n}\right).
 $$
 
 . . .
 
 ### Stochastic Gradient Descent
 
-For convex $f$ with diminishing step sizes, SGD converges at rate
+For convex $H_N$ with diminishing learning rates, SGD converges at rate
 $$
-  \E\big(f(x_k) - f^*\big) = O\left(\frac{1}{\sqrt{k}}\right).
+  \E\big(H_N(\theta_n) - H_N^*\big) = O\left(\frac{1}{\sqrt{n}}\right).
 $$
 
 . . .
 
-But this **does not improve** when $f$ is differentiable with Lipschitz
+But this **does not improve** when $H_N$ is differentiable with Lipschitz
 gradient.
 
 ## Rates for Strongly Convex Functions
 
-When $f$ is strongly convex and has Lipschitz gradient, GD satisfies
+When $H_N$ is strongly convex and has Lipschitz gradient, GD satisfies
 $$
-  f(x_k) - f^* = O(\delta^k), \qquad \delta \in (0, 1)
+  H_N(\theta_n) - H_N^* = O(\delta^n), \qquad \delta \in (0, 1)
 $$
-and $\delta = 1 - \mu/L$
+and $\delta = 1 - l/L$.
 
 . . .
 
 Under same conditions, SGD gives us
 $$
-  \E(f(x_n) - f^*) = O\left(\frac{1}{k}\right).
+  \E\big(H_N(\theta_n) - H_N^*\big) = O\left(\frac{1}{n}\right).
 $$
 
 . . .
@@ -1288,23 +1295,24 @@ So SGD does **not** enjoy linear convergence rates under strong convexity.
 
 ## Mini-Batch Gradient Descent
 
-Take mini-batch $A_k$ of size $b$ of the data and iterate through
+Take a mini-batch $I_n$ of size $m$ and compute
 $$
-  x_{k+1} = x_k - \frac{t}{b} \sum_{i \in A_k} \nabla f_i(x_k).
+  \rho_n = \frac{1}{m}\sum_{i \in I_n} \nabla_\theta L(y_i,x_i,\theta_n),
 $$
+then update $\theta_{n + 1} = \theta_n - \gamma_n\rho_n$.
 
 . . .
 
 Estimates are still unbiased,
 $$
-  \operatorname{E}\frac{1}{b}\sum_{i \in A_k}\nabla f_i(x) = \nabla f(x),
+  \E(\rho_n \mid \theta_n) = \nabla H_N(\theta_n),
 $$
-but variance is reduced by a factor of $1/b$.
+but variance is reduced by a factor of $1/m$.
 
 \medskip\pause
 
-Under Lipschitz gradient, rate goes from $O(1/\sqrt{k})$ to
-$O(1/\sqrt{bk} + 1/k)$.
+Under Lipschitz gradient, the rate goes from $O(1/\sqrt{n})$ to
+$O(1/\sqrt{mn} + 1/n)$.
 
 \medskip\pause
 
@@ -1476,8 +1484,8 @@ plot_iteration <- function(i, x_gd, x_sgd) {
   lines(x_sgd_i, f(x_sgd_i), col = "darkorange", lwd = 1)
   points(x_sgd_i, f(x_sgd_i), col = "darkorange", pch = 19, cex = 0.8)
 
-  mtext("x", side = 1, outer = TRUE, line = 2)
-  mtext("f(x)", side = 2, outer = TRUE, line = 2)
+  mtext(expression(theta), side = 1, outer = TRUE, line = 2)
+  mtext(expression(H(theta)), side = 2, outer = TRUE, line = 2)
 
   par(opar)
 }
@@ -1569,9 +1577,9 @@ plot_iteration(20, x_gd, x_sgd)
 plot_iteration(steps, x_gd, x_sgd)
 ```
 
-## Learning Rate (Step Size)
+## Learning Rate
 
-The learning rate (step size) $t$ is crucial for SGD, but hard to set.
+The learning rate $\gamma_n$ is crucial for SGD, but hard to set.
 
 \medskip\pause
 
@@ -1582,9 +1590,9 @@ Convergence theorem only gives a few hints.
 ### A Class of Decay Schedules
 
 $$
-  t_k = \frac{t_0 K}{K + k^a} = \frac{t_0 }{1 + K^{-1} k^{a}}
+  \gamma_n = \frac{\gamma_0 K}{K + n^a} = \frac{\gamma_0}{1 + K^{-1} n^a}
 $$
-with initial learning rate $t_0 > 0$ and constants $K, a > 0$.
+with initial learning rate $\gamma_0 > 0$ and constants $K, a > 0$.
 
 \medskip\pause
 
@@ -1592,10 +1600,10 @@ Convergence is ensured by Robbins--Monro if $a \in (0.5, 1]$.
 
 \medskip\pause
 
-Fixing the exponent $a$ and picking a target rate, $t_1$, to be reached after
-$k_1$ steps, we can solve for $K$ and get
+Fixing the exponent $a$ and picking a target rate, $\gamma_1$, to be reached
+after $n_1$ steps, we can solve for $K$ and get
 $$
-  K = \frac{k_1^a t_1}{t_0 - t_1}.
+  K = \frac{n_1^a \gamma_1}{\gamma_0 - \gamma_1}.
 $$
 
 ##
@@ -1604,16 +1612,25 @@ $$
 #| label: decay
 #| cache: true
 
-decay_scheduler <- function(t0 = 1, a = 1, K = 1, t = NULL, k1 = NULL) {
+decay_scheduler <- function(
+  gamma0 = 1,
+  a = 1,
+  K = 1,
+  gamma1 = NULL,
+  n1 = NULL,
+  t0 = gamma0
+) {
   force(a)
+  # Keep the existing logreg_sgd() interface while using gamma in the slides.
+  gamma0 <- t0
 
-  if (!is.null(t) && !is.null(k1)) {
-    K <- k1^a * t / (t0 - t)
+  if (!is.null(gamma1) && !is.null(n1)) {
+    K <- n1^a * gamma1 / (gamma0 - gamma1)
   }
 
-  b <- t0 * K
+  b <- gamma0 * K
 
-  function(k) b / (K + k^a)
+  function(n) b / (K + n^a)
 }
 ```
 
@@ -1625,18 +1642,18 @@ decay_scheduler <- function(t0 = 1, a = 1, K = 1, t = NULL, k1 = NULL) {
 #| fig-height: 3
 #| fig-width: 4
 #| fig-cap: "Examples of learning rate schedules,
-#|   using $t_k = \\frac{t_0 }{1 + K^{-1} k^{a}}$."
+#|   using $\\gamma_n = \\frac{\\gamma_0}{1 + K^{-1} n^{a}}$."
 
 grid_par <- expand.grid(
-  k = seq(0, 1000, 2),
+  n = seq(0, 1000, 2),
   K = c(25, 50, 100),
   a = c(0.6, 1),
-  t0 = 1
+  gamma0 = 1
 )
 
-grid_par <- dplyr::mutate(grid_par, rate = t0 * K / (K + k^a))
+grid_par <- dplyr::mutate(grid_par, rate = gamma0 * K / (K + n^a))
 
-ggplot(grid_par, aes(k, rate, color = factor(K), linetype = factor(a))) +
+ggplot(grid_par, aes(n, rate, color = factor(K), linetype = factor(a))) +
   geom_line() +
   scale_color_discrete("K") +
   scale_linetype_discrete("a") +
@@ -1645,7 +1662,7 @@ ggplot(grid_par, aes(k, rate, color = factor(K), linetype = factor(a))) +
 
 ## So, Is The Problem of Setting Learning Rate Solved?
 
-No, not really, because it's still hard to pick $t_0$, $K$, and $a$.
+No, not really, because it's still hard to pick $\gamma_0$, $K$, and $a$.
 
 ```{r}
 #| echo: false
@@ -1731,15 +1748,15 @@ step_size_illustration(0.9)
 
 \begin{algorithm}[H]
   \caption{Stochastic gradient descent (with mini-batches)}
-  \KwData{Initial step size $t_0 > 0$}
-  \For{$k = 1,2,\dots$}{
-    $A_k \gets$ batch of data\;
+  \KwData{Initial parameter $\theta_0$ and learning-rate schedule $(\gamma_n)$}
+  \For{$n = 0,1,\dots$}{
+    $I_n \gets$ mini-batch of $m$ indices\;
 
-    $t_k \gets$ new, smaller, step size\;
+    $\rho_n \gets \frac{1}{m}\sum_{i\in I_n}\nabla_\theta L(y_i,x_i,\theta_n)$\;
 
-    $x \gets x - t_k \sum_{i \in A_k} \nabla f(x_i)$\;
+    $\theta_{n+1} \gets \theta_n - \gamma_n\rho_n$\;
     \If{converged}{
-      \Return{$x$}
+      \Return{$\theta_{n+1}$}
     }
   }
 \end{algorithm}
@@ -1771,7 +1788,8 @@ first can help.
 
 Minimize
 $$
-  \frac{1}{n} \sum_{i=1}^n f_i(\beta), \quad\text{with}\quad f_i(\beta) = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2.
+  H_N(\beta) = \frac{1}{N} \sum_{i = 1}^N L(y_i,x_i,\beta), \quad\text{with}\quad L(y_i,x_i,\beta)
+             = \frac{1}{2} (y_i - x_i \beta)^2 + \frac{\lambda}{2} \beta^2.
 $$
 
 . . .
@@ -1803,7 +1821,7 @@ plot(beta_grid, f_vec(beta_grid, x, y, 0.6), type = "l")
 ### Step 1
 
 Generate some data, for instance $x$ from `rnorm` and
-`y <- x * beta + rnorm(n)`. You can pick $\beta$ and $n$ however you want.
+`y <- x * beta + rnorm(N)`. You can pick $\beta$ and $N$ however you want.
 
 . . .
 
