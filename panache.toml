@@ -9,3 +9,6 @@ extend-exclude = ["AGENTS.md"]
 [formatters]
 r = "arity"
 cpp = "clang-format"
+
+[experimental]
+format-math = true
