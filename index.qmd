@@ -44,188 +44,188 @@ for you to solve independently at your own pace.
 
 ### Week 2
 
-#### Lecture 3: Measuring and Improving Performance
-
-- **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture3.qmd))
-- **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and
-  [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (Advanced R)
-- **Exercises:** [1-3 (Section 24.4.3,
-  AdvR)](https://adv-r.hadley.nz/perf-improve.html#exercises-71)
-
-#### Exercise Session 2
-
-- **Main topic**: Using AI properly, memory usage and benchmarking, dependency
-  injection, reverse engineering
-- **In class walkthrough:** Exercises 2.1-2.6 (CSwR, Chapter 2) + 24.4.3.2 +
-  24.4.3.3 (AdvR)
-- **Solutions**: [Exercise 2 Solutions](exercises/U2.qmd)
-- **Mini-slides**: [Tips for using AI](slides/llm_use.pdf)
-
-#### Lecture 4: Parallelization and Scatterplot Smoothing
-
-- **Slides:** [Parallelization and Scatterplot Smoothing](slides/lecture4.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture4.qmd))
-- **Reading:**
-  - [Chapter 3, but skip 3.3 (CSwR)](https://cswr.nrhstat.org/bivariate.html)
-  - [Chapter 4, but skip 4.2-4.3
-    (CSwR)](https://cswr.nrhstat.org/timeseries.html)
-- **Exercises:** [3.4 (Chapter 3,
-  CSWR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
-
-### Week 3
-
-#### Lecture 5: Random Number Generation and Rejection Sampling
-
-- **Slides:** [Random Number Generation and Rejection
-  Sampling](slides/lecture5.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture5.qmd))
-- **Reading:**
-  - [Chapter 5, but skip 5.1
-    (CSwR)](https://cswr.nrhstat.org/random-number-generation)
-  - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp)
-- **Exercises:**
-  - [Exercises 5.1-5.2 in Chapter 5
-    (CSwR)](https://cswr.nrhstat.org/random-number-generation#univariate:ex)
-
-#### Exercise Session 3
-
-- **Main topic**: Premature optimization
-- **In class walkthrough:** Exercises 3.4 (Chapter 3, CSWR) + 5.1-5.2 (Chapter
-  5, CSWR)
-- **Solutions**: [Exercise 3 Solutions](exercises/U3.qmd)
-
-#### Lecture 6: Monte Carlo Methods and Importance Sampling
-
-- **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture6.qmd))
-- **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci)
-
-#### Presentations of Assignment 1
-
-- **Instructions:** [Assignment 1](assignments/assignment1.html)
-
-### Week 4
-
-#### Lecture 7: Optimization
-
-- **Slides:** [Optimization](slides/lecture7.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture7.qmd))
-- **Reading:**
-  - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization)
-  - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt)
-
-#### Exercise Session 4
-
-- **Main topic**: Currying and decorators
-- **In class walkthrough:** Exercises 25.2.6.1, 25.2.6.2, 25.4.5.1,
-  25.4.5.2(AdvR) + Bonus Example
-- **Solutions**: [Exercise 4 Solutions](exercises/U4.qmd)
-
-#### Presentations of Assignment 2
-
-- **Instructions:** [Assignment 2](assignments/assignment2.html)
-
-### Week 5
-
-#### Lecture 8: Testing and Debugging
-
-This lecture will be mostly a hands-on session. Please bring your laptop. We
-will work on debugging a piece of code together. You can find the code here:
-[debugging.R](R/debugging.R).
-
-- **Slides:** [Testing and Debugging](slides/lecture8.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture8.qmd))
-- **Reading:** [Chapter 22
-  (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging)
-
-#### Exercise Session 5
-
-- **Main topic**: None - work on your assignments with TA assistance
-
-#### Lecture 9: Likelihood Optimization and the EM Algorithm
-
-- **Slides:** [Likelihood Optimization and the EM
-  Algorithm](slides/lecture9.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture9.qmd))
-- **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em)
-
-### Week 6
-
-#### Lecture 10: More on the EM Algorithm
-
-- **Slides:** [The EM Algorithm](slides/lecture10.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture10.qmd))
-
-#### Exercise Session 6
-
-- **Main topic**: None - work on your assignments with TA assistance
-
-#### Lecture 11: Stochastic Gradient Descent
-
-- **Slides:** [Stochastic Gradient Descent](slides/lecture11.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture11.qmd))
-- **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt)
-
-#### Presentations of Assignment 3
-
-- **Instructions:** [Assignment 3](assignments/assignment3.html)
-
-### Autumn Holiday Week
-
-Enjoy your break!
-
-### Week 7
-
-#### Lecture 12: Rcpp
-
-Prior to this lecture, you should have Rcpp installed. You can follow the
-instructions in [Rcpp for
-Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html) to get
-started.
-
-- **Slides:** [Rcpp](slides/lecture12.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture12.qmd))
-- **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp)
-- **Exercises:**
-  - [1 and 2 from 25.2.6
-    (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started)
-  - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73)
-  - If you have time over, try the [exercises in 25.5.7
-    (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74) too
-
-#### Exercise Session 7
-
-- **Main topic**: Branch prediction
-- **In class walkthrough:** TA will go through the topic with a live coding
-  example.
-- **Solutions**: [Exercise 7](exercises/U7.qmd)
-
-#### Lecture 13: Variations on Stochastic Gradient Descent
-
-- **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture13.qmd))
-- **Reading:** [Sections 11.2-11.3
-  (CSwR)](https://cswr.nrhstat.org/stochopt#beyond-basic-stochastic-gradient-algorithms)
-
-#### Presentations of Assignment 4
-
-- **Instructions:** [Assignment 4](assignments/assignment4.html)
-
-### Week 8
-
-#### Lecture 14: R Packages and Wrap-Up
-
-This lecture will mostly be a hands-on session. Please bring your laptop. We
-will work on creating an R package together. Please install the
-[devtools](https://cran.r-project.org/web/packages/devtools/index.html) package
-prior to the lecture.
-
-- **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture14.qmd))
-
-### Week 9
-
-#### Examinations
-
-See the schedule on Absalon.
+<!-- #### Lecture 3: Measuring and Improving Performance -->
+<!---->
+<!-- - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture3.qmd)) -->
+<!-- - **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and -->
+<!--   [Chapter 24](https://adv-r.hadley.nz/perf-improve.html) (Advanced R) -->
+<!-- - **Exercises:** [1-3 (Section 24.4.3, -->
+<!--   AdvR)](https://adv-r.hadley.nz/perf-improve.html#exercises-71) -->
+<!---->
+<!-- #### Exercise Session 2 -->
+<!---->
+<!-- - **Main topic**: Using AI properly, memory usage and benchmarking, dependency -->
+<!--   injection, reverse engineering -->
+<!-- - **In class walkthrough:** Exercises 2.1-2.6 (CSwR, Chapter 2) + 24.4.3.2 + -->
+<!--   24.4.3.3 (AdvR) -->
+<!-- - **Solutions**: [Exercise 2 Solutions](exercises/U2.qmd) -->
+<!-- - **Mini-slides**: [Tips for using AI](slides/llm_use.pdf) -->
+<!---->
+<!-- #### Lecture 4: Parallelization and Scatterplot Smoothing -->
+<!---->
+<!-- - **Slides:** [Parallelization and Scatterplot Smoothing](slides/lecture4.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture4.qmd)) -->
+<!-- - **Reading:** -->
+<!--   - [Chapter 3, but skip 3.3 (CSwR)](https://cswr.nrhstat.org/bivariate.html) -->
+<!--   - [Chapter 4, but skip 4.2-4.3 -->
+<!--     (CSwR)](https://cswr.nrhstat.org/timeseries.html) -->
+<!-- - **Exercises:** [3.4 (Chapter 3, -->
+<!--   CSWR)](https://cswr.nrhstat.org/bivariate#bivariate:ex) -->
+<!---->
+<!-- ### Week 3 -->
+<!---->
+<!-- #### Lecture 5: Random Number Generation and Rejection Sampling -->
+<!---->
+<!-- - **Slides:** [Random Number Generation and Rejection -->
+<!--   Sampling](slides/lecture5.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture5.qmd)) -->
+<!-- - **Reading:** -->
+<!--   - [Chapter 5, but skip 5.1 -->
+<!--     (CSwR)](https://cswr.nrhstat.org/random-number-generation) -->
+<!--   - [Chapter 6 (CSwR)](https://cswr.nrhstat.org/reject-samp) -->
+<!-- - **Exercises:** -->
+<!--   - [Exercises 5.1-5.2 in Chapter 5 -->
+<!--     (CSwR)](https://cswr.nrhstat.org/random-number-generation#univariate:ex) -->
+<!---->
+<!-- #### Exercise Session 3 -->
+<!---->
+<!-- - **Main topic**: Premature optimization -->
+<!-- - **In class walkthrough:** Exercises 3.4 (Chapter 3, CSWR) + 5.1-5.2 (Chapter -->
+<!--   5, CSWR) -->
+<!-- - **Solutions**: [Exercise 3 Solutions](exercises/U3.qmd) -->
+<!---->
+<!-- #### Lecture 6: Monte Carlo Methods and Importance Sampling -->
+<!---->
+<!-- - **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture6.qmd)) -->
+<!-- - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci) -->
+<!---->
+<!-- #### Presentations of Assignment 1 -->
+<!---->
+<!-- - **Instructions:** [Assignment 1](assignments/assignment1.html) -->
+<!---->
+<!-- ### Week 4 -->
+<!---->
+<!-- #### Lecture 7: Optimization -->
+<!---->
+<!-- - **Slides:** [Optimization](slides/lecture7.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture7.qmd)) -->
+<!-- - **Reading:** -->
+<!--   - [Chapter 8 (CSwR)](https://cswr.nrhstat.org/likelihood-and-optimization) -->
+<!--   - [Chapter 9 (CSwR)](https://cswr.nrhstat.org/numopt) -->
+<!---->
+<!-- #### Exercise Session 4 -->
+<!---->
+<!-- - **Main topic**: Currying and decorators -->
+<!-- - **In class walkthrough:** Exercises 25.2.6.1, 25.2.6.2, 25.4.5.1, -->
+<!--   25.4.5.2(AdvR) + Bonus Example -->
+<!-- - **Solutions**: [Exercise 4 Solutions](exercises/U4.qmd) -->
+<!---->
+<!-- #### Presentations of Assignment 2 -->
+<!---->
+<!-- - **Instructions:** [Assignment 2](assignments/assignment2.html) -->
+<!---->
+<!-- ### Week 5 -->
+<!---->
+<!-- #### Lecture 8: Testing and Debugging -->
+<!---->
+<!-- This lecture will be mostly a hands-on session. Please bring your laptop. We -->
+<!-- will work on debugging a piece of code together. You can find the code here: -->
+<!-- [debugging.R](R/debugging.R). -->
+<!---->
+<!-- - **Slides:** [Testing and Debugging](slides/lecture8.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture8.qmd)) -->
+<!-- - **Reading:** [Chapter 22 -->
+<!--   (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging) -->
+<!---->
+<!-- #### Exercise Session 5 -->
+<!---->
+<!-- - **Main topic**: None - work on your assignments with TA assistance -->
+<!---->
+<!-- #### Lecture 9: Likelihood Optimization and the EM Algorithm -->
+<!---->
+<!-- - **Slides:** [Likelihood Optimization and the EM -->
+<!--   Algorithm](slides/lecture9.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture9.qmd)) -->
+<!-- - **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em) -->
+<!---->
+<!-- ### Week 6 -->
+<!---->
+<!-- #### Lecture 10: More on the EM Algorithm -->
+<!---->
+<!-- - **Slides:** [The EM Algorithm](slides/lecture10.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture10.qmd)) -->
+<!---->
+<!-- #### Exercise Session 6 -->
+<!---->
+<!-- - **Main topic**: None - work on your assignments with TA assistance -->
+<!---->
+<!-- #### Lecture 11: Stochastic Gradient Descent -->
+<!---->
+<!-- - **Slides:** [Stochastic Gradient Descent](slides/lecture11.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture11.qmd)) -->
+<!-- - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt) -->
+<!---->
+<!-- #### Presentations of Assignment 3 -->
+<!---->
+<!-- - **Instructions:** [Assignment 3](assignments/assignment3.html) -->
+<!---->
+<!-- ### Autumn Holiday Week -->
+<!---->
+<!-- Enjoy your break! -->
+<!---->
+<!-- ### Week 7 -->
+<!---->
+<!-- #### Lecture 12: Rcpp -->
+<!---->
+<!-- Prior to this lecture, you should have Rcpp installed. You can follow the -->
+<!-- instructions in [Rcpp for -->
+<!-- Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html) to get -->
+<!-- started. -->
+<!---->
+<!-- - **Slides:** [Rcpp](slides/lecture12.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture12.qmd)) -->
+<!-- - **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp) -->
+<!-- - **Exercises:** -->
+<!--   - [1 and 2 from 25.2.6 -->
+<!--     (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started) -->
+<!--   - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73) -->
+<!--   - If you have time over, try the [exercises in 25.5.7 -->
+<!--     (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-74) too -->
+<!---->
+<!-- #### Exercise Session 7 -->
+<!---->
+<!-- - **Main topic**: Branch prediction -->
+<!-- - **In class walkthrough:** TA will go through the topic with a live coding -->
+<!--   example. -->
+<!-- - **Solutions**: [Exercise 7](exercises/U7.qmd) -->
+<!---->
+<!-- #### Lecture 13: Variations on Stochastic Gradient Descent -->
+<!---->
+<!-- - **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture13.qmd)) -->
+<!-- - **Reading:** [Sections 11.2-11.3 -->
+<!--   (CSwR)](https://cswr.nrhstat.org/stochopt#beyond-basic-stochastic-gradient-algorithms) -->
+<!---->
+<!-- #### Presentations of Assignment 4 -->
+<!---->
+<!-- - **Instructions:** [Assignment 4](assignments/assignment4.html) -->
+<!---->
+<!-- ### Week 8 -->
+<!---->
+<!-- #### Lecture 14: R Packages and Wrap-Up -->
+<!---->
+<!-- This lecture will mostly be a hands-on session. Please bring your laptop. We -->
+<!-- will work on creating an R package together. Please install the -->
+<!-- [devtools](https://cran.r-project.org/web/packages/devtools/index.html) package -->
+<!-- prior to the lecture. -->
+<!---->
+<!-- - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf) -->
+<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture14.qmd)) -->
+<!---->
+<!-- ### Week 9 -->
+<!---->
+<!-- #### Examinations -->
+<!---->
+<!-- See the schedule on Absalon. -->
