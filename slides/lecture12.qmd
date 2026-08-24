@@ -952,9 +952,9 @@ Copies and temporaries are often optimized away.
 #| label: vM-rejection
 #| cache: true
 
-rvonmises <- function(n, kappa) {
-  y <- numeric(n)
-  for (i in 1:n) {
+rvonmises <- function(N, kappa) {
+  y <- numeric(N)
+  for (i in 1:N) {
     reject <- TRUE
     while (reject) {
       y0 <- runif(1, -pi, pi)
@@ -977,12 +977,12 @@ rvonmises <- function(n, kappa) {
 
 // [[Rcpp::export]]
 Rcpp::NumericVector
-rvonmises_cpp(const int n, const double kappa)
+rvonmises_cpp(const int N, const double kappa)
 {
-  Rcpp::NumericVector y(n);
+  Rcpp::NumericVector y(N);
   int i = 0;
 
-  while (i < n) {
+  while (i < N) {
     double y0 = R::runif(-M_PI, M_PI);
     bool accept = R::runif(0, 1) <= exp(kappa * (cos(y0) - 1));
     if (accept) {

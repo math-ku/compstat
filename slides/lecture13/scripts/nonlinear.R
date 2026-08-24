@@ -1,6 +1,4 @@
 library(tidyverse)
-library(plotly)
-library(viridis)
 library(zeallot) # For the '%<-%' assignment operator
 library(numDeriv)
 library(CSwR)
@@ -58,7 +56,7 @@ plot(
   pch = 19,
   col = "dark grey",
   xlab = "x",
-  ylab = expression(f(x)),
+  ylab = "y",
   cex = 0.7
 )
 lines(osc$x, osc$f)
@@ -96,7 +94,7 @@ persp(
   phi = 50,
   xlab = expression(beta),
   ylab = expression(alpha),
-  zlab = expression(f(alpha, beta))
+  zlab = "H(alpha, beta)"
 )
 dev.off()
 knitr::plot_crop(fn2)
@@ -292,6 +290,8 @@ for (k in seq_along(init)) {
       z,
       drawlabels = FALSE,
       col = "dark grey",
+      xlab = expression(alpha),
+      ylab = expression(beta),
       main = algs[i]
     )
     alg <- tolower(algs[i[]])

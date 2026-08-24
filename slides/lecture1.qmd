@@ -1121,7 +1121,7 @@ Write a function `is_even()` that returns `TRUE` if its argument is even,
 Write a function that computes the weighted mean of a numeric vector, $x$, given
 a vector of weights, $w$:
 $$
-  \frac{\sum_{i=1}^n w_i x_i}{\sum_{i=1}^n w_i}
+  \frac{\sum_{i=1}^N w_i x_i}{\sum_{i=1}^N w_i}
 $$
 
 Pass arguments to `sum()` via `...`. Use it to handle the case where `x`

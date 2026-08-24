@@ -64,8 +64,8 @@ plot(
   res_nesterov$loss - optim,
   type = "l",
   log = "y",
-  ylab = expression(f(x[k]) - f * "*"),
-  xlab = "k",
+  ylab = expression(H(theta[n]) - H * "*"),
+  xlab = expression(n),
   col = "steelblue4"
 )
 lines(seq_along(res$loss), res$loss - optim, type = "l", log = "y")

@@ -42,13 +42,13 @@ $$
 with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
 $$
   \begin{aligned}
-    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\
+    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \|f''\|_2^2 \\
                  & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
   \end{aligned}
 $$
 with
 $$
-  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
+  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \ \mathrm{d}z.
 $$
 
 \pause
@@ -101,7 +101,7 @@ nuuk_year <- group_by(nuuk, Year) |>
     High = max(Temperature),
     Low = min(Temperature)
   )
-n <- nrow(nuuk_year)
+N <- nrow(nuuk_year)
 ```
 
 When $n$ is large, computing $\symbf{S}_{\lambda} \symbf{y}$ directly is
@@ -110,7 +110,7 @@ expensive.
 \medskip\pause
 
 In practice, we therefore often use fewer basis functions than data points,
-$p < n$.
+$p < N$.
 
 \pause
 
@@ -252,7 +252,7 @@ equally often in a period.
 
 . . .
 
-### Uniform Random Variables i n R
+### Uniform Random Variables in R
 
 `runif()` samples by just scaling these pseduo-random integers to the unit
 interval (with some tweaks to avoid division by 0).
@@ -295,7 +295,7 @@ applying a function to samples from a simpler distribution.
 ### Example {.example}
 
 To sample $X \sim \mathrm{Exp}(\lambda)$, use $X = -\log(U)/\lambda$ with
-$U \sim \mathrm{Uniform}(0,1)$.
+$U \sim \mathcal{U}(0, 1)$.
 
 ## Inversion Sampling
 
@@ -341,7 +341,7 @@ CSwR](https://cswr.nrhstat.org/random-number-generation#univariate:ex) or the
 
 Recall that
 $$
-  \Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \mathrm{d} z.
+  \Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \ \mathrm{d}z.
 $$
 
 . . .
@@ -525,7 +525,7 @@ $U_1, U_2, \ldots$ be i.i.d. uniform and independent of $Y_i$ for all $i$.
 
 Define
 $$
-  k = \inf\left\{n \geq 1 \mid U_n \leq \alpha \frac{f(Y_n)}{g(Y_n)}\right\},
+  \sigma = \inf\left\{n \geq 1 \mid U_n \leq \alpha \frac{f(Y_n)}{g(Y_n)}\right\},
 $$
 for $\alpha \in (0, 1]$, where $f$ is a density.
 
@@ -534,7 +534,7 @@ for $\alpha \in (0, 1]$, where $f$ is a density.
 ### Theorem
 
 If $f(y) \leq g(y)/\alpha$ for all $y \in \mathbb{R}$, then the distribution of
-$Y_k$ has density $f$.
+$Y_\sigma$ has density $f$.
 
 \medskip\pause
 
@@ -552,9 +552,9 @@ $f$.
 #|   using a uniform proposal.
 
 set.seed(1)
-n <- 1000
-y <- runif(n, 0, 9)
-u <- runif(n, 0, 3.2)
+N <- 1000
+y <- runif(N, 0, 9)
+u <- runif(N, 0, 3.2)
 target <- function(x) 3 * exp(-0.5 * (x - 5)^2)
 envelope <- function(x) rep(3.2, length(x))
 
@@ -660,8 +660,8 @@ $$
 \begin{algorithm}[H]
   \caption{Rejection sampling for the von Mises distribution}
   \Repeat{sample is accepted}{
-    Generate $Y \sim \mathrm{Uniform}(-\pi, \pi)$\;
-    Generate $U \sim \mathrm{Uniform}(0, 1)$\;
+    Generate $Y \sim \mathcal{U}(-\pi, \pi)$\;
+    Generate $U \sim \mathcal{U}(0, 1)$\;
     \If{$U \leq e^{\kappa(\cos(Y) - 1)}$}{
       Accept $Y$\;
     }
@@ -690,8 +690,8 @@ get_one_sample_vmises <- function(kappa) {
 ```{r}
 #| label: vMsim-slow2
 
-sample_vonmises_slow <- function(n, kappa) {
-  replicate(n, get_one_sample_vmises(kappa))
+sample_vonmises_slow <- function(N, kappa) {
+  replicate(N, get_one_sample_vmises(kappa))
 }
 ```
 
@@ -790,19 +790,19 @@ Simple and fast, but returns a **random** number of samples!
 
 \medskip\pause
 
-We need a function that returns exactly $n$ samples. But we don't know $\alpha$
+We need a function that returns exactly $N$ samples. But we don't know $\alpha$
 in advance.
 
 ##
 
 \begin{algorithm}[H]
-  \caption{Sampling exactly $n$ values via rejection sampling with unknown
+  \caption{Sampling exactly $N$ values via rejection sampling with unknown
     acceptance probability $\alpha$.}
   $\alpha \gets 1$\;
   $\symbf{y} \gets$ empty vector\;
   $n_\text{accepted} \gets 0$\;
-  \While{$n_\text{accepted} < n$}{
-    $m \gets \lceil (n - n_\text{accepted}) / \alpha \rceil$\;
+  \While{$n_\text{accepted} < N$}{
+    $m \gets \lceil (N - n_\text{accepted}) / \alpha \rceil$\;
     $\symbf{y}_\text{new} \gets$ Generate $m$ candidate samples $x_1, \ldots, x_m$\;
     $n_\text{accepted} \gets n_\text{accepted} +$ length$(\symbf{y}_\text{new})$\;
     \If{first batch}{
@@ -810,7 +810,7 @@ in advance.
     }
     Append $\symbf{y}_\text{new}$ to $\symbf{y}$\;
   }
-  \KwRet{$\symbf{y}_{1:n}$}
+  \KwRet{$\symbf{y}_{1:N}$}
 \end{algorithm}
 
 ## Function Factory for Rejection Sampling
@@ -819,12 +819,12 @@ in advance.
 #| label: new_rejection_sampler
 
 new_rejection_sampler <- function(generator) {
-  function(n, ...) {
+  function(N, ...) {
     alpha <- 1
     y <- numeric(0)
     n_accepted <- 0
-    while (n_accepted < n) {
-      m <- ceiling((n - n_accepted) / alpha)
+    while (n_accepted < N) {
+      m <- ceiling((N - n_accepted) / alpha)
       y_new <- generator(m, ...)
       n_accepted <- n_accepted + length(y_new)
       if (length(y) == 0) {
@@ -832,7 +832,7 @@ new_rejection_sampler <- function(generator) {
       }
       y <- c(y, y_new)
     }
-    list(x = y[seq_len(n)], alpha = alpha)
+    list(x = y[seq_len(N)], alpha = alpha)
   }
 }
 ```
@@ -982,8 +982,8 @@ params <- data.frame(
   )
 )
 
-make_beta_df <- function(n, x1, x2, alpha, beta, label) {
-  x <- sample_beta(n, x1 = x1, x2 = x2, alpha = alpha, beta = beta)$x
+make_beta_df <- function(N, x1, x2, alpha, beta, label) {
+  x <- sample_beta(N, x1 = x1, x2 = x2, alpha = alpha, beta = beta)$x
   data.frame(x = x, label = label)
 }
 
@@ -1255,8 +1255,8 @@ params <- data.frame(
   )
 )
 
-make_vm_df <- function(n, x1, x2, kappa, label) {
-  x <- von_mises_adapt(n, x1, x2, kappa)$x
+make_vm_df <- function(N, x1, x2, kappa, label) {
+  x <- von_mises_adapt(N, x1, x2, kappa)$x
   data.frame(x = x, label = label)
 }
 
@@ -1367,16 +1367,16 @@ Use the fact that
 $$
   W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k \quad \text{for} \quad X_1, \ldots, X_k \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
 $$
-to implement a function, `my_rchisq()`, such that `my_rchisq(n, k)` returns a
-sample of $n$ i.i.d. observations from $\chi^2_k$.
+to implement a function, `my_rchisq()`, such that `my_rchisq(N, k)` returns a
+sample of $N$ i.i.d. observations from $\chi^2_k$.
 
 ```{r}
 #| label: rchisq2-implementation
 #| include: false
 
-my_rchisq <- function(n, k) {
-  y <- numeric(n)
-  for (i in seq_len(n)) {
+my_rchisq <- function(N, k) {
+  y <- numeric(N)
+  for (i in seq_len(N)) {
     x <- rnorm(k)
     y[i] <- sum(x^2)
   }
@@ -1388,8 +1388,8 @@ my_rchisq <- function(n, k) {
 #| label: rchisq2-implementation-faster
 #| include: false
 
-my_fast_rchisq <- function(n, k) {
-  x <- matrix(rnorm(k * n), k)
+my_fast_rchisq <- function(N, k) {
+  x <- matrix(rnorm(k * N), k)
   colSums(x)
 }
 ```
@@ -1404,8 +1404,8 @@ Make another function `my_other_rchisq()` that uses inverse sampling.
 #| label: rchisq2
 #| include: false
 
-my_other_rchisq <- function(n, k) {
-  x <- rnorm(n)
+my_other_rchisq <- function(N, k) {
+  x <- rnorm(N)
   qchisq(x, k)
 }
 ```
@@ -1420,13 +1420,13 @@ Benchmark your implementations against one another and `rchisq()`.
 #| label: rchisq-bench
 #| include: false
 
-n <- 1e4
+N <- 1e4
 k <- 5
 bench::mark(
-  rchisq(n, k),
-  my_rchisq(n, k),
-  my_fast_rchisq(n, k),
-  my_other_rchisq(n, k),
+  rchisq(N, k),
+  my_rchisq(N, k),
+  my_fast_rchisq(N, k),
+  my_other_rchisq(N, k),
   check = FALSE
 ) |>
   plot()

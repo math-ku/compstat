@@ -34,7 +34,7 @@ fn <- here::here("images", "momentum-failure.pdf")
 
 pdf(fn, width = 2.7, height = 2.9, pointsize = 7)
 
-curve(f(x), -3, 4)
+curve(f(x), -3, 4, xlab = expression(theta), ylab = expression(H(theta)))
 lines(x_hist[1:maxit], f(x_hist[1:maxit]), pch = pch, cex = cex, col = col)
 points(x_hist[1:maxit], f(x_hist[1:maxit]), pch = pch, cex = cex, col = col)
 

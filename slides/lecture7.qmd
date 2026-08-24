@@ -20,7 +20,7 @@ old_options <- options(digits = 4)
 
 Estimate $\E h(X)$ with $X \sim f$ by
 $$
-  \hat{\mu}_n = \frac{1}{n} \sum_{i=1}^n h(X_i) \quad \text{with } X_i \overset{iid}{\sim} f.
+  \hat{\mu}_{\mathrm{MC}} = \frac{1}{N} \sum_{i=1}^N h(X_i) \quad \text{with } X_i \overset{iid}{\sim} f.
 $$
 
 . . .
@@ -29,11 +29,11 @@ $$
 
 Use the "trick" that
 $$
-  \mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
+  \mu = \int h(x) f(x) \ \mathrm{d}x = \int h(x) \frac{f(x)}{g(x)} g(x) \ \mathrm{d}x = \int h(x) w^*(x) g(x) \ \mathrm{d}x
 $$
 and estimate
 $$
-  \hat{\mu}_n^{IS} = \frac{1}{n} \sum_{i=1}^n h(X_i) w^*(X_i) \quad \text{with } X_i \overset{iid}{\sim} g.
+  \hat{\mu}^*_{\mathrm{IS}} = \frac{1}{N} \sum_{i=1}^N h(X_i) w^*(X_i) \quad \text{with } X_i \overset{iid}{\sim} g.
 $$
 
 ## Recap: Importance Sampling
@@ -77,7 +77,7 @@ We learn about gradient descent and Newton's method.
 
 ## Optimization
 
-The process of trying to optimize an objective function $f$.
+The process of trying to optimize an objective function $H$.
 
 \medskip\pause
 
@@ -86,7 +86,7 @@ function.
 
 \medskip\pause
 
-Since minimizing $f$ is equivalent to maximizing $-f$, we will focus on
+Since minimizing $H$ is equivalent to maximizing $-H$, we will focus on
 minimization.
 
 . . .
@@ -103,14 +103,14 @@ minimization.
 In *standard form*, an optimization problem is written as
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_x  && f(x) \\
-    &\textrm{subject to}         && g_i(x) \leq 0, \quad i = 1, \ldots, m \\
-    &                            && h_j(x) = 0, \quad j = 1, \ldots, k.
+    &\operatorname*{minimize}_\theta && H(\theta) \\
+    &\textrm{subject to}            && g_i(\theta) \leq 0, \quad i = 1, \ldots, m \\
+    &                               && h_j(\theta) = 0, \quad j = 1, \ldots, k.
     \end{aligned}
 $$
 where
 
-- $f$ is the objective function,
+- $H$ is the objective function,
 - $g_i$ are inequality constraints, and
 - $h_j$ are equality constraints.
 
@@ -120,7 +120,7 @@ where
 
 We write the solution as
 $$
-  x^* = \operatorname{argmin}_x f(x)
+  \theta^* = \argmin_\theta H(\theta)
 $$
 
 ## Examples of Optimization Problems
@@ -149,9 +149,9 @@ $$
 ### Maximum Likelihood
 
 $$
-  \operatorname*{minimize}_{\theta}\big( - \log f(\theta \mid x)\big),
+  \operatorname*{minimize}_{\theta} \big(-\ell(\theta)\big),
 $$
-where $f(\theta \mid x)$ is the likelihood function.
+where $\ell$ is the log-likelihood function.
 
 . . .
 
@@ -173,7 +173,7 @@ the minimum acceptable return.
 The problem is to
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_{\beta \in \mathbb{R}^p} &&f(\beta) = \frac{1}{2} \lVert y - X\beta\rVert_2^2.
+    &\operatorname*{minimize}_{\beta \in \mathbb{R}^p} && H(\beta) = \frac{1}{2} \|y - X\beta\|_2^2.
   \end{aligned}
 $$
 
@@ -183,7 +183,7 @@ $$
 
 The solution is
 $$
-  \beta^* = \operatorname{argmin}_{\beta \in \mathbb{R}^p} f(\beta).
+  \beta^* = \argmin_{\beta \in \mathbb{R}^p} H(\beta).
 $$
 
 ## Types of Optimization Problems
@@ -214,20 +214,20 @@ Standard form:
 
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_x     && f(x) \\
-    &\textrm{subject to}            && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
-    &                               && a_j^T x = b_j, \quad j = 1, \ldots, k,
+    &\operatorname*{minimize}_\theta && H(\theta) \\
+    &\textrm{subject to}            && g_i(\theta) \leq 0, \quad i = 1, \ldots, m, \\
+    &                               && a_j^T \theta = b_j, \quad j = 1, \ldots, k,
     \end{aligned}
 $$
 
-where $f$ and $g_i$ are convex.
+where $H$ and $g_i$ are convex.
 
 ## Convex Functions
 
-A function $f$ is convex iff for all $x_1, x_2 \in \operatorname{dom} f$ and
-$\lambda \in [0, 1]$
+A function $H$ is convex iff for all
+$\theta_1, \theta_2 \in \operatorname{dom} H$ and $\lambda \in [0, 1]$
 $$
-  f(\lambda x_1 + (1 - \lambda) x_2) \leq \lambda f(x_1) + (1 - \lambda) f(x_2).
+  H(\lambda \theta_1 + (1 - \lambda) \theta_2) \leq \lambda H(\theta_1) + (1 - \lambda) H(\theta_2).
 $$
 
 This is known as **Jensen's inequality**.
@@ -260,8 +260,8 @@ df <- data.frame(
 pts <- data.frame(x = c(x1, x2), y = c(f(x1), f(x2)))
 
 labels <- c(
-  f = expression(f(x)),
-  chord = expression(lambda * f(x[1]) + (1 - lambda) * f(x[2]))
+  f = expression(H(theta)),
+  chord = expression(lambda * H(theta[1]) + (1 - lambda) * H(theta[2]))
 )
 
 ggplot(df, aes(x, y)) +
@@ -278,18 +278,19 @@ ggplot(df, aes(x, y)) +
   geom_text(
     aes(x, y),
     data = pts,
-    label = c(expression(x[1]), expression(x[2])),
+    label = c("theta[1]", "theta[2]"),
+    parse = TRUE,
     nudge_x = c(-0.3, 0.3)
   ) +
   labs(color = NULL, linetype = NULL) +
-  labs(y = expression(f(x)), x = "x")
+  labs(y = expression(H(theta)), x = expression(theta))
 ```
 
 ## First-Order Condition for Convexity
 
-If $f$ is **differentiable**, then the condition is equivalent to
+If $H$ is **differentiable**, then the condition is equivalent to
 $$
-  f(x_1) \geq f(x_2) + \nabla f(x_2)^T(x_1 - x_2).
+  H(\theta_1) \geq H(\theta_2) + \nabla H(\theta_2)^T(\theta_1 - \theta_2).
 $$
 
 . . .
@@ -315,8 +316,8 @@ df <- data.frame(
 pts <- data.frame(x = x0, y = f(x0))
 
 labels <- c(
-  f = expression(f(x)),
-  tangent = expression(f(x[2]) + nabla * f(x[2])^T * (x[1] - x[2]))
+  f = expression(H(theta)),
+  tangent = expression(H(theta[2]) + nabla * H(theta[2])^T * (theta[1] - theta[2]))
 )
 
 ggplot(df, aes(x, y)) +
@@ -327,7 +328,7 @@ ggplot(df, aes(x, y)) +
     linetype = "dashed",
     color = "steelblue"
   ) +
-  geom_point(data = pts, aes(x, y), label = expression(x[2]), nudge_y = 0.3) +
+  geom_point(data = pts, aes(x, y), label = expression(theta[2]), nudge_y = 0.3) +
   scale_linetype_manual(
     values = c(f = "solid", tangent = "dashed"),
     labels = labels
@@ -338,7 +339,7 @@ ggplot(df, aes(x, y)) +
   ) +
   lims(y = c(-1, 4)) +
   labs(color = NULL, linetype = NULL) +
-  labs(y = expression(f(x)), x = "x")
+  labs(y = expression(H(theta)), x = expression(theta))
 ```
 
 ## Optimality
@@ -347,9 +348,9 @@ Any (local) minimum is **global** (but not necessarily unique).
 
 ### First-Order Condition
 
-For differentiable $f$, $x^*$ is optimal iff
+For differentiable $H$, $\theta^*$ is optimal iff
 $$
-  \nabla f(x^*)^T(x - x^*) \geq 0\quad\text{for all}\quad x \in C,
+  \nabla H(\theta^*)^T(\theta - \theta^*) \geq 0\quad\text{for all}\quad \theta \in C,
 $$
 where $C$ is the feasible set.
 
@@ -357,9 +358,9 @@ where $C$ is the feasible set.
 
 ### Second-Order Condition
 
-If $f$ is twice-differentiable, then $x^*$ is optimal iff
+If $H$ is twice-differentiable, then $\theta^*$ is optimal iff
 $$
-  \nabla^2f(x^*) \succeq 0.
+  \nabla^2 H(\theta^*) \succeq 0.
 $$
 
 ## Quasiconvex Optimization Problems
@@ -368,19 +369,19 @@ $$
 
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_x && f(x) \\
-    &\textrm{subject to}        && g_i(x) \leq 0, \quad i = 1, \ldots, m, \\
-    &                               && A^T x = b,
+    &\operatorname*{minimize}_\theta && H(\theta) \\
+    &\textrm{subject to}            && g_i(\theta) \leq 0, \quad i = 1, \ldots, m, \\
+    &                               && A^T \theta = b,
     \end{aligned}
 $$
-where $g_i$ are convex but $f$ is **quasiconvex**.
+where $g_i$ are convex but $H$ is **quasiconvex**.
 
 . . .
 
 ### Examples
 
 - Utility functions (economics) \pause
-- The floor function $f(x) = \lfloor x \rfloor$
+- The floor function $H(\theta) = \lfloor \theta \rfloor$
 
 . . .
 
@@ -417,8 +418,8 @@ Won't cover here, but typically **stochastic algorithms** (next week) or
 #| warning: false
 #| fig-height: 3.4
 #| fig-width: 5.4
-#| fig-cap: "$x^2$ (convex), $\\sin(x + \\pi)$ (non-convex),
-#|   and $\\sqrt{|x|}$ (quasi-convex)."
+#| fig-cap: "$\\theta^2$ (convex), $\\sin(\\theta + \\pi)$ (non-convex),
+#|   and $\\sqrt{|\\theta|}$ (quasi-convex)."
 
 convex_function <- function(x) x^2
 non_convex_function <- function(x) sin(x + pi)
@@ -483,13 +484,13 @@ df_with_jensens <- bind_rows(convex_df, non_convex_df, quasi_convex_df)
 p1 <- ggplot(df_with_jensens, aes(x = x)) +
   geom_line(aes(y = y)) +
   geom_line(aes(y = jensens_y), linetype = "dashed", color = "steelblue4") +
-  labs(y = expression(objective(x))) +
+  labs(y = expression(H(theta)), x = expression(theta)) +
   facet_wrap(~type, scales = "free_y")
 
 # Plot the gradients using facets
 p2 <- ggplot(df, aes(x = x, y = gradient)) +
   geom_line() +
-  labs(y = expression(nabla * objective(x))) +
+  labs(y = expression(nabla * H(theta)), x = expression(theta)) +
   facet_wrap(~type, scales = "free_y")
 
 # Print the plots
@@ -614,9 +615,9 @@ persp3D(
   expand = 0.5,
   border = "black",
   col = "steelblue1",
-  xlab = "B1",
-  ylab = "B2",
-  zlab = "f"
+  xlab = "beta1",
+  ylab = "beta2",
+  zlab = "H"
 )
 ```
 :::::
@@ -792,9 +793,9 @@ Update a current best guess iteratively until it is "good enough".
 
 Can be categorized by order, in terms of the information used
 
-- **0-order**: only use function value ($f(x)$)
-- **first-order**: also use first derivative ($f'(x)$)
-- **second-order**: also use second derivative ($f''(x)$)
+- **0-order**: only use function value ($H(\theta)$)
+- **first-order**: also use first derivative ($H'(\theta)$)
+- **second-order**: also use second derivative ($H''(\theta)$)
 
 ## Zero-Order Methods
 
@@ -833,21 +834,21 @@ The quintessential first-order method!
 ::::: {.column width="47%"}
 \begin{algorithm}[H]
   \caption{Gradient descent}
-  \KwData{Step size $t > 0$}
+  \KwData{Step size $\gamma > 0$}
   \Repeat{convergence}{
-    $x \gets x - t \nabla f(x)$\;
+    $\theta \gets \theta - \gamma \nabla H(\theta)$\;
   }
-  \Return{$x$}
+  \Return{$\theta$}
 \end{algorithm}
 
 \medskip
 
-Converges to a local minimum if $f$ is convex and differentiable and $t$ small
-enough.
+Converges to a local minimum if $H$ is convex and differentiable and $\gamma$
+small enough.
 
 ### Step Size {.alert}
 
-But how do we choose $t$?
+But how do we choose $\gamma$?
 :::::
 
 ::::: {.column width="47%"}
@@ -891,7 +892,7 @@ gd_illustration <- function(f, f_prime, x0, t, n_steps) {
       data = tibble(x = 2, y = f(2)),
       color = "darkorange"
     ) +
-    labs(y = expression(f(x)), x = "x")
+    labs(y = expression(H(theta)), x = expression(theta))
 }
 
 gd_illustration(
@@ -929,23 +930,24 @@ step_size_illustration(x, y, 0.0115, maxit = 35)
 
 ## Derivation of Update
 
-Take the second-order Taylor expansion of $f$ around $x$:
+Take the second-order Taylor expansion of $H$ around $\theta$:
 $$
-  f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).
+  H(\vartheta) \approx \hat{H}(\vartheta) = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta) + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\theta) (\vartheta - \theta).
 $$
 
 . . .
 
 ::: {.columns}
 ::::: {.column width="47%"}
-Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize w.r.t $y$ to get
+Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize w.r.t
+$\vartheta$ to get
 $$
-  x^+ = x - t\nabla f(x).
+  \theta_{n + 1} = \theta_n - \gamma \nabla H(\theta_n).
 $$
 
 ### Step Size {.alert}
 
-But we still need to choose $t$!
+But we still need to choose $\gamma$!
 :::::
 
 ::::: {.column width="47%"}
@@ -985,17 +987,23 @@ gd_taylor_illustration <- function(f, f_prime, x0, t) {
       data = next_step,
       nudge_x = -0.1,
       nudge_y = -0.35,
-      label = c("x", expression(x^"+"))
+      label = c("theta[n]", "theta[n + 1]"),
+      parse = TRUE
     ) +
     scale_color_manual(
       values = c(y = "black", taylor = "steelblue"),
-      labels = c(y = expression(f(x)), taylor = expression(hat(f)(x)))
+      labels = c(y = expression(H(theta)), taylor = expression(hat(H)(theta)))
     ) +
     scale_linetype_manual(
       values = c(y = "solid", taylor = "dashed"),
-      labels = c(y = expression(f(x)), taylor = expression(hat(f)(x)))
+      labels = c(y = expression(H(theta)), taylor = expression(hat(H)(theta)))
     ) +
-    labs(y = expression(f(x)), x = "x", color = NULL, linetype = NULL) +
+    labs(
+      y = expression(H(theta)),
+      x = expression(theta),
+      color = NULL,
+      linetype = NULL
+    ) +
     theme_void()
 }
 
@@ -1013,10 +1021,10 @@ gd_taylor_illustration(
 
 ### Taylor's Theorem
 
-For any $x, y$ in the domain of $f$, there exists a $c$ on the line segment
-between $x$ and $y$ such that
+For any $\theta, \vartheta$ in the domain of $H$, there exists a $\zeta$ on the
+line segment between $\theta$ and $\vartheta$ such that
 $$
-  f(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(c) (y - x).
+  H(\vartheta) = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta) + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\zeta) (\vartheta - \theta).
 $$
 
 . . .
@@ -1025,14 +1033,14 @@ $$
 
 Suppose we know that the Hessian is bounded above by $L I$, i.e.,
 $$
-  \nabla^2 f(x) \preceq L I \quad \text{for all } x.
+  \nabla^2 H(\theta) \preceq L I \quad \text{for all } \theta.
 $$
 
 . . .
 
 Then
 $$
-  f(y) \leq f(x) + \nabla f(x)^T (y - x) + \frac{L}{2} \lVert y - x\rVert_2^2.
+  H(\vartheta) \leq H(\theta) + \nabla H(\theta)^T (\vartheta - \theta) + \frac{L}{2} \|\vartheta - \theta\|_2^2.
 $$
 
 ## Lipschitz Constant
@@ -1040,26 +1048,26 @@ $$
 ::: {.columns}
 ::::: {.column width="47%"}
 The bound that we used in the descent lemma, $L$, is known as the **Lipschitz
-constant** of $\nabla f$.
+constant** of $\nabla H$.
 
 \medskip\pause
 
 It is defined as follows.
 $$
-  \lVert \nabla f(x) - \nabla f(y)\rVert_2 \leq L \lVert x - y\rVert_2.
+  \|\nabla H(\theta) - \nabla H(\vartheta)\|_2 \leq L \|\theta - \vartheta\|_2.
 $$
 
 . . .
 
-It measures how fast the gradient of $f$ can change, relative to the change in
-$x$.
+It measures how fast the gradient of $H$ can change, relative to the change in
+$\theta$.
 
 ### Twice-Differentiable Case
 
-If $f$ is twice-differentiable, then the Lipschitz constant is the smallest $L$
+If $H$ is twice-differentiable, then the Lipschitz constant is the smallest $L$
 such that
 $$
-  \nabla^2 f(x) \preceq L I \quad \text{for all } x.
+  \nabla^2 H(\theta) \preceq L I \quad \text{for all } \theta.
 $$
 :::::
 
@@ -1095,7 +1103,7 @@ lipschitz_illustration <- function(f, f_prime, L, x0) {
       data = tibble(x = x0, y = f_prime(x0)),
       color = "darkorange"
     ) +
-    labs(y = expression(nabla * f(x)), x = "x")
+    labs(y = expression(nabla * H(theta)), x = expression(theta))
 }
 
 f <- function(x) ifelse(x < 0, x^2 - x, -log(1 + x))
@@ -1125,16 +1133,17 @@ p1 / p2 + plot_layout(axes = "collect")
 
 ## The Connection to Gradient Descent
 
-If we apply the descent lemma with $y = x - t \nabla f(x)$, we get
+If we apply the descent lemma with $\vartheta = \theta - \gamma \nabla H(\theta)$,
+we get
 $$
-  f(x - t \nabla f(x)) \leq f(x) - t \Vert \nabla f(x)\rVert_2^2 + \frac{L t^2}{2} \lVert \nabla f(x)\rVert_2^2.
+  H(\theta - \gamma \nabla H(\theta)) \leq H(\theta) - \gamma \|\nabla H(\theta)\|_2^2 + \frac{L \gamma^2}{2} \|\nabla H(\theta)\|_2^2.
 $$
 
 . . .
 
-This means that if $t \leq 1/L$, then
+This means that if $\gamma \leq 1/L$, then
 $$
-  f(x - t \nabla f(x)) \leq f(x) - \frac{t}{2} \lVert \nabla f(x)\rVert_2^2.
+  H(\theta - \gamma \nabla H(\theta)) \leq H(\theta) - \frac{\gamma}{2} \|\nabla H(\theta)\|_2^2.
 $$
 
 . . .
@@ -1147,7 +1156,7 @@ In other words, the function value decreases at each step.
 #| echo: false
 #| fig-width: 5
 #| fig-height: 3.25
-#| fig-cap: The step size is just right ($t = 1/L$)!
+#| fig-cap: The step size is just right ($\gamma = 1/L$)!
 
 step_size_illustration(x, y)
 ```
@@ -1162,7 +1171,7 @@ In practice, we may not know $L$ or it may be difficult to compute.
 
 It may be tempting to try to solve
 $$
-  t^* = \arg_t\min f(x - t\nabla f(x)).
+  \gamma^* = \argmin_\gamma H(\theta - \gamma \nabla H(\theta)).
 $$
 
 . . .
@@ -1176,12 +1185,12 @@ search, like **backtracking line search**.
 ::::: {.column width="53%"}
 \begin{algorithm}[H]
   \caption{Backtracking line search}
-  \KwData{Initial step size $t_0 > 0$, parameters $\alpha \in (0, 1/2]$ and $\gamma \in (0, 1)$}
-  $t \gets t_0$\;
-  \While{$f(x - t \nabla f(x)) > f(x) - \alpha t \lVert \nabla f(x)\rVert_2^2$}{
-    $t \gets t \gamma$\;
+  \KwData{Initial step size $\gamma_0 > 0$, parameters $c \in (0, 1/2]$ and $d \in (0, 1)$}
+  $\gamma \gets \gamma_0$\;
+  \While{$H(\theta - \gamma \nabla H(\theta)) > H(\theta) - c \gamma \|\nabla H(\theta)\|_2^2$}{
+    $\gamma \gets d \gamma$\;
   }
-  \Return{$t$}
+  \Return{$\gamma$}
 \end{algorithm}
 
 \bigskip\pause
@@ -1205,25 +1214,24 @@ Adapts to local curvature of the function.
 # that shows how the check work on a simple one-dimensional function
 # with a tangent line and the next step
 backtracking_illustration <- function() {
-  f <- function(x) (x - 2)^2 + 1
-  f_prime <- function(x) 2 * (x - 2)
+  H <- function(theta) (theta - 2)^2 + 1
+  H_prime <- function(theta) 2 * (theta - 2)
 
-  x <- 0.5
-  alpha <- 0.3
-  gamma <- 0.5
-  t <- seq(-0.2, 1, length.out = 102)
+  theta <- 0.5
+  c_suff <- 0.3
+  gamma <- seq(-0.2, 1, length.out = 102)
 
   df <- data.frame(
-    t = t,
-    f1 = f(x - t * f_prime(x)),
-    f2 = f(x) - t * f_prime(x)^2,
-    f3 = f(x) - alpha * t * f_prime(x)^2
+    gamma = gamma,
+    f1 = H(theta - gamma * H_prime(theta)),
+    f2 = H(theta) - gamma * H_prime(theta)^2,
+    f3 = H(theta) - c_suff * gamma * H_prime(theta)^2
   )
 
   labels <- c(
-    f1 = expression(f(x - t * nabla * f(x))),
-    f2 = expression(f(x) - t * nabla * f(x)^2),
-    f3 = expression(f(x) - alpha * t * nabla * f(x)^2)
+    f1 = expression(H(theta - gamma * nabla * H(theta))),
+    f2 = expression(H(theta) - gamma * nabla * H(theta)^2),
+    f3 = expression(H(theta) - c * gamma * nabla * H(theta)^2)
   )
 
   df_long <- df |>
@@ -1232,11 +1240,11 @@ backtracking_illustration <- function() {
       names_to = "type",
       values_to = "y"
     ) |>
-    filter(!(t < 0 & (type == "f2" | type == "f3")))
+    filter(!(gamma < 0 & (type == "f2" | type == "f3")))
 
-  ggplot(df_long, aes(t, y)) +
+  ggplot(df_long, aes(gamma, y)) +
     geom_line(aes(color = type, linetype = type)) +
-    labs(y = expression(f(t)), x = "t") +
+    labs(y = expression(H(gamma)), x = expression(gamma)) +
     scale_y_continuous(limits = c(-2, 5)) +
     scale_color_manual(
       values = c(f1 = "black", f2 = "darkorange", f3 = "steelblue"),
@@ -1277,22 +1285,22 @@ So, $L$ decides how large step size we can take.
 
 \medskip\pause
 
-But $L$ is based on the largest \alert{eigenvalue} of $\nabla^2 f(x)$, which
-means that it may be pessimistic in some directions.
+But $L$ is based on the largest \alert{eigenvalue} of $\nabla^2 H(\theta)$,
+which means that it may be pessimistic in some directions.
 
 . . .
 
 ### Condition Number
 
-The **condition number** of $f$ is defined as
+The **condition number** of $H$ is defined as
 $$
   \kappa = \frac{\lambda_{\max}}{\lambda_{\min}}.
 $$
 
 . . .
 
-If $\kappa$ is large, we say that $f$ is **ill-conditioned**. If $\kappa$ is
-small, we say that $f$ is **well-conditioned**.
+If $\kappa$ is large, we say that $H$ is **ill-conditioned**. If $\kappa$ is
+small, we say that $H$ is **well-conditioned**.
 :::::
 
 ::::: {.column width="46%"}
@@ -1395,9 +1403,9 @@ step_size_illustration(x_ill, y_ill, t = 0.001, plot_approx = TRUE)
 
 ## Newton's Method
 
-Recall second-order expansion of $f$ around $x$:
+Recall second-order expansion of $H$ around $\theta$:
 $$
-  f(y) \approx \hat{f}(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2}(y- x)^T \nabla^2 f(x) (y - x).
+  H(\vartheta) \approx \hat{H}(\vartheta) = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta) + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\theta) (\vartheta - \theta).
 $$
 
 . . .
@@ -1406,15 +1414,15 @@ $$
 ::::: {.column width="47%"}
 ### Gradient Descent Update
 
-Replace $\nabla^2 f(x)$ with $\frac{1}{t} I$ and minimize.
+Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize.
 
 . . .
 
 ### Newton Update
 
-Instead, minimize $\hat{f}(y)$ directly:
+Instead, minimize $\hat{H}(\vartheta)$ directly:
 $$
-  x^+ = x - \big(\nabla^2 f(x)\big)^{-1} \nabla f(x).
+  \theta_{n + 1} = \theta_n - \big(\nabla^2 H(\theta_n)\big)^{-1} \nabla H(\theta_n).
 $$
 
 \pause\bigskip
@@ -1441,16 +1449,16 @@ step_size_illustration(
 
 This might actually not converge, so instead we use **damped** Newton:
 $$
-  x^+ = x - t\nabla^2 f(x)^{-1} \nabla f(x),
+  \theta_{n + 1} = \theta_n - \gamma \nabla^2 H(\theta_n)^{-1} \nabla H(\theta_n),
 $$
-with $t > 0$ chosen by backtracking line search.
+with $\gamma > 0$ chosen by backtracking line search.
 
 . . .
 
 ### Phases
 
-- As long as $t < 1$, we are in the **damped** phase. \pause
-- When $t = 1$, we enter the **pure** phase and $t$ will remain $1$.\pause
+- As long as $\gamma < 1$, we are in the **damped** phase. \pause
+- When $\gamma = 1$, we enter the **pure** phase and $\gamma$ will remain $1$.\pause
 - In pure phase, we have quadratic convergence.
 
 ##
@@ -1505,8 +1513,8 @@ In practice, results depend on the problem.
 
 - Cheap iterations: $O(p)$
 - Sensitive to conditioning
-- Linear convergence ($O(1/k)$)
-- Few assumptions on $f$
+- Linear convergence ($O(1/n)$)
+- Few assumptions on $H$
 :::::
 
 . . .
@@ -1516,14 +1524,14 @@ In practice, results depend on the problem.
 
 - Expensive iterations: $O(p^3)$
 - Insensitive to conditioning
-- Quadratic convergence ($O(\log \log(1/k))$)
-- Requires $f$ to be twice-differentiable and Hessian to be positive definite
+- Quadratic convergence ($O(\log \log(1/n))$)
+- Requires $H$ to be twice-differentiable and Hessian to be positive definite
 :::::
 :::
 
 ## Quasi-Newton Methods
 
-Replace $\nabla^2 f(x)$ with an approximation $B_k$.
+Replace $\nabla^2 H(\theta)$ with an approximation $B_n$.
 
 . . .
 
@@ -1545,18 +1553,18 @@ Same complexity but lower memory cost.
 
 - Small gradient:
   $$
-  \lVert \nabla f(x) \rVert_r \leq \epsilon
+  \|\nabla H(\theta_n)\|_r \leq \epsilon
   $$
   \pause
-- Small relative change in $x$:
+- Small relative change in $\theta$:
   $$
-  \frac{\lVert x^{(k+1)} - x^{(k)} \rVert_2}{\lVert x^{(k)} + 10^{-q}\rVert_2}
+  \frac{\|\theta_{n + 1} - \theta_n\|_2}{\|\theta_n + 10^{-q}\|_2}
   \leq \epsilon
   $$
   \pause
-- Small relative change in $f$:
+- Small relative change in $H$:
   $$
-  \frac{f(x^{(k+1)}) - f(x^{(k)})}{f(x^{k})}
+  \frac{H(\theta_{n + 1}) - H(\theta_n)}{H(\theta_n)}
   \leq \epsilon
   $$
 :::::
@@ -1566,8 +1574,8 @@ Same complexity but lower memory cost.
 ::::: {.column width="47%"}
 ### Duality Gap
 
-If $f$ is **strongly** convex and $x$ optimal, then the duality gap is zero at
-the optimum.
+If $H$ is **strongly** convex and $\theta$ optimal, then the duality gap is zero
+at the optimum.
 
 \medskip\pause
 
@@ -1601,7 +1609,7 @@ Most principled stopping criterion, but not always available.
 
 We will attempt to minimize the following function:
 $$
-  f(x) = \log(1 + e^x) + \frac{1}{2}(x - 2)^2.
+  H(\theta) = \log(1 + e^\theta) + \frac{1}{2}(\theta - 2)^2.
 $$
 
 . . .
@@ -1610,11 +1618,11 @@ $$
 #| echo: false
 #| include: false
 
-f <- function(x) log(1 + exp(x)) + 0.5 * (x - 2)^2
+H <- function(theta) log(1 + exp(theta)) + 0.5 * (theta - 2)^2
 
-curve(f, from = -2, to = 5)
+curve(H, from = -2, to = 5)
 
-f_prime <- function(x) exp(x) / (1 + exp(x)) + (x - 2)
+H_prime <- function(theta) exp(theta) / (1 + exp(theta)) + (theta - 2)
 ```
 
 ### Step 1

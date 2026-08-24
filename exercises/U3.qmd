@@ -152,12 +152,12 @@ the implementation in Example 5.1, against `rexp()` and against
 **Solution**:
 
 ```{r}
-sim_exp <- function(n, lambda = 1) {
-  u <- runif(n)
+sim_exp <- function(N, lambda = 1) {
+  u <- runif(N)
   -log(u) / lambda
 }
 ```
-We simulate for $n = 1000$ and plot the results
+We simulate for $N = 1000$ and plot the results
 
 ```{r}
 X <- sim_exp(1000)
@@ -283,7 +283,7 @@ implementation and benchmark it against against `rt()`.
 **Solution**: Alright my implementation is the following
 
 ```{r}
-sim_t <- function(n, k) rnorm(n) / sqrt(rchisq(n, k) / k)
+sim_t <- function(N, k) rnorm(N) / sqrt(rchisq(N, k) / k)
 ```
 We will test it out
 

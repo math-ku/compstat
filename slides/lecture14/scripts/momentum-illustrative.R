@@ -1,5 +1,4 @@
 library(mvtnorm)
-library(tikzDevice)
 
 draw_canvas_bg <- function(col = "white") {
   rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = col)
@@ -78,8 +77,8 @@ contour(
   col = "dark grey",
   levels = c(480, 487.6, 495, 512.2, 526),
   drawlabels = FALSE,
-  xlab = expression(x[1]),
-  ylab = expression(x[2]),
+  xlab = expression(theta[1]),
+  ylab = expression(theta[2]),
   panel.first = expression(draw_canvas_bg())
 )
 draw_canvas_bg()
@@ -96,8 +95,8 @@ contour(
 
 b <- res$beta
 
-text(b[1, 1], b[2, 1], expression(x[k - 1]), pos = 2)
-text(b[1, 3], b[2, 3], expression(x[k]), pos = 3)
+text(b[1, 1], b[2, 1], expression(theta[n - 1]), pos = 2)
+text(b[1, 3], b[2, 3], expression(theta[n]), pos = 3)
 
 arrows(
   rm$beta[1, 3],

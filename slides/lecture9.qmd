@@ -173,7 +173,7 @@ $$
 
 We only observe $(n_C, n_I, n_T)$, where
 $$
-  n = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{ = n_C}
+  N = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{ = n_C}
       + \underbrace{n_{IT} + n_{II}}_{ = n_I}
       + \underbrace{n_{TT}}_{ = n_T}.
 $$
@@ -202,9 +202,9 @@ $$
 
 ## Multinomial Distribution
 
-If $Y \sim \textrm{Mult}(p, n)$ with $p = (p_1, \ldots, p_K)$ then
+If $Y \sim \textrm{Mult}(N, p)$ with $p = (p_1, \ldots, p_K)$ then
 $$
-  X = M(Y) \sim \textrm{Mult}(M(p), n).
+  X = M(Y) \sim \textrm{Mult}(N, M(p)).
 $$
 
 . . .
@@ -724,7 +724,7 @@ plot_barrier(10)
   \caption{Barrier Method}
   \KwData{$t > 0$, $\theta$ strictly feasible, $\mu > 1$, $\varepsilon > 0$, and $m$ constraints}
   \Repeat{$m/t < \varepsilon$ }{
-    $\theta \gets \operatorname*{argmin}_{\vartheta} tH(\vartheta) + \phi(\vartheta)$\;
+    $\theta \gets \argmin_{\vartheta} tH(\vartheta) + \phi(\vartheta)$\;
     $t \gets \mu t$\;
   }
   \Return{$\theta$}
@@ -851,7 +851,7 @@ too:
 $$
   Y_{A_j} \mid X
           = x
-          \sim \textrm{Mult}\left( \frac{p_{A_j}}{M(p)_j}, x_j \right).
+          \sim \textrm{Mult}\left( x_j, \frac{p_{A_j}}{M(p)_j} \right).
 $$
 
 . . .
@@ -860,7 +860,7 @@ $$
 
 Hence for $k \in A_j$,
 $$
-  \operatorname{E} (Y_k \mid X = x) = \frac{x_j p_k}{M(p)_j}.
+  \E(Y_k \mid X = x) = \frac{x_j p_k}{M(p)_j}.
 $$
 
 . . .
@@ -885,7 +885,7 @@ options(digits = old_options$digits)
 
 What we want is the MLE
 $$
-  \hat{\theta} = \operatorname{argmax}_{\theta \in \Theta} \ell(\theta)
+  \hat{\theta} = \argmax_{\theta \in \Theta} \ell(\theta)
 $$
 with $\ell(\theta) = \log p(X \mid \theta)$.
 
@@ -929,7 +929,7 @@ $$
 
 Maximize expected complete log-likelihood:
 $$
-  \theta_{n + 1} = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta_n).
+  \theta_{n + 1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n).
 $$
 
 ### Repeat
@@ -997,7 +997,7 @@ where $\mathcal{H}(q_n)$ is entropy, independent of $\theta$.
 
 M-step:
 $$
-  \theta_{n + 1} = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta_n).
+  \theta_{n + 1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n).
 $$
 
 . . .
@@ -1030,23 +1030,23 @@ Estimate $\theta_A$ and $\theta_B$ (MLE) using EM.
 If we knew which coin was used in each experiment, the complete-data likelihood
 would be
 $$
-  p(X,Z \mid \theta) = \sum_i \left( \symbf{1}_{Z_i = A} \text{Binomial}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \text{Binomial}(X_i \mid 10, \theta_B) \right).
+  p(X,Z \mid \theta) = \sum_i \left( \symbf{1}_{Z_i = A} \textrm{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \textrm{Bin}(X_i \mid 10, \theta_B) \right).
 $$
 
 ## The E-Step: The Q-Function
 
 The log-likelihood of the complete data (for a single experiment) is
 $$
-  \log p(X_i, Z_i \mid \theta) = \symbf{1}_{Z_i = A} \log \text{Bin}(X_i \mid 10, \theta_A)
-                                 + \symbf{1}_{Z_i = B} \log \text{Bin}(X_i \mid 10, \theta_B).
+  \log p(X_i, Z_i \mid \theta) = \symbf{1}_{Z_i = A} \log \textrm{Bin}(X_i \mid 10, \theta_A)
+                                 + \symbf{1}_{Z_i = B} \log \textrm{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
 
 Take expection over $Z_i$ given $X_i$ and current parameters:
 $$
-  Q(\theta \mid \theta_n) = \sum_i \gamma_{i,n} \log \text{Bin}(X_i \mid 10, \theta_A)
-                            + \sum_i (1 - \gamma_{i,n}) \log \text{Bin}(X_i \mid 10, \theta_B).
+  Q(\theta \mid \theta_n) = \sum_i \gamma_{i,n} \log \textrm{Bin}(X_i \mid 10, \theta_A)
+                            + \sum_i (1 - \gamma_{i,n}) \log \textrm{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
@@ -1055,7 +1055,7 @@ $$
   \begin{aligned}
     \gamma_{i,n} & = \E_{\theta_n}\left(\symbf{1}_{Z_i = A} \mid X_i\right)                                                                                      \\
                  & = \Pr_{\theta_n}(Z_i = A \mid X_i)                                                                                                            \\
-                 & = \frac{\text{Binomial}(X_i \mid 10, \theta_{A,n})}{\text{Binomial}(X_i \mid 10, \theta_{A,n}) + \text{Binomial}(X_i \mid 10, \theta_{B,n})}.
+                 & = \frac{\textrm{Bin}(X_i \mid 10, \theta_{A,n})}{\textrm{Bin}(X_i \mid 10, \theta_{A,n}) + \textrm{Bin}(X_i \mid 10, \theta_{B,n})}.
   \end{aligned}
 $$
 
@@ -1105,10 +1105,10 @@ Compute expected # of heads for each coin and divide by expected # of flips.
 #| fig-cap: "EM algorithm iterations for the two-coin example."
 
 set.seed(1)
-n <- 1000
+N <- 1000
 heads <- {
-  ind <- sample(c(TRUE, FALSE), n, TRUE)
-  rbinom(n, 10, ifelse(ind, 0.8, 0.4))
+  ind <- sample(c(TRUE, FALSE), N, TRUE)
+  rbinom(N, 10, ifelse(ind, 0.8, 0.4))
 }
 maxit <- 20
 theta <- c(0.6, 0.5) # start
@@ -1182,8 +1182,8 @@ $$
 
 In the coin-flip example:
 $$
-  Q(\theta \mid \theta_n) = \sum_i \gamma_{i,n} \log \text{Bin}(X_i \mid 10, \theta_A)
-                            + \sum_i (1 - \gamma_{i,n}) \log \text{Bin}(X_i \mid 10, \theta_B)
+  Q(\theta \mid \theta_n) = \sum_i \gamma_{i,n} \log \textrm{Bin}(X_i \mid 10, \theta_A)
+                            + \sum_i (1 - \gamma_{i,n}) \log \textrm{Bin}(X_i \mid 10, \theta_B)
 $$
 
 . . .

@@ -495,14 +495,14 @@ The Poisson regression model is given by
 $$
   \E(\symbf{y} \mid \symbf{X}) = \exp(\symbf{X} \symbf{\beta}),
 $$
-where $\symbf{X}$ is a $n \times p$ matrix of predictors and $\symbf{y}$ is our
+where $\symbf{X}$ is an $N \times p$ matrix of predictors and $\symbf{y}$ is our
 response.
 
 \medskip\pause
 
 The problem is to find
 $$
-  \hat{\symbf{\beta}} = \argmin_{\symbf{\beta}} \left( \frac{1}{n} \sum_{i=1}^n \exp(\symbf{x}_i^T \symbf{\beta}) - y_i \symbf{x}_i^T \symbf{\beta} \right).
+  \hat{\symbf{\beta}} = \argmin_{\symbf{\beta}} \left( \frac{1}{N} \sum_{i=1}^N \exp(\symbf{x}_i^T \symbf{\beta}) - y_i \symbf{x}_i^T \symbf{\beta} \right).
 $$
 
 . . .
@@ -517,9 +517,9 @@ model with one predictor.
 ```{r}
 #| label: poisson-regression
 
-n <- 1000
-x <- rnorm(n)
-y <- rpois(n, exp(x))
+N <- 1000
+x <- rnorm(N)
+y <- rpois(N, exp(x))
 X <- model.matrix(y ~ x)
 
 head(X, 5)

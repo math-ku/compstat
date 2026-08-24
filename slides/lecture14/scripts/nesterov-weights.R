@@ -25,8 +25,8 @@ plot(
   type = "b",
   pch = 19,
   cex = 0.7,
-  ylab = expression(mu[k]),
-  xlab = "k",
+  ylab = expression(mu[n]),
+  xlab = expression(n),
   col = "steelblue4"
 )
 draw_canvas_bg()
@@ -36,8 +36,8 @@ points(
   type = "b",
   pch = 19,
   cex = 0.7,
-  ylab = expression(mu[k]),
-  xlab = "k"
+  ylab = expression(mu[n]),
+  xlab = expression(n)
 )
 dev.off()
 knitr::plot_crop(fn)

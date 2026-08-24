@@ -300,7 +300,7 @@ nuuk_year <- group_by(nuuk, Year) |>
     High = max(Temperature),
     Low = min(Temperature)
   )
-n <- nrow(nuuk_year)
+N <- nrow(nuuk_year)
 ```
 
 ```{r}
@@ -315,22 +315,22 @@ Data is available [here](../data/nuuk.dat.txt).
 
 ## Nearest Neighbor Estimation
 
-Given data points $(x_1, y_1), \ldots, (x_n, y_n)$, the $k$-nearest neighbor
+Given data points $(x_1, y_1), \ldots, (x_N, y_N)$, the $k$-nearest neighbor
 estimator at $x_i$ is
 $$
-  \hat{f}_i = \frac{1}{k} \sum_{j \in N_i} y_j
+  \hat{f}_i = \frac{1}{k} \sum_{j \in \mathcal{N}_i} y_j
 $$
-where $N_i$ is the set of indices for the $k$ nearest neighbors of $x_i$.
+where $\mathcal{N}_i$ is the set of indices for the $k$ nearest neighbors of $x_i$.
 
 \medskip\pause
 
 This is an estimator of
 $$
-  f(x) = E(Y \mid X = x).
+  f(x) = \E(Y \mid X = x).
 $$
 
 \pdfpcnote{
- N(x) is the neighborhood of x.
+ N_i is the neighborhood of x_i.
 }
 
 \pdfpcnote{
@@ -343,7 +343,7 @@ We can express all fitted values as a matrix-vector product:
 $$
   \hat{\symbf{f}} = \symbf{S} \symbf{y}
 $$
-where $\symbf{y} = (y_1, \ldots, y_n)^T$ and $\symbf{S}$ is the **smoother
+where $\symbf{y} = (y_1, \ldots, y_N)^T$ and $\symbf{S}$ is the **smoother
 matrix**.
 
 \pause
@@ -352,14 +352,14 @@ matrix**.
 
 Each entry of $\symbf{S}$ is
 $$
-  S_{ij} = \frac{1}{k} \cdot \symbf{1}_{\{j \in N_i\}}
+  S_{ij} = \frac{1}{k} \cdot \symbf{1}_{\{j \in \mathcal{N}_i\}}
 $$
-where $\symbf{1}_{\{j \in N_i\}}$ is 1 if $j$ is a neighbor of $i$, 0 otherwise.
+where $\symbf{1}_{\{j \in \mathcal{N}_i\}}$ is 1 if $j$ is a neighbor of $i$, 0 otherwise.
 
 \pdfpcnote{
   Each fitted value is a weighted average of the y-values.
 
-  S is a relatively sparse n x n matrix.
+  S is a relatively sparse N x N matrix.
 }
 
 ## Linear Smoothers
@@ -386,7 +386,7 @@ $\hat{\symbf{f}}$.
 When $x_i \in \mathbb{R}$ we can sort data according to $x$-values and then use
 a *symmetric* neighbor definition:
 $$
-  N_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
+  \mathcal{N}_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
 $$
 (for $k$ odd.)
 
@@ -417,12 +417,12 @@ Assume $y$ is sorted and $k$ is odd.
 #| label: runmean-simple
 
 run_mean_naive <- function(y, k) {
-  n <- length(y)
+  N <- length(y)
   m <- (k - 1) / 2
   y <- y / k
-  f_hat <- rep(NA, n)
+  f_hat <- rep(NA, N)
 
-  for (i in (m + 1):(n - m - 1)) {
+  for (i in (m + 1):(N - m - 1)) {
     f_hat[i] <- mean(y[(i - m):(i + m)])
   }
 
@@ -447,14 +447,14 @@ $$
 #| label: run_mean_def
 
 run_mean <- function(y, k) {
-  n <- length(y)
+  N <- length(y)
   m <- floor((k - 1) / 2)
   k <- 2 * m + 1 # Ensures k is odd and m = (k - 1) / 2
   y <- y / k
-  f_hat <- rep(NA, n)
+  f_hat <- rep(NA, N)
   f_hat[m + 1] <- sum(y[1:k])
 
-  for (i in (m + 1):(n - m - 1)) {
+  for (i in (m + 1):(N - m - 1)) {
     f_hat[i + 1] <- f_hat[i] - y[i - m] + y[i + 1 + m]
   }
   f_hat
@@ -464,7 +464,7 @@ run_mean <- function(y, k) {
 \pdfpcnote{
   Ensures k is odd
 
-  Complexity goes from O(nk) to O(n).
+  Complexity goes from O(Nk) to O(N).
 
   Based on the idea of keeping and updating a running sum.
 }
@@ -527,11 +527,11 @@ all.equal(f_hat, as.numeric(f_hat_filter))
 #| fig-width: 5.5
 #| fig-height: 3
 
-nn_bench <- bench::press(n = c(512, 1024, 2048, 4196), {
+nn_bench <- bench::press(N = c(512, 1024, 2048, 4196), {
   k <- 11
-  y <- rnorm(n)
-  w <- c(rep(1, k * n), rep(0, n * (n - k)))
-  S <- matrix(w, n, n, byrow = TRUE)
+  y <- rnorm(N)
+  w <- c(rep(1, k * N), rep(0, N * (N - k)))
+  S <- matrix(w, N, N, byrow = TRUE)
   bench::mark(
     S %*% y,
     run_mean(y, k = k),
@@ -543,11 +543,11 @@ nn_bench <- bench::press(n = c(512, 1024, 2048, 4196), {
 plot(nn_bench)
 ```
 
-The Matrix-vector multiplication is $O(n^2)$.
+The Matrix-vector multiplication is $O(N^2)$.
 
 \medskip\pause
 
-The two other algorithms are $O(n)$.
+The two other algorithms are $O(N)$.
 
 ## Bias--Variance Trade-Off
 
@@ -556,15 +556,15 @@ $k$.
 
 \medskip\pause
 
-If data is i.i.d. with $V(Y \mid X) = \sigma^2$ and $f(x) = E(Y \mid X = x)$,
+If data is i.i.d. with $\V(Y \mid X) = \sigma^2$ and $f(x) = \E(Y \mid X = x)$,
 
 \pause
 
 $$
   \begin{aligned}
-    \text{MSE}(x) & = \operatorname{E}(f(x) - \hat{f}(x))^2 \\ \pause
-                  & = \operatorname{Var}\big(f(x)-\hat{f}(x)\big) + \big(\operatorname{E}(f(x)-\hat{f}(x))\big)^2\\ \pause
-                  & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \bigg( \underbrace{f(x) - \frac{1}{k} \sum_{l \in N(x)} f(x_l)}_{\text{bias}}\bigg)^2.
+    \mathrm{MSE}(x) & = \E(f(x) - \hat{f}(x))^2 \\ \pause
+                    & = \V\big(f(x)-\hat{f}(x)\big) + \big(\E(f(x)-\hat{f}(x))\big)^2\\ \pause
+                    & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \bigg( \underbrace{f(x) - \frac{1}{k} \sum_{l \in \mathcal{N}(x)} f(x_l)}_{\text{bias}}\bigg)^2.
   \end{aligned}
 $$
 
@@ -593,7 +593,7 @@ the prediction error.
 ::::: {.column width="47%"}
 The general LOOCV formula is
 $$
-  \text{LOOCV} = \sum_{i=1}^n (y_i - \hat{f}^{-i}_i)^2.
+  \mathrm{LOOCV} = \frac{1}{N} \sum_{i=1}^N (y_i - \hat{f}^{-i}_i)^2.
 $$
 
 \pause
@@ -609,7 +609,7 @@ $$
 ::::: {.column width="47%"}
 This leads to the simplified formula
 $$
-  \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2.
+  \mathrm{LOOCV} = \frac{1}{N} \sum_{i=1}^N \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2.
 $$
 :::::
 :::
@@ -622,7 +622,7 @@ Can for running mean in principle compute this without leaving anything out.
 
 For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$, so
 $$
-  \text{LOOCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
+  \mathrm{LOOCV} = \frac{1}{N} \sum_{i=1}^N \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
 $$
 
 . . .
@@ -714,7 +714,7 @@ We want a smooth function $f$ that balances goodness-of-fit and wiggliness.
 
 To do this, we minimize an objective function that penalizes wiggliness:
 $$
-  L(f) = \sum_{i=1}^n (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \text{d} z}_{\lVert f''\rVert_2^2}
+  L(f) = \sum_{i=1}^N (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \ \mathrm{d}z}_{\|f''\|_2^2}
 $$
 where $\lambda \geq 0$ is a tuning parameter that controls the trade-off.
 
@@ -729,7 +729,7 @@ That is, a function
 $$
   f = \sum_j \beta_j \varphi_j
 $$
-where $\varphi_j$ is a basis function for the $n$-dimensional space of such
+where $\varphi_j$ is a basis function for the $N$-dimensional space of such
 splines.
 
 \medskip\pause
@@ -751,13 +751,13 @@ $$
 with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
 $$
   \begin{aligned}
-    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \lVert f''\rVert_2^2 \\
+    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \|f''\|_2^2 \\
                  & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
   \end{aligned}
 $$
 with
 $$
-  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \text{d}z.
+  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \ \mathrm{d}z.
 $$
 
 \pause
@@ -911,11 +911,11 @@ compute.
 
 ### Idea
 
-Replace $S_{ii}$ in LOOCV by $\text{df} / n$, with
-$\text{df} = \text{trace}(\symbf{S}) = \sum_{i=1}^n S_{ii}$, to get the
+Replace $S_{ii}$ in LOOCV by $\mathrm{df} / N$, with
+$\mathrm{df} = \operatorname{trace}(\symbf{S}) = \sum_{i=1}^N S_{ii}$, to get the
 **generalized** cross-validation criterion
 $$
-  \text{GCV} = \sum_{i=1}^n \left(\frac{y_i - \hat{f}_i}{1 - \text{df} / n}\right)^2.
+  \mathrm{GCV} = \frac{1}{N} \sum_{i=1}^N \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / N}\right)^2.
 $$
 
 . . .
@@ -928,7 +928,7 @@ $$
 gcv <- function(lambda, y) {
   S <- Phi %*% solve(crossprod(Phi) + lambda * omega, t(Phi))
   df <- sum(diag(S))
-  sum(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE)
+  mean(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE)
 }
 ```
 
@@ -992,13 +992,13 @@ nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
 
 ## Efficient Computations
 
-When $n$ is large, computing $\symbf{S}_{\lambda} \symbf{y}$ directly is
+When $N$ is large, computing $\symbf{S}_{\lambda} \symbf{y}$ directly is
 expensive.
 
 \medskip\pause
 
 In practice, we therefore often use fewer basis functions than data points,
-$p < n$.
+$p < N$.
 
 \pause
 

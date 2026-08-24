@@ -16,12 +16,12 @@ library(mvtnorm)
 
 set.seed(622)
 
-n <- 1000
+N <- 1000
 Sigma <- matrix(c(1, 0.7, 0.7, 1), 2, 2)
 mu <- c(0, 0)
-X <- rmvnorm(n, mu, Sigma)
+X <- rmvnorm(N, mu, Sigma)
 beta <- c(0.5, 1)
-y <- X %*% beta + rnorm(n)
+y <- X %*% beta + rnorm(N)
 
 res <- gd(X, y)
 mu <- 0.3
@@ -61,9 +61,9 @@ Introduced stochastic gradient descent (SGD) and mini-batch version thereof.
 
 ::::: {.column width="51%"}
 \begin{algorithm}[H]
-  \KwData{$t_0 >0$} \For{$k \gets 1, 2, \dots$}{
-  $A_k \gets$ random mini-batch of $m$ samples\;
-  $x_k \gets x_{k-1} - \frac{t_k }{|A_k|} \sum_{i \in A_k} \nabla f_i(x_{k-1})$\;
+  \KwData{Learning-rate schedule $(\gamma_n)$} \For{$n \gets 1, 2, \dots$}{
+  $I_n \gets$ random mini-batch of $m$ indices\;
+  $\theta_n \gets \theta_{n-1} - \frac{\gamma_n}{m} \sum_{i \in I_n} \nabla_\theta L(y_i,x_i,\theta_{n-1})$\;
   }
   \caption{Mini-Batch SGD}
 \end{algorithm}
@@ -123,9 +123,9 @@ Classical version [@polyakMethodsSpeedingConvergence1964]:
 
 ::::: {.column width="47%"}
 \begin{algorithm}[H]
-  \KwData{$t >0$, $\mu \in [0,1)$, $x_{-1} = x_0$}
-    \For{$k \gets 1, 2, \dots$}{
-      $x_k \gets x_{k-1} - t \nabla f(x_{k-1}) + \alert{\mu (x_{k-1} - x_{k-2})} $\; 
+  \KwData{$\gamma >0$, $\mu \in [0,1)$, $\theta_{-1} = \theta_0$}
+    \For{$n \gets 1, 2, \dots$}{
+      $\theta_n \gets \theta_{n-1} - \gamma \nabla H(\theta_{n-1}) + \alert{\mu (\theta_{n-1} - \theta_{n-2})} $\;
   }
   \caption{GD with Polyak Momentum}
 \end{algorithm}
@@ -140,7 +140,7 @@ Classical version [@polyakMethodsSpeedingConvergence1964]:
 
 ::: {.columns align="center"}
 ::::: {.column width="47%"}
-For nonconvex $f$, gradient descent may get stuck at a local minimum.
+For nonconvex $H$, gradient descent may get stuck at a local minimum.
 :::::
 
 ::::: {.column width="47%"}
@@ -185,32 +185,32 @@ For some problems, the momentum method may fail to converge
 
 Consider
 $$
-  f(x) =
+  H(\theta) =
   \begin{cases}
-    \frac{25x^2}{2}            & \text{if } x < 1,        \\
-    \frac{x^2}{2} +24x - 12    & \text{if } 1 \leq x < 2, \\
-    \frac{25x^2}{2} - 24x + 36 & \text{if } x \geq 2.
+    \frac{25\theta^2}{2}               & \text{if } \theta < 1,        \\
+    \frac{\theta^2}{2} + 24\theta - 12 & \text{if } 1 \leq \theta < 2, \\
+    \frac{25\theta^2}{2} - 24\theta + 36 & \text{if } \theta \geq 2.
   \end{cases}
 $$
 
 . . .
 
-For an "optimal" step size $t = 1/L$ with $L = 25$, GD with momentum converges
-to three limit points.
+For an "optimal" step size $\gamma = 1/L$ with $L = 25$, GD with momentum
+converges to three limit points.
 :::::
 
 ::::: {.column width="47%"}
-![Initialized at $x_0 = 3.2$, the algorithm fails to converge.](../images/momentum-failure.pdf)
+![Initialized at $\theta_0 = 3.2$, the algorithm fails to converge.](../images/momentum-failure.pdf)
 :::::
 :::
 
 ## Nesterov Momentum
 
 \begin{algorithm}[H]
-  \KwData{$t >0$, $\mu \in [0,1)$}
-  \For{$k \gets 1,2,\dots$}{
-    $v_k \gets x_{k-1} - t \nabla f(x_{k-1})$\;
-    $x_k \gets v_{k} + \mu (v_{k} - v_{k-1})$\;
+  \KwData{$\gamma >0$, $\mu \in [0,1)$}
+  \For{$n \gets 1,2,\dots$}{
+    $v_n \gets \theta_{n-1} - \gamma \nabla H(\theta_{n-1})$\;
+    $\theta_n \gets v_{n} + \mu (v_{n} - v_{n-1})$\;
   } 
   \caption{GD with Nesterov Momentum}
 \end{algorithm}
@@ -230,10 +230,10 @@ First appeared in article by @nesterovMethodSolvingConvex1983.
 Consider two iterations of Nesterov algorithm:
 $$
   \begin{aligned}
-    v_{k}               & = x_{k-1} - t \nabla f\left(x_{k-1} \right)         \\
-    \alert<2->{x_{k}}   & \alert<2->{= v_{k} + \mu\left(v_{k} - v_{{k-1}} \right)} \\
-    \alert<2->{v_{k+1}} & \alert<2->{= x_{k} - t \nabla f\left(x_{k} \right)} \\
-    x_{k+1}             & = v_{k+1} + \mu\left(v_{k+1} - v_{k} \right)
+    v_{n}                  & = \theta_{n-1} - \gamma \nabla H\left(\theta_{n-1} \right)         \\
+    \alert<2->{\theta_{n}} & \alert<2->{= v_{n} + \mu\left(v_{n} - v_{{n-1}} \right)} \\
+    \alert<2->{v_{n+1}}    & \alert<2->{= \theta_{n} - \gamma \nabla H\left(\theta_{n} \right)} \\
+    \theta_{n+1}           & = v_{n+1} + \mu\left(v_{n+1} - v_{n} \right)
   \end{aligned}
 $$
 
@@ -244,8 +244,8 @@ $$
 Idea: focus on interim step:
 $$
   \begin{aligned}
-    x_{k}   & = v_{k} + \mu\left(v_{k} - v_{{k-1}} \right) \\
-    v_{k+1} & = x_{k} - t \nabla f\left(x_{k} \right)
+    \theta_{n} & = v_{n} + \mu\left(v_{n} - v_{{n-1}} \right) \\
+    v_{n+1}    & = \theta_{n} - \gamma \nabla H\left(\theta_{n} \right)
   \end{aligned}
 $$
 
@@ -254,8 +254,8 @@ $$
 Reindex:
 $$
   \begin{aligned}
-    x_{k} & = v_{k-1} + \mu\left(v_{k-1} - v_{{k-2}} \right) \\
-    v_{k} & = x_{k} - t \nabla f\left(x_{k} \right)
+    \theta_{n} & = v_{n-1} + \mu\left(v_{n-1} - v_{{n-2}} \right) \\
+    v_{n}      & = \theta_{n} - \gamma \nabla H\left(\theta_{n} \right)
   \end{aligned}
 $$
 :::::
@@ -263,10 +263,10 @@ $$
 
 \bigskip\pause
 
-But since $x_k = v_k$ for $k=1$ by construction, we can swap $x_k$ for $v_k$ and
-get the update
+But since $\theta_n = v_n$ for $n = 1$ by construction, we can swap $\theta_n$
+for $v_n$ and get the update
 $$
-  x_k = x_{k-1} + \mu(x_{k-1} - x_{k-2}) - t \nabla f(x_{k} + \mu(x_{k-1} - x_{k-2})).
+  \theta_n = \theta_{n-1} + \mu(\theta_{n-1} - \theta_{n-2}) - \gamma \nabla H(\theta_{n} + \mu(\theta_{n-1} - \theta_{n-2})).
 $$
 
 ##
@@ -277,20 +277,20 @@ $$
 
 ::: {.columns}
 ::::: {.column width="47%"}
-For gradient descent with $t = 1/L$, the optimal choice of $\mu_k$ for general
-convex and smooth $f$ is
+For gradient descent with $\gamma = 1/L$, the optimal choice of $\mu_n$ for
+general convex and smooth $H$ is
 $$
-  \mu_k = \frac{a_{k-1} - 1}{a_{k}}
+  \mu_n = \frac{a_{n-1} - 1}{a_{n}}
 $$
 for a series of
 $$
-  a_k = \frac{1 + \sqrt{4a_{k-1}^2 + 1}}{2}
+  a_n = \frac{1 + \sqrt{4a_{n-1}^2 + 1}}{2}
 $$
 with $a_0 = 1$ (and hence $\mu_1 = 0$).
 
 \medskip\pause
 
-First step ($k = 1$) is just standard gradient descent.
+First step ($n = 1$) is just standard gradient descent.
 :::::
 
 ::::: {.column width="47%"}
@@ -302,7 +302,7 @@ First step ($k = 1$) is just standard gradient descent.
 
 ::: {.columns align="center"}
 ::::: {.column width="47%"}
-Convergence rate with Nesterov acceleration goes from $O(1/k)$ to $O(1/k^2)$
+Convergence rate with Nesterov acceleration goes from $O(1/n)$ to $O(1/n^2)$
 
 \medskip\pause
 
@@ -315,7 +315,7 @@ Convergence improves further for quadratic and strongly convex!
 :::::
 
 ::::: {.column width="47%"}
-![Suboptimality plot for a logistic regression problem with $n = 1000$, $p = 100$.](../images/momentum-convergence.pdf)
+![Suboptimality plot for a logistic regression problem with $N = 1000$, $p = 100$.](../images/momentum-convergence.pdf)
 :::::
 :::
 
@@ -415,14 +415,14 @@ source(here::here("R", "sgd.R"))
 # Generate logistic regression data
 set.seed(123)
 
-n <- 1000
+N <- 1000
 p <- 2
 Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
 mu <- c(0, 0)
 
-X <- rmvnorm(n, mean = mu, sigma = Sigma)
+X <- rmvnorm(N, mean = mu, sigma = Sigma)
 beta <- c(1, 2)
-y <- rbinom(n, 1, plogis(X %*% beta))
+y <- rbinom(N, 1, plogis(X %*% beta))
 
 res_glm <- glm.fit(X, y, family = binomial())
 
@@ -526,26 +526,26 @@ legend(
 ::::: {.column width="47%"}
 Keep a running average of SGD iterates to reduce variance:
 $$
-  \bar{x}_k = \frac{1}{k} \sum_{i=1}^k x_i.
+  \bar{\theta}_n = \frac{1}{n} \sum_{i=1}^n \theta_i.
 $$
 
 . . .
 
 Update incrementally:
 $$
-  \bar{x}_k = \bar{x}_{k-1} + \frac{1}{k}(x_k - \bar{x}_{k-1}).
+  \bar{\theta}_n = \bar{\theta}_{n-1} + \frac{1}{n}(\theta_n - \bar{\theta}_{n-1}).
 $$
 :::::
 
 ::::: {.column width="47%"}
 \begin{algorithm}[H]
-  \KwData{$x_0$, schedule $t_k$}
-  $\bar{x}_0 \gets x_0$\;
-  \For{$k \gets 1,2,\dots$}{
-    Sample $i_k$\;
-    $g_k \gets \nabla f_{i_k}(x_{k-1})$\;
-    $x_k \gets x_{k-1} - t_k g_k$\;
-    $\bar{x}_k \gets \bar{x}_{k-1} + \frac{1}{k}\left(x_k - \bar{x}_{k-1}\right)$\;
+  \KwData{$\theta_0$, schedule $(\gamma_n)$}
+  $\bar{\theta}_0 \gets \theta_0$\;
+  \For{$n \gets 1,2,\dots$}{
+    Sample $i_n$\;
+    $\rho_n \gets \nabla_\theta L(y_{i_n},x_{i_n},\theta_{n-1})$\;
+    $\theta_n \gets \theta_{n-1} - \gamma_n \rho_n$\;
+    $\bar{\theta}_n \gets \bar{\theta}_{n-1} + \frac{1}{n}\left(\theta_n - \bar{\theta}_{n-1}\right)$\;
   }
   \caption{SGD with Polyak--Ruppert averaging}
 \end{algorithm}
@@ -572,13 +572,13 @@ Works with momentum and batches.
 
 # Generate logistic regression data
 set.seed(123)
-n <- 1000
+N <- 1000
 p <- 2
-X_logistic <- matrix(rnorm(n * p), n, p)
+X_logistic <- matrix(rnorm(N * p), N, p)
 beta_true <- c(0.5, 1.5)
 logits <- X_logistic %*% beta_true
 probs <- plogis(logits)
-y_logistic <- rbinom(n, 1, probs)
+y_logistic <- rbinom(N, 1, probs)
 
 # Logistic regression loss and gradient functions
 logistic_loss <- function(beta, X, y) {
@@ -594,7 +594,7 @@ logistic_grad <- function(beta, X, y) {
 
 # SGD with Polyak-Ruppert averaging for logistic regression
 sgd_polyak_ruppert <- function(X, y, batch_size = 10, maxit = 500, lr = 0.19) {
-  n <- nrow(X)
+  N <- nrow(X)
   p <- ncol(X)
 
   # Initialize parameters
@@ -610,7 +610,7 @@ sgd_polyak_ruppert <- function(X, y, batch_size = 10, maxit = 500, lr = 0.19) {
 
   for (k in 2:maxit) {
     # Sample mini-batch
-    batch_idx <- sample(n, batch_size, replace = FALSE)
+    batch_idx <- sample(N, batch_size, replace = FALSE)
     X_batch <- X[batch_idx, , drop = FALSE]
     y_batch <- y[batch_idx]
 
@@ -689,18 +689,18 @@ Some directions may be important, but feature information is **sparse**.
 ::::: {.column width="47%"}
 Store matrix of gradient history,
 $$
-  G_k = \sum_{i = 1}^k \nabla f(x_i) \nabla f(x_i)^\intercal,
+  G_n = \sum_{i = 1}^n \nabla H(\theta_i) \nabla H(\theta_i)^\intercal,
 $$
-and update by multiplying gradient with $G_k^{-1/2}$.
+and update by multiplying gradient with $G_n^{-1/2}$.
 :::::
 
 . . .
 
 ::::: {.column width="47%"}
 \begin{algorithm}[H]
-  \KwData{$t >0$, $G = 0$} \For{$k \gets 1, 2, \dots$}{
-    $G_k \gets G_{k-1} + \nabla f(x_{k-1}) \nabla f(x_{k-1})^\intercal$\;
-    $x_k \gets x_{k-1} - t G_k^{-1/2} \nabla f(x_{k-1})$\; }
+  \KwData{$\gamma >0$, $G = 0$} \For{$n \gets 1, 2, \dots$}{
+    $G_n \gets G_{n-1} + \nabla H(\theta_{n-1}) \nabla H(\theta_{n-1})^\intercal$\;
+    $\theta_n \gets \theta_{n-1} - \gamma G_n^{-1/2} \nabla H(\theta_{n-1})$\; }
 \caption{AdaGrad}
 \end{algorithm}
 :::::
@@ -717,11 +717,11 @@ and update by multiplying gradient with $G_k^{-1/2}$.
 
 ### Simplified Version
 
-Computing $\nabla f \nabla f^\intercal$ is $O(p^2)$: expensive!
+Computing $\nabla H \nabla H^\intercal$ is $O(p^2)$: expensive!
 
 \medskip\pause
 
-Replace $G^{-1/2}_k$ with $\operatorname{diag}(G_k)^{-1/2}$
+Replace $G^{-1/2}_n$ with $\operatorname{diag}(G_n)^{-1/2}$
 
 . . .
 
@@ -732,10 +732,10 @@ Add a small $\epsilon$ to diagonal.
 \bigskip
 
 \begin{algorithm}[H]
-  \KwData{$t >0$, $\epsilon > 0$}
-    \For{$k \gets 1, 2, \dots$}{
-      $G_k \gets G_{k-1} + \operatorname{diag}\big(\nabla f(x_{k-1})^2\big)$\;
-      $x_k \gets x_{k-1} - t \operatorname{diag}\big(\epsilon I_p + G_k\big)^{-1/2} \nabla f(x_{k-1})$\;
+  \KwData{$\gamma >0$, $\epsilon > 0$}
+    \For{$n \gets 1, 2, \dots$}{
+      $G_n \gets G_{n-1} + \operatorname{diag}\big(\nabla H(\theta_{n-1})^2\big)$\;
+      $\theta_n \gets \theta_{n-1} - \gamma \operatorname{diag}\big(\epsilon I_p + G_n\big)^{-1/2} \nabla H(\theta_{n-1})$\;
     }
   \caption{Simplified AdaGrad}
 \end{algorithm}
@@ -750,7 +750,7 @@ Acronym for **R**oot **M**ean **S**quare **Prop**agation [@hintonLecture62018].
 
 Divide learning rate by running average of magnitude of recent gradients:
 $$
-  v(x,k) = \xi v(x, k -1) + (1 - \xi)\nabla f(x_k)^2
+  v(\theta, n) = \xi v(\theta, n - 1) + (1 - \xi)\nabla H(\theta_n)^2
 $$
 where $\xi$ is the **forgetting factor**.
 
@@ -762,10 +762,10 @@ old data.
 \medskip\pause
 
 \begin{algorithm}[H]
-  \KwData{$t >0$, $\xi > 0$}
-  \For{$k \gets 1, 2, \dots$,
-    $\xi \in [0, 1)$}{ $v_k = \xi v_{k-1} + (1 - \xi) \nabla f(x_{k-1})$\;
-    $x_k \gets x_{k-1} - \frac{t}{\sqrt{v_k}} \odot \nabla f(x_{k-1})$\; 
+  \KwData{$\gamma >0$, $\xi > 0$}
+  \For{$n \gets 1, 2, \dots$,
+    $\xi \in [0, 1)$}{ $v_n = \xi v_{n-1} + (1 - \xi) \nabla H(\theta_{n-1})$\;
+    $\theta_n \gets \theta_{n-1} - \frac{\gamma}{\sqrt{v_n}} \odot \nabla H(\theta_{n-1})$\; 
   }
   \caption{RMSProp. (Note that $\odot$ is element-wise product.)}
 \end{algorithm}
@@ -794,11 +794,11 @@ If gradient is too large, scale it down to avoid too large steps.
 
 \medskip\pause
 
-Replace gradient $\nabla f(x_k)$ by
+Replace gradient $\nabla H(\theta_n)$ by
 $$
-  \tilde{\nabla} f(x_k) = \begin{cases}
-    \nabla f(x_k) & \text{if } \|\nabla f(x_k)\|_2 \leq c, \\
-    c \frac{\nabla f(x_k)}{\|\nabla f(x_k)\|_2} & \text{otherwise}.
+  \tilde{\nabla} H(\theta_n) = \begin{cases}
+    \nabla H(\theta_n) & \text{if } \|\nabla H(\theta_n)\|_2 \leq c, \\
+    c \frac{\nabla H(\theta_n)}{\|\nabla H(\theta_n)\|_2} & \text{otherwise}.
   \end{cases}
 $$
 
@@ -809,7 +809,7 @@ $$
 Some strategies:
 
 1. **Rule of thumb**: $c \in [1, 10]$ often works well in practice\pause
-2. **Gradient norm monitoring**: Track $\|\nabla f(x_k)\|_2$ during training and
+2. **Gradient norm monitoring**: Track $\|\nabla H(\theta_n)\|_2$ during training and
    set $c$ based on observed distribution\pause
 3. **Percentile-based**: Set $c$ to be the 95th or 99th percentile of observed
    gradient norms\pause
@@ -847,18 +847,18 @@ Use a held-out validation set; never the training set, and avoid
 ::::: {.column width="54%"}
 \begin{algorithm}[H]
   \KwData{Patience $P$, min improvement $\delta \ge 0$}
-  $x \gets x_0$, $x_{\mathrm{best}} \gets x$, $b_{\mathrm{best}} \gets \infty$, $p \gets 0$\;
-  \For{$k=1,2,\dots$}{
+  $\theta \gets \theta_0$, $\theta_{\mathrm{best}} \gets \theta$, $b_{\mathrm{best}} \gets \infty$, $p \gets 0$\;
+  \For{$n=1,2,\dots$}{
     Train for some epochs\;
-    Compute validation loss $b_k$\;
-    \eIf{$b_k \le b_{\mathrm{best}} - \delta$}{
-      $b_{\mathrm{best}} \gets b_k$, $x_{\mathrm{best}} \gets x$, $p \gets 0$\;
+    Compute validation loss $b_n$\;
+    \eIf{$b_n \le b_{\mathrm{best}} - \delta$}{
+      $b_{\mathrm{best}} \gets b_n$, $\theta_{\mathrm{best}} \gets \theta$, $p \gets 0$\;
     }{
       $p \gets p + 1$\;
       \If{$p \ge P$}{break}
     }
   }
-  \Return{$x_{\mathrm{best}}$}
+  \Return{$\theta_{\mathrm{best}}$}
   \caption{Early stopping with patience}
 \end{algorithm}
 :::::
@@ -977,7 +977,7 @@ legend(
 ::::: {.column width="42%"}
 Let's assume we're trying to solve a least-squares type of problem:
 $$
-  f(\theta) = \frac{1}{2n} \sum_{i=1}^n  \left(y_i - g(\theta; x_i)\right)^2
+  H_N(\theta) = \frac{1}{2N} \sum_{i=1}^N  \left(y_i - g(\theta; x_i)\right)^2
 $$
 with $\theta = (\alpha, \beta)$ and
 $$
@@ -988,7 +988,7 @@ $$
 
 Then
 $$
-  \nabla_{\theta} f(\theta) = \frac{1}{n}\sum_{i=1}^n (y_i - g(\theta; x_i))
+  \nabla_{\theta} H_N(\theta) = \frac{1}{N}\sum_{i=1}^N (y_i - g(\theta; x_i))
   \begin{bmatrix}
     -\cos(\beta x_i)\\
     \alpha x_i \sin(\beta x_i)
@@ -1009,7 +1009,7 @@ $$
 :::::
 
 ::::: {.column width="50%"}
-![Contour plot of $f$](../images/nonlinear-contour.png)
+![Contour plot of $H_N$](../images/nonlinear-contour.png)
 :::::
 :::
 
@@ -1077,18 +1077,18 @@ Use RcppEigen or RcppArmadillo.
 
 ### Steps
 
-1. Minimize $f(x_1, x_2) = (a - x_1)^2 + b(x_2 - x_1^2)^2$ with $a = 1$ and
-   $b = 100$ using gradient descent. Optimum is $(a, a^2)$.\pause
+1. Minimize $H(\theta) = (a - \theta_1)^2 + b(\theta_2 - \theta_1^2)^2$ with
+   $a = 1$ and $b = 100$ using gradient descent. Optimum is $(a, a^2)$.\pause
 2. Add Polyak momentum.\pause
 3. Experiment with different step sizes and momentum parameters.
 
 ::: {.columns}
 ::::: {.column width="47%"}
 \begin{algorithm}[H]
-  \KwData{$t >0$, $\mu \in [0,1)$}
-  \For{$k \gets 1, 2, \dots$}{
-    $x_k \gets x_{k-1} - t \nabla f(x_{k-1}) + \mu
-  (x_{k-1} - x_{k-2}) $\;
+  \KwData{$\gamma >0$, $\mu \in [0,1)$}
+  \For{$n \gets 1, 2, \dots$}{
+    $\theta_n \gets \theta_{n-1} - \gamma \nabla H(\theta_{n-1}) + \mu
+  (\theta_{n-1} - \theta_{n-2}) $\;
   }
   \caption{GD with Polyak Momentum}
 \end{algorithm}
@@ -1100,13 +1100,13 @@ Use RcppEigen or RcppArmadillo.
 ### Plot Contours
 
 You can use the following code to plot the contours of the function (after
-defining `f`):
+defining `H`):
 
 ```r
-x1 <- seq(-2, 2, by = 0.05)
-x2 <- seq(-1, 3, by = 0.05)
-z <- outer(x1, x2, f)
-contour(x1, x2, z, nlevels = 20)
+theta1 <- seq(-2, 2, by = 0.05)
+theta2 <- seq(-1, 3, by = 0.05)
+z <- outer(theta1, theta2, H)
+contour(theta1, theta2, z, nlevels = 20)
 ```
 :::::
 :::

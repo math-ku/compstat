@@ -389,8 +389,8 @@ across outer product of its initial arguments.
 #| message: false
 #| warning: false
 
-dens_bench <- bench::press(n = 2^(6:9), {
-  x <- rnorm(n)
+dens_bench <- bench::press(N = 2^(6:9), {
+  x <- rnorm(N)
   bench::mark(
     base = density(x, 0.2),
     loop = kern_dens(x, 0.2),
@@ -432,14 +432,14 @@ plot(dens_bench)
 #|   implementations.
 
 mutate(dens_bench, method = as.character(expression)) |>
-  ggplot(aes(n, median, color = method)) +
+  ggplot(aes(N, median, color = method)) +
   geom_point() +
   geom_line() +
   labs(y = "time (µs)")
 ```
 
 \pdfpcnote{
-  Mention the difference in how performance scales with n.
+  Mention the difference in how performance scales with N.
 }
 
 ## Notes About Benchmarking
@@ -609,18 +609,18 @@ we cannot optimize the kernel further.
 But we can use \alert{binning}: create $B$ bins and evaluate the kernel and
 replace
 $$
-  \hat{f}(x) = \frac{1}{n h} \sum_{i=1}^n K\left( \frac{x - x_i}{h} \right)
+  \hat{f}(x) = \frac{1}{N h} \sum_{j=1}^N K\left( \frac{x - x_j}{h} \right)
 $$
 with
 $$
-  \hat{f}(x) = \frac{1}{n h} \sum_{j=1}^B n_j K\left( \frac{x - c_j}{h} \right)
+  \hat{f}(x) = \frac{1}{N h} \sum_{j=1}^B N_j K\left( \frac{x - c_j}{h} \right)
 $$
-where $c_j$ is the center of the $j$th bin and $n_j$ is the number of data
+where $c_j$ is the center of the $j$th bin and $N_j$ is the number of data
 points in the $j$th bin.
 
 \medskip\pause
 
-Turns complexity from $O(nm)$ to $O(n) + O(mB)$.
+Turns complexity from $O(Nm)$ to $O(N) + O(mB)$.
 
 ## Binning Procedure
 
@@ -641,7 +641,7 @@ It's an example of context-specific optimization.
 
 ### Caution
 
-If $n < B$, then binning will not help. (But do you need to optimize for this
+If $N < B$, then binning will not help. (But do you need to optimize for this
 scenario?)
 
 ## Implementation
@@ -696,9 +696,9 @@ points as bin centers.
 #| fig-cap: The relative benefit of binning increases with the size of the data.
 #| fig-height: 3
 
-res2 <- bench::press(n = 2^(5:13), {
+res2 <- bench::press(N = 2^(5:13), {
   h <- 0.2
-  x <- rnorm(n)
+  x <- rnorm(N)
   bench::mark(
     base = density(x, h),
     loop = kern_dens(x, h),
@@ -709,7 +709,7 @@ res2 <- bench::press(n = 2^(5:13), {
 })
 
 mutate(res2, expr = as.character(expression), median = as.numeric(median)) |>
-  ggplot(aes(n, median, color = expr)) +
+  ggplot(aes(N, median, color = expr)) +
   geom_point() +
   geom_line() +
   scale_y_log10() +
@@ -764,11 +764,11 @@ df <- data.frame(
     kern_dens(x[1:1024], 0.2)$y - kern_dens_bin(x[1:1024], 0.2)$y,
     kern_dens(x, 0.2)$y - kern_dens_bin(x, 0.2)$y
   ),
-  n = factor(rep(c(128, 1024, 8192), each = length(x0)))
+  N = factor(rep(c(128, 1024, 8192), each = length(x0)))
 )
 
 ggplot(df, aes(x, diff)) +
-  facet_wrap(~n, labeller = "label_both") +
+  facet_wrap(~N, labeller = "label_both") +
   geom_hline(yintercept = 0, col = "grey80") +
   geom_line() +
   ylab("Difference")
@@ -860,10 +860,10 @@ We access rows, then transpose.
 #| label: f1-code
 
 f1 <- function(x, y) {
-  n <- NROW(x)
-  z <- double(n)
+  N <- NROW(x)
+  z <- double(N)
 
-  for (i in seq_len(n)) {
+  for (i in seq_len(N)) {
     z[i] <- t(x[i, ]) %*% y
   }
 
@@ -883,11 +883,11 @@ Transpose first, then access columns.
 #| label: f2-code
 
 f2 <- function(x, y) {
-  n <- NROW(x)
+  N <- NROW(x)
   x_t <- t(x)
-  z <- double(n)
+  z <- double(N)
 
-  for (i in seq_len(n)) {
+  for (i in seq_len(N)) {
     z[i] <- x_t[, i] %*% y
   }
 
@@ -907,9 +907,9 @@ Access columns directly, update sums together.
 #| label: f3-code
 
 f3 <- function(x, y) {
-  n <- NROW(x)
+  N <- NROW(x)
   p <- NCOL(x)
-  z <- double(n)
+  z <- double(N)
 
   for (i in seq_len(p)) {
     z <- z + x[, i] * y[i]
@@ -931,10 +931,10 @@ f3 <- function(x, y) {
 #| fig-cap: Benchmark results for three different implementations of
 #|   matrix-vector multiplication.
 
-n <- 1e3
+N <- 1e3
 p <- 1e1
 
-x <- matrix(rnorm(n * p), n)
+x <- matrix(rnorm(N * p), N)
 y <- matrix(rnorm(p), p, 1)
 
 bench::mark(f1(x, y), f2(x, y), f3(x, y)) |>

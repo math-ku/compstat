@@ -34,7 +34,7 @@ to the EM algorithm.
 
 The EM algorithm iteratively optimizes
 $$
-  \theta_{n + 1} = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta_n),
+  \theta_{n + 1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n),
 $$
 with
 $$
@@ -181,11 +181,11 @@ Letting $\theta = (\pi_1, \ldots, \pi_K, \psi_1, \ldots, \psi_K)$, the
 complete-data log-likelihood is
 $$
 \begin{aligned}
-  \ell_c (\theta) & = \sum_{i = 1}^n \log p(x_i, z_i \mid \theta)                                                                       \\
+  \ell_c (\theta) & = \sum_{i = 1}^N \log p(x_i, z_i \mid \theta)                                                                       \\
   \pause
-                  & = \sum_{i = 1}^n \log \left( f(x_i \mid z_i, \theta) f(z_i \mid \theta) \right)                                     \\
+                  & = \sum_{i = 1}^N \log \left( f(x_i \mid z_i, \theta) f(z_i \mid \theta) \right)                                     \\
   \pause
-                  & = \sum_{i = 1}^n \sum_{k = 1}^K \symbf{1}(Z_i = k) \left( \log \pi_k + \log f_k(x_i \mid \mu_k, \sigma_k^2) \right)
+                  & = \sum_{i = 1}^N \sum_{k = 1}^K \symbf{1}(Z_i = k) \left( \log \pi_k + \log f_k(x_i \mid \mu_k, \sigma_k^2) \right)
 \end{aligned}
 $$
 
@@ -227,7 +227,7 @@ $$
   \draw[->] (mu2) -- (x);
 
   % Plate for data points
-  \node[plate={below:{$i=1,\dots,n$}}, fit=(z)(x)] (plateN) {};
+  \node[plate={below:{$i = 1,\dots,N$}}, fit=(z)(x)] (plateN) {};
 \end{tikzpicture}
 :::::
 :::
@@ -237,7 +237,7 @@ $$
 The complete-data log-likelihood is now
 $$
 \begin{aligned}
-  \ell_c(\theta) & = \sum_{i = 1}^n \symbf{1}(Z_i = 1) \left( \log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right)                     \\
+  \ell_c(\theta) & = \sum_{i = 1}^N \symbf{1}(Z_i = 1) \left( \log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right)                     \\
                  & \phantom{ = {}} + \symbf{1}(Z_i = 2)\left( \log(1 - \pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right) + \text{const}.
 \end{aligned}
 $$
@@ -246,7 +246,7 @@ $$
 
 Taking expectations gives
 $$
-  Q(\theta \mid \theta') = \sum_{i = 1}^n \tau_{i} \left(\log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right)
+  Q(\theta \mid \theta') = \sum_{i = 1}^N \tau_{i} \left(\log(\pi) - \frac{(x_i - \mu_1)^2}{2 \sigma_1^2} \right)
                            + (1 - \tau_{i})\left( \log(1 - \pi) - \frac{(x_i - \mu_2)^2}{2 \sigma_2^2} \right)
 $$
 where $\tau_i = \Pr(Z_i = 1 \mid X_i = x_i, \theta')$ is the **responsibility**
@@ -275,7 +275,7 @@ $$
 
 The MLEs of $\theta$ given $Q(\theta \mid \theta')$ are
 $$
-  \hat{\theta} = \left(\frac{1}{n} \sum_{i = 1}^n \tau_i, \quad \frac{1}{\sum_{i = 1}^n \tau_i} \sum_{i = 1}^n \tau_i x_i, \quad \frac{1}{\sum_{i = 1}^n (1 - \tau_i)} \sum_{i = 1}^n (1 - \tau_i) x_i \right).
+  \hat{\theta} = \left(\frac{1}{N} \sum_{i = 1}^N \tau_i, \quad \frac{1}{\sum_{i = 1}^N \tau_i} \sum_{i = 1}^N \tau_i x_i, \quad \frac{1}{\sum_{i = 1}^N (1 - \tau_i)} \sum_{i = 1}^N (1 - \tau_i) x_i \right).
 $$
 
 . . .
@@ -286,7 +286,7 @@ $$
 
 We update $\pi$ as
 $$
-  \hat{\pi} = \frac{1}{n} \sum_{i = 1}^n \tau_i,
+  \hat{\pi} = \frac{1}{N} \sum_{i = 1}^N \tau_i,
 $$
 which is the fraction of all data points "assigned" to component 1.
 :::::
@@ -298,7 +298,7 @@ which is the fraction of all data points "assigned" to component 1.
 
 We update $\mu_1$ as
 $$
-  \hat{\mu}_1 = \frac{\sum_{i = 1}^n \tau_i x_i}{\sum_{i = 1}^n \tau_i},
+  \hat{\mu}_1 = \frac{\sum_{i = 1}^N \tau_i x_i}{\sum_{i = 1}^N \tau_i},
 $$
 and similarly for $\mu_2$.
 
@@ -328,12 +328,12 @@ p <- 0.5
 Then we simulate data.
 
 ```{r}
-n <- 5000
-z <- sample(c(TRUE, FALSE), n, replace = TRUE, prob = c(p, 1 - p))
-x <- numeric(n)
-n1 <- sum(z)
-x[z] <- rnorm(n1, mu1, sigma1)
-x[!z] <- rnorm(n - n1, mu2, sigma2)
+N <- 5000
+z <- sample(c(TRUE, FALSE), N, replace = TRUE, prob = c(p, 1 - p))
+x <- numeric(N)
+N1 <- sum(z)
+x[z] <- rnorm(N1, mu1, sigma1)
+x[!z] <- rnorm(N - N1, mu2, sigma2)
 ```
 
 ##
@@ -438,10 +438,10 @@ e_step_gauss <- function(par, x, sigma1 = 1, sigma2 = sigma1) {
 }
 
 m_step_gauss <- function(p_hat, x) {
-  n <- length(x)
+  N <- length(x)
   N1 <- sum(p_hat)
-  N2 <- n - N1
-  c(N1 / n, sum(p_hat * x) / N1, sum((1 - p_hat) * x) / N2)
+  N2 <- N - N1
+  c(N1 / N, sum(p_hat * x) / N1, sum((1 - p_hat) * x) / N2)
 }
 
 create_em_gauss_step <- function(x, sigma1 = 1, sigma2 = sigma1) {
@@ -690,12 +690,12 @@ sigma2 <- 1
 mu1 <- -0.5
 mu2 <- 4
 p <- 0.8
-n <- 5000
-z <- sample(c(TRUE, FALSE), n, replace = TRUE, prob = c(p, 1 - p))
-x <- numeric(n)
-n1 <- sum(z)
-x[z] <- rnorm(n1, mu1, sigma1)
-x[!z] <- rnorm(n - n1, mu2, sigma2)
+N <- 5000
+z <- sample(c(TRUE, FALSE), N, replace = TRUE, prob = c(p, 1 - p))
+x <- numeric(N)
+N1 <- sum(z)
+x[z] <- rnorm(N1, mu1, sigma1)
+x[!z] <- rnorm(N - N1, mu2, sigma2)
 
 em_gauss_step_alt <- create_em_gauss_step(x, sigma1)
 ```
@@ -772,7 +772,7 @@ $$
 sgd_basic <- function(
   par,
   grad,
-  n,
+  N,
   # number of data points
   gamma,
   # learning rate
@@ -782,8 +782,8 @@ sgd_basic <- function(
   ...
 ) {
   for (k in seq_len(maxit)) {
-    for (i in seq_len(n)) {
-      ind <- sampler(n)
+    for (i in seq_len(N)) {
+      ind <- sampler(N)
       par <- par - gamma * grad(par, ind, ...)
     }
   }
@@ -841,14 +841,14 @@ minimum.
 
 set.seed(123)
 
-n <- 1000
+N <- 1000
 p <- 2
 Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
 mu <- c(0, 0)
 
-X <- rmvnorm(n, mean = mu, sigma = Sigma)
+X <- rmvnorm(N, mean = mu, sigma = Sigma)
 beta <- c(1, 2)
-y <- rbinom(n, 1, plogis(X %*% beta))
+y <- rbinom(N, 1, plogis(X %*% beta))
 
 res_glm <- glm.fit(X, y, family = binomial())
 
@@ -868,11 +868,11 @@ z <- outer(beta1, beta2, loss_2d_vectorized)
 
 res_sgd <- logreg_sgd(X, y, max_epochs = 100, batch_size = 1)
 res_sgd2 <- logreg_sgd(X, y, max_epochs = 100, batch_size = 1, K = 5, a = 0.5)
-res_gd <- logreg_sgd(X, y, max_epochs = 100, batch_size = n)
+res_gd <- logreg_sgd(X, y, max_epochs = 100, batch_size = N)
 
 loss_optim <- loss_2d(res_glm$coefficients[1], res_glm$coefficients[2], X, y)
 
-res_gd <- logreg_sgd(X, y, max_epochs = 100, batch_size = n)
+res_gd <- logreg_sgd(X, y, max_epochs = 100, batch_size = N)
 loss1 <- loss_2d_vectorized(res_gd$beta_history[1, ], res_gd$beta_history[2, ])
 loss2 <- loss_2d_vectorized(
   res_sgd$beta_history[1, ],
@@ -977,8 +977,8 @@ convex** if
 $$
   H(\theta) \geq H(\theta')
                  + \nabla H(\theta')^T (\theta - \theta')
-                 + \frac{l}{2} \lVert \theta
-                 - \theta'\rVert_2^2
+                 + \frac{l}{2} \| \theta
+                 - \theta'\|_2^2
 $$
 for all $\theta,\theta' \in \mathbb{R}^p$ and some $l > 0$.
 
@@ -1008,7 +1008,7 @@ for all $\theta,\theta' \in \mathbb{R}^p$ and some $l > 0$.
       \addplot[only marks, mark=*] coordinates {(1,1)};
       % Annotations
       \node[anchor=west] at (axis cs:2.2,5) {$H(\theta)$};
-      \node[anchor=west, RoyalBlue] at (axis cs:2.2,4.3) {$H(\theta') + \nabla H(\theta')^T(\theta-\theta') + \frac{l}{2}\lVert\theta-\theta' \rVert^2$};
+      \node[anchor=west, RoyalBlue] at (axis cs:2.2,4.3) {$H(\theta') + \nabla H(\theta')^T(\theta-\theta') + \frac{l}{2}\|\theta-\theta' \|^2$};
       \node[anchor=west, DarkOrange] at (axis cs:2.2,3.5) {$H(\theta') + \nabla H(\theta')^T(\theta-\theta')$};
     \end{axis}
   \end{tikzpicture}
@@ -1160,8 +1160,8 @@ $t = 1/L = 1/2$.
 Let $H(\theta) = \E L(Y,\theta)$ be the population risk. Suppose $H$ is strongly
 convex and
 $$
-  \E\left(\lVert\nabla_\theta L(Y,\theta)\rVert_2^2\right) \leq A
-                                                                + B \lVert \theta \rVert_2^2
+  \E\left(\|\nabla_\theta L(Y,\theta)\|_2^2\right) \leq A
+                                                                + B \| \theta \|_2^2
 $$
 for some constants $A$ and $B$.
 
@@ -1261,32 +1261,32 @@ So SGD does **not** enjoy linear convergence rates under strong convexity.
 \begin{tikzpicture}
   \begin{axis}[
       width=9cm, height=8cm,
-      xlabel={$k$},
+      xlabel={$n$},
       ylabel={Suboptimality},
       legend pos=north east,
       ymode=log,
       xmax=36,
       domain=1:20
     ]
-    % O(1/sqrt(k))
+    % O(1/sqrt(n))
     \addplot[
       thick,
-      line label={$O(1/\sqrt{k})$}
+      line label={$O(1/\sqrt{n})$}
     ] {1/sqrt(x)};
 
-    % O(1/k)
+    % O(1/n)
     \addplot[
       thick,
       dashed,
-      line label={$O(1/k)$}
+      line label={$O(1/n)$}
     ] {1/x};
 
-    % O(delta^k) with delta = 0.5
+    % O(delta^n) with delta = 0.5
     \addplot[
       thick,
       dotted,
       samples=50,
-      line label={$O(\delta^k)$}
+      line label={$O(\delta^n)$}
     ] {0.5^x};
   \end{axis}
 \end{tikzpicture}
@@ -1335,14 +1335,14 @@ Connect to law of large numbers: averaging reduces variance.
 
 set.seed(123)
 
-n <- 1000
+N <- 1000
 p <- 2
 Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
 mu <- c(0, 0)
 
-X <- rmvnorm(n, mean = mu, sigma = Sigma)
+X <- rmvnorm(N, mean = mu, sigma = Sigma)
 beta <- c(1, 2)
-y <- rbinom(n, 1, plogis(X %*% beta))
+y <- rbinom(N, 1, plogis(X %*% beta))
 
 res_glm <- glm.fit(X, y, family = binomial())
 loss_optim <- loss_2d(res_glm$coefficients[1], res_glm$coefficients[2], X, y)
@@ -1356,7 +1356,7 @@ loss_2d <- function(beta1, beta2, X, y) {
 
 conv_data <- data.frame(b = NULL, epoch = NULL, loss = NULL)
 
-for (b in c(1, 10, 100, n)) {
+for (b in c(1, 10, 100, N)) {
   res_sgd <- logreg_sgd(X, y, max_epochs = 100, batch_size = b, a = 1, t0 = 3)
 
   conv_data <- rbind(
@@ -1383,8 +1383,8 @@ So why even care about SGD?
 
 ### Reasons to Use SGD
 
-- If $n \gg p$, then we can pick a batch size that is reasonably accurate but
-  still much smaller than $n$. \pause
+- If $N \gg p$, then we can pick a batch size that is reasonably accurate but
+  still much smaller than $N$. \pause
 - In many applications (e.g. deep learning), we don't *care* about optimizing to
   high accuracy. \pause
 - Sometimes, the stochasticity in SGD helps it escape local minima.
@@ -1405,7 +1405,7 @@ But in terms of epochs, SGD can be faster.
 
 conv_data <- tibble(
   method = rep(c("GD", "SGD"), times = c(length(loss1), length(loss2))),
-  epoch = c(seq_len(n1), seq_len(n2) / n),
+  epoch = c(seq_len(n1), seq_len(n2) / N),
   loss = c(loss1 - loss_optim, loss2 - loss_optim),
   iteration = c(seq_len(n1), seq_len(n2))
 )
@@ -1669,14 +1669,14 @@ No, not really, because it's still hard to pick $\gamma_0$, $K$, and $a$.
 
 set.seed(123)
 
-n <- 1000
+N <- 1000
 p <- 2
 Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
 mu <- c(0, 0)
 
-X <- rmvnorm(n, mean = mu, sigma = Sigma)
+X <- rmvnorm(N, mean = mu, sigma = Sigma)
 beta <- c(1, 2)
-y <- rbinom(n, 1, plogis(X %*% beta))
+y <- rbinom(N, 1, plogis(X %*% beta))
 
 res_glm <- glm.fit(X, y, family = binomial())
 

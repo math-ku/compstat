@@ -283,7 +283,7 @@ as the **usethis** package.
 Let's build a simple package that solves the Rosenbrock optimization problem,
 i.e. find
 $$
-  x^* = \argmin_{x}\Big((a - x_1)^2 + b(x_2 - x_1^2)^2\Big).
+  \theta^* = \argmin_{\theta}\Big((a - \theta_1)^2 + b(\theta_2 - \theta_1^2)^2\Big).
 $$
 
 . . .

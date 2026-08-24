@@ -117,7 +117,7 @@ Think of $X_k$ as the capital that a company or a gambler earns or loses at time
 $n$. Starting with a total capital of 30, $S_n$ is the total capital at time
 $n$. We are interested in computing the *ruin probabilities* before time $n$:
 $$
-  p(n) = P(\exists k \leq n: S_k \leq 0).
+  p(n) = \P(\exists k \leq n: S_k \leq 0).
 $$
 
 Implement Monte Carlo integration to compute $p(100)$.
@@ -129,7 +129,7 @@ $$
 $$
 for $x \in (-1.9, 2)^n$, where
 $$
-  \varphi(\theta) = \int_{-1.9}^2 e^{\theta z} \mathrm{d}z.
+  \varphi(\theta) = \int_{-1.9}^2 e^{\theta z} \ \mathrm{d}z.
 $$
 
 Implement importance sampling to compute $p(100)$ by sampling from

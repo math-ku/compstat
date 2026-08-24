@@ -636,7 +636,7 @@ Because
 
 Density estimation relies on the approximation
 $$
-  P(X \in (x-h, x+h)) = \int_{x-h}^{x+h} f_0(z) \ dz \pause \simeq f_0(x) 2h.
+  \P(X \in (x-h, x+h)) = \int_{x-h}^{x+h} f_0(z) \ \mathrm{d}z \pause \approx f_0(x) 2h.
 $$
 
 . . .
@@ -644,9 +644,9 @@ $$
 Rearranging and using the law of large numbers gives
 $$
   \begin{aligned}
-    f_0(x) & \simeq \frac{1}{2h} P(X \in (x-h, x+h)) \\ \pause
-           & \simeq \frac{1}{2hn} \sum_{i=1}^n 1_{(x-h, x+h)}(x_i) \\ \pause
-           & = \frac{1}{2hn} \sum_{i=1}^n 1_{(-h, h)}(x - x_i) \\ \pause
+    f_0(x) & \approx \frac{1}{2h} \P(X \in (x-h, x+h)) \\ \pause
+           & \approx \frac{1}{2hN} \sum_{j=1}^N 1_{(x-h, x+h)}(x_j) \\ \pause
+           & = \frac{1}{2hN} \sum_{j=1}^N 1_{(-h, h)}(x - x_j) \\ \pause
            & = \hat{f}_h(x).
   \end{aligned}
 $$
@@ -661,7 +661,7 @@ $$
 
 We will consider *kernel estimators*
 $$
-  \hat{f}_h(x) = \frac{1}{hn} \sum_{i=1}^n K\left(\frac{x - x_i}{h}\right).
+  \hat{f}_h(x) = \frac{1}{hN} \sum_{j=1}^N K\left(\frac{x - x_j}{h}\right).
 $$
 
 . . .
@@ -712,11 +712,11 @@ ggplot(tibble(x = seq(-4, 4, length.out = 100)), aes(x)) +
 #| echo: false
 
 x <- c(-1, 3, 5, 6, 9)
-n <- length(x)
+N <- length(x)
 
 l <- lapply(x, function(xi) {
   a <- seq(-4, 4, length.out = 100)
-  d <- dnorm(a) / n
+  d <- dnorm(a) / N
   data.frame(x = xi, a = a + xi, d = d)
 })
 
@@ -940,7 +940,7 @@ You need to decide on the tolerance level on a case-by-case basis.
 One might wonder if we can use maximum likelihood estimation (MLE) to estimate
 the density. I.e., solve
 $$
-  \hat{\theta} = \text{arg max}_{\theta} \sum_{j=1}^n \log f_{\theta}(x_j).
+  \hat{\theta} = \argmax_{\theta} \sum_{j=1}^N \log f_{\theta}(x_j).
 $$
 
 \bigskip
@@ -992,14 +992,14 @@ How about maximizing over \alert{all possible} densities?
 
 For nonparametric estimation we can still introduce the log-likelihood:
 $$
-  \ell(f) = \sum_{j=1}^n \log f(x_j)
+  \ell(f) = \sum_{j=1}^N \log f(x_j)
 $$
 
 . . .
 
 Let's see what happens for the Gaussian kernel density estimate
 $$
-  \bar{f}_h(x) = \frac{1}{nh \sqrt{2 \pi}} \sum_{j=1}^n e^{- \frac{(x - x_j)^2}{2 h^2} }.
+  \bar{f}_h(x) = \frac{1}{Nh \sqrt{2 \pi}} \sum_{j=1}^N e^{- \frac{(x - x_j)^2}{2 h^2} }.
 $$
 
 \pdfpcnote{
@@ -1094,8 +1094,8 @@ plot_psi_density(0.0001, n = 10001)
 If $x_i \neq x_j$ when $i \neq j$, then
 $$
   \begin{aligned}
-    \ell(\bar{f}_h) & = \sum_{i} \log\left(1 + \sum_{j \neq i} e^{-(x_i - x_j)^2 / (2 h^2)} \right) - n \log(nh\sqrt{2 \pi}) \\ \pause
-                    & \sim - n \log(nh\sqrt{2 \pi})
+    \ell(\bar{f}_h) & = \sum_{i} \log\left(1 + \sum_{j \neq i} e^{-(x_i - x_j)^2 / (2 h^2)} \right) - N \log(Nh\sqrt{2 \pi}) \\ \pause
+                    & \sim - N \log(Nh\sqrt{2 \pi})
   \end{aligned}
 $$
 
@@ -1109,24 +1109,24 @@ Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is **no MLE**.
 
 Quality of $\hat{f}_h$ can be quantified by the *integrated squared error*,
 $$
-  \operatorname{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ dx = ||\hat{f}_h - f_0||_2^2.
+  \mathrm{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ \mathrm{d}x = \|\hat{f}_h - f_0\|_2^2.
 $$
 
 . . .
 
 Quality of the estimation procedure can be quantified by the mean ISE,
 $$
-  \operatorname{MISE}(h) = \operatorname{E}(\mathrm{ISE}(\hat{f}_h)),
+  \mathrm{MISE}(h) = \E(\mathrm{ISE}(\hat{f}_h)),
 $$
 where the expectation integral is over the data.
 
 . . .
 
 $$
-  \operatorname{MISE}(h) = \int \operatorname{MSE}_h(x) \ dx
+  \mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \ \mathrm{d}x
 $$
 where
-$\operatorname{MSE}_h(x) = \operatorname{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
+$\mathrm{MSE}_h(x) = \V(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
 \pdfpcnote{
   Derive this for the uniform kernel (if you have time.)
@@ -1136,13 +1136,13 @@ $\operatorname{MSE}_h(x) = \operatorname{var}(\hat{f}_h(x)) + \mathrm{bias}(\hat
 
 If $K$ is a square-integrable probability density with mean 0,
 $$
-  \mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((nh)^{-1} + h^4)
+  \mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((Nh)^{-1} + h^4)
 $$
 \pause where the *asymptotic mean integrated squared error* is
 $$
-  \mathrm{AMISE}(h) = \frac{\|K\|_2^2}{nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}
+  \mathrm{AMISE}(h) = \frac{\|K\|_2^2}{Nh} + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}
 $$
-with $\sigma_K^2 = \int t^2 K(t) \ dt.$
+with $\sigma_K^2 = \int x^2 K(x) \ \mathrm{d}x.$
 
 . . .
 
@@ -1178,7 +1178,7 @@ phipsi_plot <- function(bw) {
 ```
 
 $$
-  h = 0.9 \min \left(\hat{\sigma},\frac{\text{IQR}}{1.34}\right) n^{-1/5}
+  h = 0.9 \min \left(\hat{\sigma},\frac{\mathrm{IQR}}{1.34}\right) N^{-1/5}
 $$
 
 \medskip
@@ -1195,7 +1195,7 @@ phipsi_plot("nrd0")
 ## Amino Acid Angles (Scott, using 1.06)
 
 $$
-  h = 1.06 \hat{\sigma} n^{-1/5}
+  h = 1.06 \hat{\sigma} N^{-1/5}
 $$
 
 \medskip

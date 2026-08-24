@@ -53,7 +53,7 @@ has density $f$.
            $f \propto q$ using proposal $Z$ with density $g \propto p$.}
   \Repeat{$x$ is accepted}{
     Generate $x \sim Z$\;
-    Generate $u \sim \mathrm{Uniform}(0, 1)$\;
+    Generate $u \sim \mathcal{U}(0, 1)$\;
     \If{$u \leq \frac{\alpha' q(x)}{p(x)}$}{
       Accept $x$\;
     }
@@ -105,35 +105,35 @@ Useful when analytical solutions are infeasible.
 
 ### Monte Carlo Integration
 
-With $X_1, \ldots, X_n$ i.i.d. with density $f$,
+With $X_1, \ldots, X_N$ i.i.d. with density $f$,
 $$
-  \hat{\mu}_{\mathrm{MC}} = \frac{1}{n} \sum_{i=1}^n h(X_i) \rightarrow \mu = \E h(X_1) = \int h(x) f(x) \ dx
+  \hat{\mu}_{\mathrm{MC}} = \frac{1}{N} \sum_{i=1}^N h(X_i) \rightarrow \mu = \E h(X_1) = \int h(x) f(x) \ \mathrm{d}x
 $$
-for $n \to \infty$ by the law of large numbers (LLN).
+for $N \to \infty$ by the law of large numbers (LLN).
 
 ## Monte Carlo Integration
 
 By the central limit theorem (CLT), we know that
 $$
-  \frac{1}{n} \sum_{i=1}^n h(X_i) \overset{\mathrm{approx}} \sim
-  \mathcal{N}(\mu, \sigma^2_{\mathrm{MC}} / n)
+  \frac{1}{N} \sum_{i=1}^N h(X_i) \overset{\mathrm{approx}} \sim
+  \mathcal{N}(\mu, \sigma^2_{\mathrm{MC}} / N)
 $$
 where
 $$
-  \sigma^2_{\mathrm{MC}} = \var h(X_1) = \int (h(x) - \mu)^2 f(x) \ dx.
+  \sigma^2_{\mathrm{MC}} = \V h(X_1) = \int (h(x) - \mu)^2 f(x) \ \mathrm{d}x.
 $$
 
 ## Monte Carlo Integration
 
 We can estimate $\sigma^2_{\mathrm{MC}}$ using the empirical variance
 $$
-  \hat{\sigma}^2_{\mathrm{MC}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i) - \hat{\mu}_{\mathrm{MC}})^2,
+  \hat{\sigma}^2_{\mathrm{MC}} = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i) - \hat{\mu}_{\mathrm{MC}})^2,
 $$
 then the variance of $\hat{\mu}_{\mathrm{MC}}$ is estimated as
-$\hat{\sigma}^2_{\mathrm{MC}} / n$ and a standard 95% confidence interval for
+$\hat{\sigma}^2_{\mathrm{MC}} / N$ and a standard 95% confidence interval for
 $\mu$ is
 $$
-  \hat{\mu}_{\mathrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\mathrm{MC}}}{\sqrt{n}}.
+  \hat{\mu}_{\mathrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\mathrm{MC}}}{\sqrt{N}}.
 $$
 
 ## Example: Gamma Distribution
@@ -249,7 +249,7 @@ So let's \alert{oversample} these regions, but correct for this by
 
 We want to find $\mu = \E h(X)$. Observe that
 $$
-  \mu = \int h(x) f(x) \ dx = \int h(x) \frac{f(x)}{g(x)} g(x) \ dx = \int h(x) w^*(x) g(x) \ dx
+  \mu = \int h(x) f(x) \ \mathrm{d}x = \int h(x) \frac{f(x)}{g(x)} g(x) \ \mathrm{d}x = \int h(x) w^*(x) g(x) \ \mathrm{d}x
 $$
 whenever $g$ is a density fulfilling that
 $$
@@ -258,7 +258,7 @@ $$
 
 ## Weights
 
-With $X_1, \ldots, X_n$ i.i.d. with density $g$ define the *weights*
+With $X_1, \ldots, X_N$ i.i.d. with density $g$ define the *weights*
 $$
   w^*(X_i) = \frac{f(X_i)}{g(X_i)}.
 $$
@@ -272,7 +272,7 @@ $g$ is the *importance* density and $f/g$ is called the *likelihood ratio*.
 ### Estimator
 
 $$
-  \hat{\mu}_{\mathrm{IS}}^* := \frac{1}{n} \sum_{i=1}^n h(X_i)w^*(X_i).
+  \hat{\mu}_{\mathrm{IS}}^* := \frac{1}{N} \sum_{i=1}^N h(X_i)w^*(X_i).
 $$
 
 It has mean $\mu$.
@@ -406,30 +406,30 @@ p
 
 Again by the LLN
 $$
-  \hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1) = \mu  \quad \text{as } n \to \infty.\pause
+  \hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1) = \mu  \quad \text{as } N \to \infty.\pause
 $$
 And by the CLT
 $$
   \hat{\mu}_{\mathrm{IS}}^* \overset{\mathrm{approx}} \sim
-  \mathcal{N}(\mu, \sigma^{*2}_{\mathrm{IS}} / n)
+  \mathcal{N}(\mu, \sigma^{*2}_{\mathrm{IS}} / N)
 $$
 where
 $$
-  \sigma^{*2}_{\mathrm{IS}} = \var \big( h(X_1)w^*(X_1)\big) = \int (h(x) w^*(x) - \mu)^2 g(x) \ dx.
+  \sigma^{*2}_{\mathrm{IS}} = \V \big( h(X_1)w^*(X_1)\big) = \int (h(x) w^*(x) - \mu)^2 g(x) \ \mathrm{d}x.
 $$
 
 ## Importance Sampling Variance
 
 The IS variance can be estimated analogously with the MC variance,
 $$
-  \hat{\sigma}^{*2}_{\mathrm{IS}} = \frac{1}{n - 1} \sum_{i=1}^n (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2.
+  \hat{\sigma}^{*2}_{\mathrm{IS}} = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2.
 $$
 
 . . .
 
 And a 95% standard confidence interval is
 $$
-  \hat{\mu}^*_{\mathrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\mathrm{IS}}}{\sqrt{n}}.
+  \hat{\mu}^*_{\mathrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\mathrm{IS}}}{\sqrt{N}}.
 $$
 
 \medskip\pause
@@ -498,7 +498,7 @@ target distribution.
 
 Suppose we want to estimate
 $$
-  \E(X^4) = \int x^4 \, f(x) \, dx = 3
+  \E(X^4) = \int x^4 f(x) \ \mathrm{d}x = 3
 $$
 where $f(x)$ is the standard normal density.
 
@@ -529,8 +529,8 @@ Instead, we can try a heavy-tailed importance distribution, such as Student-$t$.
 #|   a normal importance distribution.
 
 set.seed(1)
-n <- 1000
-x_norm <- rnorm(n)
+N <- 1000
+x_norm <- rnorm(N)
 target <- dnorm(x_norm, 0, 1)
 importance_norm <- dnorm(x_norm, 0, 1)
 weights_norm <- target / importance_norm # All 1
@@ -603,7 +603,7 @@ dens_df_t <- tibble(
   )
 
 set.seed(1)
-x_t <- rt(n, df = 3)
+x_t <- rt(N, df = 3)
 target_t <- dnorm(x_t, 0, 1)
 importance_t <- dt(x_t, df = 3)
 weights_t <- target_t / importance_t
@@ -664,14 +664,14 @@ p2 / p2b + plot_layout(heights = c(2, 1), axes = "collect")
 
 If $f = c^{-1} q$ with $c$ unknown then
 $$
-  c = \int q(x) dx = \int \frac{q(x)}{g(x)} g(x) d x.
+  c = \int q(x) \ \mathrm{d}x = \int \frac{q(x)}{g(x)} g(x) \ \mathrm{d}x.
 $$
 
 . . .
 
 And
 $$
-  \mu = \frac{\int h(x) w^*(x) g(x) \ d x}{\int w^*(x) g(x) \ d x},
+  \mu = \frac{\int h(x) w^*(x) g(x) \ \mathrm{d}x}{\int w^*(x) g(x) \ \mathrm{d}x},
 $$
 where
 $$
@@ -686,12 +686,12 @@ Note that g is still the normalized density.
 
 An importance sampling estimate of $\mu$ is thus
 $$
-  \hat{\mu}_{\mathrm{IS}} = \frac{\sum_{i=1}^n h(X_i) w^*(X_i)}{\sum_{i=1}^n w^*(X_i)} \pause
-                          = \sum_{i=1}^n h(X_i) w(X_i),
+  \hat{\mu}_{\mathrm{IS}} = \frac{\sum_{i=1}^N h(X_i) w^*(X_i)}{\sum_{i=1}^N w^*(X_i)} \pause
+                          = \sum_{i=1}^N h(X_i) w(X_i),
 $$
 where $w^*(X_i) = q(X_i) / g(X_i)$ and
 $$
-  w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^n w^*(X_i)}
+  w(X_i) = \frac{w^*(X_i)}{\sum_{i=1}^N w^*(X_i)}
 $$
 are the *normalized weights*.
 
@@ -754,18 +754,18 @@ the estimator is a \alert{ratio of random variables}.
 
 From the multivariate CLT, we have
 $$
-  \frac{1}{n} \sum_{i=1}^n \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
+  \frac{1}{N} \sum_{i=1}^N \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
   \overset{\mathrm{approx}}{\sim}
   \mathcal{N}\left(
     c \begin{bmatrix} \mu \\ 1\end{bmatrix},
-    \frac{1}{n} \begin{bmatrix} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
+    \frac{1}{N} \begin{bmatrix} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
   \right),
 $$
 where $$
 \begin{aligned}
-  \sigma^2_{\mathrm{IS}} & = \var \big(h(X_1) w^*(X_1)\big) \\
+  \sigma^2_{\mathrm{IS}} & = \V \big(h(X_1) w^*(X_1)\big) \\
   \gamma & = \cov (h(X_1) w^*(X_1), w^*(X_1)) \\
-  \sigma^2_{w^*} & = \var (w^*(X_1))
+  \sigma^2_{w^*} & = \V (w^*(X_1))
 \end{aligned}
 $$
 
@@ -788,7 +788,7 @@ $$
 By the $\Delta$-method,
 $$
   \hat{\mu}_{\mathrm{IS}} \overset{\mathrm{approx}}{\sim}
-  \mathcal{N}\left(\mu, \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 n} \right).
+  \mathcal{N}\left(\mu, \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 N} \right).
 $$
 
 . . .
@@ -796,7 +796,7 @@ $$
 For $c = 1$, the asymptotic variance can be estimated by plugging in empirical
 estimates. For $c \neq 1$ it is necessary to estimate $c$ as
 $$
-  \hat{c} = \frac{1}{n} \sum_{i=1}^n w^*(X_i)
+  \hat{c} = \frac{1}{N} \sum_{i=1}^N w^*(X_i)
 $$
 
 \pdfpcnote{
@@ -989,7 +989,7 @@ Suppose that
 $$
   X \sim \mathcal{N}(0, I_{2})
 $$
-and that we want to estimate $\operatorname{E}[f(X)]$ where $f(X)$ is large near
+and that we want to estimate $\E(f(X))$ where $f(X)$ is large near
 the origin.
 
 \medskip\pause
@@ -1015,9 +1015,9 @@ library(mvtnorm)
 
 set.seed(1)
 d <- 2
-n <- 1000
+N <- 1000
 mu <- rep(2, d)
-x <- matrix(rnorm(n * d, mean = mu), ncol = d)
+x <- matrix(rnorm(N * d, mean = mu), ncol = d)
 
 colnames(x) <- c("x1", "x2")
 
@@ -1091,13 +1091,13 @@ This indicates weight degeneracy and poor sampling efficiency.
 The effective sample size (ESS) quantifies how many samples effectively
 contribute to the estimate:
 $$
-  \mathrm{ESS} = \frac{1}{\sum_{i=1}^n w_i^2} = \frac{\left(\sum_{i=1}^n w^*_i\right)^2}{\sum_{i=1}^n ({w^*_i})^2}
+  \mathrm{ESS} = \frac{1}{\sum_{i=1}^N w_i^2} = \frac{\left(\sum_{i=1}^N w^*_i\right)^2}{\sum_{i=1}^N ({w^*_i})^2}
 $$
 where $w_i$ are the \alert{normalized} importance weights.
 
 \medskip\pause
 
-If all weights are equal, $\mathrm{ESS} = n$. If one weight dominates,
+If all weights are equal, $\mathrm{ESS} = N$. If one weight dominates,
 $\mathrm{ESS} \approx 1$, and the estimate is unreliable.
 
 . . .
@@ -1108,7 +1108,7 @@ $\mathrm{ESS} \approx 1$, and the estimate is unreliable.
 #| label: ess-demo
 
 ess <- (sum(w_star))^2 / sum(w_star^2)
-ess # out of n = 1000 samples
+ess # out of N = 1000 samples
 ```
 
 ## Coefficient of Variation (CV)
@@ -1120,9 +1120,9 @@ variability.
 
 It is defined as
 $$
-  \mathrm{CV} = \frac{\sqrt{\frac{1}{n} \sum_{i=1}^n (w_i - \bar{w})^2}}{\bar{w}}
+  \mathrm{CV} = \frac{\sqrt{\frac{1}{N} \sum_{i=1}^N (w_i - \bar{w})^2}}{\bar{w}}
 $$
-where $\bar{w} = \frac{1}{n} \sum_{i=1}^n w_i$ is the mean weight.
+where $\bar{w} = \frac{1}{N} \sum_{i=1}^N w_i$ is the mean weight.
 
 . . .
 
@@ -1134,7 +1134,7 @@ variance.
 \medskip\pause
 
 CV near 0 means weights are nearly uniform---great! As a rule of thumb, CV below
-1 ($\mathrm{ESS} > n/2$) is good.
+1 ($\mathrm{ESS} > N/2$) is good.
 
 . . .
 
@@ -1142,14 +1142,14 @@ CV near 0 means weights are nearly uniform---great! As a rule of thumb, CV below
 
 There is a direct relationship between ESS and CV:
 $$
-  \mathrm{ESS} = \frac{n}{1 + \mathrm{CV}^2}.
+  \mathrm{ESS} = \frac{N}{1 + \mathrm{CV}^2}.
 $$
 
 ## Choosing the Importance Distribution
 
 We want low-variance estimates of
 $$
-  I = \int h(x) f(x) \ dx
+  I = \int h(x) f(x) \ \mathrm{d}x
 $$
 
 . . .
@@ -1220,25 +1220,25 @@ importance distribution.
 Connection comes from the second-order Taylor expansion of $\log f(x)$ at the
 mode $x^*$,
 $$
-  \log f(x) \approx \log f(x^*) - \frac{1}{2}(x - x^*)^T H (x - x^*)
+  \log f(x) \approx \log f(x^*) - \frac{1}{2}(x - x^*)^T \Lambda (x - x^*)
 $$
-where $H$ is the Hessian of $-\log f(x)$ at $x^*$.
+where $\Lambda$ is the Hessian of $-\log f(x)$ at $x^*$.
 
 \medskip\pause
 
 Exponentiating both sides gives:
 $$
-  f(x) \approx f(x^*) \exp\left(-\frac{1}{2}(x - x^*)^T H (x - x^*)\right)
+  f(x) \approx f(x^*) \exp\left(-\frac{1}{2}(x - x^*)^T \Lambda (x - x^*)\right)
 $$
 
 ## Laplace Approximation
 
 ### Steps
 
-1. Find the mode $x^* = \arg\max_x f(x)$.\pause
-2. Compute the Hessian $H$ of the first-order Taylor approximation of
+1. Find the mode $x^* = \argmax_x f(x)$.\pause
+2. Compute the Hessian $\Lambda$ of the first-order Taylor approximation of
    $-\log f(x)$ around $x^*$.\pause
-3. Use $\mathcal{N}(x^*, H^{-1})$ as importance distribution.
+3. Use $\mathcal{N}(x^*, \Lambda^{-1})$ as importance distribution.
 
 . . .
 
@@ -1259,7 +1259,7 @@ $$
 
 The mode is at $x^* = 2$ and the Hessian of $-\log f(x)$ at $x^*$ is
 $$
-  H = \frac{\alpha - 1}{(x^*)^2} = \frac 1 2.
+  \Lambda = \frac{\alpha - 1}{(x^*)^2} = \frac 1 2.
 $$
 
 \medskip\pause
@@ -1278,8 +1278,8 @@ f_density <- function(x) dgamma(x, shape = 3, rate = 1) # Gamma(3,1)
 log_f <- function(x) log(f_density(x))
 
 x_star <- (3 - 1) / 1
-H <- 2 / (x_star^2)
-sd_laplace <- 1 / sqrt(H)
+lambda <- 2 / (x_star^2)
+sd_laplace <- 1 / sqrt(lambda)
 
 x_grid <- seq(-2, 10, length.out = 400)
 
@@ -1339,18 +1339,18 @@ importance distribution.
 
 \medskip\pause
 
-At iteration $t$, draw samples $x_1, \ldots, x_n \sim g_t(x)$ and compute
+At iteration $n$, draw samples $x_1, \ldots, x_N \sim g_n(x)$ and compute
 weights
 $$
-  w_i^* = \frac{f(X_i)}{g_t(X_i)}.
+  w_i^* = \frac{f(X_i)}{g_n(X_i)}.
 $$
 
 . . .
 
 Then update the importance distribution parameters as $$
 \begin{aligned}
-  \mu_{t+1}      &= \frac{\sum_{i=1}^n w_i^* x_i}{\sum_{i=1}^n w_i^*},\\
-  \sigma^2_{t+1} &= \frac{\sum_{i=1}^n w_i^* (x_i - \mu_{t+1})^2}{\sum_{i=1}^n w_i^*}.
+  \mu_{n + 1}      &= \frac{\sum_{i=1}^N w_i^* x_i}{\sum_{i=1}^N w_i^*},\\
+  \sigma^2_{n + 1} &= \frac{\sum_{i=1}^N w_i^* (x_i - \mu_{n + 1})^2}{\sum_{i=1}^N w_i^*}.
 \end{aligned}
 $$
 
@@ -1371,7 +1371,7 @@ library(tibble)
 f_density <- function(x) 0.4 * dnorm(x, -2, 1) + 0.6 * dnorm(x, 3, 0.5)
 
 # Adaptive importance sampling function
-adaptive_is <- function(n = 1000, n_iter = 5, q_init_mean = 0, q_init_sd = 1) {
+adaptive_is <- function(N = 1000, n_iter = 5, q_init_mean = 0, q_init_sd = 1) {
   # Store proposal params and samples
   proposals <- list()
   samples <- list()
@@ -1382,7 +1382,7 @@ adaptive_is <- function(n = 1000, n_iter = 5, q_init_mean = 0, q_init_sd = 1) {
 
   for (i in 1:n_iter) {
     # Draw from current proposal
-    x <- rnorm(n, mean = mean_q, sd = sd_q)
+    x <- rnorm(N, mean = mean_q, sd = sd_q)
     w <- f_density(x) / dnorm(x, mean = mean_q, sd = sd_q)
     w_norm <- w / sum(w)
 
@@ -1401,7 +1401,7 @@ adaptive_is <- function(n = 1000, n_iter = 5, q_init_mean = 0, q_init_sd = 1) {
 
 # Run adaptive importance sampling
 set.seed(123)
-res <- adaptive_is(n = 1000, n_iter = 5)
+res <- adaptive_is(N = 1000, n_iter = 5)
 
 # Plotting function for a given iteration
 plot_step <- function(iter) {
@@ -1420,7 +1420,7 @@ plot_step <- function(iter) {
 
   # Calculate ESS and CV for current iteration
   w <- res$weights[[iter]]
-  n <- length(w)
+  N <- length(w)
   ess <- (sum(w))^2 / sum(w^2)
   cv <- sqrt(mean((w - mean(w))^2)) / mean(w)
 
@@ -1657,8 +1657,8 @@ bench::bench_time(replicate(1e5, sim_net(Aup, 0.5)))
 #| label: sim
 
 set.seed(27092016)
-n <- 1e5
-tmp <- replicate(n, discon(sim_net(Aup, 0.05)))
+N <- 1e5
+tmp <- replicate(N, discon(sim_net(Aup, 0.05)))
 
 mu_hat <- mean(tmp)
 mu_hat
@@ -1671,7 +1671,7 @@ Estimate with confidence interval using $\sigma^2 = \mu (1 - \mu)$.
 ```{r}
 #| label: sim-confint
 
-mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
+mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / N) * c(-1, 0, 1)
 ```
 
 ## Importance Sampling
@@ -1705,7 +1705,7 @@ For the IS estimator the weights will be multiplied by the indicator that 1 and
 #| label: sim2
 #| cache: true
 
-tmp <- replicate(n, weights(Aup, sim_net(Aup, 0.2), 0.2, 0.05))
+tmp <- replicate(N, weights(Aup, sim_net(Aup, 0.2), 0.2, 0.05))
 mu_hat_IS <- mean(tmp)
 mu_hat_IS
 ```
@@ -1715,7 +1715,7 @@ mu_hat_IS
 Confidence interval using empirical variance estimate $\hat{\sigma}^2$.
 
 ```{r}
-mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
+mu_hat_IS + 1.96 * sd(tmp) / sqrt(N) * c(-1, 0, 1)
 ```
 
 . . .
@@ -1787,7 +1787,7 @@ sum(prob)
 And here's the MC estimate with confidence interval:
 
 ```{r}
-mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
+mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / N) * c(-1, 0, 1)
 ```
 
 . . .
@@ -1795,7 +1795,7 @@ mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / n) * c(-1, 0, 1)
 And the IS estimate with confidence interval:
 
 ```{r}
-mu_hat_IS + 1.96 * sd(tmp) / sqrt(n) * c(-1, 0, 1)
+mu_hat_IS + 1.96 * sd(tmp) / sqrt(N) * c(-1, 0, 1)
 ```
 
 ```{r}
@@ -1866,10 +1866,10 @@ better one.
 #| label: vmises-importance
 #| include: false
 
-vonmises_importance <- function(n, mu = 0, kappa = 2) {
-  x <- rnorm(n, 0, pi / 2)
+vonmises_importance <- function(N, mu = 0, kappa = 2) {
+  x <- rnorm(N, 0, pi / 2)
   w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)
-  cumsum(x * w) / 1:n
+  cumsum(x * w) / 1:N
 }
 
 x <- seq(-pi, pi, length.out = 100)

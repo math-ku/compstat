@@ -145,8 +145,8 @@ hist(log(F12), breaks = 500, main = "breaks = 500")
 ```
 
 The number of breaks changes the impression of the distribution, the default
-uses Sturges' formula where the number of cells for $n$ observations is
-$\lceil{\log_2(n)+1}\rceil$.
+uses Sturges' formula where the number of cells for $N$ observations is
+$\lceil{\log_2(N)+1}\rceil$.
 
 **Take away points**: Read documentation to understand how the functions work,
 or (my preferred method) ask ChatGPT (at the cost of a higher CO2 footprint).

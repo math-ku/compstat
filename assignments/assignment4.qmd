@@ -13,12 +13,12 @@ description:
 library(ggplot2)
 
 set.seed(1)
-n <- 100
-x <- seq(32, 46, length.out = n)
+N <- 100
+x <- seq(32, 46, length.out = N)
 beta0 <- -20
 beta1 <- 0.5
 p <- 1 / (1 + exp(-(beta0 + beta1 * x)))
-y <- rbinom(n, 1, p)
+y <- rbinom(N, 1, p)
 df <- data.frame(x = x, y = y)
 
 # Plot: points and fitted logistic curve
@@ -66,7 +66,7 @@ the different algorithms such as size of mini-batch and learning rate for SGD.
 # A: Logistic Regression Smoothing
 
 Consider the logistic regression model with $y_i \in \{0, 1\}$ and
-$x_i \in \mathbb{R}$ such that with $p_i(\beta) = P(Y_i = 1 \mid X_i = x_i)$
+$x_i \in \mathbb{R}$ such that with $p_i(\beta) = \P(Y_i = 1 \mid X_i = x_i)$
 $$
   \log \frac{p_i(\beta)}{1 - p_i(\beta)} = f(x_i \mid \beta) = (\varphi_1(x_i), \ldots, \varphi_p(x_i))^T \beta
 $$

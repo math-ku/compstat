@@ -78,7 +78,7 @@ optimization when the likelihood is complicated.
 
 The EM algorithm iteratively optimizes
 $$
-  \theta_{n + 1} = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta_n),
+  \theta_{n + 1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n),
 $$
 with
 $$
@@ -146,7 +146,7 @@ Black, Mottled, Light-Colored
 
 ### Genotype Labels
 
-Let each moth $i = 1,\ldots,n$ have an (unobserved) genotype label
+Let each moth $i = 1,\ldots,N$ have an (unobserved) genotype label
 $$
   Z_i \in \{1,2,3,4,5,6\} \quad\text{(CC, CI, CT, II, IT, TT)}.
 $$
@@ -165,9 +165,9 @@ $$
 The genotype counts $Y_k$ are the sufficient statistics for the complete data,
 and also latent, with
 $$
-  Y_k = \sum_{i = 1}^n \mathbf{1}(Z_i = k), \quad Y
+  Y_k = \sum_{i = 1}^N \mathbf{1}(Z_i = k), \quad Y
       = (Y_1,\ldots,Y_6), \quad \sum_k Y_k
-      = n.
+      = N.
 $$
 
 ## Observed Data
@@ -194,9 +194,9 @@ $$
 
 ### Multinomial Distribution
 
-If $Y \sim \operatorname{Mult}(p, n)$ with $p = (p_1, \ldots, p_K)$ then
+If $Y \sim \textrm{Mult}(N, p)$ with $p = (p_1, \ldots, p_K)$ then
 $$
-  X = M(Y) \sim \operatorname{Mult}(M(p), n).
+  X = M(Y) \sim \textrm{Mult}(N, M(p)).
 $$
 
 ## Complete-Data Log-Likelihood
@@ -252,7 +252,7 @@ $$
   \E_{Y \mid X, \theta'}(Y_k) = \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}}
 $$
 since
-$Y \mid X, \theta' \sim \operatorname{Mult}\left(X_{j(k)}, \left( \frac{\pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \right)_{k \in A_{j(k)}}\right)$.
+$Y \mid X, \theta' \sim \textrm{Mult}\left(X_{j(k)}, \left( \frac{\pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \right)_{k \in A_{j(k)}}\right)$.
 
 \pdfpcnote{
 Intuition: If we know the phenotype counts X and the allele frequencies
@@ -299,11 +299,11 @@ With $y = (n_{CC}, n_{CI}, n_{CT}, n_{II}, n_{IT}, n_{TT})^T$ a complete
 observation, it can be shown that the MLE is
 $$
 \begin{aligned}
-  \hat{p}_C & = \frac{n_{CC} + (n_{CI} + n_{CT}) / 2}{n} \\
-  \hat{p}_I & = \frac{n_{II} + (n_{CI} + n_{IT}) / 2}{n}
+  \hat{p}_C & = \frac{n_{CC} + (n_{CI} + n_{CT}) / 2}{N} \\
+  \hat{p}_I & = \frac{n_{II} + (n_{CI} + n_{IT}) / 2}{N}
 \end{aligned}
 $$
-where $n = \symbf{1}^T y$ is the total number of observations.
+where $N = \symbf{1}^T y$ is the total number of observations.
 
 \medskip\pause
 
@@ -313,9 +313,9 @@ Here's an implementation of this.
 #| label: mstep-mult
 
 m_step_mult <- function(y) {
-  n <- sum(y)
-  pC <- (y[1] + (y[2] + y[3]) / 2) / n
-  pI <- (y[4] + (y[2] + y[5]) / 2) / n
+  N <- sum(y)
+  pC <- (y[1] + (y[2] + y[3]) / 2) / N
+  pI <- (y[4] + (y[2] + y[5]) / 2) / N
   c(pC, pI)
 }
 ```
@@ -963,7 +963,7 @@ iX <- iY - iYX
 
 Define $\Phi : \Theta \to \Theta$ by
 $$
-  \Phi(\theta') = \operatorname{argmax}_{\theta \in \Theta} Q(\theta \mid \theta').
+  \Phi(\theta') = \argmax_{\theta \in \Theta} Q(\theta \mid \theta').
 $$
 
 \medskip\pause
@@ -1152,9 +1152,9 @@ quickly.\
 
 The EM algorithm converges linearly near the optimum:\
 $$
-  \lVert\theta_{n + 1}
-  - \hat{\theta}\rVert \approx \rho \lVert\theta_n
-  - \hat{\theta}\rVert, \qquad 0
+  \|\theta_{n + 1}
+  - \hat{\theta}\| \approx \rho \|\theta_n
+  - \hat{\theta}\|, \qquad 0
                                             < \rho
                                             < 1.
 $$
@@ -1164,12 +1164,12 @@ $$
 Rate can be estimated by fitting a linear model to the log of the parameter
 differences:
 $$
-  \log \lVert\theta_{n + 1}
-  - \hat{\theta}\rVert \approx \log \rho
-  + \log \lVert \theta_n
-  - \hat{\theta}\rVert
-                                                 \implies \log \lVert \theta_n
-                                                          - \hat{\theta}\rVert
+  \log \|\theta_{n + 1}
+  - \hat{\theta}\| \approx \log \rho
+  + \log \| \theta_n
+  - \hat{\theta}\|
+                                                 \implies \log \| \theta_n
+                                                          - \hat{\theta}\|
                                                  \approx n \log \rho
                                                          + \text{constant}.
 $$
@@ -1238,7 +1238,7 @@ x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
 Assume that $X_i \sim \text{Bernoulli}(\theta)$ i.i.d. and that the data are
 missing at random. The complete data log-likelihood is
 $$
-  \ell_C(\theta) = \sum_{i = 1}^n \left( X_i \log(\theta) + (1 - X_i) \log(1 - \theta) \right).
+  \ell_C(\theta) = \sum_{i = 1}^N \left( X_i \log(\theta) + (1 - X_i) \log(1 - \theta) \right).
 $$
 
 . . .

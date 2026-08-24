@@ -12,7 +12,7 @@ description:
 library(ggplot2)
 
 set.seed(42)
-n <- 400
+N <- 400
 p <- 0.6
 mu1 <- 0
 sigma1 <- 1
@@ -21,11 +21,11 @@ mu2 <- 3
 sigma2 <- 0.7
 nu2 <- 10
 
-comp <- rbinom(n, 1, p)
+comp <- rbinom(N, 1, p)
 x <- ifelse(
   comp == 1,
-  mu1 + sigma1 * rt(n, df = nu1),
-  mu2 + sigma2 * rt(n, df = nu2)
+  mu1 + sigma1 * rt(N, df = nu1),
+  mu2 + sigma2 * rt(N, df = nu2)
 )
 df <- data.frame(x = x)
 
@@ -73,7 +73,7 @@ parameter $\mu \in \mathbb{R}$, scale parameter $\sigma > 0$, and shape
 parameter $\nu > 0$. You can initially regard $\nu$ as fixed. Maximize the
 complete data log-likelihood
 $$
-  \sum_{i=1}^n \log f(y_i)
+  \sum_{i=1}^N \log f(y_i)
 $$
 for i.i.d. observations over $(\mu, \sigma^2)$ and implement this as a function.
 Then implement the EM algorithm for estimating $(\mu, \sigma^2)$, compare it to
@@ -98,7 +98,7 @@ $$
   f(x \mid \mu, \sigma^2, \nu) = \frac{\Gamma((\nu + 1)/2)}{\sqrt{ \pi \nu \sigma^2} \Gamma(\nu/2)} \left(1 + \frac{(x- \mu)^2}{\nu \sigma^2}\right)^{- (\nu + 1)/2}.
 $$
 
-In this assignment you will consider iid observations $x_1, \ldots, x_n$ from
+In this assignment you will consider iid observations $x_1, \ldots, x_N$ from
 the two-component mixture of $t$-distributions, that is, the density is
 $$
   p f(x \mid \mu_1, \sigma_1^2, \nu_1) + (1 - p) f(x \mid \mu_2, \sigma_2^2, \nu_2)
