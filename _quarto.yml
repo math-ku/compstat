@@ -4,6 +4,7 @@ project:
     - "*.qmd"
     - "*.md"
     - "!AGENTS.md"
+    - "!CLAUDE.md"
     - "!TODO.md"
 
 website:

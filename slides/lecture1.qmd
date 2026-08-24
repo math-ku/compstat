@@ -337,14 +337,15 @@ Exercise sessions will revolve around a central topic, for instance
 
 ### Computational Statistics with R
 
-Main textbook for the course, written by Niels Richard Hansen.
+Main textbook for the course, written by Niels Richard Hansen and me.
 
 \medskip
 
 . . .
 
-It is available online at [cswr.nrhstat.org/](https://cswr.nrhstat.org). Not yet
-complete, but we only use parts that are.
+It is available online at [cswr.nrhstat.org/](https://cswr.nrhstat.org). Some
+parts are still a work-in-progress, but the parts that are relevant for this
+course are complete.
 
 . . .
 
@@ -354,6 +355,7 @@ There is a [companion
 package](https://github.com/nielsrhansen/CSwR/tree/master/CSwR_package):
 
 ```{r}
+#| label: cswr-package
 #| eval: false
 
 pak::pak("github::nielsrhansen/CSwR/CSwR_package")
@@ -525,6 +527,7 @@ with, exploring, and visualizing data.
 Throughout the lectures, I assume that you have it installed and loaded.
 
 ```{r}
+#| label: tidyverse
 #| eval: false
 
 pak::pak("tidyverse")
@@ -649,6 +652,8 @@ probably a good idea to turn it into a function.
 Here is a simple function that takes two arguments and returns their sum.
 
 ```{r}
+#| label: simple-function
+
 f <- function(x, y) x + y
 ```
 
@@ -681,6 +686,7 @@ The environment is where the function was created. It is used to look up
 variables that are not defined inside the function.
 
 ```{r}
+|# label: function-environment
 environment(f)
 ```
 :::::
@@ -1121,7 +1127,7 @@ Write a function `is_even()` that returns `TRUE` if its argument is even,
 Write a function that computes the weighted mean of a numeric vector, $x$, given
 a vector of weights, $w$:
 $$
-  \frac{\sum_{i=1}^N w_i x_i}{\sum_{i=1}^N w_i}
+  \frac{\sum_{i = 1}^N w_i x_i}{\sum_{i = 1}^N w_i}
 $$
 
 Pass arguments to `sum()` via `...`. Use it to handle the case where `x`
