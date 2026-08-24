@@ -410,7 +410,7 @@ assignments.
 
 ## Generative AI
 
-Generative AI (e.g. ChatGPT, Copilot, Bard, etc.) are powerful tools.
+Generative AI (e.g. GPT, Claude, Gemini, etc.) are powerful tools.
 
 \bigskip
 
@@ -420,7 +420,7 @@ You are allowed to use them in this course, but with some caveats:
 
 . . .
 
-- You must understand the results.
+- You must understand and take responsibility for the results.
 - You must acknowledge their use in your assignments and how you used them.
 
 . . .
