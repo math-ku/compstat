@@ -542,21 +542,21 @@ library(tidyverse)
 
 ### Code Organization
 
-Write your code in scripts (`.R` files), not in the console. Organize your files
-in project directories, one for each project.
+Write your code in scripts (`.R` files). Organize your files in project
+directories, one for each project.
 
 . . .
 
 ### Presentations
 
-Use [quarto](https://quarto.org) or [R Markdown](https://rmarkdown.rstudio.com)
-for easily interleaving code and text.
+Use [quarto](https://quarto.org) to combine text and code in reproducible
+notebooks.
 
 . . .
 
 ### Write Functions
 
-Write functions for repeated tasks! (Up next)
+Write functions for repeated tasks!
 
 ## Getting Help with R
 
@@ -686,7 +686,8 @@ The environment is where the function was created. It is used to look up
 variables that are not defined inside the function.
 
 ```{r}
-|# label: function-environment
+#| label: function-environment
+
 environment(f)
 ```
 :::::
@@ -699,6 +700,8 @@ environment(f)
 ### Arguments can have default values
 
 ```{r}
+#| label: default-values
+
 g <- function(x, y = 2) x + y
 
 g(3) # y = 2
@@ -709,6 +712,8 @@ g(3) # y = 2
 ### Named arguments can be passed in any order
 
 ```{r}
+#| label: named-arguments
+
 g(y = 3, x = 2)
 ```
 :::::
@@ -719,6 +724,8 @@ g(y = 3, x = 2)
 ### Use `NULL` for optional arguments
 
 ```{r}
+#| label: null-optional-arguments
+
 g <- function(x, y = NULL) {
   if (!is.null(y)) {
     return(x * y)
@@ -750,6 +757,8 @@ arguments without shooting yourself in the foot.
 ::: {.columns}
 ::::: {.column width="47%"}
 ```{r}
+#| label: copy-on-write
+
 h <- function(x) {
   x[1] <- 100
   x
@@ -765,6 +774,8 @@ h(a) # a is not modified
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: cow-value
+
 a # a is still 1:5
 ```
 
