@@ -16,7 +16,6 @@ in
     pandoc
     quarto
     pkgs.texliveFull
-    pkgs.arity
     (pkgs.rstudioWrapper.override {
       packages = with pkgs.rPackages; [
         Rcpp
