@@ -141,9 +141,9 @@ influential; $\beta = 0$ gives gradient descent.
 
 For a fixed learning rate $\gamma$, the previous update implies
 $$
-  \theta_n = \theta_{n - 1}
-             - \gamma(1 - \beta)\nabla H(\theta_{n - 1})
-             + \beta(\theta_{n - 1} - \theta_{n - 2}).
+  \theta_n = \theta_{n-1}
+             - \gamma(1 - \beta)\nabla H(\theta_{n-1})
+             + \beta(\theta_{n-1} - \theta_{n-2}).
 $$
 
 . . .
@@ -151,16 +151,16 @@ $$
 As introduced by @polyakMethodsSpeedingConvergence1964, the classical heavy-ball
 form
 $$
-  \theta_n = \theta_{n - 1}
-             - \alpha \nabla H(\theta_{n - 1})
-             + \beta(\theta_{n - 1} - \theta_{n - 2}),
+  \theta_n = \theta_{n-1}
+             - \alpha \nabla H(\theta_{n-1})
+             + \beta(\theta_{n-1} - \theta_{n-2}),
 $$
 uses $\alpha = \gamma(1 - \beta)$.
 
 \medskip\pause
 
 With a learning-rate schedule, the displacement coefficient also contains
-$\gamma_n / \gamma_{n - 1}$, so the two forms are not related by a single
+$\gamma_n / \gamma_{n-1}$, so the two forms are not related by a single
 rescaling.
 
 ## Polyak Momentum in Practice
@@ -276,11 +276,11 @@ First appeared in @nesterovMethodSolvingConvex1983.
 For gradient descent with $\gamma = 1/L$, the optimal choice of $\beta_n$ for
 general convex and smooth $H$ is
 $$
-  \beta_n = \frac{a_{n - 1} - 1}{a_{n}}
+  \beta_n = \frac{a_{n-1} - 1}{a_{n}}
 $$
 for a series of
 $$
-  a_n = \frac{1 + \sqrt{4a_{n - 1}^2 + 1}}{2}
+  a_n = \frac{1 + \sqrt{4a_{n-1}^2 + 1}}{2}
 $$
 with $a_0 = 1$ (and hence $\beta_1 = 0$).
 
@@ -689,7 +689,7 @@ Some directions may be important, but feature information is **sparse**.
 ::::: {.column width="47%"}
 Store matrix of gradient history,
 $$
-  G_n = \sum_{i = 1}^n \nabla H(\theta_i) \nabla H(\theta_i)^\intercal,
+  G_n = \sum_{i=1}^n \nabla H(\theta_i) \nabla H(\theta_i)^\intercal,
 $$
 and update by multiplying gradient with $G_n^{-1/2}$.
 :::::
@@ -981,7 +981,7 @@ legend(
 ::::: {.column width="42%"}
 Let's assume we're trying to solve a least-squares type of problem:
 $$
-  H_N(\theta) = \frac{1}{2N} \sum_{i = 1}^N \left( y_i - g(\theta; x_i) \right)^2
+  H_N(\theta) = \frac{1}{2N} \sum_{i=1}^N \left( y_i - g(\theta; x_i) \right)^2
 $$
 with $\theta = (\alpha, \beta)$ and
 $$
@@ -992,12 +992,10 @@ $$
 
 Then
 $$
-  \nabla_{\theta} H_N(\theta) = \frac{1}{N}\sum_{i = 1}^N (y_i - g(\theta; x_i))
-\begin{bmatrix}
-  -\cos(\beta x_i) \\
-  \alpha x_i \sin(\beta x_i)
-\end{bmatrix}
-  .
+  \nabla_{\theta} H_N(\theta) = \frac{1}{N}\sum_{i = 1}^N (y_i - g(\theta; x_i)) \begin{bmatrix}
+                                                                                   -\cos(\beta x_i) \\
+                                                                                   \alpha x_i \sin(\beta x_i)
+                                                                                 \end{bmatrix}.
 $$
 :::::
 
