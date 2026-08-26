@@ -11,7 +11,6 @@ title: "Introduction"
 #| warning: false
 
 load(here::here("data", "top100dih.RData"))
-phipsi2 <- na.omit(dataset)
 phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 
@@ -815,6 +814,8 @@ created.
 This is called **lexical scoping**.
 
 ```{r}
+#| label: lexical-scoping
+
 x <- 10
 f <- function(y) x + y
 f(5)
@@ -847,6 +848,8 @@ Unless you explicitly use the `return()` function, which immediately exits the
 function and returns the specified value.
 
 ```{r}
+#| label: return-value
+
 f <- function(x, y) {
   return(x + y)
   x * y # This line is never reached
@@ -892,12 +895,16 @@ our_apply <- function(x, fun) {
 ## Testing Our Apply Function
 
 ```{r}
+#| label: test-our-apply
+
 sapply(1:10, exp)
 ```
 
 . . .
 
 ```{r}
+#| label: test-our-apply-2
+
 our_apply(1:10, exp)
 ```
 
@@ -913,6 +920,7 @@ a numeric.
 Then we get an error:
 
 ```{r, echo=-1}
+#| label: test-our-apply-3
 #| error: true
 
 set.seed(1)
@@ -926,6 +934,8 @@ our_apply(1:10, rpois)
 We can use an anonymous function to pass additional arguments to `fun()`.
 
 ```{r}
+#| label: test-our-apply-4
+
 our_apply(1:10, function(lambda) rpois(1, lambda = 0.9))
 ```
 
@@ -955,6 +965,8 @@ our_apply <- function(x, fun, ...) {
 . . .
 
 ```{r}
+#| label: test-our-apply-5
+
 our_apply(1:10, rpois, n = 1) # n is passed to fun
 ```
 
@@ -969,6 +981,7 @@ Assert that arguments to a function are valid and stop early if they are not.
 Simplest way to do this is to use `stopifnot()`:
 
 ```{r}
+#| label: stopifnot
 #| error: true
 
 my_mean <- function(x) {
@@ -990,6 +1003,8 @@ If `x` is not numeric, we would otherwise get an error deep inside `sum()`.
 For more control over the error message, use `if` and `stop()`.
 
 ```{r}
+#| label: custom-error
+
 my_mean <- function(x) {
   if (!is.numeric(x)) {
     stop("x must be numeric")
@@ -1117,7 +1132,7 @@ Write short functions and name them descriptively.
 
 # Exercises
 
-### Exercise 1: Hello, world!
+## Exercise 1: Hello, world!
 
 Write a function `greet` that takes a name as an argument and prints "Hello,
 Name!". If no name is given, it should print "Hello, World!".
@@ -1126,14 +1141,14 @@ Name!". If no name is given, it should print "Hello, World!".
 
 . . .
 
-### Exercise 2: Check if a number is even
+## Exercise 2: Check if a number is even
 
 Write a function `is_even()` that returns `TRUE` if its argument is even,
 `FALSE` otherwise. Stop early if the argument is not numeric.
 
 . . .
 
-### Exercise 3: Weighted mean
+## Exercise 3: Weighted mean
 
 Write a function that computes the weighted mean of a numeric vector, $x$, given
 a vector of weights, $w$:
