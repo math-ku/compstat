@@ -744,6 +744,8 @@ Marginal performance improvements, but signals intent and can prevent bugs.
 ## Including C++ Code in R
 
 ```{r}
+#| label: rcpp-setup
+
 library(Rcpp)
 ```
 
@@ -753,6 +755,8 @@ The C++ code can be passed directly to the `cppFunction()` as a text string for
 compilation and setting up an R interface.
 
 ```{r}
+#| label: rcpp-one
+
 cppFunction("int one() {return 1;}")
 ```
 
@@ -761,6 +765,8 @@ cppFunction("int one() {return 1;}")
 And then the function can be called from R.
 
 ```{r}
+#| label: rcpp-one-call
+
 one()
 ```
 
@@ -909,6 +915,8 @@ print_cpp(const Rcpp::NumericVector& x) {
 . . .
 
 ```{r}
+#| label: rcpp-print-call
+
 print_cpp(1:5)
 ```
 

@@ -1591,6 +1591,7 @@ ggplot(grid_par, aes(n, rate, color = factor(K), linetype = factor(a))) +
 No, not really, because it's still hard to pick $\gamma_0$, $K$, and $a$.
 
 ```{r}
+#| label: step-size-illustration
 #| echo: false
 
 set.seed(123)
@@ -1649,6 +1650,7 @@ step_size_illustration <- function(a) {
 ::: {.columns}
 ::::: {.column width="47%"}
 ```{r}
+#| label: step-size-illustration-06
 #| echo: false
 #| fig-height: 3
 #| fig-cap: SGD on the logistic regression example with $a = 0.6$ (slow decay).
@@ -1661,6 +1663,7 @@ step_size_illustration(0.6)
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: step-size-illustration-09
 #| echo: false
 #| fig-height: 3
 #| fig-cap: SGD on the logistic regression example with $a = 0.9$ (fast decay).
@@ -1721,6 +1724,7 @@ $$
 . . .
 
 ```{r}
+#| label: ridge-regression
 #| echo: false
 #| include: false
 
