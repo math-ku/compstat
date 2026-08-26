@@ -1068,7 +1068,8 @@ $$
 ```{r}
 #| label: plot-psi-density
 #| echo: false
-#| fig-cap: $h = 1$.
+#| fig-show: animate
+#| fig-cap: Gaussian kernel density estimates for decreasing bandwidths.
 #| fig-width: 3.5
 #| fig-height: 2.5
 
@@ -1084,72 +1085,15 @@ plot_psi_density <- function(h, n = 1001) {
     geom_histogram(aes(y = ..density..), fill = "grey60") +
     geom_rug(alpha = 0.3) +
     geom_line(data = dens_df, aes(x = x, y = y), color = "blue") +
-    labs(x = expression(psi), y = "density") +
+    labs(title = bquote(h == .(h)), x = expression(psi), y = "density") +
     lims(y = c(0, 0.5))
 }
 
-# Example plot for h = 1
-plot_psi_density(1)
-```
-
---------------------------------------------------------------------------------
-
-```{r}
-#| label: plot-psi-density-2
-#| echo: false
-#| fig-cap: $h = 0.25$.
-#| fig-width: 3.5
-#| fig-height: 2.5
-
-plot_psi_density(0.25)
-```
-
---------------------------------------------------------------------------------
-
-```{r}
-#| label: plot-psi-density-3
-#| echo: false
-#| fig-cap: $h = 0.1$.
-#| fig-width: 3.5
-#| fig-height: 2.5
-
-plot_psi_density(0.1)
-```
-
---------------------------------------------------------------------------------
-
-```{r}
-#| label: plot-psi-density-4
-#| echo: false
-#| fig-cap: $h = 0.025$.
-#| fig-width: 3.5
-#| fig-height: 2.5
-
-plot_psi_density(0.025, n = 10001)
-```
-
---------------------------------------------------------------------------------
-
-```{r}
-#| label: plot-psi-density-5
-#| echo: false
-#| fig-cap: $h = 0.01$.
-#| fig-width: 3.5
-#| fig-height: 2.5
-
-plot_psi_density(0.01, n = 10001)
-```
-
---------------------------------------------------------------------------------
-
-```{r}
-#| label: plot-psi-density-6
-#| echo: false
-#| fig-cap: $h = 0.0001$.
-#| fig-width: 3.5
-#| fig-height: 2.5
-
-plot_psi_density(0.0001, n = 10001)
+h_values <- c(1, 0.25, 0.1, 0.025, 0.01, 0.0001)
+for (h in h_values) {
+  plot_psi_density(h, n = if (h <= 0.025) 10001 else 1001) |>
+    print()
+}
 ```
 
 ## The MLE Does Not Exist
