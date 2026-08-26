@@ -9,3 +9,68 @@ library(patchwork)
 theme_set(theme_minimal(base_size = 10))
 options(width = 60)
 ```
+
+```{r}
+#| label: setup-xmpmulti
+#| echo: false
+
+# Render a chunk's plots as a beamer overlay via xmpmulti's \multiinclude,
+# instead of quarto's \animategraphics. Opt in per chunk with
+# `fig-show: animate`; the overlay spec defaults to <+> (one plot per click)
+# and can be set per chunk with `overlay`.
+local({
+  previous_hook <- knitr::knit_hooks$get("plot")
+
+  knitr::knit_hooks$set(
+    plot = function(x, options) {
+      if (!identical(options$fig.show, "animate")) {
+        return(previous_hook(x, options))
+      }
+
+      # \multiinclude is emitted once, after the last plot of the chunk.
+      if ((options$fig.cur %||% 1L) < options$fig.num) {
+        return("")
+      }
+
+      include <- sprintf(
+        "\\multiinclude[%s][format=%s,start=1,end=%d%s]{%s}",
+        options$overlay %||% "<+>",
+        xfun::file_ext(x),
+        # `end` guards against stale figures left over from an earlier render.
+        options$fig.num,
+        if (is.null(options$out.width)) {
+          ""
+        } else {
+          sprintf(",graphics={width=%s}", options$out.width)
+        },
+        sub(sprintf("-%d$", options$fig.num), "", xfun::sans_ext(x))
+      )
+
+      caption <- options$fig.cap
+
+      if (is.null(caption) || is.na(caption) || !nzchar(caption)) {
+        sprintf("\n\n\\begin{center}\n%s\n\\end{center}\n\n", include)
+      } else {
+        sprintf(
+          "\n\n\\begin{figure}[htpb]\n\\centering\n%s\n\\caption{%s}\n\\end{figure}\n\n",
+          include,
+          caption
+        )
+      }
+    }
+  )
+})
+```
+
+::: {.content-hidden when-format="beamer"}
+\DeclareMathOperator*{\argmin}{\arg\,\min}
+\DeclareMathOperator*{\argmax}{\arg\,\min}
+\DeclareMathOperator*{\minimize}{minimize}
+\DeclareMathOperator{\kl}{KL}
+\DeclareMathOperator{\var}{Var}
+\DeclareMathOperator{\cov}{Cov}
+\DeclareMathOperator{\normal}{\mathcal{N}}
+\DeclareMathOperator{\binomial}{Bin}
+\DeclareMathOperator{\uniform}{\mathcal{U}}
+\newcommand{\E}{\operatorname{E}}
+:::
