@@ -8,6 +8,7 @@ execute:
 {{< include _common.qmd >}}
 
 ```{r}
+#| label: momentum-surface
 #| echo: false
 
 source(here::here("R", "gd.R"))
@@ -206,21 +207,22 @@ With momentum, we can (sometimes) remedy this problem.
 
 ::: {.columns}
 ::::: {.column width="41%"}
-For some problems, the momentum method may fail to converge
-[@lessardAnalysisDesignOptimization2016].
+For some problems, the momentum method may fail to
+converge\ [@lessardAnalysisDesignOptimization2016].
 
 \medskip\pause
 
 ### Example {.example}
 
-Consider
-$$
+Consider $$
+
   H(\theta) =
 \begin{cases}
   \frac{25\theta^2}{2}                 & \text{if } \theta < 1,        \\
   \frac{\theta^2}{2} + 24\theta - 12   & \text{if } 1 \leq \theta < 2, \\
   \frac{25\theta^2}{2} - 24\theta + 36 & \text{if } \theta \geq 2.
 \end{cases}
+
 $$
 
 . . .
@@ -316,6 +318,7 @@ Convergence improves further for quadratic and strongly convex!
 ##
 
 ```{r}
+#| label: momentum-comparison
 #| fig-width: 5.2
 #| fig-height: 4.3
 #| fig-cap: "Comparison of Polyak momentum and Nesterov acceleration for a
@@ -399,6 +402,7 @@ And also adds inertia, accelerating progress in low-variance directions.
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: momentum-variance
 #| echo: false
 #| fig-height: 4
 #| fig-width: 3.2
@@ -558,6 +562,7 @@ Works with momentum and batches.
 ##
 
 ```{r}
+#| label: momentum-variance-comparison
 #| echo: false
 #| fig-width: 5.2
 #| fig-height: 3.3
@@ -737,7 +742,7 @@ Add a small $\epsilon$ to diagonal.
 
 ## RMSProp
 
-Acronym for **R**oot **M**ean **S**quare **Prop**agation [@hintonLecture62018].
+Acronym for **R**oot **M**ean **S**quare **Prop**agation\ [@hintonLecture62018].
 
 . . .
 
@@ -767,7 +772,8 @@ old data.
 
 ## Adam
 
-Acronym for **Ada**ptive **m**oment estimation [@kingmaAdamMethodStochastic2015]
+Acronym for **Ada**ptive **m**oment
+estimation\ [@kingmaAdamMethodStochastic2015]
 
 \medskip\pause
 
@@ -779,7 +785,7 @@ Popular and still in much use today.
 
 \medskip\pause
 
-Not covered here, but see the course literature [@hansen2024] for details.
+Not covered here, but see the course literature\ [@hansen2024] for details.
 
 ## Gradient Clipping
 
@@ -789,13 +795,14 @@ If gradient is too large, scale it down to avoid too large steps.
 
 \medskip\pause
 
-Replace gradient $\nabla H(\theta_n)$ by
-$$
+Replace gradient $\nabla H(\theta_n)$ by $$
+
   \tilde{\nabla} H(\theta_n) =
 \begin{cases}
   \nabla H(\theta_n)                                    & \text{if } \|\nabla H(\theta_n)\|_2 \leq c, \\
-  c \frac{\nabla H(\theta_n)}{\|\nabla H(\theta_n)\|_2} & \text{otherwise}.
+c \frac{\nabla H(\theta_n)}{\|\nabla H(\theta_n)\|_2} & \text{otherwise}.
 \end{cases}
+
 $$
 
 . . .
@@ -863,6 +870,7 @@ Use a held-out validation set; never the training set, and avoid
 ##
 
 ```{r}
+#| label: early-stopping
 #| fig-cap: Illustration of early stopping.
 #| echo: false
 #| fig-width: 6
@@ -973,7 +981,7 @@ legend(
 ::::: {.column width="42%"}
 Let's assume we're trying to solve a least-squares type of problem:
 $$
-  H_N(\theta) = \frac{1}{2N} \sum_{i = 1}^N \left(y_i - g(\theta; x_i)\right)^2
+  H_N(\theta) = \frac{1}{2N} \sum_{i = 1}^N \left( y_i - g(\theta; x_i) \right)^2
 $$
 with $\theta = (\alpha, \beta)$ and
 $$
@@ -1151,3 +1159,5 @@ We summarize the course.
 We talk about the upcoming oral examinations.
 
 ## References {.allowframebreaks}
+
+:::
