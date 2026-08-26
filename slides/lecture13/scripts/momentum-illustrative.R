@@ -30,42 +30,44 @@ L <- norm(crossprod(X), "2")
 
 beta <- c(.2, 1.1)
 n_it <- 4
-gamma <- 1 / L
-alpha <- gamma / 2
+alpha <- 1 / L
 
-twostep_gd <- function(mu = 0, method = c("polyak", "nesterov")) {
+twostep_gd <- function(beta_mom = 0, method = c("polyak", "nesterov")) {
   betas <- matrix(0, nrow = p, ncol = n_it)
   betas[, 1] <- beta
   betas[, 2] <- beta
   rs <- matrix(0, nrow = p, ncol = n_it)
+  rho <- double(p)
 
   method <- match.arg(method)
 
   for (k in 2:(n_it - 1)) {
-    rs[, k] <- betas[, k] + mu * (betas[, k] - betas[, k - 1])
+    rs[, k] <- betas[, k] + beta_mom * (betas[, k] - betas[, k - 1])
 
     if (method == "polyak") {
       gradient <- crossprod(X, X %*% betas[, k] - y)
-      betas[, k + 1] <- rs[, k] - gamma * gradient
+      rho <- beta_mom * rho + (1 - beta_mom) * gradient
+      gamma <- alpha / (1 - beta_mom)
+      betas[, k + 1] <- betas[, k] - gamma * rho
     } else {
       gradient <- crossprod(X, X %*% rs[, k] - y)
       if (k < 3) {
-        alpha <- gamma
+        step <- alpha
       } else {
-        alpha <- gamma * 0.8
+        step <- alpha * 0.8
       }
-      betas[, k + 1] <- rs[, k] - alpha * gradient
+      betas[, k + 1] <- rs[, k] - step * gradient
     }
   }
 
   list(beta = betas, r = rs)
 }
 
-mu <- 0.6
+beta_mom <- 0.6
 
 res <- twostep_gd()
-rm <- twostep_gd(mu)
-rn <- twostep_gd(mu, method = "nesterov")
+rm <- twostep_gd(beta_mom)
+rn <- twostep_gd(beta_mom, method = "nesterov")
 
 fn <- "images/momentum-illustration.pdf"
 pdf(fn, width = 5.4, height = 3.1, pointsize = 7)

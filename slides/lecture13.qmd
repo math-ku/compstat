@@ -24,8 +24,8 @@ beta <- c(0.5, 1)
 y <- X %*% beta + rnorm(N)
 
 res <- gd(X, y)
-mu <- 0.3
-res_momentum <- gd(X, y, mu = mu)
+beta_mom <- 0.3
+res_momentum <- gd(X, y, beta_mom = beta_mom)
 
 plot_trajectory <- function(betas) {
   b1 <- betas[1, ]
@@ -39,7 +39,7 @@ b2 <- seq(0, 1.6, length.out = 100)
 f_vec <- Vectorize(function(b1, b2) 0.5 * norm(X %*% c(b1, b2) - y, "2")^2)
 z <- outer(b1, b2, f_vec)
 
-mus <- c(0, 0.3, 0.9)
+beta_mom_values <- c(0, 0.3, 0.9)
 ```
 
 ## Last Times: Rcpp and SGD
@@ -85,11 +85,12 @@ How can we improve stochastic gradient descent?
 
 ### Momentum
 
-Base update on combination of gradient step and previous point.
+Replace the current gradient by a smoothed direction that remembers past
+gradients.
 
 \medskip\pause
 
-Two versions: Polyak and Nesterov momentum
+Two versions: Polyak momentum and Nesterov acceleration
 
 . . .
 
@@ -103,7 +104,7 @@ Adapt learning rate to particular feature.
 ::::: {.column width="47%"}
 ### Basic Idea
 
-Give the particle **momentum**: like a heavy ball
+Average recent gradients so that the update has **memory**.
 
 \medskip\pause
 
@@ -112,25 +113,54 @@ first.
 
 . . .
 
-### Polyak Momentum
+### Book Convention
 
-Classical version [@polyakMethodsSpeedingConvergence1964]:
+The direction $\rho_n$ is an exponentially weighted average of gradients.
 
-- $\mu \in [0, 1)$ decides strength of momentum; $\mu = 0$ gives standard
-  gradient descent\pause
-- Guaranteed convergence for quadratic functions
+\medskip\pause
+
+The memory parameter $\beta \in [0,1)$ determines how long past gradients remain
+influential; $\beta = 0$ gives gradient descent.
 :::::
 
 ::::: {.column width="47%"}
 \begin{algorithm}[H]
-  \KwData{$\gamma >0$, $\mu \in [0,1)$, $\theta_{-1} = \theta_0$}
+  \KwData{$\gamma >0$, $\beta \in [0,1)$, $\theta_0$, $\rho_0 = 0$}
     \For{$n \gets 1, 2, \dots$}{
-      $\theta_n \gets \theta_{n-1} - \gamma \nabla H(\theta_{n-1}) + \alert{\mu (\theta_{n-1} - \theta_{n-2})} $\;
+      $g_n \gets \nabla H(\theta_{n-1})$\;
+      $\rho_n \gets \alert{\beta \rho_{n-1} + (1 - \beta)g_n}$\;
+      $\theta_n \gets \theta_{n-1} - \gamma \rho_n$\;
   }
-  \caption{GD with Polyak Momentum}
+  \caption{Polyak momentum}
 \end{algorithm}
 :::::
 :::
+
+## Relation to the Heavy-Ball Form
+
+For a fixed learning rate $\gamma$, the previous update implies
+$$
+  \theta_n = \theta_{n - 1}
+             - \gamma(1 - \beta)\nabla H(\theta_{n - 1})
+             + \beta(\theta_{n - 1} - \theta_{n - 2}).
+$$
+
+. . .
+
+As introduced by @polyakMethodsSpeedingConvergence1964, the classical heavy-ball
+form
+$$
+  \theta_n = \theta_{n - 1}
+             - \alpha \nabla H(\theta_{n - 1})
+             + \beta(\theta_{n - 1} - \theta_{n - 2}),
+$$
+uses $\alpha = \gamma(1 - \beta)$.
+
+\medskip\pause
+
+With a learning-rate schedule, the displacement coefficient also contains
+$\gamma_n / \gamma_{n - 1}$, so the two forms are not related by a single
+rescaling.
 
 ## Polyak Momentum in Practice
 
@@ -148,7 +178,7 @@ For nonconvex $H$, gradient descent may get stuck at a local minimum.
   \centering
   \multiinclude[<+>][format=pdf]{lecture13/images/escape-minima-gd}
   \caption{%
-    No momentum ($\mu = 0$).
+    No momentum ($\beta = 0$).
   }
 \end{figure}
 :::::
@@ -166,7 +196,7 @@ With momentum, we can (sometimes) remedy this problem.
   \centering
   \multiinclude[<+>][format=pdf]{lecture13/images/escape-minima-mom}
   \caption{%
-    With momentum ($\mu = 0.8$).
+    With momentum ($\beta = 0.8$).
   }
 \end{figure}
 :::::
@@ -186,17 +216,18 @@ For some problems, the momentum method may fail to converge
 Consider
 $$
   H(\theta) =
-  \begin{cases}
-    \frac{25\theta^2}{2}               & \text{if } \theta < 1,        \\
-    \frac{\theta^2}{2} + 24\theta - 12 & \text{if } 1 \leq \theta < 2, \\
-    \frac{25\theta^2}{2} - 24\theta + 36 & \text{if } \theta \geq 2.
-  \end{cases}
+\begin{cases}
+  \frac{25\theta^2}{2}                 & \text{if } \theta < 1,        \\
+  \frac{\theta^2}{2} + 24\theta - 12   & \text{if } 1 \leq \theta < 2, \\
+  \frac{25\theta^2}{2} - 24\theta + 36 & \text{if } \theta \geq 2.
+\end{cases}
 $$
 
 . . .
 
-For an "optimal" step size $\gamma = 1/L$ with $L = 25$, GD with momentum
-converges to three limit points.
+With heavy-ball coefficients $\alpha = 1/9$ and $\beta = 4/9$, the method
+converges to three limit points. In the book convention, the equivalent learning
+rate is $\gamma = \alpha / (1 - \beta) = 1/5$.
 :::::
 
 ::::: {.column width="47%"}
@@ -204,89 +235,52 @@ converges to three limit points.
 :::::
 :::
 
-## Nesterov Momentum
+## Nesterov Acceleration
 
-\begin{algorithm}[H]
-  \KwData{$\gamma >0$, $\mu \in [0,1)$}
-  \For{$n \gets 1,2,\dots$}{
-    $v_n \gets \theta_{n-1} - \gamma \nabla H(\theta_{n-1})$\;
-    $\theta_n \gets v_{n} + \mu (v_{n} - v_{n-1})$\;
-  } 
-  \caption{GD with Nesterov Momentum}
-\end{algorithm}
+::: {.columns align="center"}
+::::: {.column width="43%"}
+First extrapolate to a look-ahead point $y_n$, then evaluate the gradient there.
 
 \medskip\pause
 
-Overcomes convergence problem of classical (Polyak) momentum.
+Unlike Polyak momentum, Nesterov acceleration has an $O(1/n^2)$ guarantee for
+general smooth, convex objectives.
 
 \medskip\pause
 
-First appeared in article by @nesterovMethodSolvingConvex1983.
-
-## Nesterov: Sutskever Perspective
-
-::: {.columns}
-::::: {.column width="47%"}
-Consider two iterations of Nesterov algorithm:
-$$
-  \begin{aligned}
-    v_{n}                  & = \theta_{n-1} - \gamma \nabla H\left(\theta_{n-1} \right)         \\
-    \alert<2->{\theta_{n}} & \alert<2->{= v_{n} + \mu\left(v_{n} - v_{{n-1}} \right)} \\
-    \alert<2->{v_{n+1}}    & \alert<2->{= \theta_{n} - \gamma \nabla H\left(\theta_{n} \right)} \\
-    \theta_{n+1}           & = v_{n+1} + \mu\left(v_{n+1} - v_{n} \right)
-  \end{aligned}
-$$
-
-. . .
+First appeared in @nesterovMethodSolvingConvex1983.
 :::::
 
-::::: {.column width="47%"}
-Idea: focus on interim step:
-$$
-  \begin{aligned}
-    \theta_{n} & = v_{n} + \mu\left(v_{n} - v_{{n-1}} \right) \\
-    v_{n+1}    & = \theta_{n} - \gamma \nabla H\left(\theta_{n} \right)
-  \end{aligned}
-$$
-
-. . .
-
-Reindex:
-$$
-  \begin{aligned}
-    \theta_{n} & = v_{n-1} + \mu\left(v_{n-1} - v_{{n-2}} \right) \\
-    v_{n}      & = \theta_{n} - \gamma \nabla H\left(\theta_{n} \right)
-  \end{aligned}
-$$
+::::: {.column width="53%"}
+\begin{algorithm}[H]
+  \KwData{$\gamma >0$, $(\beta_n)$, $\theta_{-1} = \theta_0$}
+  \For{$n \gets 1,2,\dots$}{
+    $y_n \gets \theta_{n-1} + \beta_n(\theta_{n-1} - \theta_{n-2})$\;
+    $\theta_n \gets y_n - \gamma \nabla H(y_n)$\;
+  }
+  \caption{Nesterov acceleration}
+\end{algorithm}
 :::::
 :::
-
-\bigskip\pause
-
-But since $\theta_n = v_n$ for $n = 1$ by construction, we can swap $\theta_n$
-for $v_n$ and get the update
-$$
-  \theta_n = \theta_{n-1} + \mu(\theta_{n-1} - \theta_{n-2}) - \gamma \nabla H(\theta_{n} + \mu(\theta_{n-1} - \theta_{n-2})).
-$$
 
 ##
 
 ![Illustration of Nesterov and Polyak momentum](../images/momentum-illustration.pdf)
 
-## Optimal Momentum
+## Optimal Nesterov Weights
 
 ::: {.columns}
 ::::: {.column width="47%"}
-For gradient descent with $\gamma = 1/L$, the optimal choice of $\mu_n$ for
+For gradient descent with $\gamma = 1/L$, the optimal choice of $\beta_n$ for
 general convex and smooth $H$ is
 $$
-  \mu_n = \frac{a_{n-1} - 1}{a_{n}}
+  \beta_n = \frac{a_{n - 1} - 1}{a_{n}}
 $$
 for a series of
 $$
-  a_n = \frac{1 + \sqrt{4a_{n-1}^2 + 1}}{2}
+  a_n = \frac{1 + \sqrt{4a_{n - 1}^2 + 1}}{2}
 $$
-with $a_0 = 1$ (and hence $\mu_1 = 0$).
+with $a_0 = 1$ (and hence $\beta_1 = 0$).
 
 \medskip\pause
 
@@ -324,20 +318,20 @@ Convergence improves further for quadratic and strongly convex!
 ```{r}
 #| fig-width: 5.2
 #| fig-height: 4.3
-#| fig-cap: "Comparison of Polyak and Nesterov momentum for a least-squares problem.
-#|   with $\\mu = 0.8$ and $30$ iterations."
+#| fig-cap: "Comparison of Polyak momentum and Nesterov acceleration for a
+#|   least-squares problem with $\\beta = 0.8$ and $30$ iterations."
 #| echo: false
 
 opar <- par(no.readonly = TRUE)
 par(mfrow = c(1, 2), mai = c(1, 0, 1, 0.0), oma = c(0, 4, 0.1, 0.1), cex = 1)
 
 maxit <- 30
-mu <- 0.8
+beta_mom <- 0.8
 
 source(here::here("R", "gd.R"))
 
 for (method in c("polyak", "nesterov")) {
-  res <- gd(X, y, mu = mu, type = method, maxit = maxit)
+  res <- gd(X, y, beta_mom = beta_mom, type = method, maxit = maxit)
   first_plot <- method == "polyak"
   contour(
     b1,
@@ -442,7 +436,7 @@ z <- outer(beta1, beta2, loss_2d_vectorized)
 
 # SGD parameters - use small batch and more epochs to show variance clearly
 batch_size <- 5
-mu <- 0.9
+beta_mom <- 0.9
 max_epochs <- 1
 K <- 5
 
@@ -453,7 +447,7 @@ res_sgd <- logreg_sgd(
   max_epochs = max_epochs,
   batch_size = batch_size,
   K = K,
-  mu = 0
+  beta_mom = 0
 )
 set.seed(123)
 res_sgd_mom <- logreg_sgd(
@@ -462,7 +456,7 @@ res_sgd_mom <- logreg_sgd(
   max_epochs = max_epochs,
   batch_size = batch_size,
   K = K,
-  mu = mu
+  beta_mom = beta_mom
 )
 loss_optim <- loss_2d(res_glm$coefficients[1], res_glm$coefficients[2], X, y)
 
@@ -526,14 +520,15 @@ legend(
 ::::: {.column width="47%"}
 Keep a running average of SGD iterates to reduce variance:
 $$
-  \bar{\theta}_n = \frac{1}{n} \sum_{i=1}^n \theta_i.
+  \bar{\theta}_n = \frac{1}{n} \sum_{i = 1}^n \theta_i.
 $$
 
 . . .
 
 Update incrementally:
 $$
-  \bar{\theta}_n = \bar{\theta}_{n-1} + \frac{1}{n}(\theta_n - \bar{\theta}_{n-1}).
+  \bar{\theta}_n = \bar{\theta}_{n - 1}
+                   + \frac{1}{n}(\theta_n - \bar{\theta}_{n - 1}).
 $$
 :::::
 
@@ -796,10 +791,11 @@ If gradient is too large, scale it down to avoid too large steps.
 
 Replace gradient $\nabla H(\theta_n)$ by
 $$
-  \tilde{\nabla} H(\theta_n) = \begin{cases}
-    \nabla H(\theta_n) & \text{if } \|\nabla H(\theta_n)\|_2 \leq c, \\
-    c \frac{\nabla H(\theta_n)}{\|\nabla H(\theta_n)\|_2} & \text{otherwise}.
-  \end{cases}
+  \tilde{\nabla} H(\theta_n) =
+\begin{cases}
+  \nabla H(\theta_n)                                    & \text{if } \|\nabla H(\theta_n)\|_2 \leq c, \\
+  c \frac{\nabla H(\theta_n)}{\|\nabla H(\theta_n)\|_2} & \text{otherwise}.
+\end{cases}
 $$
 
 . . .
@@ -809,8 +805,8 @@ $$
 Some strategies:
 
 1. **Rule of thumb**: $c \in [1, 10]$ often works well in practice\pause
-2. **Gradient norm monitoring**: Track $\|\nabla H(\theta_n)\|_2$ during training and
-   set $c$ based on observed distribution\pause
+2. **Gradient norm monitoring**: Track $\|\nabla H(\theta_n)\|_2$ during
+   training and set $c$ based on observed distribution\pause
 3. **Percentile-based**: Set $c$ to be the 95th or 99th percentile of observed
    gradient norms\pause
 4. **Problem-specific**: Use domain knowledge about expected gradient magnitudes
@@ -977,7 +973,7 @@ legend(
 ::::: {.column width="42%"}
 Let's assume we're trying to solve a least-squares type of problem:
 $$
-  H_N(\theta) = \frac{1}{2N} \sum_{i=1}^N  \left(y_i - g(\theta; x_i)\right)^2
+  H_N(\theta) = \frac{1}{2N} \sum_{i = 1}^N \left(y_i - g(\theta; x_i)\right)^2
 $$
 with $\theta = (\alpha, \beta)$ and
 $$
@@ -988,11 +984,12 @@ $$
 
 Then
 $$
-  \nabla_{\theta} H_N(\theta) = \frac{1}{N}\sum_{i=1}^N (y_i - g(\theta; x_i))
-  \begin{bmatrix}
-    -\cos(\beta x_i)\\
-    \alpha x_i \sin(\beta x_i)
-  \end{bmatrix}.
+  \nabla_{\theta} H_N(\theta) = \frac{1}{N}\sum_{i = 1}^N (y_i - g(\theta; x_i))
+\begin{bmatrix}
+  -\cos(\beta x_i) \\
+  \alpha x_i \sin(\beta x_i)
+\end{bmatrix}
+  .
 $$
 :::::
 
@@ -1023,7 +1020,7 @@ We will consider three variants:
 
 \medskip\pause
 
-In each case, we'll use a batch of size $m=50$.
+In each case, we'll use a batch of size $m = 50$.
 
 \medskip\pause
 
@@ -1085,12 +1082,13 @@ Use RcppEigen or RcppArmadillo.
 ::: {.columns}
 ::::: {.column width="47%"}
 \begin{algorithm}[H]
-  \KwData{$\gamma >0$, $\mu \in [0,1)$}
+  \KwData{$\gamma >0$, $\beta \in [0,1)$, $\rho_0 = 0$}
   \For{$n \gets 1, 2, \dots$}{
-    $\theta_n \gets \theta_{n-1} - \gamma \nabla H(\theta_{n-1}) + \mu
-  (\theta_{n-1} - \theta_{n-2}) $\;
+    $g_n \gets \nabla H(\theta_{n-1})$\;
+    $\rho_n \gets \beta\rho_{n-1} + (1 - \beta)g_n$\;
+    $\theta_n \gets \theta_{n-1} - \gamma\rho_n$\;
   }
-  \caption{GD with Polyak Momentum}
+  \caption{Polyak momentum}
 \end{algorithm}
 :::::
 

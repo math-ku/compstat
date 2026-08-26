@@ -8,12 +8,12 @@ draw_canvas_bg <- function(col = "white") {
 
 n <- 50
 k <- 1:n
-mu <- a <- double(n)
+beta_mom <- a <- double(n)
 a[1] <- 1
 
 for (k in seq_len(n - 1)) {
   a[k + 1] <- (1 + sqrt(1 + 4 * a[k]^2)) / 2
-  mu[k] <- (a[k] - 1) / a[k + 1]
+  beta_mom[k] <- (a[k] - 1) / a[k + 1]
 }
 
 k <- 1:n
@@ -21,22 +21,22 @@ k <- 1:n
 pdf(fn, width = 2.4, height = 2.9, pointsize = 7)
 plot(
   1:(n - 1),
-  mu[-n],
+  beta_mom[-n],
   type = "b",
   pch = 19,
   cex = 0.7,
-  ylab = expression(mu[n]),
+  ylab = expression(beta[n]),
   xlab = expression(n),
   col = "steelblue4"
 )
 draw_canvas_bg()
 points(
   1:(n - 1),
-  mu[-n],
+  beta_mom[-n],
   type = "b",
   pch = 19,
   cex = 0.7,
-  ylab = expression(mu[n]),
+  ylab = expression(beta[n]),
   xlab = expression(n)
 )
 dev.off()

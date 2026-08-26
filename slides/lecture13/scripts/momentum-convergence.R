@@ -1,6 +1,4 @@
-library(tikzDevice)
-
-source(here::here("scripts/gd.R"))
+source(here::here("slides", "lecture13", "scripts", "gd.R"))
 
 library(mvtnorm)
 
@@ -49,11 +47,12 @@ res_nesterov <- gd_general(
   maxit = maxit
 )
 
-coef(res_glm)
-coef(res)
-coef(res_nesterov)
-
-optim <- tail(res_nesterov$loss, 1)
+optim <- f(coef(res_glm), X, y)
+suboptimality_gd <- pmax(res$loss - optim, .Machine$double.eps)
+suboptimality_nesterov <- pmax(
+  res_nesterov$loss - optim,
+  .Machine$double.eps
+)
 
 k <- seq_along(res$loss)
 
@@ -61,14 +60,14 @@ fn <- here::here("images", "momentum-convergence.pdf")
 pdf(fn, width = 2.7, height = 3.2, pointsize = 8)
 plot(
   seq_along(res_nesterov$loss),
-  res_nesterov$loss - optim,
+  suboptimality_nesterov,
   type = "l",
   log = "y",
   ylab = expression(H(theta[n]) - H * "*"),
   xlab = expression(n),
   col = "steelblue4"
 )
-lines(seq_along(res$loss), res$loss - optim, type = "l", log = "y")
+lines(seq_along(res$loss), suboptimality_gd, type = "l")
 legend(
   "topright",
   c("GD", "Nesterov"),

@@ -13,21 +13,23 @@ g <- function(x) {
   ifelse(x < 1, 25 * x, ifelse(1 <= x & x < 2, x + 24, 25 * x - 24))
 }
 
-gamma <- 1 / 25
-mu <- 1
+alpha <- 1 / 9
+beta_mom <- 4 / 9
+gamma <- alpha / (1 - beta_mom)
 
 col <- rgb(0, 0, 0, alpha = 0.2)
 
 maxit <- 100
 
-x <- x0 <- 3.1
+x0 <- 3.2
 x_hist <- double(maxit)
-x_hist[1:2] <- x0
+x_hist[1] <- x0
+rho <- 0
 
 for (k in 2:maxit) {
-  x_hist[k + 1] <- (13 / 9) * x_hist[k] -
-    (4 / 9) * x_hist[k - 1] -
-    (1 / 9) * g(x_hist[k])
+  gradient <- g(x_hist[k - 1])
+  rho <- beta_mom * rho + (1 - beta_mom) * gradient
+  x_hist[k] <- x_hist[k - 1] - gamma * rho
 }
 
 fn <- here::here("images", "momentum-failure.pdf")

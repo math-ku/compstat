@@ -19,8 +19,8 @@ logreg_sgd <- function(
   loss_optim = 0,
   K = 5,
   a = 1,
-  mu = 0,
-  # momentum parameter (0 = no momentum)
+  beta_mom = 0,
+  # Momentum memory (0 = no momentum).
   momentum_type = "polyak" # "polyak" or "nesterov"
 ) {
   loss <- double(max_epochs)
@@ -42,8 +42,8 @@ logreg_sgd <- function(
 
   # Initialize the coefficients
   beta <- double(p)
-  beta_prev <- double(p) # for momentum
-  v_prev <- double(p) # for Nesterov momentum
+  beta_prev <- double(p)
+  rho <- double(p)
 
   beta_history <- matrix(
     NA,
@@ -67,39 +67,28 @@ logreg_sgd <- function(
       X_batch <- X[ind, , drop = FALSE]
       y_batch <- y[ind]
 
-      # Store current beta for momentum calculation
       beta_current <- beta
 
-      if (momentum_type == "nesterov" && mu > 0) {
-        # For Nesterov momentum, evaluate gradient at the "look-ahead" point
-        beta_lookahead <- beta + mu * (beta - beta_prev)
+      if (momentum_type == "nesterov" && beta_mom > 0) {
+        beta_lookahead <- beta + beta_mom * (beta - beta_prev)
         z <- X_batch %*% beta_lookahead
       } else {
-        # For Polyak momentum or no momentum, evaluate at current point
         z <- X_batch %*% beta
       }
 
       p_hat <- 1 / (1 + exp(-z))
 
-      # Compute the gradient
-      gradient <- crossprod(X_batch, p_hat - y_batch) / batch_size
+      gradient <- drop(crossprod(X_batch, p_hat - y_batch)) / batch_size
 
-      # Update the coefficients with momentum
-      if (mu > 0) {
-        if (momentum_type == "polyak") {
-          beta_new <- beta - learning_rate * gradient + mu * (beta - beta_prev)
-        } else if (momentum_type == "nesterov") {
-          # Nesterov momentum: v = momentum * v + lr * grad, beta = beta - v
-          v_new <- mu * v_prev + learning_rate * gradient
-          beta_new <- beta - v_new
-          v_prev <- v_new
-        }
+      if (momentum_type == "polyak") {
+        rho <- beta_mom * rho + (1 - beta_mom) * gradient
+        beta_new <- beta - learning_rate * rho
+      } else if (beta_mom > 0) {
+        beta_new <- beta_lookahead - learning_rate * gradient
       } else {
-        # No momentum
         beta_new <- beta - learning_rate * gradient
       }
 
-      # Update for next iteration
       beta_prev <- beta_current
       beta <- beta_new
     }

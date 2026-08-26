@@ -1,43 +1,70 @@
-gd <- function(X, y, mu = 0, t = NULL, line_search = FALSE, maxit = 100) {
+gd <- function(
+  X,
+  y,
+  beta_mom = 0,
+  gamma = NULL,
+  line_search = FALSE,
+  maxit = 100,
+  t = NULL,
+  type = c("polyak", "nesterov")
+) {
   loss <- double(maxit)
+  type <- match.arg(type)
 
   p <- ncol(X)
 
-  if (is.null(t)) {
-    L <- norm(crossprod(X), "2")
-    t <- 1 / L
+  if (!is.null(t)) {
+    if (!is.null(gamma)) {
+      stop("Specify only one of `gamma` and the legacy `t` argument.")
+    }
+    gamma <- t
   }
 
-  t0 <- t
+  if (is.null(gamma)) {
+    L <- norm(crossprod(X), "2")
+    gamma <- 1 / L
+  }
+
+  gamma0 <- gamma
 
   betas <- matrix(0, nrow = p, ncol = maxit)
+  rho <- double(p)
 
   loss[1] <- 0.5 * norm(y - X %*% betas[, 1], "2")^2
 
   for (k in 2:maxit) {
-    eta <- X %*% betas[, k - 1]
-    gradient <- crossprod(X, eta - y)
+    theta <- betas[, k - 1]
+
+    if (type == "polyak") {
+      base <- theta
+      gradient <- drop(crossprod(X, X %*% base - y))
+      rho <- beta_mom * rho + (1 - beta_mom) * gradient
+      direction <- -rho
+    } else {
+      theta_prev <- betas[, max(1, k - 2)]
+      base <- theta + beta_mom * (theta - theta_prev)
+      gradient <- drop(crossprod(X, X %*% base - y))
+      direction <- -gradient
+    }
 
     keep_going <- TRUE
-    t <- t0
+    gamma <- gamma0
 
     while (line_search && keep_going) {
-      new_eta <- X %*% (betas[, k - 1] - t * gradient)
+      new_eta <- X %*% (base + gamma * direction)
       new_loss <- 0.5 * norm(y - new_eta, "2")^2
+      base_loss <- 0.5 * norm(y - X %*% base, "2")^2
 
-      if (new_loss <= loss[k - 1] - (t / 2) * norm(gradient, "2")^2) {
+      if (new_loss <= base_loss + gamma / 2 * sum(gradient * direction)) {
         keep_going <- FALSE
       } else {
-        t <- t / 2
+        gamma <- gamma / 2
       }
     }
 
-    betas[, k] <- betas[, k - 1] -
-      t * gradient +
-      mu * (betas[, k - 1] - betas[, max(1, k - 2)])
+    betas[, k] <- base + gamma * direction
 
-    # Compute the loss for the current iteration
-    loss[k] <- 0.5 * norm(y - eta, "2")^2
+    loss[k] <- 0.5 * norm(y - X %*% betas[, k], "2")^2
   }
 
   list(coefficients = betas[, maxit], loss = loss, betas = betas)
@@ -94,7 +121,7 @@ gd_general <- function(
   f,
   grad_f,
   L,
-  mu = 0,
+  beta_mom = 0,
   type = c("polyak", "nesterov"),
   maxit = 100,
   ...
@@ -106,9 +133,10 @@ gd_general <- function(
   type <- match.arg(type)
 
   x <- matrix(0, p, maxit)
-  mu_nesterov <- a <- double(maxit)
+  a <- double(maxit)
   x[, 1] <- par
   a[1] <- 1
+  rho <- double(p)
 
   gamma <- 1 / L
 
@@ -116,17 +144,17 @@ gd_general <- function(
 
   for (k in 2:maxit) {
     if (type == "polyak") {
-      mom <- mu * (x[, max(1, k - 1)] - x[, max(1, k - 2)])
-      x[, k] <- x[, k - 1] - gamma * grad_f(x[, k - 1], ...) + mom
+      gradient <- drop(grad_f(x[, k - 1], ...))
+      rho <- beta_mom * rho + (1 - beta_mom) * gradient
+      x[, k] <- x[, k - 1] - gamma * rho
     } else {
       a[k] <- (1 + sqrt(1 + 4 * a[k - 1]^2)) / 2
-      mu[k] <- (a[k - 1] - 1) / a[k]
-      mom <- mu[k] * (x[, max(1, k - 1)] - x[, max(1, k - 2)])
-
-      x[, k] <- x[, k - 1] - gamma * grad_f(x[, k - 1] + mom, ...) + mom
+      beta_n <- (a[k - 1] - 1) / a[k]
+      lookahead <- x[, k - 1] +
+        beta_n * (x[, k - 1] - x[, max(1, k - 2)])
+      x[, k] <- lookahead - gamma * drop(grad_f(lookahead, ...))
     }
 
-    # Compute the loss for the current iteration
     loss[k] <- f(x[, k], ...)
   }
 
