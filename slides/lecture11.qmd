@@ -1160,8 +1160,7 @@ $t = 1/L = 1/2$.
 Let $H(\theta) = \E L(Y,\theta)$ be the population risk. Suppose $H$ is strongly
 convex and
 $$
-  \E\left(\|\nabla_\theta L(Y,\theta)\|_2^2\right) \leq A
-                                                                + B \| \theta \|_2^2
+  \E\left(\|\nabla_\theta L(Y,\theta)\|_2^2\right) \leq A + B \| \theta \|_2^2
 $$
 for some constants $A$ and $B$.
 
@@ -1492,89 +1491,16 @@ plot_iteration <- function(i, x_gd, x_sgd) {
 ```
 
 ```{r}
+#| label: sgd-escape-minima
 #| echo: false
+#| fig-show: animate
 #| fig-width: 5.2
 #| fig-height: 3.2
 #| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
 
-plot_iteration(1, x_gd, x_sgd)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5.2
-#| fig-height: 3.2
-#| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
-
-plot_iteration(2, x_gd, x_sgd)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5.2
-#| fig-height: 3.2
-#| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
-
-plot_iteration(3, x_gd, x_sgd)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5.2
-#| fig-height: 3.2
-#| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
-
-plot_iteration(5, x_gd, x_sgd)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5.2
-#| fig-height: 3.2
-#| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
-
-plot_iteration(10, x_gd, x_sgd)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5.2
-#| fig-height: 3.2
-#| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
-
-plot_iteration(15, x_gd, x_sgd)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5.2
-#| fig-height: 3.2
-#| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
-
-plot_iteration(20, x_gd, x_sgd)
-```
-
-##
-
-```{r}
-#| echo: false
-#| fig-width: 5.2
-#| fig-height: 3.2
-#| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
-
-plot_iteration(steps, x_gd, x_sgd)
+for (i in c(1, 2, 3, 5, 10, 15, 20, steps)) {
+  plot_iteration(i, x_gd, x_sgd)
+}
 ```
 
 ## Learning Rate
