@@ -395,7 +395,7 @@ The reason we can do this is that `print()` is a generic.
 ## A Print Method
 
 ::: {.columns}
-::::: {.column width="47%"}
+::::: {.column width="53%"}
 The print method is written by just suffixing the class name with a dot after
 the generic name.
 
@@ -418,7 +418,7 @@ print.data_summary <- function(x) {
 
 . . .
 
-::::: {.column width="53%"}
+::::: {.column width="41%"}
 Let's test our new method.
 
 ```{r}
@@ -519,8 +519,6 @@ matrix_stats
 
 ## Common Pitfalls in S3
 
-::: {.columns}
-::::: {.column width="47%"}
 ### Naming conflicts
 
 Accidentally overwriting existing generics or methods (e.g., redefining
@@ -555,9 +553,7 @@ print("Hello")
 
 print <- old_print
 ```
-:::::
 
-::::: {.column width="47%"}
 . . .
 
 ### Forgetting the default method
@@ -574,8 +570,6 @@ myfun.numeric <- function(x, ...) "It's numeric!"
 
 myfun("a") # error!
 ```
-:::::
-:::
 
 ## Best Practices for S3
 
@@ -669,15 +663,15 @@ $$
 
 Rearranging and using the law of large numbers gives
 $$
-\begin{aligned}
-  f_0(x) & \approx \frac{1}{2h} \P(X \in (x - h, x + h))          \\
-  \pause
-         & \approx \frac{1}{2hN} \sum_{j=1}^N 1_{(x-h, x+h)}(x_j) \\
-  \pause
-         & = \frac{1}{2hN} \sum_{j=1}^N 1_{(-h, h)}(x - x_j)      \\
-  \pause
-         & = \hat{f}_h(x).
-\end{aligned}
+  \begin{aligned}
+    f_0(x) & \approx \frac{1}{2h} \P(X \in (x - h, x + h))          \\
+    \pause
+           & \approx \frac{1}{2hN} \sum_{j=1}^N 1_{(x-h, x+h)}(x_j) \\
+    \pause
+           & = \frac{1}{2hN} \sum_{j=1}^N 1_{(-h, h)}(x - x_j)      \\
+    \pause
+           & = \hat{f}_h(x).
+  \end{aligned}
 $$
 
 \pdfpcnote{
@@ -916,30 +910,18 @@ ggplot(df, aes(x, y)) +
 
 ## Plotting Differences
 
-::: {.columns align=center}
-::::: {.column width="47%"}
 Plotting the difference between the two estimates, we see that they are very
 close.
 
 ```{r}
 #| label: plot-diff
-#| eval: false
+#| echo: false
+#| fig-cap: Difference between our density estimate and that of `density()`.
 
 df_diff <- tibble(x = f_hat$x, y = f_hat$y - f_hat_dens$y)
 
 ggplot(df_diff, aes(x, y)) + geom_line() + labs(x = "x", y = "difference")
 ```
-:::::
-
-::::: {.column width="47%"}
-```{r}
-#| label: plot-diff-impl
-#| echo: false
-#| ref-label: plot-diff
-#| fig-cap: Difference between our density estimate and that of `density()`.
-```
-:::::
-:::
 
 ## Testing
 
@@ -1043,7 +1025,8 @@ $$
 
 Let's see what happens for the Gaussian kernel density estimate
 $$
-  \bar{f}_h(x) = \frac{1}{Nh \sqrt{2 \pi}} \sum_{j=1}^N e^{-\frac{(x-x_j)^2}{2 h^2}}.
+  \bar{f}_h(x)
+  = \frac{1}{Nh \sqrt{2 \pi}} \sum_{j=1}^N e^{-\frac{(x-x_j)^2}{2 h^2}}.
 $$
 
 \pdfpcnote{
@@ -1087,11 +1070,11 @@ for (h in h_values) {
 
 If $x_i \neq x_j$ when $i \neq j$, then
 $$
-\begin{aligned}
-  \ell(\bar{f}_h) & = \sum_{i} \log\left( 1 + \sum_{j \neq i} e^{-(x_i-x_j)^2 / (2 h^2)} \right) - N \log(Nh\sqrt{2 \pi}) \\
-  \pause
-                  & \sim -N \log(Nh\sqrt{2 \pi})
-\end{aligned}
+  \begin{aligned}
+    \ell(\bar{f}_h) & = \sum_{i} \log\left( 1 + \sum_{j \neq i} e^{-(x_i-x_j)^2 / (2 h^2)} \right) - N \log(Nh\sqrt{2 \pi}) \\
+    \pause
+                    & \sim -N \log(Nh\sqrt{2 \pi})
+  \end{aligned}
 $$
 
 . . .
@@ -1104,7 +1087,7 @@ Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is **no MLE**.
 
 Quality of $\hat{f}_h$ can be quantified by the *integrated squared error*,
 $$
-  \mathrm{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \mathrm{d}x
+  \mathrm{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ \mathrm{d}x
                           = \|\hat{f}_h - f_0\|_2^2.
 $$
 
@@ -1119,7 +1102,7 @@ where the expectation integral is over the data.
 . . .
 
 $$
-  \mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \mathrm{d}x
+  \mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \ \mathrm{d}x
 $$
 where $\mathrm{MSE}_h(x) = \V(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
@@ -1138,7 +1121,7 @@ $$
   \mathrm{AMISE}(h) = \frac{\|K\|_2^2}{Nh}
                       + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}
 $$
-with $\sigma_K^2 = \int x^2 K(x) \mathrm{d}x.$
+with $\sigma_K^2 = \int x^2 K(x) \\mathrm{d}x.$
 
 . . .
 
