@@ -328,8 +328,6 @@ whether the input is a vector or a matrix.
 
 ## Constructing a New Class
 
-::: {.columns}
-::::: {.column width="47%"}
 Here's a function that computes summary statistics of a numeric vector.
 
 ```{r}
@@ -342,11 +340,9 @@ summarize_data <- function(x) {
   )
 }
 ```
-:::::
 
 . . .
 
-::::: {.column width="47%"}
 `structure()` is a common way to create an object with a class label.
 
 \medskip
@@ -360,10 +356,8 @@ of the input vector.
 
 ### Constructor Functions
 
-Sometimes it's worth writing a constructor function to encapsulate the creation
-of an object.
-:::::
-:::
+It can be worth writing a constructor function to encapsulate the creation of an
+object.
 
 ## Print Method
 
@@ -424,7 +418,7 @@ print.data_summary <- function(x) {
 
 . . .
 
-::::: {.column width="47%"}
+::::: {.column width="53%"}
 Let's test our new method.
 
 ```{r}
@@ -442,8 +436,6 @@ Same call as before, but now there's a method available, so
 
 ## Generics
 
-::: {.columns align=center}
-::::: {.column width="47%"}
 Let's say that we want to specialize `summarize_data()`{.r}. We could write our
 own generic:
 
@@ -455,11 +447,8 @@ summarize_data <- function(x) UseMethod("summarize_data")
 
 . . .
 
-We use our previous implementation as the \alert{default}
-method.
-:::::
+We use our previous implementation as the \alert{default} method.
 
-::::: {.column width="47%"}
 . . .
 
 ```{r}
@@ -472,8 +461,6 @@ summarize_data.default <- function(x) {
   )
 }
 ```
-:::::
-:::
 
 ## Adding Methods
 
@@ -674,7 +661,7 @@ Because
 
 Density estimation relies on the approximation
 $$
-  \P(X \in (x - h, x + h)) = \int_{x - h}^{x + h} f_0(z) \ \mathrm{d}z \pause
+  \P(X \in (x - h, x + h)) = \int_{x-h}^{x+h} f_0(z) \mathrm{d}z \pause
                            \approx f_0(x) 2h.
 $$
 
@@ -703,7 +690,7 @@ $$
 
 We will consider *kernel estimators*
 $$
-  \hat{f}_h(x) = \frac{1}{hN} \sum_{j = 1}^N K\left(\frac{x - x_j}{h}\right).
+  \hat{f}_h(x) = \frac{1}{hN} \sum_{j=1}^N K\left( \frac{x - x_j}{h} \right).
 $$
 
 . . .
@@ -996,7 +983,7 @@ You need to decide on the tolerance level on a case-by-case basis.
 One might wonder if we can use maximum likelihood estimation (MLE) to estimate
 the density. I.e., solve
 $$
-  \hat{\theta} = \argmax_{\theta} \sum_{j = 1}^N \log f_{\theta}(x_j).
+  \hat{\theta} = \argmax_{\theta} \sum_{j=1}^N \log f_{\theta}(x_j).
 $$
 
 \bigskip
@@ -1056,7 +1043,7 @@ $$
 
 Let's see what happens for the Gaussian kernel density estimate
 $$
-  \bar{f}_h(x) = \frac{1}{Nh \sqrt{2 \pi}} \sum_{j = 1}^N e^{-\frac{(x - x_j)^2}{2 h^2}}.
+  \bar{f}_h(x) = \frac{1}{Nh \sqrt{2 \pi}} \sum_{j=1}^N e^{-\frac{(x-x_j)^2}{2 h^2}}.
 $$
 
 \pdfpcnote{
@@ -1117,7 +1104,7 @@ Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is **no MLE**.
 
 Quality of $\hat{f}_h$ can be quantified by the *integrated squared error*,
 $$
-  \mathrm{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ \mathrm{d}x
+  \mathrm{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \mathrm{d}x
                           = \|\hat{f}_h - f_0\|_2^2.
 $$
 
@@ -1132,7 +1119,7 @@ where the expectation integral is over the data.
 . . .
 
 $$
-  \mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \ \mathrm{d}x
+  \mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \mathrm{d}x
 $$
 where $\mathrm{MSE}_h(x) = \V(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
@@ -1151,7 +1138,7 @@ $$
   \mathrm{AMISE}(h) = \frac{\|K\|_2^2}{Nh}
                       + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}
 $$
-with $\sigma_K^2 = \int x^2 K(x) \ \mathrm{d}x.$
+with $\sigma_K^2 = \int x^2 K(x) \mathrm{d}x.$
 
 . . .
 
@@ -1188,7 +1175,7 @@ phipsi_plot <- function(bw) {
 ```
 
 $$
-  h = 0.9 \min \left(\hat{\sigma},\frac{\mathrm{IQR}}{1.34}\right) N^{-1/5}
+  h = 0.9 \min \left( \hat{\sigma},\frac{\mathrm{IQR}}{1.34} \right) N^{-1/5}
 $$
 
 \medskip
