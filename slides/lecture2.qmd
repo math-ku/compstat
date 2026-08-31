@@ -554,7 +554,7 @@ print("Hello")
 print <- old_print
 ```
 
-. . .
+## Common Pitfalls in S3 (cont.)
 
 ### Forgetting the default method
 
