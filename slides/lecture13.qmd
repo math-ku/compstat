@@ -214,15 +214,13 @@ converge\ [@lessardAnalysisDesignOptimization2016].
 
 ### Example {.example}
 
-Consider $$
-
-  H(\theta) =
-\begin{cases}
-  \frac{25\theta^2}{2}                 & \text{if } \theta < 1,        \\
-  \frac{\theta^2}{2} + 24\theta - 12   & \text{if } 1 \leq \theta < 2, \\
-  \frac{25\theta^2}{2} - 24\theta + 36 & \text{if } \theta \geq 2.
-\end{cases}
-
+Consider
+$$
+  H(\theta) = \begin{cases}
+                \frac{25\theta^2}{2}                 & \text{if } \theta < 1,        \\
+                \frac{\theta^2}{2} + 24\theta - 12   & \text{if } 1 \leq \theta < 2, \\
+                \frac{25\theta^2}{2} - 24\theta + 36 & \text{if } \theta \geq 2.
+              \end{cases}
 $$
 
 . . .
@@ -524,15 +522,15 @@ legend(
 ::::: {.column width="47%"}
 Keep a running average of SGD iterates to reduce variance:
 $$
-  \bar{\theta}_n = \frac{1}{n} \sum_{i = 1}^n \theta_i.
+  \bar{\theta}_n = \frac{1}{n} \sum_{i=1}^n \theta_i.
 $$
 
 . . .
 
 Update incrementally:
 $$
-  \bar{\theta}_n = \bar{\theta}_{n - 1}
-                   + \frac{1}{n}(\theta_n - \bar{\theta}_{n - 1}).
+  \bar{\theta}_n = \bar{\theta}_{n-1}
+                   + \frac{1}{n}(\theta_n - \bar{\theta}_{n-1}).
 $$
 :::::
 
@@ -795,14 +793,12 @@ If gradient is too large, scale it down to avoid too large steps.
 
 \medskip\pause
 
-Replace gradient $\nabla H(\theta_n)$ by $$
-
-  \tilde{\nabla} H(\theta_n) =
-\begin{cases}
-  \nabla H(\theta_n)                                    & \text{if } \|\nabla H(\theta_n)\|_2 \leq c, \\
-c \frac{\nabla H(\theta_n)}{\|\nabla H(\theta_n)\|_2} & \text{otherwise}.
-\end{cases}
-
+Replace gradient $\nabla H(\theta_n)$ by
+$$
+  \tilde{\nabla} H(\theta_n) = \begin{cases}
+                                 \nabla H(\theta_n)                                    & \text{if } \|\nabla H(\theta_n)\|_2 \leq c, \\
+                                 c \frac{\nabla H(\theta_n)}{\|\nabla H(\theta_n)\|_2} & \text{otherwise}.
+                               \end{cases}
 $$
 
 . . .
@@ -992,10 +988,10 @@ $$
 
 Then
 $$
-  \nabla_{\theta} H_N(\theta) = \frac{1}{N}\sum_{i = 1}^N (y_i - g(\theta; x_i)) \begin{bmatrix}
-                                                                                   -\cos(\beta x_i) \\
-                                                                                   \alpha x_i \sin(\beta x_i)
-                                                                                 \end{bmatrix}.
+  \nabla_{\theta} H_N(\theta) = \frac{1}{N}\sum_{i=1}^N (y_i - g(\theta; x_i)) \begin{bmatrix}
+                                                                                 -\cos(\beta x_i) \\
+                                                                                 \alpha x_i \sin(\beta x_i)
+                                                                               \end{bmatrix}.
 $$
 :::::
 
@@ -1157,5 +1153,3 @@ We summarize the course.
 We talk about the upcoming oral examinations.
 
 ## References {.allowframebreaks}
-
-:::
