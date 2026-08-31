@@ -40,9 +40,9 @@ problems**, for instance
 
 ::: {.columns}
 ::::: {.column width="47%"}
-To get a bit of flavor about what we will be doing in the course, we will start
-with a running example on a data set of angles, $\Phi$ and $\Psi$, formed
-between two planes in protein structures.
+To get a sense of what we will be doing in the course, we will start with an
+example of a data set of angles, $\Phi$ and $\Psi$, formed between two planes in
+protein structures.
 :::::
 
 ::::: {.column width="47%"}
@@ -94,9 +94,9 @@ ggplot(phipsi, aes(x = phi)) +
 
 ## Density Estimation
 
-Histograms are not very smooth. If we allow ourselves to make stronger
-assumptions, we can get a smoother estimate of the distribution, using **kernel
-density estimation** (KDE).
+Histograms are not smooth, but if we admit stronger assumptions, we can get a
+smoother estimate of the distribution, using **kernel density estimation**
+(KDE).
 
 . . .
 
@@ -135,8 +135,8 @@ But how is this KDE actually computed? Doing this efficiently is a
 
 ## Statistical Topics of the Course
 
-The course can be broken down into a number of **statistical** topics, as well
-as **computational** topics.
+The course can be broken down into a number of **statistical** and
+**computational** topics.
 
 \medskip
 
@@ -167,10 +167,12 @@ functions.
 
 ## Computational Topics of the Course
 
+There are also three **computational** topics in the course:
+
 ### Implementation
 
-We will learn how to implement statistical methods in R, using object-oriented
-programming and functional programming.
+We will learn how to implement statistical methods in R, using various
+programming techniques and paradigms.
 
 . . .
 
@@ -214,6 +216,10 @@ Jinyang Liu, PhD student in machine learning
 ![Jin](../images/jinyang.jpg){width=50%}
 :::::
 :::
+
+#### Kasper
+
+Kasper Niss, PhD student, will cover for Jin when he is away.
 
 ## Assignments
 
@@ -305,7 +311,7 @@ At the exam, you will present one of these at random.
 ::::: {.column width="47%"}
 ### Examination
 
-- November 5-7 (9.15-16.30, tentative)
+- November 4-6 (9.15-16.30, tentative)
 :::::
 :::
 
@@ -342,7 +348,7 @@ Main textbook for the course, written by Niels Richard Hansen and me.
 
 . . .
 
-It is available online at [cswr.nrhstat.org/](https://cswr.nrhstat.org). Some
+It is available online at [cswr.nrhstat.org](https://cswr.nrhstat.org). Some
 parts are still a work-in-progress, but the parts that are relevant for this
 course are complete.
 
@@ -350,14 +356,14 @@ course are complete.
 
 \medskip
 
-There is a [companion
-package](https://github.com/nielsrhansen/CSwR/tree/master/CSwR_package):
+There is a [companion package](https://cran.r-project.org/package=CSwR) for the
+book:
 
 ```{r}
 #| label: cswr-package
 #| eval: false
 
-pak::pak("github::nielsrhansen/CSwR/CSwR_package")
+install.packages("CSwR")
 ```
 
 . . .
@@ -409,18 +415,19 @@ assignments.
 
 ## Generative AI
 
-Generative AI (e.g. GPT, Claude, Gemini, etc.) are powerful tools.
+Generative AI (e.g. GPT, Claude, Gemini, etc.) have changed the way we work with
+code and data.
 
 \bigskip
 
 . . .
 
-You are allowed to use them in this course, but with some caveats:
+You are allowed to use them in this course, but you must
 
 . . .
 
-- You must understand and take responsibility for the results.
-- You must acknowledge their use in your assignments and how you used them.
+- understand and take responsibility for the results, and
+- acknowledge if and how you used them in your assignments
 
 . . .
 
@@ -432,12 +439,39 @@ You are allowed to use them in this course, but with some caveats:
 
 Access to GitHub Copilot is available for free to students, via [GitHub
 Education](https://education.github.com).
+
+\medskip\pause
+
+Used to be generous, now not so much.
 :::::
 
 ::::: {.column width="47%"}
 ![](../assets/images/github-education.png){width=100%}
 :::::
 :::
+
+## Why Learn to Code When AI Can?
+
+AI can write, run, debug, test, and optimize code.
+
+. . .
+
+So what is left for us?
+
+. . .
+
+\bigskip
+
+The less we understand a computation, the more completely we must trust the
+system that produced it.
+
+. . .
+
+\bigskip
+
+Learning to program gives us a way to **inspect, challenge, and independently
+reason about computational work**---including work produced by AI.^[Including
+this slide...]
 
 # Programming in R
 
@@ -508,9 +542,7 @@ An integrated developed environment (IDE) for R. Stable and full-featured.
 
 A newer alternative, that has support for other programming languages as well.
 
-. . .
-
-\bigskip
+\medskip\pause
 
 If you haven't tried any of these before, we recommend you use Positron.
 
