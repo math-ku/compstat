@@ -1121,7 +1121,7 @@ $$
   \mathrm{AMISE}(h) = \frac{\|K\|_2^2}{Nh}
                       + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}
 $$
-with $\sigma_K^2 = \int x^2 K(x) \\mathrm{d}x.$
+with $\sigma_K^2 = \int x^2 K(x) \mathrm{d}x.$
 
 . . .
 
