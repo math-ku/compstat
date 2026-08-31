@@ -29,7 +29,7 @@ for you to solve independently at your own pace.
 
 - **Main topic**: Setting up a proper development environment for R/Rcpp
 - **In class walkthrough**: A1-A7 (CSwR, Appendix A)
-- **Solutions**: [Exercise 1 Solutions](exercises/U1.qmd)
+  <!-- - **Solutions**: [Exercise 1 Solutions](exercises/U1.qmd) -->
 
 #### Lecture 2: OOP and Density Estimation
 
@@ -39,7 +39,7 @@ for you to solve independently at your own pace.
   - [Chapter 13](https://adv-r.hadley.nz/s3.html) (AdvR)
   - [Sections 2-2.4](https://cswr.nrhstat.org/density.html) (CSwR)
 - **Exercises:**
-  - [A8-A10](https://cswr.nrhstat.org/app-r#app-ex) (CSwR, Appendix A)
+  - [A7-A10](https://cswr.nrhstat.org/app-r#app-ex) (CSwR, Appendix A)
   - [2.1-2.6](https://cswr.nrhstat.org/density#density:ex) (CSwR, Chapter 2)
 
 ### Week 2
