@@ -1161,9 +1161,9 @@ They help make your code organized, reusable, testable, and easy to debug.
 
 Write short functions and name them descriptively.
 
-# Exercises
+## Exercises
 
-## Exercise 1: Hello, world!
+### Exercise 1: Hello, world!
 
 Write a function `greet` that takes a name as an argument and prints "Hello,
 Name!". If no name is given, it should print "Hello, World!".
@@ -1172,14 +1172,14 @@ Name!". If no name is given, it should print "Hello, World!".
 
 . . .
 
-## Exercise 2: Check If a Number is Even
+### Exercise 2: Check If a Number is Even
 
 Write a function `is_even()` that returns `TRUE` if its argument is even,
 `FALSE` otherwise. Stop early if the argument is not numeric.
 
 . . .
 
-## Exercise 3: Weighted mean
+### Exercise 3: Weighted mean
 
 Write a function that computes the weighted mean of a numeric vector, $x$, given
 a vector of weights, $w$:
