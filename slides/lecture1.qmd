@@ -412,6 +412,25 @@ assignments.
 :::::
 :::
 
+## Changes in This Iteration
+
+The course is evolving and (hopefully) improving. Some changes from last
+year:\pause
+
+- The notation in the slides and assignments is more consistent with the
+  book.\pause
+- Assignments are more even in difficulty.\pause
+- Slide material has been trimmed down.
+
+\medskip\pause
+
+Most of the changes are based on feedback from evaluations of last year's
+course.
+
+\medskip\pause
+
+**Your opinions matter!**
+
 ## Generative AI
 
 Generative AI (e.g., GPT, Claude, and Gemini) has changed the way we work with
@@ -529,7 +548,7 @@ R](https://adv-r.hadley.nz/).
 
 We do not expect that you are an expert in R.
 
-## RStudio and Positron
+## Integrated Development Environments
 
 ### RStudio
 
@@ -539,7 +558,15 @@ An integrated development environment (IDE) for R. Stable and full-featured.
 
 ### Positron
 
-A newer alternative that supports other programming languages as well.
+A newer alternative, based on VS Code, that supports other programming languages
+as well.
+
+. . .
+
+### VS Code
+
+You can also use VS Code directly, but mostly useful if you work with multiple
+programming languages or already have it set up.
 
 \medskip\pause
 
