@@ -454,7 +454,7 @@ Used to be generous, now not so much.
 
 AI can write, run, debug, test, and optimize code.
 
-. . .
+\medskip\pause
 
 So what is left for us?
 
