@@ -29,7 +29,7 @@ We learn what OOP is and how the S3 OOP system in R works.
 
 ### Kernel Density Estimation
 
-We learn how to create non-parametric density estimates using kernel density
+We learn how to create nonparametric density estimates using kernel density
 estimation.
 
 # Object-Oriented Programming
@@ -44,13 +44,13 @@ A paradigm based on the concept of "objects", which contain data and methods.
 ::::: {.column width="47%"}
 ### Data
 
-Contains attributes and properties (e.g. name, type, size, color, etc.)
+Contains attributes and properties (e.g., name, type, size, and color).
 
 . . .
 
 ### Methods
 
-Functions that operate on the data (e.g. print, plot, summarize, etc.).
+Functions that operate on the data (e.g., print, plot, and summarize).
 :::::
 
 ::::: {.column width="47%"}
@@ -101,8 +101,9 @@ In this course, we focus **entirely** on S3: a *very* informal OOP system.
 
 ## Example: Integration
 
-The function `integrate()` takes a function as argument and returns the value of
-numerically integrating the function. It is an example of a *functional*.
+The function `integrate()` takes a function as an argument and returns the value
+obtained by numerically integrating the function. It is an example of a
+*functional*.
 
 . . .
 
@@ -123,7 +124,8 @@ is helpfully printed---including an indication of the numerical error.
 
 ## Return Values
 
-In fact, `integrate()` returns a class object: a list with a *class label*.
+In fact, `integrate()` returns an object with a class: a list with a *class
+label*.
 
 ```{r}
 #| label: integrate-structure
@@ -135,7 +137,7 @@ str(integral)
 
 ### What is the Point of This Class Label?
 
-It allows us to write functions that act based on the class of the argument.
+It allows us to write functions that act according to the class of the argument.
 
 . . .
 
@@ -159,7 +161,7 @@ class(integral)
 The printed result of `integrate()` is not the same as the object itself. What
 you see is the result of a **method**, `print.integrate()`.
 
-## Printing Objects of Class Integrate
+## Printing Objects of Class `integrate`
 
 ```{r}
 #| label: print-integrate
@@ -238,7 +240,7 @@ str(phi_hist)
 
 ## Getting Help for Methods
 
-You can find documentation for `plot()` using for instance
+You can find documentation for `plot()`, for instance, by using
 
 ```{r}
 #| label: help-plot
@@ -249,7 +251,7 @@ You can find documentation for `plot()` using for instance
 
 . . .
 
-But this will be uninformative about how an object of class histogram is
+But this will be uninformative about how an object of class `histogram` is
 plotted. Instead, try
 
 ```{r}
@@ -262,7 +264,7 @@ plotted. Instead, try
 . . .
 
 This will give the documentation for the plot method for objects of class
-histogram.
+`histogram`.
 
 ## S3 Overview
 
@@ -272,15 +274,15 @@ S3 classes are standard data structures (typically lists) with *class labels*.
 
 \bigskip
 
-It is a simple but informal system: no formal object definition and no type
+It is a simple but informal system, with no formal object definition or type
 checking.
 
 . . .
 
 \bigskip
 
-To use S3, we implement a \alert{generic} function via `UseMethod()`. E.g.
-`plot()`:
+To use S3, we implement a \alert{generic} function via `UseMethod()`. For
+example, `plot()` is defined as follows:
 
 ```{r}
 #| label: plot-generic
@@ -300,20 +302,20 @@ function `f()`.
 \bigskip
 
 The system is widely used to write methods for the generic functions `print()`,
-`plot()` and `summary()`.
+`plot()`, and `summary()`.
 
 ## Use Cases for OOP
 
 ### Handle function output
 
 One common use of OOP is to make it easier to handle objects that your functions
-create, especially if they are complex (e.g. `lm()`).
+create, especially if they are complex (e.g., `lm()`).
 
 . . .
 
 \medskip
 
-Instead of having to write specialized functions, e.g. `print_lm()`,
+Instead of having to write specialized functions, e.g., `print_lm()` and
 `plot_lm()`, you can write methods for the generic functions `print()`,
 `plot()`, etc.
 
@@ -349,8 +351,8 @@ summarize_data <- function(x) {
 
 . . .
 
-Returns a list with three components: the mean, median, and standard deviation
-of the input vector.
+The function returns a list with three components: the mean, median, and
+standard deviation of the input vector.
 
 . . .
 
@@ -396,8 +398,8 @@ The reason we can do this is that `print()` is a generic.
 
 ::: {.columns}
 ::::: {.column width="53%"}
-The print method is written by just suffixing the class name with a dot after
-the generic name.
+The print method is written by appending a dot and the class name to the generic
+name.
 
 ```{r}
 #| label: print-data-summary-impl
@@ -558,7 +560,7 @@ print <- old_print
 
 ### Forgetting the default method
 
-Forgetting the default method (`myfun.default`), can cause confusing errors.
+Forgetting the default method (`myfun.default`) can cause confusing errors.
 
 ```{r}
 #| label: myfun-example
@@ -614,7 +616,7 @@ system and how methods are dispatched.
 
 \pdfpcnote{
   - Joe Armstrong is one of the creators of Erlang.\\
-  - Mention that people in course have different opinions
+  - Mention that people in the course have different opinions
     about OOP.
 }
 
@@ -628,16 +630,16 @@ system and how methods are dispatched.
 
 . . .
 
-We could use a \alert{parametric} approach, where we assume that $f_0$ is in a
-family of densities $(f_\theta)_\theta$ indexed by a parameter $\theta$.
+We could use a \alert{parametric} approach, where we assume that $f_0$ belongs
+to a family of densities $(f_\theta)_\theta$ indexed by a parameter $\theta$.
 
 . . .
 
 \medskip
 
 Alternatively, we can use a \alert{nonparametric} approach, where we do not
-assume a specific parametric form for $f_0$, e.g. the **histogram**, which we
-can write as $\hat{f}$.
+assume a specific parametric form for $f_0$. One example is the **histogram**
+estimator, which we can write as $\hat{f}$.
 
 . . .
 
@@ -703,11 +705,11 @@ $$
 #| fig-height: 1.5
 
 ggplot(tibble(x = seq(-2, 2, length.out = 100)), aes(x)) +
-  geom_line(aes(y = dunif(x, -1, 1) / 2)) +
+  geom_line(aes(y = dunif(x, -1, 1))) +
   labs(x = "x", y = "K(x)")
 ```
 
-Leads to expression on last slide.
+This leads to the expression on the previous slide.
 
 . . .
 :::::
@@ -755,7 +757,7 @@ p1 <- ggplot() +
 
 p2 <- p1 + geom_rug(aes(x), data = tibble(x = x), linewidth = 1, col = "navy")
 
-p3 <- p2 + geom_line(aes(a, d, group = x), col = "dark orange", data = res)
+p3 <- p2 + geom_line(aes(a, d, group = x), col = "darkorange", data = res)
 
 p4 <- p3 + geom_density(aes(x), bw = 1, data = tibble(x = x))
 ```
@@ -791,7 +793,7 @@ $$
 
 \smallskip
 
-Now we add a Gaussian density kernel with bandwidth 1 for each point.
+Now we center a Gaussian density kernel with bandwidth 1 at each point.
 :::::
 
 ::::: {.column width="47%"}
@@ -817,11 +819,11 @@ $$
 
 \smallskip
 
-Now we add a Gaussian density kernel with bandwidth 1 for each point.
+Now we center a Gaussian density kernel with bandwidth 1 at each point.
 
 \bigskip
 
-Finally, we average (sum) the kernels to get the density estimate.
+Finally, we sum the scaled kernels to obtain the density estimate.
 :::::
 
 ::::: {.column width="47%"}
@@ -931,7 +933,7 @@ ggplot(df_diff, aes(x, y)) + geom_line() + labs(x = "x", y = "difference")
 
 \medskip
 
-These tests are ad-hoc. Later in the course we will learn about formal testing
+These tests are ad hoc. Later in the course, we will learn about formal testing
 using the `testthat` package.
 
 . . .
@@ -958,12 +960,12 @@ test
 
 . . .
 
-You need to decide on the tolerance level on a case-by-case basis.
+You need to choose the tolerance on a case-by-case basis.
 
 ## Maximum Likelihood Estimation
 
 One might wonder if we can use maximum likelihood estimation (MLE) to estimate
-the density. I.e., solve
+the density, i.e., solve
 $$
   \hat{\theta} = \argmax_{\theta} \sum_{j=1}^N \log f_{\theta}(x_j).
 $$
@@ -1016,7 +1018,7 @@ How about maximizing over \alert{all possible} densities?
 
 . . .
 
-For nonparametric estimation we can still introduce the log-likelihood:
+For nonparametric estimation, we can still introduce the log-likelihood:
 $$
   \ell(f) = \sum_{j=1}^N \log f(x_j)
 $$
@@ -1081,11 +1083,11 @@ $$
 
 \bigskip
 
-Hence, $\ell(f_h) \to \infty$ for $h \to 0$ and there is **no MLE**.
+Hence, $\ell(\bar{f}_h) \to \infty$ as $h \to 0$, and there is **no MLE**.
 
 ## ISE, MISE, and MSE
 
-Quality of $\hat{f}_h$ can be quantified by the *integrated squared error*,
+The quality of $\hat{f}_h$ can be quantified by the *integrated squared error*,
 $$
   \mathrm{ISE}(\hat{f}_h) = \int (\hat{f}_h(x) - f_0(x))^2 \ \mathrm{d}x
                           = \|\hat{f}_h - f_0\|_2^2.
@@ -1093,16 +1095,16 @@ $$
 
 . . .
 
-Quality of the estimation procedure can be quantified by the mean ISE,
+The quality of the estimation procedure can be quantified by the mean ISE,
 $$
   \mathrm{MISE}(h) = \E(\mathrm{ISE}(\hat{f}_h)),
 $$
-where the expectation integral is over the data.
+where the expectation is taken over the data.
 
 . . .
 
 $$
-  \mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \ \mathrm{d}x
+  \mathrm{MISE}(h) = \int \mathrm{MSE}_h(x) \ \mathrm{d}x,
 $$
 where $\mathrm{MSE}_h(x) = \V(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
@@ -1112,7 +1114,7 @@ where $\mathrm{MSE}_h(x) = \V(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
 ## AMISE
 
-If $K$ is a square-integrable probability density with mean 0,
+If $K$ is a square-integrable probability density with mean zero,
 $$
   \mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((Nh)^{-1} + h^4)
 $$
@@ -1129,7 +1131,7 @@ with $\sigma_K^2 = \int x^2 K(x) \mathrm{d}x.$
 
 ### Asymptotically Optimal Bandwidth
 
-Using plug-in estimates of $\|f_0''\|_2^2$, AMISE can be used to estimate the
+Using a plug-in estimate of $\|f_0''\|_2^2$, we can use AMISE to estimate the
 *asymptotically optimal bandwidth* (with respect to MISE).
 
 ## Amino Acid Angles (Silverman, the default)
@@ -1167,8 +1169,8 @@ $$
 #| label: phipsi-plot-nrd0
 #| echo: false
 #| fig-width: 5.5
-#| fig-cap: "Silverman's rule of thumb bandwidth (default in `density()`, uses
-#|   `bw = 'nrd'`)."
+#| fig-cap: "Silverman's rule-of-thumb bandwidth (the default in `density()`),
+#|   using `bw = 'nrd0'`."
 
 phipsi_plot("nrd0")
 ```
@@ -1185,14 +1187,14 @@ $$
 #| label: phipsi-plot-nrd
 #| echo: false
 #| fig-width: 5.5
-#| fig-cap: "Scott's rule of thumb bandwidth, using `bw = 'nrd'`."
+#| fig-cap: "Scott's rule-of-thumb bandwidth, using `bw = 'nrd'`."
 
 phipsi_plot("nrd")
 ```
 
 ## Amino Acid Angles (Sheather & Jones)
 
-More elaborate method!
+This is a more elaborate method.
 
 \medskip
 
@@ -1200,8 +1202,8 @@ More elaborate method!
 #| label: phipsi-plot-sj
 #| echo: false
 #| fig-width: 5.5
-#| fig-cap: "Sheather & Jones' bandwidth. Uses `bw = 'SJ'` (in `density()`) and
-#|   `bw = 'sj'` (in ggplot2)."
+#| fig-cap: "The Sheather and Jones bandwidth, using `bw = 'SJ'` in `density()`
+#|   and `bw = 'sj'` in ggplot2."
 
 phipsi_plot("sj")
 ```
@@ -1241,8 +1243,8 @@ vectors of length 2.
 
 . . .
 
-### Exercise 3: Manually Insert Bandwidth Selection
+### Exercise 3: Manually Inspect Bandwidth Selection
 
-Sample a data set from a Gaussian mixture model, varying the standard deviation
-of the components. How does the different bandwidth selection methods in
+Sample a data set from a Gaussian mixture model, varying the standard deviations
+of the components. How do the different bandwidth selection methods in
 `density()` perform?
