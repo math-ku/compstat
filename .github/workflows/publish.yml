@@ -42,6 +42,17 @@ jobs:
 
       - run: devenv shell -- quarto render --profile publish
 
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Stack Overflow blocks automated clients even when a page exists.
+          args: >-
+            --root-dir "${{ github.workspace }}/_site"
+            --max-retries 3
+            --no-progress
+            --exclude '^https://stackoverflow\.com/'
+            '_site/**/*.html'
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
 
