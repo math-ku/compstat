@@ -214,12 +214,12 @@ Use Absalon discussions for course-related questions and email
 Jinyang Liu, PhD student in machine learning
 
 ![Jin](../images/jinyang.jpg){width=50%}
-:::::
-:::
 
 #### Kasper
 
 Kasper Niss, PhD student, will cover for Jin when he is away.
+:::::
+:::
 
 ## Assignments
 
@@ -981,7 +981,8 @@ additional arguments to `fun()`.
 ```{r}
 #| label: own-apply-2
 
-our_apply <- function(x, fun, ...) { # <1>
+our_apply <- function(x, fun, ...) {
+  # <1>
   val <- numeric(length(x))
   for (i in seq_along(x)) {
     val[i] <- fun(x[[i]], ...) # <2>
