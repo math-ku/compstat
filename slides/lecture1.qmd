@@ -19,24 +19,24 @@ options(width = 50)
 
 ## What is Computational Statistics?
 
-It is not a coherent field, but rather an umbrella term for a number of
-techniques and methods.
+Not a coherent field, but rather an umbrella term for a number of techniques and
+methods.
 
 \bigskip
 
 . . .
 
-Largely speaking, it is **the use of computational methods to solve statistical
+Broadly speaking, it is **the use of computational methods to solve statistical
 problems**, for instance
 
 . . .
 
-- simulation,
-- optimization,
-- numerical integration, and
-- data visualization.
+- simulating probabilities,
+- maximizing likelihood functions,
+- integrating numerically, and
+- visualizing data.
 
-## A Running Example
+## A First Example
 
 ::: {.columns}
 ::::: {.column width="47%"}
@@ -71,7 +71,7 @@ observations fall into each bin.
 ```{r}
 #| label: hist1-src
 #| eval: false
-#| fig-cap: A histogram of the $\Psi$ variable in the amino acid data
+#| fig-cap: A histogram of the $\Phi$ variable in the amino acid data
 
 library(ggplot2)
 
@@ -94,9 +94,8 @@ ggplot(phipsi, aes(x = phi)) +
 
 ## Density Estimation
 
-Histograms are not smooth, but if we admit stronger assumptions, we can get a
-smoother estimate of the distribution, using **kernel density estimation**
-(KDE).
+Histograms are not smooth, but if we make stronger assumptions, we can smooth
+out the estimate of the distribution with **kernel density estimation** (KDE).
 
 . . .
 
@@ -130,8 +129,8 @@ ggplot(phipsi, aes(x = phi)) +
 \bigskip
 
 But how is this KDE actually computed? Doing this efficiently is a
-**computational statistics** problem, and part of the first topic of the course:
-**smoothing**.
+**computational statistics** problem, and is part of the first topic of the
+course: **smoothing**.
 
 ## Statistical Topics of the Course
 
@@ -185,7 +184,7 @@ debugging.
 
 ### Efficiency
 
-We will learn how measure performance and find bottlenecks in our code using
+We will learn how to measure performance and find bottlenecks in our code using
 profiling and benchmarking, and how to optimize it.
 
 ## Teaching Staff
@@ -217,13 +216,13 @@ Jinyang Liu, PhD student in machine learning
 
 #### Kasper
 
-Kasper Niss, PhD student, will cover for Jin when he is away.
+Kasper Niss (PhD student) will cover for Jin on September 17.
 :::::
 :::
 
 ## Assignments
 
-Four assignments make up the bulk of the course work.
+Four assignments make up the bulk of the coursework.
 
 . . .
 
@@ -244,14 +243,14 @@ Each assignment is tied to a particular **topic**:
 
 ## Presentations
 
-There will be four presentation sessions (week 3, 4, 6, 7)^[Not counting the
-potato harvesting week when you are off.]
+There will be four presentation sessions (weeks 3, 4, 6, and 7)^[Not counting
+the potato harvesting week when you are off.]
 
 . . .
 
 \medskip
 
-You will divide into groups of 2-3 students and present your solution to one of
+You will divide into groups of 2--3 students and present your solution to one of
 the assignments during one of the sessions.
 
 . . .
@@ -259,14 +258,14 @@ the assignments during one of the sessions.
 \medskip
 
 You will register for groups and assignments in
-[Absalon](https://absalon.ku/dk).
+[Absalon](https://absalon.ku.dk).
 
 . . .
 
 \medskip
 
-Presentation is compulsory but not graded. We expect solutions to be work in
-progress.
+The presentations are compulsory but not graded. We expect solutions to be work
+in progress.
 
 ## Oral Examination
 
@@ -317,14 +316,14 @@ At the exam, you will present one of these at random.
 
 ## Exercise Sessions
 
-An opportunity to get help with the exercises. To make best use of your time,
-make sure you have *tried* each of them.
+An opportunity to get help with the exercises. To make the best use of your
+time, make sure you have *tried* each of them.
 
 \medskip
 
 . . .
 
-Later on, the exercise sessions is where you will get assistance with your
+Later on, the exercise sessions are where you will get assistance with your
 projects.
 
 . . .
@@ -349,7 +348,7 @@ Main textbook for the course, written by Niels Richard Hansen and me.
 . . .
 
 It is available online at [cswr.nrhstat.org](https://cswr.nrhstat.org). Some
-parts are still a work-in-progress, but the parts that are relevant for this
+parts are still a work in progress, but the parts that are relevant for this
 course are complete.
 
 . . .
@@ -382,7 +381,7 @@ Available online at [adv-r.hadley.nz](https://adv-r.hadley.nz/).
 
 \medskip
 
-Covers more advanced R programming topics, among which we use a few
+Covers more advanced R programming topics, a few of which we use.
 
 ## Online Resources
 
@@ -404,7 +403,7 @@ Course content will be uploaded to
 
 \medskip
 
-This is where you will a detailed schedule of the course, slides, and the
+This is where you will find a detailed schedule of the course, slides, and the
 assignments.
 :::::
 
@@ -415,7 +414,7 @@ assignments.
 
 ## Generative AI
 
-Generative AI (e.g. GPT, Claude, Gemini, etc.) have changed the way we work with
+Generative AI (e.g., GPT, Claude, and Gemini) has changed the way we work with
 code and data.
 
 \bigskip
@@ -485,7 +484,7 @@ statistical computing and graphics.
 \bigskip
 
 It is widely used among statisticians and data miners for developing statistical
-software and data analysis.
+software and analyzing data.
 
 . . .
 
@@ -508,7 +507,7 @@ My personal opinion is that:
 - R is better suited for visualization and exploratory data analysis, while
 - Python is better suited for general-purpose programming and machine learning,
   and
-- Julia is a best for numerical computing.
+- Julia is best for numerical computing.
 
 ## Prerequisite R Knowledge
 
@@ -534,22 +533,22 @@ We do not expect that you are an expert in R.
 
 ### RStudio
 
-An integrated developed environment (IDE) for R. Stable and full-featured.
+An integrated development environment (IDE) for R. Stable and full-featured.
 
 . . .
 
 ### Positron
 
-A newer alternative, that has support for other programming languages as well.
+A newer alternative that supports other programming languages as well.
 
 \medskip\pause
 
-If you haven't tried any of these before, we recommend you use Positron.
+If you haven't tried either of these before, we recommend that you use Positron.
 
 ## Tidyverse
 
-The [tidyverse](https://www.tidyverse.org/) is a suite of packages for wrangling
-with, exploring, and visualizing data.
+The [tidyverse](https://www.tidyverse.org/) is a suite of packages for
+wrangling, exploring, and visualizing data.
 
 . . .
 
@@ -580,7 +579,7 @@ directories, one for each project.
 
 ### Presentations
 
-Use [quarto](https://quarto.org) to combine text and code in reproducible
+Use [Quarto](https://quarto.org) to combine text and code in reproducible
 notebooks.
 
 . . .
@@ -627,15 +626,15 @@ Any questions so far?
 
 ## Functions in R
 
-Everything that happens in R is the result of a function call. Even `+`, `[` and
-`<-` are functions.
+Everything that happens in R is the result of a function call. Even `+`, `[`,
+and `<-` are functions.
 
 . . .
 
 \medskip
 
-An R function takes a number of *arguments*, and when a function call is
-evaluated it computes a *return value*.
+An R function takes a number of *arguments* and computes a *return value* when
+called.
 
 . . .
 
@@ -706,8 +705,7 @@ In this case, `x` and `y` are the arguments.
 ::::: {.column width="47%"}
 ### Body
 
-The body of the function is everything inside the curly braces `{}`, that is,
-`x + y`.
+The body of the function is `x + y`.
 
 . . .
 
@@ -870,14 +868,15 @@ functions.
 
 ## Return Values
 
-The return value of a function is the value of the last expression in the body.
+The return value of a function is usually the value of the last expression in
+the body.
 
 . . .
 
 \bigskip
 
-Unless you explicitly use the `return()` function, which immediately exits the
-function and returns the specified value.
+The `return()` function instead immediately exits the function and returns the
+specified value.
 
 ```{r}
 #| label: return-value
@@ -890,8 +889,8 @@ f <- function(x, y) {
 
 . . .
 
-Whether or not to use `return()` is a matter of style. Personally, I prefer to
-not use it unless returning early.
+Whether or not to use `return()` is a matter of style. Personally, I prefer not
+to use it unless returning early.
 
 ## Functional Programming
 
@@ -906,7 +905,7 @@ functions, returned as values from functions, and assigned to variables. R is a
 This allows for a high degree of abstraction and code reuse, for instance
 through the use of the `apply` family of functions.
 
-. . .
+\medskip\pause
 
 Let's write our own apply function.
 
@@ -945,7 +944,7 @@ our_apply(1:10, exp)
 ### Assumptions of `our_apply()`
 
 `x` is a "list-like" structure, `fun` takes a single argument, and `fun` returns
-a numeric.
+a numeric value.
 
 ## What if `fun` Needs Additional Arguments?
 
@@ -1010,7 +1009,7 @@ Assert that arguments to a function are valid and stop early if they are not.
 
 \bigskip
 
-Simplest way to do this is to use `stopifnot()`:
+The simplest way to do this is to use `stopifnot()`:
 
 ```{r}
 #| label: stopifnot
@@ -1063,7 +1062,7 @@ like [roxygen2](https://roxygen2.r-lib.org/).
 
 ### Why, not What
 
-Sometimes document **why** something is done, not just **what** is done.
+Prefer documenting **why** the code does what it does, not **what** it does.
 
 . . .
 
@@ -1075,7 +1074,7 @@ In good code, the **what** is often clear from the code itself.
 
 \medskip
 
-Functions, if named properly, often serve as documentation by themselves.
+Well-written functions are often largely **self-documenting**.
 
 ## Naming Functions
 
@@ -1092,25 +1091,25 @@ Functions, if named properly, often serve as documentation by themselves.
 ::::: {.column width="47%"}
 ### Favor Descriptive Names
 
-First check if you can use a *verb*, which signals **intent**.
+Use *verbs* to signal **intent**.
 
 \medskip
 
 . . .
 
-Better descriptive but long, than short but cryptic.
+Prefer descriptive but long names to short but cryptic ones.
 
 . . .
 
 ### Honor Common Conventions
 
-Avoid `.` in names; it is used for **methods** (upcoming).
+Avoid `.`, which is used in **methods** (upcoming).
 
 . . .
 :::::
 
 ::::: {.column width="47%"}
-### Use a Consistent Style
+### Be Consistent
 
 - `lowercase`
 - `snake_case` (tidyverse)
@@ -1121,7 +1120,7 @@ Avoid `.` in names; it is used for **methods** (upcoming).
 
 ### Namespace Clashes
 
-Avoid names of existing functions.
+Avoid names that clash with existing functions.
 :::::
 :::
 
@@ -1129,15 +1128,15 @@ Avoid names of existing functions.
 
 ### Keep Functions Short and Focused
 
-Functions should do one thing and do it well. If a function is too long or
-complex, consider breaking it up into smaller functions.
+Functions should do one thing and do it well. If a function is long or complex,
+consider breaking it up.
 
 . . .
 
 ### Testing
 
-Write tests for your functions to ensure that they work as expected. (More on
-this later in the course.)
+Write unit tests for your functions to ensure that they work as expected. (More
+on this later in the course.)
 
 . . .
 
@@ -1148,7 +1147,7 @@ this later in the course.)
 
 ## Summary
 
-Functions are the buildings block of R code, and first-class citizens.
+Functions are the building blocks of R code and are first-class citizens.
 
 \medskip
 
@@ -1173,7 +1172,7 @@ Name!". If no name is given, it should print "Hello, World!".
 
 . . .
 
-## Exercise 2: Check if a number is even
+## Exercise 2: Check If a Number is Even
 
 Write a function `is_even()` that returns `TRUE` if its argument is even,
 `FALSE` otherwise. Stop early if the argument is not numeric.
