@@ -157,7 +157,7 @@ order to obtain the same density estimate as we would have gotten by using
 we can choose our bandwidth to be
 $\tilde{h} = (\sigma_K^2)^{-1/2} h= (1/5)^{-1/2}$ to get the same density
 estimate, see [this
-article](https://bookdown.org/egarpor/NP-UC3M/kde-i-kde.html).
+article](https://egarpor.github.io/NP-UC3M/kde-i.html).
 
 ```{r}
 #| warning: false
