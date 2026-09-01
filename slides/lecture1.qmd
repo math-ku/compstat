@@ -390,7 +390,7 @@ Covers more advanced R programming topics, among which we use a few
 ::::: {.column width="70%"}
 ### Absalon
 
-Main source for information and communication about the course. Accessed at
+Communication channel for the course. Accessed at
 [absalon.ku.dk](https://absalon.ku.dk/).
 
 . . .
