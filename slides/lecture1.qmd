@@ -561,7 +561,7 @@ Throughout the lectures, I assume that you have it installed and loaded.
 #| label: tidyverse
 #| eval: false
 
-pak::pak("tidyverse")
+install.packages("tidyverse")
 library(tidyverse)
 ```
 
