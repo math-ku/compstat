@@ -25,7 +25,7 @@ website:
       - text: "Home"
         href: index.qmd
       - overview.qmd
-      # - assignments.qmd
+      - assignments.qmd
       # - exercises.qmd
       # - exam.qmd
       - text: "FAQ"
