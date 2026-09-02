@@ -1242,16 +1242,9 @@ The course evaluations are open!
 
 Please take a few minutes to fill them out. Your feedback is valuable!
 
-## Next Two Lectures
+## Next Time
 
 ### Variations on Stochastic Gradient Descent
 
 We expand on the stochastic gradient descent algorithm, looking at momentum and
 adaptive step sizes.
-
-. . .
-
-### R Packages and Wrap-up (Final Lecture)
-
-We learn how to set up R packages, which is the best way to distribute R and
-Rcpp code.
