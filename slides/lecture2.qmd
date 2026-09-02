@@ -1180,7 +1180,7 @@ phipsi_plot("nrd0")
 ## Amino Acid Angles (Scott, using 1.06)
 
 $$
-  h = 1.06 \hat{\sigma} N^{-1/5}
+  h = 1.06 \min \left( \hat{\sigma},\frac{\mathrm{IQR}}{1.34} \right) N^{-1/5}
 $$
 
 \medskip
