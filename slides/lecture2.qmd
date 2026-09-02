@@ -36,7 +36,8 @@ estimation.
 
 ## What Is Object-Oriented Programming (OOP)?
 
-A paradigm based on the concept of "objects", which contain data and methods.
+A paradigm organized around objects, with operations selected according to the
+objects' classes.
 
 . . .
 
@@ -58,7 +59,7 @@ Functions that operate on the data (e.g., print, plot, and summarize).
 
 ### Benefits of OOP
 
-OOP allows us to bundle data and methods together.
+OOP allows us to associate data with methods through classes.
 
 . . .
 
@@ -306,7 +307,7 @@ The system is widely used to write methods for the generic functions `print()`,
 
 ## Use Cases for OOP
 
-### Handle function output
+### Handle Function Output
 
 One common use of OOP is to make it easier to handle objects that your functions
 create, especially if they are complex (e.g., `lm()`).
@@ -321,12 +322,12 @@ Instead of having to write specialized functions, e.g., `print_lm()` and
 
 . . .
 
-### Dispatch based on input type
+### Dispatch Based on Input Class
 
 . . .
 
 For instance, you may want a function that behaves differently depending on
-whether the input is a vector or a matrix.
+whether the input has class `numeric` or class `matrix`.
 
 ## Constructing a New Class
 
@@ -523,8 +524,8 @@ matrix_stats
 
 ### Naming conflicts
 
-Accidentally overwriting existing generics or methods (e.g., redefining
-`print()`).
+Accidentally masking existing generics or methods (e.g., defining a new
+`print()` in the global environment).
 
 ```{r}
 #| label: print-overwrite
@@ -630,16 +631,16 @@ system and how methods are dispatched.
 
 . . .
 
-We could use a \alert{parametric} approach, where we assume that $f_0$ belongs
-to a family of densities $(f_\theta)_\theta$ indexed by a parameter $\theta$.
+We could use a \alert{parametric} approach, assuming that $f_0$ belongs to a
+family of densities $(f_\theta)_\theta$.
 
 . . .
 
 \medskip
 
-Alternatively, we can use a \alert{nonparametric} approach, where we do not
-assume a specific parametric form for $f_0$. One example is the **histogram**
-estimator, which we can write as $\hat{f}$.
+Alternatively, we could use a \alert{nonparametric} approach and not assume a
+specific parametric form for $f_0$. One example is the **histogram** estimator,
+which we can write as $\hat{f}$.
 
 . . .
 
@@ -657,8 +658,8 @@ Because
 
 Density estimation relies on the approximation
 $$
-  \P(X \in (x - h, x + h)) = \int_{x-h}^{x+h} f_0(z) \mathrm{d}z \pause
-                           \approx f_0(x) 2h.
+  \P\big(X \in (x - h, x + h)\big) = \int_{x-h}^{x+h} f_0(z) \mathrm{d}z \pause
+                                   \approx f_0(x) 2h.
 $$
 
 . . .
@@ -704,7 +705,7 @@ $$
 ```{r}
 #| label: uniform-kernel
 #| echo: false
-#| fig-height: 1.5
+#| fig-height: 1.3
 
 ggplot(tibble(x = seq(-2, 2, length.out = 100)), aes(x)) +
   geom_line(aes(y = dunif(x, -1, 1))) +
@@ -726,7 +727,7 @@ $$
 ```{r}
 #| label: gaussian-kernel
 #| echo: false
-#| fig-height: 1.5
+#| fig-height: 1.3
 
 ggplot(tibble(x = seq(-4, 4, length.out = 100)), aes(x)) +
   geom_line(aes(y = dnorm(x))) +
@@ -921,6 +922,7 @@ close.
 #| label: plot-diff
 #| echo: false
 #| fig-cap: Difference between our density estimate and that of `density()`.
+#| fig-width: 5.5
 
 df_diff <- tibble(x = f_hat$x, y = f_hat$y - f_hat_dens$y)
 
@@ -929,20 +931,13 @@ ggplot(df_diff, aes(x, y)) + geom_line() + labs(x = "x", y = "difference")
 
 ## Testing
 
-\alert{Correctness} is one of the major computational topics in the course.
+\alert{Correctness} is one of the computational topics in the course.
 
 . . .
 
 \medskip
 
-These tests are ad hoc. Later in the course, we will learn about formal testing
-using the `testthat` package.
-
-. . .
-
-\medskip
-
-Here's a rough idea:
+Here's a simple test to check if our implementation is correct.
 
 ```{r}
 #| label: test-dens-impl2
@@ -963,6 +958,11 @@ test
 . . .
 
 You need to choose the tolerance on a case-by-case basis.
+
+\pause\medskip
+
+Later in the course, we will learn about principled testing using the `testthat`
+package.
 
 ## Maximum Likelihood Estimation
 
@@ -997,7 +997,7 @@ How does this work?
 #| fig-height: 1.5
 
 psi_mean <- mean(phipsi$psi)
-psi_sd <- sd(phipsi$psi)
+psi_sd <- sqrt(mean((phipsi$psi - psi_mean)^2))
 
 ggplot(phipsi, aes(psi)) +
   geom_histogram(aes(y = ..density..), fill = "grey60") +
@@ -1058,7 +1058,7 @@ plot_psi_density <- function(h, n = 1001) {
   ggplot(psi_df, aes(x = psi)) +
     geom_histogram(aes(y = ..density..), fill = "grey60") +
     geom_rug(alpha = 0.3) +
-    geom_line(data = dens_df, aes(x = x, y = y), color = "blue") +
+    geom_line(data = dens_df, aes(x = x, y = y), color = "steelblue4") +
     labs(title = bquote(h == .(h)), x = expression(psi), y = "density") +
     lims(y = c(0, 0.5))
 }
@@ -1086,6 +1086,17 @@ $$
 \bigskip
 
 Hence, $\ell(\bar{f}_h) \to \infty$ as $h \to 0$, and there is **no MLE**.
+
+\pdfpcnote{
+  - At each observation, its own kernel term equals one because the exponent is
+    zero.\\
+  - When observations are distinct, all the other kernel terms vanish as the
+    bandwidth tends to zero. The first sum therefore tends to zero.\\
+  - The logarithm of the normalization tends to negative infinity. The leading
+    minus sign makes the log-likelihood tend to positive infinity.\\
+  - Every candidate in this sequence is a valid density. The sequence shows that
+    the likelihood is unbounded; it does not show that the KDE is an MLE.
+}
 
 ## ISE, MISE, and MSE
 
@@ -1116,16 +1127,27 @@ where $\mathrm{MSE}_h(x) = \V(\hat{f}_h(x)) + \mathrm{bias}(\hat{f}_h(x))^2$.
 
 ## AMISE
 
-If $K$ is a square-integrable probability density with mean zero,
+Suppose $K$ is a square-integrable probability density with mean zero and finite
+variance, and $f_0$ has a square-integrable second derivative. If
+$h = h_N \to 0$ and $N h_N \to \infty$, then
 $$
-  \mathrm{MISE}(h) = \mathrm{AMISE}(h) + o((Nh)^{-1} + h^4)
+  \mathrm{MISE}(h_N) = \mathrm{AMISE}(h_N)
+                       + o\left( (N h_N)^{-1} + h_N^4 \right)
 $$
 \pause where the *asymptotic mean integrated squared error* is
 $$
-  \mathrm{AMISE}(h) = \frac{\|K\|_2^2}{Nh}
-                      + \frac{h^4 \sigma^4_K \|f_0''\|_2^2}{4}
+  \mathrm{AMISE}(h_N) = \frac{\|K\|_2^2}{N h_N}
+                        + \frac{h_N^4 \sigma^4_K \|f_0''\|_2^2}{4}
 $$
 with $\sigma_K^2 = \int x^2 K(x) \mathrm{d}x.$
+
+\pdfpcnote{
+  - Letting the bandwidth tend to zero makes the local approximation increasingly
+    accurate.\\
+  - Letting the effective local sample size tend to infinity ensures that
+    increasingly many observations contribute locally, causing the variance to
+    vanish.
+}
 
 . . .
 
