@@ -8,6 +8,7 @@ description:
 ---
 
 ```{r}
+#| label: setup
 #| include: false
 
 library(ggplot2)
@@ -61,14 +62,11 @@ Implement a kernel density estimator using the Epanechnikov kernel,
 $$
   K(x) = \frac{3}{4}(1 - x^2) 1_{[-1, 1]}(x),
 $$
-and implement one or more bandwidth selection algorithms using either AMISE
-plug-in methods or cross-validation methods. Test the implementation and compare
-the results with the results of using `density()` in R.
-
-It may be a good idea to use real data to investigate how the bandwidth
-selection works, but for benchmarking and profiling it is best to use simulated
-data. Think about how to make your implementation as general and generic as
-possible.
+and implement two bandwidth-selection methods: an AMISE plug-in method and a
+cross-validation method. Test your implementation using both real and simulated
+data, and investigate how the two methods behave. Compare your results with
+`density()` and suitable bandwidth selectors provided by R. Make your
+implementation as general as possible.
 
 ::: {.callout-tip}
 When comparing your implementation with R's built-in `density()`{.R}, make sure
