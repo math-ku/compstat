@@ -881,7 +881,7 @@ angle in the amino acid data.
 ggplot(phipsi, aes(psi)) +
   geom_histogram() +
   geom_rug(alpha = 0.3) +
-  labs(x = expression(psi), y = "Density")
+  labs(x = expression(psi), y = "Count")
 ```
 
 ## A First Test
