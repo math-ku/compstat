@@ -36,8 +36,6 @@ format:
     toc: true
     theme: cosmo
     html-math-method: katex
-    include-before-body:
-      - assets/math-macros.html
   beamer:
     aspectratio: 1610
     classoption:

@@ -34,13 +34,13 @@ four main topics are:
 ## Technology Stack
 
 - **Build Tool:** Quarto (Quarto Markdown for content, renders to HTML/PDF)
-- **Package Manager:** Nix (flake-based, for reproducible environment)
+- **Environment Manager:** devenv (Nix-backed, reproducible environment)
 - **Task Runner:** go-task (Taskfile.yml)
 - **Runtime:** R with extensive package ecosystem
 - **PDF Generation:** XeLaTeX via Quarto (for Beamer slides)
 - **CI/CD:** GitHub Actions (publishes to GitHub Pages)
 
-### Key R Packages (from flake.nix)
+### Key R Packages (from devenv.nix)
 
 The environment includes: tidyverse, ggplot2, Rcpp, RcppArmadillo, bench,
 testthat, knitr, rmarkdown, here, lme4, profvis, foreach, doParallel, CSwR
@@ -64,7 +64,9 @@ testthat, knitr, rmarkdown, here, lme4, profvis, foreach, doParallel, CSwR
 ├── _quarto.yml           # Main Quarto configuration
 ├── _quarto-present.yml   # Quarto profile for presentations
 ├── _quarto-publish.yml   # Quarto profile for publishing
-├── flake.nix             # Nix flake for environment
+├── devenv.nix            # Development environment and dependencies
+├── devenv.yaml           # devenv inputs
+├── devenv.lock           # Locked environment inputs
 ├── Taskfile.yml          # Task definitions
 ├── index.qmd             # Course homepage
 └── *.qmd                 # Other top-level pages
@@ -72,18 +74,19 @@ testthat, knitr, rmarkdown, here, lme4, profvis, foreach, doParallel, CSwR
 
 ### Important Configuration Files
 
-1. **flake.nix** - Nix development environment with all dependencies (R
-   packages, Quarto, go-task, LaTeX)
-2. **\_quarto.yml** - Main Quarto configuration (website structure, themes,
+1. **devenv.nix** - Development environment with all dependencies (R packages,
+   Quarto, go-task, LaTeX)
+2. **devenv.yaml** - devenv input configuration
+3. **devenv.lock** - Locked environment inputs
+4. **_quarto.yml** - Main Quarto configuration (website structure, themes,
    formats)
-3. **\_quarto-present.yml** - Disables caching for presentations
-4. **\_quarto-publish.yml** - Handout mode for published content
-5. **Taskfile.yml** - Task definitions for preview and render
-6. **.lintr** - R linting configuration (excludes some strict rules)
-7. **.prettierrc.yml** - Prose wrapping configuration
-8. **.clang-format** - C++ code formatting configuration (uses Mozilla style)
-9. **air.toml** - R code formatting configuration (follows tidyverse style)
-10. **.envrc** - direnv configuration for automatic Nix environment loading
+5. **_quarto-present.yml** - Disables caching for presentations
+6. **_quarto-publish.yml** - Handout mode for published content
+7. **Taskfile.yml** - Task definitions for preview and render
+8. **.lintr** - R linting configuration (excludes some strict rules)
+9. **.prettierrc.yml** - Prose wrapping configuration
+10. **.clang-format** - C++ code formatting configuration (uses Mozilla style)
+11. **air.toml** - R code formatting configuration (follows tidyverse style)
 
 ### Slides Directory Structure
 
@@ -102,31 +105,28 @@ slides/
 
 ### Prerequisites
 
-**CRITICAL:** This repository requires Nix to be installed. All other
-dependencies (R, Quarto, go-task, LaTeX) are provided through the Nix flake.
+**CRITICAL:** This repository requires Nix and devenv to be installed. All other
+dependencies (R, Quarto, go-task, LaTeX) are provided through devenv.
 
 ### Environment Setup
 
-The repository uses Nix flakes for reproducible development environments. There
-are two ways to enter the environment:
+The repository uses devenv for a reproducible development environment. Enter it
+manually with:
 
-1. **Manual (every time):**
+```bash
+devenv shell
+```
 
-   ```bash
-   nix develop
-   ```
-
-2. **Automatic (recommended with direnv):** Install direnv and nix-direnv, then
-   run `direnv allow` in the repository root. The environment will automatically
-   load when entering the directory.
+For a single noninteractive command, use `devenv shell -- <command>`. If your
+shell is configured to activate devenv automatically when entering the project,
+you can run project commands directly.
 
 **Environment Setup Time:** First run takes 5-15 minutes to download and build
 dependencies. Subsequent runs are instant due to Nix caching.
 
 ### Building the Website
 
-**ALWAYS run commands inside the Nix development environment** (either via
-`nix develop` or direnv).
+**ALWAYS run commands inside the devenv environment.**
 
 #### Preview the Website (Development)
 
@@ -174,7 +174,7 @@ The repository includes minimal test files in the `tests/` directory:
 **Running Tests:**
 
 ```bash
-# Inside nix develop environment
+# Inside the devenv environment
 Rscript -e "testthat::test_dir('tests')"
 ```
 
@@ -186,7 +186,7 @@ test coverage or a dedicated test runner.
 **R Code Linting:**
 
 ```bash
-# Inside nix develop environment
+# Inside the devenv environment
 Rscript -e "lintr::lint_dir('R')"
 Rscript -e "lintr::lint_dir('slides')"
 ```
@@ -199,13 +199,13 @@ object_name_linter.
 guide:
 
 ```bash
-# Inside nix develop environment
+# Inside the devenv environment
 # Configuration in air.toml
 air format R/gd.R # to format a specific file
 ```
 
-**C++ Code Formatting:** Folow the Mozilla style. clang-format is not available
-in the nix development environment.
+**C++ Code Formatting:** Follow the Mozilla style. clang-format is not available
+in the devenv environment.
 
 **Note:** No automated linting is enforced in CI.
 
@@ -219,12 +219,14 @@ in the nix development environment.
 
 1. Checkout repository
 2. Install Nix (cachix/install-nix-action@v31)
-3. Setup Cachix cache (cache name: jolars)
-4. Configure GitHub Pages
-5. Restore git timestamps (important for caching)
-6. **Build:** `nix develop --command quarto render --profile publish`
-7. Upload artifact to GitHub Pages
-8. Deploy to GitHub Pages
+3. Set up the Cachix cache (cache name: jolars)
+4. Install devenv
+5. Configure GitHub Pages
+6. Restore git timestamps (important for caching)
+7. **Build:** `devenv shell -- quarto render --profile publish`
+8. Check links
+9. Upload the artifact to GitHub Pages
+10. Deploy to GitHub Pages
 
 **Build Time:** Approximately 10-15 minutes (with cache hits)
 
@@ -266,7 +268,7 @@ ensures Quarto's caching works correctly across CI runs.
 
 1. R scripts in `R/` are standalone examples/exercises
 2. Scripts should use `here::here()` for path resolution
-3. Test scripts interactively in R console within nix develop environment
+3. Test scripts interactively in an R console within the devenv environment
 4. No need to rebuild website unless scripts are referenced in .qmd files
 
 ### Working with Data
@@ -296,10 +298,10 @@ packages
 
 **Solution:**
 
-- Ensure you're in the Nix environment (all LaTeX packages included via
+- Ensure you're in the devenv environment (all LaTeX packages are included via
   texliveFull)
 - Check `slides/packages.tex` for required LaTeX packages
-- All required packages should be available in the Nix environment
+- All required packages should be available in the devenv environment
 
 ### Issue: R Package Not Found
 
@@ -307,11 +309,10 @@ packages
 
 **Solution:**
 
-1. Check if package is listed in `flake.nix` under `pkgs.rPackages`
-2. If missing, add it to the list and run `nix develop` again (may need to exit
-   and re-enter)
+1. Check if the package is listed in `devenv.nix` under the R wrapper packages
+2. If missing, add it to the list and restart `devenv shell`
 3. Do NOT install packages via `install.packages()` - all dependencies must be
-   in flake.nix
+   declared in `devenv.nix`
 
 ### Issue: Git Timestamp Issues in CI
 
@@ -429,14 +430,15 @@ Common chunk options: `echo`, `eval`, `message`, `warning`, `fig-width`,
 
 ## Dependencies Not Obvious from Structure
 
-1. **CSwR Package:** Custom R package from GitHub (nielsrhansen/CSwR) built as
-   part of Nix flake
+1. **CSwR Package:** Custom R package from GitHub (nielsrhansen/CSwR) provided
+   through devenv
 2. **LaTeX Packages:** Extensive list in `slides/packages.tex` (xmpmulti,
    fontsetup, algorithm2e, tikz libraries, etc.)
 
 ## Quick Reference Commands
 
-All commands should be run inside `nix develop` environment:
+All commands should be run inside the devenv environment. Enter it with
+`devenv shell`, or prefix an individual command with `devenv shell --`:
 
 ```bash
 # Preview website (dev server with auto-reload)
@@ -465,16 +467,15 @@ R
 
 ## Critical Instructions for Agents
 
-1. **ALWAYS enter the Nix development environment first:** Run `nix develop`
-   before any build/test commands. Without this, R, Quarto, and other tools will
-   not be available.
+1. **ALWAYS use the devenv environment:** Run build and test commands from an
+   active `devenv shell`, or use `devenv shell -- <command>`. Without this, the
+   correct R, Quarto, and other tools may not be available.
 
-2. **DO NOT modify flake.nix and NEVER flake.lock unless explicitly required:**
-   These files define the reproducible environment. Changes can break the build
-   for all users.
+2. **DO NOT modify `devenv.lock` unless a dependency update explicitly requires
+   it:** This file pins the reproducible environment.
 
-3. **DO NOT install R packages outside of flake.nix:** All R package
-   dependencies must be declared in flake.nix. Do not use `install.packages()`.
+3. **DO NOT install R packages outside of devenv:** All R package dependencies
+   must be declared in `devenv.nix`. Do not use `install.packages()`.
 
 4. **ALWAYS use `here::here()` for file paths in R code:** This ensures scripts
    work regardless of working directory.
