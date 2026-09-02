@@ -1,16 +1,11 @@
 ## General
 
-- Harmonize notation with book
-- Harmonize indicator notation
 - Reconsider reading instructions; maybe not aligned properly.
 - Start each lecture with a recap of the previous lecture.
 - End each lecture with a summary of what was covered and a preview of the next
   lecture.
 - Talk about computational complexity, maybe in first lecture (since it's
   central).
-- Talk about exponential tilting for rejection and importance sampling.
-- Overall time is skewed towards the optimization topic. Maybe cut some material
-  and add another lecture on kernel density estimation or MCMC.
 - Talk more about sparse matrices. Maybe have a larger part on numerical linear
   algebra.
 
