@@ -8,6 +8,7 @@ description:
 ---
 
 ```{r}
+#| label: setup
 #| include: false
 
 library(ggplot2)

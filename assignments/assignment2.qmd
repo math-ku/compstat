@@ -8,6 +8,7 @@ description:
 ---
 
 ```{r}
+#| label: setup
 #| include: false
 
 library(ggplot2)
@@ -90,7 +91,8 @@ values and $x$ takes positive real values.
 The purpose of this assignment is to sample from the probability distribution on
 $[0, \infty)$ with density
 $$
-  f(y) \propto \prod_{i=1}^{100}  \exp\left(yz_ix_i - e^{yx_i}\right), \quad y \geq 0.
+  f(y) \propto \prod_{i=1}^{100} \exp\left( yz_ix_i - e^{yx_i} \right), \quad y
+       \geq 0.
 $$
 
 Find a Gaussian envelope of $f$ and implement rejection sampling from the
@@ -124,8 +126,8 @@ Implement Monte Carlo integration to compute $p(100)$.
 
 Define
 $$
-  g_{\theta, n}(x) = \frac{1}{\varphi(\theta)^n} \exp\left(\theta \sum_{k=1}^n
-  x_k\right)
+  g_{\theta, n}(x)
+  = \frac{1}{\varphi(\theta)^n} \exp\left( \theta \sum_{k=1}^n x_k \right)
 $$
 for $x \in (-1.9, 2)^n$, where
 $$
