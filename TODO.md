@@ -45,6 +45,11 @@ Assignment 1A, 2B, 4A, 4A are definitely more popular than the alternatives.
 - Maybe add one example for each topic covered in the course, aligned with the
   book.
 
+## Lecture 2: Density and OOP
+
+- Make the entire lecture about density estimation, and move the OOP part to the
+  next lecture or remove all together.
+
 ## Lecture 3: Measuring and Improving Performance
 
 - Add another exercise.
