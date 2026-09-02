@@ -677,6 +677,8 @@ $$
 $$
 
 \pdfpcnote{
+  - The first is the midpoint rule approximation of the integral.\\
+  - P(X in (x-h, x+h)) is the expected value of the indicator function.\\
   - Probability of X in (x-h, x+h) is small for small h\\
   - Density at x times width of interval\\
   - Approximation gets better as h gets smaller
