@@ -1214,8 +1214,6 @@ phipsi_plot("sj")
 Questions?
 :::
 
-# Exercises
-
 ## Exercises
 
 ### Exercise 1: Create a Simple S3 Class
@@ -1248,3 +1246,40 @@ vectors of length 2.
 Sample a data set from a Gaussian mixture model, varying the standard deviations
 of the components. How do the different bandwidth selection methods in
 `density()` perform?
+
+## Summary
+
+### Object-Oriented Programming
+
+R has a simple OOP system called S3, which allows us to define classes and
+methods.
+
+\medskip\pause
+
+### Density Estimation
+
+We can estimate an unknown density using kernel density estimation, which is a
+nonparametric method that does not assume a specific parametric form for the
+density.
+
+## Next Time: Measuring and Improving Performance
+
+Next time, we will learn how to measure the performance of our code and how to
+improve it.
+
+### Profiling
+
+Identify bottlenecks in your code using profiling tools.
+
+. . .
+
+### Benchmarking
+
+Comparing the performance of different implementations using benchmarking tools.
+
+. . .
+
+### Improving performance
+
+How to take the knowledge gained from profiling and benchmarking to improve the
+performance of your code.
