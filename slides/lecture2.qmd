@@ -672,11 +672,10 @@ $$
 $$
 
 \pdfpcnote{
-  - The first is the midpoint rule approximation of the integral.\\
-  - P(X in (x-h, x+h)) is the expected value of the indicator function.\\
-  - Probability of X in (x-h, x+h) is small for small h\\
-  - Density at x times width of interval\\
-  - Approximation gets better as h gets smaller
+  - Midpoint rule: probability is approximately density at x times width 2h.\\
+  - The indicator average estimates this probability by the law of large numbers.\\
+  - Smaller h reduces bias but increases sampling variability.\\
+  - For consistency: h -> 0 and Nh -> infinity.
 }
 
 ## Kernels
@@ -916,7 +915,7 @@ close.
 #| label: plot-diff
 #| echo: false
 #| fig-cap: Difference between our density estimate and that of `density()`.
-#| fig-width: 5.5
+#| fig-width: 5
 
 df_diff <- tibble(x = f_hat$x, y = f_hat$y - f_hat_dens$y)
 
@@ -1082,14 +1081,11 @@ $$
 Hence, $\ell(\bar{f}_h) \to \infty$ as $h \to 0$, and there is **no MLE**.
 
 \pdfpcnote{
-  - At each observation, its own kernel term equals one because the exponent is
-    zero.\\
-  - When observations are distinct, all the other kernel terms vanish as the
-    bandwidth tends to zero. The first sum therefore tends to zero.\\
-  - The logarithm of the normalization tends to negative infinity. The leading
-    minus sign makes the log-likelihood tend to positive infinity.\\
-  - Every candidate in this sequence is a valid density. The sequence shows that
-    the likelihood is unbounded; it does not show that the KDE is an MLE.
+  - At x_i, its own exponential is 1; all cross terms vanish as h -> 0.\\
+  - Each density value contains 1/(Nh sqrt(2 pi)); summing its log over N data
+    points gives -N log(Nh sqrt(2 pi)).\\
+  - The first sum tends to 0, while the second term tends to infinity: the
+    likelihood is unbounded, so no MLE exists.
 }
 
 ## ISE, MISE, and MSE
