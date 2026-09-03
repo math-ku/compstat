@@ -275,15 +275,14 @@ S3 classes are standard data structures (typically lists) with *class labels*.
 
 \bigskip
 
-It is a simple but informal system, with no formal object definition or type
-checking.
+Simple but informal system, with no formal object definition or type checking.
 
 . . .
 
 \bigskip
 
-To use S3, we implement a \alert{generic} function via `UseMethod()`. For
-example, `plot()` is defined as follows:
+To use S3, implement a \alert{generic} function via `UseMethod()`. `plot()` is
+for instance defined like this:
 
 ```{r}
 #| label: plot-generic
@@ -295,8 +294,8 @@ plot <- function(x, y, ...) UseMethod("plot")
 . . .
 
 **Methods** for specific classes are implemented as standard R functions with
-the naming convention `f.classname()` for a method for class `classname` of the
-function `f()`.
+the naming convention `f.classname()` for a method for class `classname`
+belonging to the generic `f()`.
 
 . . .
 
@@ -309,25 +308,22 @@ The system is widely used to write methods for the generic functions `print()`,
 
 ### Handle Function Output
 
-One common use of OOP is to make it easier to handle objects that your functions
+A common use of OOP is to make it easy to handle objects that your functions
 create, especially if they are complex (e.g., `lm()`).
 
 . . .
 
 \medskip
 
-Instead of having to write specialized functions, e.g., `print_lm()` and
-`plot_lm()`, you can write methods for the generic functions `print()`,
-`plot()`, etc.
+Instead of writing specialized functions, e.g., `print_lm()` and `plot_lm()`,
+you write methods for the generics `print()`, `plot()`, etc.
 
 . . .
 
 ### Dispatch Based on Input Class
 
-. . .
-
-For instance, you may want a function that behaves differently depending on
-whether the input has class `numeric` or class `matrix`.
+For instance, you may want a function that behaves differently for `numeric` or
+`matrix` objects.
 
 ## Constructing a New Class
 
@@ -353,7 +349,7 @@ summarize_data <- function(x) {
 . . .
 
 The function returns a list with three components: the mean, median, and
-standard deviation of the input vector.
+standard deviation of `x`.
 
 . . .
 
@@ -391,7 +387,7 @@ To achieve this, we can write a new \alert{method} for
 
 \medskip
 
-The reason we can do this is that `print()` is a generic.
+We can do this because `print()` is a generic.
 :::::
 :::
 
@@ -522,7 +518,7 @@ matrix_stats
 
 ## Common Pitfalls in S3
 
-### Naming conflicts
+### Naming Conflicts
 
 Accidentally masking existing generics or methods (e.g., defining a new
 `print()` in the global environment).
@@ -559,7 +555,7 @@ print <- old_print
 
 ## Common Pitfalls in S3 (cont.)
 
-### Forgetting the default method
+### Forgetting the Default Method
 
 Forgetting the default method (`myfun.default`) can cause confusing errors.
 
@@ -638,17 +634,15 @@ family of densities $(f_\theta)_\theta$.
 
 \medskip
 
-Alternatively, we could use a \alert{nonparametric} approach and not assume a
-specific parametric form for $f_0$. One example is the **histogram** estimator,
-which we can write as $\hat{f}$.
+Alternatively, use a \alert{nonparametric} approach and not assume a specific
+parametric form for $f_0$. One example is the **histogram** estimator, which we
+can write as $\hat{f}$.
 
 . . .
 
 ### Why are we interested in nonparametric estimators?
 
 Because
-
-. . .
 
 - we want to compare data with the parametric estimate,\pause
 - we don't know a suitable parametric model, and\pause
@@ -666,15 +660,15 @@ $$
 
 Rearranging and using the law of large numbers gives
 $$
-  \begin{aligned}
-    f_0(x) & \approx \frac{1}{2h} \P(X \in (x - h, x + h))          \\
-    \pause
-           & \approx \frac{1}{2hN} \sum_{j=1}^N 1_{(x-h, x+h)}(x_j) \\
-    \pause
-           & = \frac{1}{2hN} \sum_{j=1}^N 1_{(-h, h)}(x - x_j)      \\
-    \pause
-           & = \hat{f}_h(x).
-  \end{aligned}
+\begin{aligned}
+  f_0(x) & \approx \frac{1}{2h} \P(X \in (x - h, x + h))          \\
+  \pause
+         & \approx \frac{1}{2hN} \sum_{j=1}^N 1_{(x-h, x+h)}(x_j) \\
+  \pause
+         & = \frac{1}{2hN} \sum_{j=1}^N 1_{(-h, h)}(x - x_j)      \\
+  \pause
+         & = \hat{f}_h(x).
+\end{aligned}
 $$
 
 \pdfpcnote{
@@ -1074,11 +1068,11 @@ for (h in h_values) {
 
 If $x_i \neq x_j$ when $i \neq j$, then
 $$
-  \begin{aligned}
-    \ell(\bar{f}_h) & = \sum_{i} \log\left( 1 + \sum_{j \neq i} e^{-(x_i-x_j)^2 / (2 h^2)} \right) - N \log(Nh\sqrt{2 \pi}) \\
-    \pause
-                    & \sim -N \log(Nh\sqrt{2 \pi})
-  \end{aligned}
+\begin{aligned}
+  \ell(\bar{f}_h) & = \sum_{i} \log\left( 1 + \sum_{j \neq i} e^{-(x_i-x_j)^2 / (2 h^2)} \right) - N \log(Nh\sqrt{2 \pi}) \\
+  \pause
+                  & \sim -N \log(Nh\sqrt{2 \pi})
+\end{aligned}
 $$
 
 . . .
