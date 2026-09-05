@@ -71,7 +71,7 @@ for you to solve independently at your own pace.
   - [Chapter 4, but skip 4.2-4.3
     (CSwR)](https://cswr.nrhstat.org/timeseries.html)
 - **Exercises:** [3.4 (Chapter 3,
-  CSWR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
+  CSwR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
 
 <!-- ### Week 3 -->
 <!---->
