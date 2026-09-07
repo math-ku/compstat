@@ -38,12 +38,13 @@ kern_bin <- function(x, l, u, B) {
   w / sum(w)
 }
 
-kern_dens_bin <- function(x, h, m = 512) {
+kern_dens_bin <- function(x, h, m = 512, B = m) {
   rg <- range(x) + c(-3 * h, 3 * h)
   xx <- seq(rg[1], rg[2], length.out = m)
-  weights <- kern_bin(x, rg[1], rg[2], m)
-  kerneval <- exp(-(xx - xx[1])^2 / (2 * h^2)) / (sqrt(2 * pi) * h)
-  kerndif <- toeplitz(kerneval)
-  y <- colSums(weights * kerndif)
+  centers <- seq(rg[1], rg[2], length.out = B)
+  weights <- kern_bin(x, rg[1], rg[2], B)
+  distances <- outer(xx, centers, "-")
+  kernel_values <- exp(-distances^2 / (2 * h^2)) / (sqrt(2 * pi) * h)
+  y <- drop(kernel_values %*% weights)
   list(x = xx, y = y, h = h)
 }

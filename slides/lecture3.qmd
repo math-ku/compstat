@@ -35,7 +35,7 @@ Comparing performance of implementations
 
 Writing efficient code
 
-## Two Types of Performance
+## Dimensions of Performance
 
 ### Speed
 
@@ -49,15 +49,26 @@ How much memory space does it use?
 
 . . .
 
-### At Odds
+### Accuracy
 
-Often, improving one worsens the other.
+How close is an approximation to the target quantity?
+
+## Correctness Is a Constraint
+
+Before optimizing, decide what counts as the same answer:
+
+- exact equality, or\pause
+- agreement within a meaningful tolerance.
 
 . . .
 
-### In this Course
+### Trade-Offs
 
-We will focus on **speed**, not **memory**.
+Faster methods may require more memory or tolerate more approximation error.
+
+. . .
+
+We will focus on **speed**, but never without checking correctness and accuracy.
 
 ## Should You Optimize?
 
@@ -362,8 +373,7 @@ profvis(profile_example())
 
 . . .
 
-`gamma()` receives the most samples, and its cost appears directly on its source
-line.
+`gamma()` receives the most samples.
 
 \pdfpcnote{
   Return to their predictions. Emphasize that the profiler gives an estimate
@@ -422,8 +432,8 @@ Where will the loop overhead appear in the profile?
 
 . . .
 
-Almost all samples land on the loop body---not the `for` statements. Numerical
-work and R's loop overhead are bundled together.
+Most samples land on the loop body---not the `for` statements. Numerical work
+and R's loop overhead are bundled together.
 
 \pdfpcnote{
   The body is evaluated $512N$ times. A line profiler attributes samples to the
@@ -592,6 +602,11 @@ the number of iterations needed to obtain accurate results.
 . . .
 
 It also checks results for correctness unless `check = FALSE`.
+
+\medskip\pause
+
+Disabling the check only removes a safeguard. It does not make different results
+comparable---you must validate them separately against a trusted reference.
 
 ## A First, Simple Benchmark
 
@@ -870,12 +885,11 @@ This reduces the complexity from $O(Nm)$ to $O(N) + O(mB)$.
 
 ## Binning Procedure
 
-1. Determine the range of the data and divide it into equal-sized bins.\pause
-2. Count the number of data points in each bin.\pause
-3. For each bin, compute the kernel density estimate using the bin count and the
-   kernel function.\pause
-4. For a new data point, find the bin it belongs to and use the pre-computed
-   kernel density estimate for that bin.
+1. Determine the range of the data and choose equally spaced bin centers.\pause
+2. Assign every observation to its nearest center and count the
+   assignments.\pause
+3. Replace the observations in each bin by its center and count.\pause
+4. At every output point, evaluate the weighted kernel sum over the centers.
 
 . . .
 
@@ -916,23 +930,23 @@ kern_bin <- function(x, l, u, B) {
 ```{r}
 #| label: kern-dens-bin-code
 
-kern_dens_bin <- function(x, h, m = 512) {
+kern_dens_bin <- function(x, h, m = 512, B = m) {
   rg <- range(x) + c(-3 * h, 3 * h)
   xx <- seq(rg[1], rg[2], length.out = m)
+  centers <- seq(rg[1], rg[2], length.out = B)
 
-  w <- kern_bin(x, rg[1], rg[2], m)
+  w <- kern_bin(x, rg[1], rg[2], B)
 
-  kerneval <- exp(-(xx - xx[1])^2 / (2 * h^2)) /
+  distances <- outer(xx, centers, "-")
+  kernel_values <- exp(-distances^2 / (2 * h^2)) /
     (sqrt(2 * pi) * h)
-  kerndif <- toeplitz(kerneval)
-  y <- colSums(w * kerndif)
+  y <- drop(kernel_values %*% w)
 
   list(x = xx, y = y, h = h)
 }
 ```
 
-The `kern_dens_bin()` function computes bin weights using `kern_bin()` with grid
-points as bin centers.
+The argument `B` controls the approximation, while `m` controls the output grid.
 
 ##
 
@@ -967,74 +981,67 @@ mutate(
   labs(y = "time (s)")
 ```
 
-## Testing
+## Validate the Approximation
 
-As always, we should test our code to ensure it works as expected.
-
-. . .
+We compare every binned estimate with the exact implementation on the same
+output grid.
 
 ```{r}
-#| label: plot-kern-dens-benchmark
-#| fig-width: 4
-#| echo: false
-#| fig-cap: The standard density estimator as a black line and the binning
-#|   estimate as a filled area.
+#| label: binning-accuracy
 
 set.seed(123)
-x <- c(rnorm(1e4), rnorm(1e4, -3, 0.7))
+N <- 2^13
+x <- c(rnorm(N / 2), rnorm(N / 2, -3, 0.7))
+h <- 0.2
+B_values <- 2^(4:9)
 
-y1 <- kern_dens(x, 0.2)
-y2 <- kern_dens_bin(x, 0.2)
+reference <- kern_dens_vec(x, h)
 
-df1 <- tibble(x = y1$x, y = y1$y, method = "standard")
-
-df2 <- tibble(x = y2$x, y = y2$y, method = "binning")
-
-ggplot(
-  bind_rows(df1, df2),
-  aes(x, y, fill = method, color = method)
-) +
-  geom_area(
-    alpha = 0.4,
-    position = "identity",
-    color = "transparent"
-  ) +
-  geom_line() +
-  scale_fill_manual(
-    values = c(standard = "transparent", binning = "blue")
-  ) +
-  scale_color_manual(
-    values = c(standard = "black", binning = "transparent")
-  ) +
-  labs(fill = "Method", color = "Method")
+accuracy <- tibble(B = B_values) |>
+  mutate(
+    max_error = map_dbl(B, function(B) {
+      estimate <- kern_dens_bin(x, h, B = B)
+      max(abs(estimate$y - reference$y))
+    })
+  )
 ```
 
-##
+## The Speed--Accuracy Trade-Off
+
+Earlier, `check = FALSE` let us benchmark exact and approximate results
+together. The preceding calculation supplies the separate validation that this
+requires.
 
 ```{r}
-#| label: test-kern-dens-bench
-#| fig-width: 5.3
+#| label: binning-tradeoff
 #| echo: false
-#| fig-cap: Errors due to binning decrease as the length of the data sequence
-#|   increases.
+#| message: false
+#| warning: false
+#| fig-width: 5.5
+#| fig-height: 2.4
+#| fig-cap: Increasing the number of bins costs time but reduces the maximum
+#|   absolute error.
 
-x0 <- kern_dens(x, 0.2)$x
-df <- data.frame(
-  x = rep(x0, 3),
-  diff = c(
-    kern_dens(x[1:128], 0.2)$y - kern_dens_bin(x[1:128], 0.2)$y,
-    kern_dens(x[1:1024], 0.2)$y -
-      kern_dens_bin(x[1:1024], 0.2)$y,
-    kern_dens(x, 0.2)$y - kern_dens_bin(x, 0.2)$y
-  ),
-  N = factor(rep(c(128, 1024, 8192), each = length(x0)))
-)
+speed <- bench::press(B = B_values, {
+  bench::mark(binned = kern_dens_bin(x, h, B = B))
+}) |>
+  transmute(B, median_time = as.numeric(median))
 
-ggplot(df, aes(x, diff)) +
-  facet_wrap(~N, labeller = "label_both") +
-  geom_hline(yintercept = 0, col = "grey80") +
-  geom_line() +
-  ylab("Difference")
+time_plot <- ggplot(speed, aes(B, median_time)) +
+  geom_line(color = "darkorange") +
+  geom_point(color = "darkorange") +
+  scale_x_log10(breaks = B_values) +
+  scale_y_log10() +
+  labs(x = "Number of bins", y = "Median time (s)")
+
+error_plot <- ggplot(accuracy, aes(B, max_error)) +
+  geom_line(color = "royalblue") +
+  geom_point(color = "royalblue") +
+  scale_x_log10(breaks = B_values) +
+  scale_y_log10() +
+  labs(x = "Number of bins", y = "Maximum absolute error")
+
+time_plot + error_plot
 ```
 
 ## Line Profiling
@@ -1055,7 +1062,8 @@ profvis(kern_dens_bin(x, 0.2))
 ![](../images/profvis-kern-bin.png)
 
 \pdfpcnote{
-  The bottleneck is now the loop in `kern_bin()`.
+  - The bottleneck is now the loop in `kern_bin()`.\\
+  - We leave solving this to the future.
 }
 
 ## Avoiding Copies
