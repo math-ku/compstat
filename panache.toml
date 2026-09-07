@@ -12,6 +12,3 @@ cpp = "clang-format"
 
 [linters]
 r = "arity"
-
-[experimental]
-format-math = true
