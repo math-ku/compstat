@@ -990,3 +990,15 @@ Keep readability in mind: performant code can be hard to read.
 \pause\medskip
 
 Write tests: performance improvements can introduce bugs.
+
+## Next Time
+
+### Parallelization
+
+Using multiple CPU cores to speed up computations.
+
+. . .
+
+### Scatterplot Smoothing
+
+Using kernel density estimation to smooth scatterplots.
