@@ -10,7 +10,10 @@ title: "Measuring and Improving Performance"
 
 source(here::here("R", "kernel.R"), keep.source = TRUE)
 
-phipsi <- read.table(here::here("data", "phipsi.tsv"), header = TRUE)
+phipsi <- read.table(
+  here::here("data", "phipsi.tsv"),
+  header = TRUE
+)
 phipsi[, c("phi", "psi")] <- pi * phipsi[, c("phi", "psi")] / 180
 ```
 
@@ -116,8 +119,18 @@ samples.
 #| results: asis
 
 profiler_samples <- c("f", "g", "h", "f")
-profiler_colors <- c(f = "royalblue", g = "darkorange", h = "grey35")
-profiler_code <- c("function(x) {", "  f(x)", "  g(x)", "  h(x)", "}")
+profiler_colors <- c(
+  f = "royalblue",
+  g = "darkorange",
+  h = "grey35"
+)
+profiler_code <- c(
+  "function(x) {",
+  "  f(x)",
+  "  g(x)",
+  "  h(x)",
+  "}"
+)
 profiler_call_rows <- c(f = 2, g = 3, h = 4)
 
 draw_profiler_sample <- function(step) {
@@ -125,7 +138,12 @@ draw_profiler_sample <- function(step) {
   on.exit(par(old_par))
 
   plot.new()
-  plot.window(xlim = c(0, 1), ylim = c(0, 1), xaxs = "i", yaxs = "i")
+  plot.window(
+    xlim = c(0, 1),
+    ylim = c(0, 1),
+    xaxs = "i",
+    yaxs = "i"
+  )
 
   card_left <- c(0.01, 0.26, 0.51, 0.76)
   card_width <- 0.22
@@ -187,13 +205,26 @@ draw_profiler_sample <- function(step) {
     }
   }
 
-  text(0.01, 0.27, "sample tally", adj = 0, family = "sans", cex = 0.8)
+  text(
+    0.01,
+    0.27,
+    "sample tally",
+    adj = 0,
+    family = "sans",
+    cex = 0.8
+  )
 
   tally_y <- c(f = 0.19, g = 0.12, h = 0.05)
   observed <- profiler_samples[seq_len(step)]
 
   for (fun in names(tally_y)) {
-    text(0.06, tally_y[fun], paste0(fun, "()"), family = "mono", cex = 0.85)
+    text(
+      0.06,
+      tally_y[fun],
+      paste0(fun, "()"),
+      family = "mono",
+      cex = 0.85
+    )
 
     count <- sum(observed == fun)
     if (count > 0) {
@@ -213,8 +244,15 @@ draw_profiler_sample <- function(step) {
 }
 
 profiler_figure_path <- knitr::opts_chunk$get("fig.path")
-profiler_figure_base <- file.path(profiler_figure_path, "sampling-profiler")
-dir.create(profiler_figure_path, recursive = TRUE, showWarnings = FALSE)
+profiler_figure_base <- file.path(
+  profiler_figure_path,
+  "sampling-profiler"
+)
+dir.create(
+  profiler_figure_path,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
 
 for (step in seq_along(profiler_samples)) {
   grDevices::pdf(
@@ -640,7 +678,7 @@ mutate(dens_bench, method = as.character(expression)) |>
   ggplot(aes(N, median, color = method)) +
   geom_point() +
   geom_line() +
-  labs(y = "time (µs)")
+  labs(y = "time (s)")
 ```
 
 \pdfpcnote{
@@ -781,15 +819,18 @@ Using a vectorized function does not necessarily make your code fast.
 ```{r}
 #| label: bench-loop-bench
 
-loop_bench <- bench::mark(sapply = sapply(x, function(x_i) 10 * x_i), loop = {
-  y <- numeric(length(x))
+loop_bench <- bench::mark(
+  sapply = sapply(x, function(x_i) 10 * x_i),
+  loop = {
+    y <- numeric(length(x))
 
-  for (i in seq_along(x)) {
-    y[i] <- 10 * x[i]
+    for (i in seq_along(x)) {
+      y[i] <- 10 * x[i]
+    }
+
+    y
   }
-
-  y
-})
+)
 ```
 
 --------------------------------------------------------------------------------
@@ -881,7 +922,8 @@ kern_dens_bin <- function(x, h, m = 512) {
 
   w <- kern_bin(x, rg[1], rg[2], m)
 
-  kerneval <- exp(-(xx - xx[1])^2 / (2 * h^2)) / (sqrt(2 * pi) * h)
+  kerneval <- exp(-(xx - xx[1])^2 / (2 * h^2)) /
+    (sqrt(2 * pi) * h)
   kerndif <- toeplitz(kerneval)
   y <- colSums(w * kerndif)
 
@@ -913,12 +955,16 @@ res2 <- bench::press(N = 2^(5:13), {
   )
 })
 
-mutate(res2, expr = as.character(expression), median = as.numeric(median)) |>
+mutate(
+  res2,
+  expr = as.character(expression),
+  median = as.numeric(median)
+) |>
   ggplot(aes(N, median, color = expr)) +
   geom_point() +
   geom_line() +
   scale_y_log10() +
-  labs(y = "time (µs)")
+  labs(y = "time (s)")
 ```
 
 ## Testing
@@ -935,7 +981,7 @@ As always, we should test our code to ensure it works as expected.
 #|   estimate as a filled area.
 
 set.seed(123)
-x <- rnorm(1e4) + rnorm(1e4, -3, 0.7)
+x <- c(rnorm(1e4), rnorm(1e4, -3, 0.7))
 
 y1 <- kern_dens(x, 0.2)
 y2 <- kern_dens_bin(x, 0.2)
@@ -944,11 +990,22 @@ df1 <- tibble(x = y1$x, y = y1$y, method = "standard")
 
 df2 <- tibble(x = y2$x, y = y2$y, method = "binning")
 
-ggplot(bind_rows(df1, df2), aes(x, y, fill = method, color = method)) +
-  geom_area(alpha = 0.4, position = "identity", color = "transparent") +
+ggplot(
+  bind_rows(df1, df2),
+  aes(x, y, fill = method, color = method)
+) +
+  geom_area(
+    alpha = 0.4,
+    position = "identity",
+    color = "transparent"
+  ) +
   geom_line() +
-  scale_fill_manual(values = c(standard = "transparent", binning = "blue")) +
-  scale_color_manual(values = c(standard = "black", binning = "transparent")) +
+  scale_fill_manual(
+    values = c(standard = "transparent", binning = "blue")
+  ) +
+  scale_color_manual(
+    values = c(standard = "black", binning = "transparent")
+  ) +
   labs(fill = "Method", color = "Method")
 ```
 
@@ -958,15 +1015,16 @@ ggplot(bind_rows(df1, df2), aes(x, y, fill = method, color = method)) +
 #| label: test-kern-dens-bench
 #| fig-width: 5.3
 #| echo: false
-#| fig-cap: Absolute errors due to binning decrease as the length of the data
-#|   sequence increases.
+#| fig-cap: Errors due to binning decrease as the length of the data sequence
+#|   increases.
 
 x0 <- kern_dens(x, 0.2)$x
 df <- data.frame(
   x = rep(x0, 3),
   diff = c(
     kern_dens(x[1:128], 0.2)$y - kern_dens_bin(x[1:128], 0.2)$y,
-    kern_dens(x[1:1024], 0.2)$y - kern_dens_bin(x[1:1024], 0.2)$y,
+    kern_dens(x[1:1024], 0.2)$y -
+      kern_dens_bin(x[1:1024], 0.2)$y,
     kern_dens(x, 0.2)$y - kern_dens_bin(x, 0.2)$y
   ),
   N = factor(rep(c(128, 1024, 8192), each = length(x0)))
@@ -1158,7 +1216,9 @@ starting: which do you think will be faster?
 ```{r}
 #| label: gauss-code
 
-gauss <- function(x, h = 1) exp(-x^2 / (2 * h^2)) / (h * sqrt(2 * pi))
+gauss <- function(x, h = 1) {
+  exp(-x^2 / (2 * h^2)) / (h * sqrt(2 * pi))
+}
 ```
 
 . . .
