@@ -252,8 +252,7 @@ cat(
 ## Profiling in R
 
 The R package [profvis](https://CRAN.R-project.org/package=profvis) provides
-tools to visualize profiling output.^[It can be activated directly in RStudio
-(but not Positron).]
+tools to visualize profiling output.
 
 ```{r}
 #| label: load_profvis
@@ -272,7 +271,7 @@ library(profvis)
 
 \pause\medskip
 
-The result is an interactive webpage that opens in a tab in RStudio.
+The result is an interactive webpage that opens in a tab in RStudio or Positron.
 
 ```{r}
 #| label: source_profvis
@@ -425,8 +424,6 @@ kern_dens_vec <- function(x, h, m = 512) {
 
 One hypothesis is that repeatedly evaluating the inner loop body in R is
 expensive.
-
-\pause\medskip
 
 We can test it by \alert{vectorizing} the inner loop.
 
