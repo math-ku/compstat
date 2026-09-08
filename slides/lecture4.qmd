@@ -167,30 +167,41 @@ multiple workers.
 Parallelizing a task that is already parallelized may not help and may even
 \alert{hurt} performance.
 
-## Comparison of foreach and future
+## Parallelization on One Computer
 
-::: {.columns}
-::::: {.column width="47%"}
-### foreach
+![](../images/parallelization-cores.png){width=100%}
 
-The main use case is running computations in parallel that would otherwise be
-performed in a `for` loop.
-:::::
+\pause
 
-. . .
+Independent tasks can run simultaneously on different cores of one processor.
 
-::::: {.column width="47%"}
-### future
+\pdfpcnote{
+  The cores share the memory of one computer.
 
-The package provides a more general abstraction for asynchronous programming
-and parallelization.
+  Most R code uses only one core unless we explicitly parallelize it.
+}
 
-\pause\medskip
+## Parallelization on an HPC Cluster
 
-It is primarily used when you have several independent tasks that you want to
-run in parallel.
-:::::
-:::
+![](../images/hpc-cluster.png){width=88%}
+
+\pause
+
+A scheduler assigns independent jobs to cores across several **nodes**.
+
+\pdfpcnote{
+  A node is one physical computer containing several cores and shared memory.
+
+  Communication between nodes is usually more expensive than communication
+  within a node.
+
+  Job arrays are ideal for independent simulation scenarios or bootstrap
+  batches.
+
+  The program must not start more workers than the number of allocated cores.
+
+  Have each job write to a separate output file.
+}
 
 # Scatterplot Smoothing
 
@@ -326,6 +337,141 @@ We don't need to keep track of metric comparisons. Only the order matters.
 - We only need to sort.
 
 - Only the order matters.
+}
+
+## Running Mean: An Illustration
+
+For $k = 3$, the orange bracket marks the current neighborhood. The blue points
+trace the running mean.
+
+```{r}
+#| label: running-mean-illustration
+#| echo: false
+#| warning: false
+#| fig-show: animate
+#| fig-width: 5.5
+#| fig-height: 3
+
+running_mean_data <- tibble(
+  x = seq_len(6),
+  y = c(1, 7, 4, 10, 4, 7)
+) |>
+  mutate(pair = sprintf("(%d, %d)", x, y))
+
+running_mean_centers <- 2:5
+running_mean_fits <- tibble(
+  x = running_mean_centers,
+  y = map_dbl(
+    running_mean_centers,
+    \(i) mean(running_mean_data$y[(i - 1):(i + 1)])
+  )
+)
+
+running_mean_frame <- function(step) {
+  center <- running_mean_centers[step]
+  neighbors <- (center - 1):(center + 1)
+  current_y <- running_mean_fits$y[step]
+  window_values <- running_mean_data$y[neighbors]
+  displayed_fits <- running_mean_fits[seq_len(step), ]
+  equation <- sprintf(
+    paste0(
+      "paste(hat(f)[%d] == frac(y[%d] + y[%d] + y[%d], 3), ",
+      "'=', frac(%d + %d + %d, 3), '=', %d)"
+    ),
+    center,
+    neighbors[1],
+    neighbors[2],
+    neighbors[3],
+    window_values[1],
+    window_values[2],
+    window_values[3],
+    current_y
+  )
+
+  running_mean_data |>
+    mutate(in_window = x %in% neighbors) |>
+    ggplot(aes(x, y)) +
+    geom_line(color = "grey80") +
+    geom_point(aes(color = in_window), size = 3) +
+    geom_text(
+      aes(label = pair, color = in_window),
+      nudge_y = 0.65,
+      show.legend = FALSE
+    ) +
+    geom_line(
+      aes(x, y),
+      data = displayed_fits,
+      color = "royalblue"
+    ) +
+    geom_point(
+      aes(x, y),
+      data = displayed_fits,
+      color = "royalblue",
+      size = 2.5
+    ) +
+    annotate(
+      "point",
+      x = center,
+      y = current_y,
+      color = "royalblue",
+      size = 4
+    ) +
+    annotate(
+      "segment",
+      x = neighbors[1],
+      xend = neighbors[3],
+      y = 0,
+      yend = 0,
+      color = "darkorange"
+    ) +
+    annotate(
+      "segment",
+      x = c(neighbors[1], neighbors[3]),
+      xend = c(neighbors[1], neighbors[3]),
+      y = 0,
+      yend = 0.35,
+      color = "darkorange"
+    ) +
+    annotate(
+      "text",
+      x = center,
+      y = -0.45,
+      label = sprintf("N[%d]", center),
+      parse = TRUE,
+      color = "darkorange"
+    ) +
+    annotate(
+      "text",
+      x = 3.5,
+      y = 11.7,
+      label = equation,
+      parse = TRUE,
+      color = "royalblue"
+    ) +
+    scale_color_manual(
+      values = c(`FALSE` = "grey60", `TRUE` = "darkorange"),
+      guide = "none"
+    ) +
+    scale_x_continuous(breaks = running_mean_data$x) +
+    coord_cartesian(
+      xlim = c(0.65, 6.35),
+      ylim = c(-0.8, 12.7),
+      expand = FALSE
+    ) +
+    labs(x = expression(x[i]), y = expression(y[i]))
+}
+
+for (step in seq_along(running_mean_centers)) {
+  print(running_mean_frame(step))
+}
+```
+
+\pdfpcnote{
+  Each click shifts the three-point neighborhood one position to the right.
+
+  Only the first and last observations in the neighborhood change.
+
+  This sets up the efficient update on the following slides.
 }
 
 ## Running Mean (Naive Implementation)
@@ -1117,5 +1263,3 @@ the spline. Plot and compare the results.
 . . .
 
 ### Smoothing Splines
-
-
