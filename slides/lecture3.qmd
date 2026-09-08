@@ -509,7 +509,7 @@ kern_dens_vec <- function(x, h, m = 512) {
 }
 ```
 
-## Pitfall: Line Profiling in Stricky
+## Pitfall: Line Profiling Can Be Deceptive!
 
 Now consider another function that calls `runif()`, `sqrt()`, and `sort()`:
 
@@ -525,7 +525,7 @@ profile_sort <- function(n = 5e6) {
 }
 ```
 
-## Pitfall: Line Profiling in Stricky
+## Pitfall: Line Profiling Can Be Deceptive!
 
 ![](../images/profvis-sort.png){fig-align="center" width="95%"}
 

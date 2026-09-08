@@ -8,13 +8,13 @@ title: "Parallelization and Scatterplot Smoothing"
 
 ### Parallelization
 
-Using multiple cores to speed up computations.
+We use multiple cores to speed up computations.
 
 . . .
 
 ### Scatterplot Smoothing
 
-Cover **nearest neighbor smoothing** and **smoothing splines**
+We will cover **nearest-neighbor smoothing** and **smoothing splines**.
 
 # Parallelization
 
@@ -24,7 +24,7 @@ Most processors have multiple cores.
 
 \medskip\pause
 
-But unless instructed otherwise, only a single core is going to be used.
+Unless instructed otherwise, only a single core is used.
 
 \medskip\pause
 
@@ -33,7 +33,7 @@ parallel.
 
 ## Embarrassingly Parallel Tasks
 
-Tasks that easily separate into independent subtasks.
+These tasks separate easily into independent subtasks.
 
 \pause\medskip
 
@@ -81,14 +81,14 @@ foreach(i = seq_len(3)) %dopar%
 
 ### Notes {.alert}
 
-- Returns a list (so not really a for loop).\pause
+- Returns a list, so it is not really a `for` loop.\pause
 - Nothing is actually parallel yet!\pause
 - First, we need to register a **backend**.
 
 ## Backends
 
-Multiple backends, installed separately (**doParallel**, **doMC**, **doFuture**)
-Load and **register** one before using foreach.
+Several backends are available as separate packages (**doParallel**, **doMC**,
+**doFuture**). Load and **register** one before using `%dopar%`.
 
 . . .
 
@@ -122,7 +122,7 @@ foreach(i = seq_len(3)) %dopar%
 
 ## Combining Results
 
-`foreach()` always returns a list.
+`foreach()` returns a list by default.
 
 \medskip\pause
 
@@ -146,7 +146,8 @@ A future represents a value that may be available later on.
 
 \medskip\pause
 
-Sometimes called \alert{promises}: "I promise to give you the result later."
+Futures are sometimes called \alert{promises}: "I promise to give you the result
+later."
 
 . . .
 
@@ -182,12 +183,13 @@ v
 
 ## Futures Enable Parallelization
 
-A new \alert{thread} is created for each future.
+Depending on the plan, a future may run in the current R session or in a
+background R process.
 
 \medskip\pause
 
-- Meanwhile, the main thread can continue doing other work.
-- Once the value is needed, the main thread blocks until it's available.
+- Meanwhile, the main R session can continue doing other work.
+- Once the value is needed, the main R session blocks until it is available.
 
 . . .
 
@@ -198,7 +200,7 @@ plan(multisession) # or multicore, mirai_multisession, etc.
 
 z %<-%
   {
-    # Peform some expensive computation
+    # Perform some expensive computation.
   }
 
 # Perform other work here ...
@@ -208,40 +210,42 @@ z # This line blocks until z is available
 
 ## Backends for Futures
 
-Need to pick a backend (plan), with multiple options.
+We need to pick a backend, or plan, from several options.
 
 . . .
 
 ### `multicore`
 
-Available on Linux and macOS, but not Windows or RStudio. *Forks* the current R
-process, instead of starting a new one. But *not* recommended because of
-potential stability issues.
+The `multicore` backend is available on Linux and macOS, but not on Windows or in
+RStudio. It *forks* the current R process instead of starting a new one. It is
+*not* recommended, however, because of potential stability issues.
 
 . . .
 
-### `mirai_multisession`/`mirai_cluster`
+### `mirai_multisession` / `mirai_cluster`
 
-A newer alternative, available through the
+These are newer alternatives available through the
 [future.mirai](https://cran.r-project.org/package=future.mirai) package.
 
 ## Caveats
 
 ### Realistic Expectations
 
-In practice, twice as many cores $\neq$ twice as fast (in practice).
+In practice, twice as many cores $\neq$ twice the speed.
 
 . . .
 
 ### Overhead
 
-Parallelization comes with overhead (starting threads, communication).
+Parallelization comes with overhead from starting workers and communicating
+between them.
 
 . . .
 
 ### Thread Safety
 
-Some functions are not thread safe (e.g. random number generation).
+Some operations are not thread-safe—for example, writing to the same file from
+multiple workers.
 
 . . .
 
@@ -256,8 +260,8 @@ Parallelizing a task that is already parallelized may not help and may even
 ::::: {.column width="47%"}
 ### foreach
 
-Main use case is to run computations in parallel that would otherwise be done in
-a `for` loop.
+The main use case is running computations in parallel that would otherwise be
+performed in a `for` loop.
 :::::
 
 . . .
@@ -265,12 +269,13 @@ a `for` loop.
 ::::: {.column width="47%"}
 ### future
 
-More general abstraction for asynchronous programming and parallelization.
+The package provides a more general abstraction for asynchronous programming
+and parallelization.
 
 \pause\medskip
 
-Primarily used when you have various independent tasks that you want to run in
-parallel.
+It is primarily used when you have several independent tasks that you want to
+run in parallel.
 :::::
 :::
 
@@ -279,7 +284,7 @@ parallel.
 ## Nuuk Temperature Data
 
 ```{r}
-#| label: looad-nuuk-data
+#| label: load-nuuk-data
 #| echo: false
 #| message: false
 
@@ -311,11 +316,11 @@ nuuk_plot <- ggplot(nuuk_year, aes(Year, Temperature)) + geom_point()
 nuuk_plot
 ```
 
-Data is available [here](../data/nuuk.dat.txt).
+Data is available [here](../data/nuuk.txt).
 
-## Nearest Neighbor Estimation
+## Nearest-Neighbor Estimation
 
-Given data points $(x_1, y_1), \ldots, (x_N, y_N)$, the $k$-nearest neighbor
+Given data points $(x_1, y_1), \ldots, (x_N, y_N)$, the $k$-nearest-neighbor
 estimator at $x_i$ is
 $$
   \hat{f}_i = \frac{1}{k} \sum_{j \in \mathcal{N}_i} y_j
@@ -354,7 +359,8 @@ Each entry of $\symbf{S}$ is
 $$
   S_{ij} = \frac{1}{k} \cdot \symbf{1}_{\{j \in \mathcal{N}_i\}}
 $$
-where $\symbf{1}_{\{j \in \mathcal{N}_i\}}$ is 1 if $j$ is a neighbor of $i$, 0 otherwise.
+where $\symbf{1}_{\{j \in \mathcal{N}_i\}}$ is 1 if $j$ is a neighbor of $i$ and
+0 otherwise.
 
 \pdfpcnote{
   Each fitted value is a weighted average of the y-values.
@@ -364,12 +370,12 @@ where $\symbf{1}_{\{j \in \mathcal{N}_i\}}$ is 1 if $j$ is a neighbor of $i$, 0 
 
 ## Linear Smoothers
 
-Smoothers of the form $\hat{\symbf{f}} = \symbf{S} \symbf{y}$ are called a
-*linear* smoothers.
+Smoothers of the form $\hat{\symbf{f}} = \symbf{S} \symbf{y}$ are called
+*linear smoothers*.
 
 \pause\medskip
 
-The $k$ nearest neighbor smoother is a simple example of a linear smoother that
+The $k$-nearest-neighbor smoother is a simple example of a linear smoother that
 works for $x$-values in any metric space.
 
 \pause\medskip
@@ -383,17 +389,17 @@ $\hat{\symbf{f}}$.
 
 ## Running Mean
 
-When $x_i \in \mathbb{R}$ we can sort data according to $x$-values and then use
-a *symmetric* neighbor definition:
+When $x_i \in \mathbb{R}$, we can sort the data according to the $x$-values and
+then use a *symmetric* neighbor definition:
 $$
   \mathcal{N}_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
 $$
-(for $k$ odd.)
+for odd $k$.
 
 \pause\medskip
 
-A version of nearest neighbor smoothing that assumes ordered and symmetric
-neighborhoods.
+This is a version of nearest-neighbor smoothing that assumes ordered and
+symmetric neighborhoods.
 
 \pause
 
@@ -404,9 +410,9 @@ We don't need to keep track of metric comparisons. Only the order matters.
 \pdfpcnote{
 - Symmetric neighborhoods do not take distance into account.
 
-- Only need to sort
+- We only need to sort.
 
-- Only order matters
+- Only the order matters.
 }
 
 ## Running Mean (Naive Implementation)
@@ -419,10 +425,9 @@ Assume $y$ is sorted and $k$ is odd.
 run_mean_naive <- function(y, k) {
   N <- length(y)
   m <- (k - 1) / 2
-  y <- y / k
   f_hat <- rep(NA, N)
 
-  for (i in (m + 1):(N - m - 1)) {
+  for (i in (m + 1):(N - m)) {
     f_hat[i] <- mean(y[(i - m):(i + m)])
   }
 
@@ -431,7 +436,7 @@ run_mean_naive <- function(y, k) {
 ```
 
 \pdfpcnote{
-- Can speed this up by replacing mean computation
+- We can speed this up by replacing the mean computation.
 }
 
 ## Efficient Running Mean
@@ -462,11 +467,11 @@ run_mean <- function(y, k) {
 ```
 
 \pdfpcnote{
-  Ensures k is odd
+  This ensures that k is odd.
 
-  Complexity goes from O(Nk) to O(N).
+  The complexity decreases from O(Nk) to O(N).
 
-  Based on the idea of keeping and updating a running sum.
+  This approach maintains and updates a running sum.
 }
 
 ## Visualization
@@ -483,7 +488,7 @@ nuuk_plot + geom_line(aes(y = f_hat), color = "blue")
 ```
 
 \pdfpcnote{
-  Takes 5 to the right and 5 to the left
+  This takes five observations to the right and five to the left.
 }
 
 ## `stats::filter()`
@@ -512,9 +517,9 @@ all.equal(f_hat, as.numeric(f_hat_filter))
 ```
 
 \pdfpcnote{
-  Warn about name clash with dplyr::filter.
+  Warn about the name clash with dplyr::filter().
 
-  `rep(1, /11, 11)` are MA coefficients
+  `rep(1 / 11, 11)` contains the moving-average coefficients.
 }
 
 ##
@@ -527,11 +532,14 @@ all.equal(f_hat, as.numeric(f_hat_filter))
 #| fig-width: 5.5
 #| fig-height: 3
 
-nn_bench <- bench::press(N = c(512, 1024, 2048, 4196), {
+nn_bench <- bench::press(N = c(512, 1024, 2048, 4096), {
   k <- 11
+  m <- (k - 1) / 2
   y <- rnorm(N)
-  w <- c(rep(1, k * N), rep(0, N * (N - k)))
-  S <- matrix(w, N, N, byrow = TRUE)
+  S <- matrix(0, N - 2 * m, N)
+  for (i in seq_len(nrow(S))) {
+    S[i, i:(i + k - 1)] <- 1 / k
+  }
   bench::mark(
     S %*% y,
     run_mean(y, k = k),
@@ -543,20 +551,21 @@ nn_bench <- bench::press(N = c(512, 1024, 2048, 4196), {
 plot(nn_bench)
 ```
 
-The Matrix-vector multiplication is $O(N^2)$.
+Matrix-vector multiplication is $O(N^2)$.
 
 \medskip\pause
 
-The two other algorithms are $O(N)$.
+The other two algorithms are $O(N)$.
 
 ## Bias--Variance Trade-Off
 
-There is a bias-variance trade-off in nearest neighbor smoothing with respect to
+There is a bias-variance trade-off in nearest-neighbor smoothing with respect to
 $k$.
 
 \medskip\pause
 
-If data is i.i.d. with $\V(Y \mid X) = \sigma^2$ and $f(x) = \E(Y \mid X = x)$,
+If the data are i.i.d. with $\V(Y \mid X) = \sigma^2$ and
+$f(x) = \E(Y \mid X = x)$,
 
 \pause
 
@@ -582,9 +591,9 @@ We know there is a bias-variance trade-off in $k$---so how do we choose $k$?
 
 \pause
 
-### Leave-One-Out Cross Validation (LOOCV)
+### Leave-One-Out Cross-Validation (LOOCV)
 
-Leave out one observation at a time, predict using remaining data, and measure
+Leave out one observation at a time, predict using the remaining data, and measure
 the prediction error.
 
 \pause\medskip
@@ -615,7 +624,8 @@ $$
 :::
 
 \pdfpcnote{
-Can for running mean in principle compute this without leaving anything out.
+For the running mean, we can, in principle, compute this without leaving out any
+observations.
 }
 
 ## LOOCV for Nearest Neighbors
@@ -642,9 +652,9 @@ loocv <- function(k, y) {
 
 ### Note {.alert}
 
-The implementation removes missing values due to the way we handle the
-boundaries, and it uses `mean()` instead of `sum()` to correctly adjust for
-this.
+The implementation ignores the missing fitted values introduced by our boundary
+handling. It uses `mean()` rather than `sum()` so that the criterion is averaged
+over the remaining observations.
 
 \pdfpcnote{
 - For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$.
@@ -669,7 +679,7 @@ k_opt <- k[which.min(cv_error)]
 #| fig-width: 5
 #| fig-height: 2
 #| echo: false
-#| fig-cap: LOOCV error for nearest neighbor smoothing as a function of $k$.
+#| fig-cap: LOOCV error for nearest-neighbor smoothing as a function of $k$.
 
 ggplot(tibble(k, cv_error), aes(k, cv_error)) +
   geom_vline(xintercept = k_opt, color = "dark orange") +
@@ -686,7 +696,7 @@ ggplot(tibble(k, cv_error), aes(k, cv_error)) +
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2.5
-#| fig-cap: Nearest neighbor smoother with LOOCV-optimal $k=15$.
+#| fig-cap: Nearest-neighbor smoother with LOOCV-optimal $k=15$.
 
 nuuk_plot +
   geom_line(aes(y = run_mean(nuuk_year$Temperature, k_opt)), color = "blue")
@@ -708,7 +718,7 @@ But another idea is to use \alert{smoothing splines} instead.
 
 ## Smoothing Splines
 
-We want a smooth function $f$ that balances goodness-of-fit and wiggliness.
+We want a smooth function $f$ that balances goodness of fit and wiggliness.
 
 \medskip\pause
 
@@ -720,35 +730,34 @@ where $\lambda \geq 0$ is a tuning parameter that controls the trade-off.
 
 \pause\medskip
 
-The minimizer of this objective is a **cubic spline** with **knots** in the data
-points $x_i$.
+The minimizer of this objective is a **natural cubic spline** with **knots** at
+the data points $x_i$.
 
 \medskip\pause
 
-That is, a function
+That is, it has the representation
 $$
-  f = \sum_j \beta_j \varphi_j
+  f = \sum_j \beta_j \varphi_j,
 $$
-where $\varphi_j$ is a basis function for the $N$-dimensional space of such
-splines.
+where $\{\varphi_j\}$ is a basis for the $N$-dimensional space of such splines.
 
 \medskip\pause
 
 The problem reduces to finding the coefficients $\symbf{\beta}$.
 
 \pdfpcnote{
-Without penalty term, any interpolating function would work well.
+Without the penalty term, any interpolating function would work well.
 
-Penalty term penalizes solutions with large second derivatives (in norm).
+The penalty term penalizes solutions whose second derivatives have large norms.
 }
 
 ## Loss Function
 
-In vector notation
+In vector notation,
 $$
   \symbf{f} = \symbf{\Phi}\symbf{\beta}
 $$
-with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
+where $\symbf{\Phi}_{ij} = \varphi_j(x_i)$. Then \pause
 $$
   \begin{aligned}
     L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \|f''\|_2^2 \\
@@ -768,9 +777,11 @@ The solution is a *linear smoother* with smoother matrix $\symbf{S}_{\lambda}$
 and penalty matrix $\symbf{\Omega}$.
 
 \pdfpcnote{
-  Similar to ridge (Tikhonov) regression: OLS + squared l2 penalty.
+  This is similar to ridge (Tikhonov) regression: OLS plus a squared $\ell_2$
+  penalty.
 
-  Can rewrite penalty term in quadratic form $\lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}$.
+  We can write the penalty term in the quadratic form
+  $\lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}$.
 
   Derive the minimizer on the blackboard.
 }
@@ -810,11 +821,6 @@ ggplot(df, aes(x = x, y = y, group = group, color = group)) +
   labs(x = "x", y = "Basis Value") +
   guides(color = "none")
 ```
-
-\pdfpcnote{
-Repeated knots at boundaries necessary to ensure function goes through
-control points and is smooth.
-}
 
 ## Penalty Matrix $\symbf{\Omega}$
 
@@ -860,7 +866,7 @@ ggplot(omega_df, aes(x = Col, y = Row, fill = Value)) +
 
 ## Fitting a Smoothing Spline
 
-We implement the matrix-algebra directly for computing
+We implement the matrix algebra directly to compute
 $\symbf{S}_{\lambda} \symbf{y}$.
 
 ```{r}
@@ -868,7 +874,7 @@ $\symbf{S}_{\lambda} \symbf{y}$.
 
 inner_knots <- nuuk_year$Year
 
-# Note that order does not matter
+# Note that the order does not matter.
 knots <- c(rep(range(inner_knots), 3), inner_knots)
 
 Phi <- splines::splineDesign(knots, inner_knots)
@@ -879,7 +885,8 @@ Phi <- splines::splineDesign(knots, inner_knots)
 ```{r}
 #| label: nuuk-smooth-spline2
 
-omega <- pen_mat(inner_knots) # Complicated, but depends only on knots
+# The penalty matrix can be reused because it depends only on the knots.
+omega <- pen_mat(inner_knots)
 smoother <- function(lambda) {
   Phi %*%
     solve(
@@ -911,9 +918,9 @@ compute.
 
 ### Idea
 
-Replace $S_{ii}$ in LOOCV by $\mathrm{df} / N$, with
-$\mathrm{df} = \operatorname{trace}(\symbf{S}) = \sum_{i=1}^N S_{ii}$, to get the
-**generalized** cross-validation criterion
+Replace $S_{ii}$ in LOOCV with $\mathrm{df} / N$, where
+$\mathrm{df} = \operatorname{trace}(\symbf{S}) = \sum_{i=1}^N S_{ii}$. This gives
+the **generalized** cross-validation criterion
 $$
   \mathrm{GCV} = \frac{1}{N} \sum_{i=1}^N \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / N}\right)^2.
 $$
@@ -933,14 +940,13 @@ gcv <- function(lambda, y) {
 ```
 
 \pdfpcnote{
-  The df approximation relies on S_ii being nearly constant.
-
-  GCV does not make sense for running mean since S_ii is constant.
+  - The df approximation relies on S_ii being nearly constant.\\
+  - When S_ii is constant, GCV coincides with the LOOCV formula.
 }
 
 ## GCV-Optimal $\lambda$
 
-Apply `gcv()` across grid of $\lambda$-values and choose $\lambda$ that
+Apply `gcv()` across a grid of $\lambda$-values and choose the $\lambda$ that
 minimizes GCV.
 
 ```{r}
@@ -987,7 +993,7 @@ nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
 ```
 
 \pdfpcnote{
-- Disable fast heuristic to have similar results as us.
+- Disable the fast heuristic to obtain results similar to ours.
 }
 
 ## Efficient Computations
@@ -1022,18 +1028,18 @@ $$
 The columns of $\widetilde{\symbf{U}}$ form the **Demmler-Reinsch basis**.
 
 \pdfpcnote{
-  Can be done whether we use all or a subset of our basis functions
+  This can be done whether we use all or a subset of the basis functions.
 
-  S_\lambda is diagonalized
+  The smoother matrix S_\lambda is diagonalized.
 
   Derive $\symbf{S}_\lambda$ on blackboard.
 }
 
 ## Interpretation
 
-Project the data $y$ onto the Demmler-Reinsch basis (columns of
-$\widetilde{\symbf{U}}$) to get coefficients
-$\hat{\symbf{\beta}} = \widetilde{\symbf{U}}^Ty$.
+Project the data $\symbf{y}$ onto the Demmler-Reinsch basis (the columns of
+$\widetilde{\symbf{U}}$) to obtain the coefficients
+$\hat{\symbf{\beta}} = \widetilde{\symbf{U}}^T \symbf{y}$.
 
 \pause\medskip
 
@@ -1046,13 +1052,13 @@ $$
 \pause\medskip
 
 The final smoothed values are reconstructed by combining the shrunk coefficients
-with the basis functions.
+with the basis functions:
 $$
-  \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
+  \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda).
 $$
 
 \pdfpcnote{
-  \hat\beta are the original coefficients (if lambda = 0).
+  The $\hat\beta_i$ are the original coefficients when $\lambda = 0$.
 }
 
 ## The Demmler-Reinsch Basis (Columns of $\widetilde{\symbf{U}}$)
@@ -1160,8 +1166,8 @@ bench::mark(loop = loop_square(x), parallel = parallel_square(x), check = FALSE)
 
 ### Exercise 2: Future
 
-Create a future that waits for 5 seconds using `Sys.sleep(5)`. When it's done,
-it should prints "The future is here!" and return the value 42. Try accessing
+Create a future that waits for five seconds using `Sys.sleep(5)`. When it is done,
+it should print "The future is here!" and return the value 42. Try accessing
 the value of the future before and after the computation is complete.
 
 ```{r}
