@@ -140,93 +140,6 @@ foreach(i = seq_len(4), .combine = c) %dopar%
   }
 ```
 
-## Futures
-
-A future represents a value that may be available later on.
-
-\medskip\pause
-
-Futures are sometimes called \alert{promises}: "I promise to give you the result
-later."
-
-. . .
-
-::: {.columns}
-::::: {.column width="47%"}
-### Without Futures {.alert}
-
-```{r}
-v <- {
-  cat("Hello world!\n")
-  3.14
-}
-v
-```
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-### With Futures {.example}
-
-```{r}
-library(future)
-v %<-%
-  {
-    cat("Hello world!\n")
-    3.14
-  }
-v
-```
-:::::
-:::
-
-## Futures Enable Parallelization
-
-Depending on the plan, a future may run in the current R session or in a
-background R process.
-
-\medskip\pause
-
-- Meanwhile, the main R session can continue doing other work.
-- Once the value is needed, the main R session blocks until it is available.
-
-. . .
-
-```{r}
-#| eval: false
-
-plan(multisession) # or multicore, mirai_multisession, etc.
-
-z %<-%
-  {
-    # Perform some expensive computation.
-  }
-
-# Perform other work here ...
-
-z # This line blocks until z is available
-```
-
-## Backends for Futures
-
-We need to pick a backend, or plan, from several options.
-
-. . .
-
-### `multicore`
-
-The `multicore` backend is available on Linux and macOS, but not on Windows or in
-RStudio. It *forks* the current R process instead of starting a new one. It is
-*not* recommended, however, because of potential stability issues.
-
-. . .
-
-### `mirai_multisession` / `mirai_cluster`
-
-These are newer alternatives available through the
-[future.mirai](https://cran.r-project.org/package=future.mirai) package.
-
 ## Caveats
 
 ### Realistic Expectations
@@ -1193,3 +1106,16 @@ v # This line blocks until v is available
 Apply `stats::filter()` and `smooth.spline()` to the `airquality$Temp` data. Try
 different window sizes for the moving average and different `spar` values for
 the spline. Plot and compare the results.
+
+## Summary
+
+### Parallelization
+
+- Parallelization delegates work across your CPU cores to speed up computations.\pause
+- Use `foreach` and `%dopar%` to parallelize computations.
+
+. . .
+
+### Smoothing Splines
+
+
