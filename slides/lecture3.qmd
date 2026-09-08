@@ -594,14 +594,14 @@ library(bench)
 The package's main function is a high-precision timer that adaptively chooses
 the number of iterations needed to obtain accurate results.
 
-. . .
+\medskip\pause
 
 It also checks results for correctness unless `check = FALSE`.
 
 \medskip\pause
 
-Disabling the check only removes a safeguard. It does not make different results
-comparable---you must validate them separately against a trusted reference.
+`check()` only compares against your reference, which you have to 
+**trust**.
 
 ## A First, Simple Benchmark
 
@@ -898,6 +898,262 @@ It's an example of context-specific optimization.
 
 If $N < B$, then binning will not help. (But do you need to optimize for this
 scenario?)
+
+```{r}
+#| label: binning-illustration
+#| echo: false
+
+binning_x <- c(-1, 3, 5, 6, 9)
+binning_N <- length(binning_x)
+binning_B <- 5
+binning_h <- 1
+
+binning_centers <- seq(
+  min(binning_x),
+  max(binning_x),
+  length.out = binning_B
+)
+binning_delta <- binning_centers[2] - binning_centers[1]
+binning_weights <- kern_bin(
+  binning_x,
+  min(binning_x),
+  max(binning_x),
+  binning_B
+)
+
+binning_summary <- tibble(
+  bin = seq_len(binning_B),
+  center = binning_centers,
+  left = binning_centers - binning_delta / 2,
+  right = binning_centers + binning_delta / 2,
+  count = as.integer(round(binning_N * binning_weights)),
+  weight = binning_weights,
+  shade = factor(bin %% 2),
+  center_label = paste0("c[", bin, "]"),
+  weight_label = if_else(
+    count == 0,
+    "0",
+    paste0("frac(", count, ",", binning_N, ")")
+  )
+)
+
+binning_limits <- range(binning_summary$left, binning_summary$right) +
+  c(-3 * binning_h, 3 * binning_h)
+binning_grid <- seq(binning_limits[1], binning_limits[2], length.out = 500)
+
+binning_kernels <- map2_dfr(
+  binning_summary$center,
+  binning_summary$weight,
+  function(center, weight) {
+    tibble(
+      center = center,
+      x = binning_grid,
+      density = weight * dnorm(binning_grid, center, binning_h)
+    )
+  }
+) |>
+  filter(density > 0)
+
+binning_estimate <- binning_kernels |>
+  group_by(x) |>
+  summarize(density = sum(density), .groups = "drop")
+
+binning_density_base <- ggplot() +
+  coord_cartesian(
+    xlim = binning_limits,
+    ylim = c(0, 0.19),
+    expand = FALSE
+  ) +
+  labs(x = "x", y = "Density")
+
+binning_p1 <- binning_density_base +
+  geom_rug(
+    aes(x),
+    data = tibble(x = binning_x),
+    sides = "b",
+    linewidth = 1,
+    color = "navy"
+  )
+
+binning_p2 <- binning_density_base +
+  geom_rect(
+    aes(xmin = left, xmax = right, ymin = -Inf, ymax = Inf, fill = shade),
+    data = binning_summary,
+    alpha = 0.18
+  ) +
+  geom_vline(
+    xintercept = c(binning_summary$left, tail(binning_summary$right, 1)),
+    color = "grey65"
+  ) +
+  geom_vline(
+    xintercept = binning_centers,
+    color = "darkorange",
+    linetype = "dashed"
+  ) +
+  geom_text(
+    aes(center, 0.175, label = center_label),
+    data = binning_summary,
+    color = "darkorange",
+    parse = TRUE
+  ) +
+  geom_rug(
+    aes(x),
+    data = tibble(x = binning_x),
+    sides = "b",
+    linewidth = 1,
+    color = "navy"
+  ) +
+  scale_fill_manual(values = c("grey85", "grey95"), guide = "none")
+
+binning_p3 <- ggplot(binning_summary, aes(center, weight)) +
+  geom_segment(
+    aes(xend = center, y = 0, yend = weight),
+    color = "darkorange"
+  ) +
+  geom_point(color = "darkorange", size = 2.5) +
+  geom_text(
+    aes(y = weight + 0.035, label = weight_label),
+    parse = TRUE
+  ) +
+  coord_cartesian(
+    xlim = binning_limits,
+    ylim = c(0, 0.48),
+    expand = FALSE
+  ) +
+  labs(x = "Bin center", y = expression(w[j] == N[j] / N))
+
+occupied_bins <- filter(binning_summary, weight > 0)
+
+binning_p4 <- binning_density_base +
+  geom_line(
+    aes(x, density, group = center),
+    data = binning_kernels,
+    color = "darkorange"
+  ) +
+  geom_rug(
+    aes(x = center, linewidth = weight),
+    data = occupied_bins,
+    sides = "b",
+    color = "navy"
+  ) +
+  scale_linewidth(range = c(0.8, 2), guide = "none")
+
+binning_p5 <- binning_p4 +
+  geom_line(
+    aes(x, density),
+    data = binning_estimate,
+    color = "royalblue"
+  )
+```
+
+## Binning: An Illustration
+
+::: {.columns}
+::::: {.column width="47%"}
+Consider the data set
+$$
+  \symbf{x} = (-1, 3, 5, 6, 9).
+$$
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: binning-illustration-data
+#| echo: false
+#| fig-width: 3
+#| fig-height: 2.5
+
+binning_p1
+```
+:::::
+:::
+
+## Binning: Choose the Bins
+
+::: {.columns}
+::::: {.column width="47%"}
+Choose $B = 5$ equally spaced bin centers.
+
+\medskip
+
+Assign each observation to its nearest center.
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: binning-illustration-bins
+#| echo: false
+#| fig-width: 3
+#| fig-height: 2.5
+
+binning_p2
+```
+:::::
+:::
+
+## Binning: Compute the Weights
+
+::: {.columns}
+::::: {.column width="47%"}
+Replace the observations in bin $j$ by its center $c_j$ and weight
+$$
+  w_j = \frac{N_j}{N}.
+$$
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: binning-illustration-weights
+#| echo: false
+#| fig-width: 3
+#| fig-height: 2.5
+
+binning_p3
+```
+:::::
+:::
+
+## Binning: Evaluate the Kernels
+
+::: {.columns}
+::::: {.column width="47%"}
+Center a Gaussian kernel with bandwidth 1 at every occupied bin center.
+
+\medskip
+
+Scale each kernel by the corresponding weight $w_j$.
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: binning-illustration-kernels
+#| echo: false
+#| fig-width: 3
+#| fig-height: 2.5
+
+binning_p4
+```
+:::::
+:::
+
+## Binning: Sum the Kernels
+
+::: {.columns}
+::::: {.column width="47%"}
+Finally, sum the weighted kernels to obtain the binned density estimate.
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: binning-illustration-estimate
+#| echo: false
+#| fig-width: 3
+#| fig-height: 2.5
+
+binning_p5
+```
+:::::
+:::
 
 ## Implementation
 
