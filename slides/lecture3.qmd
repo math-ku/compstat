@@ -45,7 +45,7 @@ How long does it take to run?
 
 ### Memory
 
-How much memory space does it use?
+How much memory does it use?
 
 . . .
 
@@ -66,7 +66,7 @@ Before optimizing, decide what counts as the same answer:
 
 Faster methods may require more memory or tolerate more approximation error.
 
-. . .
+\medskip\pause
 
 We will focus on **speed**, but never without checking correctness and accuracy.
 
@@ -110,7 +110,7 @@ But if your code \alert{is} too slow, then it's time to profile it.
 
 A profiler quantifies how much time each part of your code takes to run.
 
-. . .
+\medskip\pause
 
 R uses a **sampling-based profiler**, which periodically samples the call stack
 to see what functions are running.
@@ -380,9 +380,9 @@ profvis(profile_example())
   based on samples, not an exact decomposition of the running time.
 }
 
-## Loop Overhead
+## Profiling Density Estimation
 
-Now consider the kernel density estimator from the last lecture.
+Let's profile the naive density estimator.
 
 ```{r}
 #| label: kern-dens-code
@@ -405,15 +405,10 @@ kern_dens <- function(x, h, m = 512) {
 }
 ```
 
-## Can We See the Overhead?
-
-Now let's run the profiler.
-
-. . .
-
 ```{r}
 #| label: kern-dens-prof
 #| eval: false
+#| echo: false
 
 source(here::here("R", "kernel.R"), keep.source = TRUE)
 
@@ -422,11 +417,8 @@ x <- rnorm(1e5)
 profvis(kern_dens(x, 0.2))
 ```
 
-. . .
 
-Where will the loop overhead appear in the profile?
-
-##
+---
 
 ![](../images/profvis-kern.png)
 
@@ -436,12 +428,13 @@ Most samples land on the loop body---not the `for` statements. Numerical work
 and R's loop overhead are bundled together.
 
 \pdfpcnote{
-  The body is evaluated $512N$ times. A line profiler attributes samples to the
-  expression being evaluated; it does not measure loop overhead as a separate
-  category. We need a benchmark to learn how much vectorization saves.
+  - A line profiler attributes samples to the
+    expression being evaluated\\
+  - It does not measure loop overhead as a separate
+    category. We need a benchmark to learn how much vectorization saves.
 }
 
-## A First Optimization
+## A First Optimization: Vectorization Helps
 
 One hypothesis is that repeatedly evaluating the inner loop body in R is
 expensive.
@@ -460,7 +453,7 @@ We can test it by \alert{vectorizing} the inner loop.
 kern_dens_vec <- function(x, h, m = 512) {
   # ...
   for (i in seq_along(xx)) {
-    for (j in seq_along(x)) {
+    for (j in seq_along(x)) { #< Nested for loop
       y[i] <- y[i] + exp(-(xx[i] - x[j])^2 / (2 * h^2))
     }
   }
@@ -468,10 +461,12 @@ kern_dens_vec <- function(x, h, m = 512) {
 }
 ```
 
-## A First Optimization
+## A First Optimization: Vectorization Helps
 
 One hypothesis is that repeatedly evaluating the inner loop body in R is
 expensive.
+
+\medskip
 
 We can test it by \alert{vectorizing} the inner loop.
 
@@ -540,8 +535,8 @@ profile_sort <- function(n = 5e6) {
 line.
 
 \pdfpcnote{
-  The work is recorded under sort.default(), sort.int(), and order(). This is a
-  source-attribution limitation, not lazy evaluation.
+  - The work is recorded under sort.default(), sort.int(), and order().\\
+  - This is a source-attribution limitation, not lazy evaluation.
 }
 
 ## Other Common Pitfalls
@@ -1007,10 +1002,6 @@ accuracy <- tibble(B = B_values) |>
 ```
 
 ## The Speed--Accuracy Trade-Off
-
-Earlier, `check = FALSE` let us benchmark exact and approximate results
-together. The preceding calculation supplies the separate validation that this
-requires.
 
 ```{r}
 #| label: binning-tradeoff
