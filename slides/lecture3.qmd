@@ -439,7 +439,7 @@ and R's loop overhead are bundled together.
 One hypothesis is that repeatedly evaluating the inner loop body in R is
 expensive.
 
-\pause\medskip
+\medskip
 
 We can test it by \alert{vectorizing} the inner loop.
 
@@ -509,9 +509,9 @@ kern_dens_vec <- function(x, h, m = 512) {
 }
 ```
 
-## Pitfall: Time in Callees
+## Pitfall: Line Profiling in Stricky
 
-Now consider a version that calls `sort()`.
+Now consider another function that calls `runif()`, `sqrt()`, and `sort()`:
 
 ```{r}
 #| label: profile-sort-code
@@ -525,7 +525,7 @@ profile_sort <- function(n = 5e6) {
 }
 ```
 
-## Pitfall: Time in Callees
+## Pitfall: Line Profiling in Stricky
 
 ![](../images/profvis-sort.png){fig-align="center" width="95%"}
 
