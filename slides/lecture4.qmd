@@ -392,6 +392,86 @@ $$
   why the first two rows are identical, as are the last two rows.
 }
 
+## Sparse Storage
+
+When $k \ll N$, most entries of $\symbf{S}$ are zero: it is a **sparse
+matrix**.
+
+The third row of our example is
+$$
+  \begin{pmatrix} 0 & 1/3 & 1/3 & 1/3 & 0 \end{pmatrix}.
+$$
+
+\pause
+
+Store only the nonzero values and their positions:
+$$
+  \begin{array}{c|ccc}
+    \text{Column index} & 2 & 3 & 4 \\
+    \hline
+    \text{Value} & 1/3 & 1/3 & 1/3
+  \end{array}
+$$
+
+\pause
+
+For $N$ rows with $k$ nonzeros each, storage grows as $O(Nk)$.
+
+\pdfpcnote{
+  A dense matrix stores all N squared entries, including the zeros.
+
+  Sparse storage also needs indices to locate the nonzero entries. The table
+  illustrates one row; there are several formats for organizing a whole matrix.
+
+  Our five-point example is small. The savings become substantial when k is
+  small relative to N; sparse storage can cost more for tiny matrices.
+}
+
+## Sparse Matrices in R
+
+Construct the smoother matrix directly from its nonzero entries.
+
+::: {.columns}
+::::: {.column width="56%"}
+```{r}
+#| label: sparse-smoother-example
+
+S_example <- Matrix::sparseMatrix(
+  i = rep(1:5, each = 3),
+  j = c(1:3, 1:3, 2:4, 3:5, 3:5),
+  x = 1 / 3,
+  dims = c(5, 5)
+)
+```
+:::::
+
+. . .
+
+::::: {.column width="40%"}
+```{r}
+#| label: sparse-smoother-display
+#| echo: false
+
+Matrix::printSpMatrix(3 * S_example)
+```
+:::::
+:::
+
+The display is scaled by 3. Dots represent zeros that are not stored.
+
+\pause\medskip
+
+The usual `%*%` operator also works with sparse matrices, using only the stored
+entries when multiplying by a vector.
+
+\pdfpcnote{
+  The i and j arguments give row and column indices. The x argument gives the
+  corresponding values; a single value is repeated for every listed position.
+
+  A base R matrix containing many zeros still uses dense storage. Constructing
+  the sparse matrix directly avoids allocating that dense matrix first.
+}
+
 ## Linear Smoothers
 
 Smoothers of the form $\hat{\symbf{f}} = \symbf{S} \symbf{y}$ are called *linear
@@ -702,10 +782,18 @@ nn_bench <- bench::press(N = c(512, 1024, 2048, 4096), {
   for (i in seq_len(nrow(S))) {
     S[i, i:(i + k - 1)] <- 1 / k
   }
+  S_sparse <- Matrix::sparseMatrix(
+    i = rep(seq_len(nrow(S)), each = k),
+    j = rep(seq_len(nrow(S)), each = k) +
+      rep(0:(k - 1), times = nrow(S)),
+    x = 1 / k,
+    dims = dim(S)
+  )
   bench::mark(
-    S %*% y,
-    run_mean(y, k = k),
-    stats::filter(y, rep(1 / k, k)),
+    dense = S %*% y,
+    sparse = S_sparse %*% y,
+    running = run_mean(y, k = k),
+    filter = stats::filter(y, rep(1 / k, k)),
     check = FALSE
   )
 })
@@ -713,11 +801,46 @@ nn_bench <- bench::press(N = c(512, 1024, 2048, 4096), {
 plot(nn_bench)
 ```
 
-Matrix-vector multiplication is $O(N^2)$.
+Dense matrix-vector multiplication is $O(N^2)$.
 
 \medskip\pause
 
-The other two algorithms are $O(N)$.
+For fixed $k$, sparse multiplication and the other two algorithms are $O(N)$.
+
+\pdfpcnote{
+  Both matrix representations are constructed before timing. The benchmark
+  measures applying an already constructed smoother to a vector.
+
+  The matrix products return only the interior fitted values; the other methods
+  also return missing values at the boundaries.
+}
+
+## Three Ways to Compute a Running Mean
+
+| Method | Storage for $\symbf{S}$ | Work for all fitted values |
+|:--|:--|:--|
+| Dense matrix | $O(N^2)$ | $O(N^2)$ |
+| Sparse matrix | $O(Nk)$ | $O(Nk)$ |
+| Sliding-window update | No matrix | $O(N)$ |
+
+\pause\medskip
+
+Sparse multiplication skips the zero weights.
+
+\pause\medskip
+
+The sliding-window update also reuses the overlap between neighborhoods.
+
+\pdfpcnote{
+  These costs assume the observations are already ordered and k is the window
+  size. Matrix construction and finding neighborhoods are not included.
+
+  All methods still need storage for the data and fitted values. The table
+  compares the additional storage used to represent the smoother matrix.
+
+  With k fixed, both sparse multiplication and the sliding-window update are
+  linear in N. Varying k reveals their different dependence on window size.
+}
 
 ## Bias--Variance Trade-Off
 
@@ -1062,6 +1185,44 @@ ggplot(omega_df, aes(x = Col, y = Row, fill = Value)) +
   scale_fill_gradient2() +
   coord_fixed()
 ```
+
+## Sparsity in Spline Computations
+
+B-spline basis functions have **local support**: each is nonzero only on a few
+neighboring knot intervals. This makes $\symbf{\Phi}$ and $\symbf{\Omega}$ sparse.
+
+\pause\medskip
+
+The coefficients solve
+$$
+  (\symbf{\Phi}^T \symbf{\Phi} + \lambda \symbf{\Omega})
+  \hat{\symbf{\beta}} = \symbf{\Phi}^T \symbf{y}.
+$$
+With the basis ordered by knot location, this system is **banded**: its nonzero
+entries lie near the diagonal.
+
+\pause\medskip
+
+Solve for $\hat{\symbf{\beta}}$, then compute
+$\hat{\symbf{f}} = \symbf{\Phi}\hat{\symbf{\beta}}$.
+The full smoother matrix $\symbf{S}_{\lambda}$ is generally dense.
+
+\pause\medskip
+
+In R, `splineDesign(..., sparse = TRUE)` creates a sparse design matrix.
+
+\pdfpcnote{
+  At any x, at most four cubic B-spline basis functions are nonzero.
+
+  Basis functions with disjoint supports also have zero entries in the penalty
+  matrix. Its band structure is visible in the preceding figure.
+
+  Sparse structure must be reflected in the storage to obtain the computational
+  benefits. The following implementation uses dense storage to show the algebra.
+
+  The inverse of a sparse matrix need not be sparse. Solving the system avoids
+  explicitly constructing the inverse and the full smoother matrix.
+}
 
 ## Fitting a Smoothing Spline
 
