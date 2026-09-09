@@ -17,12 +17,6 @@ source(here::here("R", "vMSim.R"), keep.source = TRUE)
 
 ## Today
 
-### Leftovers From Last Lecture
-
-Efficient computations of smoothing splines
-
-. . .
-
 ### Pseudo-Random Numbers
 
 How do you simulate random numbers in R?
@@ -32,196 +26,6 @@ How do you simulate random numbers in R?
 ### Rejection Sampling
 
 General and useful method for sampling from a target distribution
-
-## Smoothing Splines
-
-Recall, that our smoothing spline estimate is
-$$
-  \symbf{f} = \symbf{\Phi}\symbf{\beta}
-$$
-with $\symbf{\Phi}_{ij} = \varphi_j(x_i)$, and \pause
-$$
-  \begin{aligned}
-    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \|f''\|_2^2 \\
-                 & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
-  \end{aligned}
-$$
-with
-$$
-  \symbf{\Omega}_{jk} = \int \varphi_j''(z) \varphi_k''(z) \ \mathrm{d}z.
-$$
-
-\pause
-
-### Solution
-
-The solution is
-$$
-  \hat{\symbf{\beta}} = (\symbf{\Phi}^T \symbf{\Phi} + \lambda \symbf{\Omega})^{-1} \symbf{\Phi}^T \symbf{y}.
-$$
-
-## Efficient Computations of Smoothing Splines
-
-```{r}
-#| label: looad-nuuk-data
-#| echo: false
-#| message: false
-
-library(Matrix)
-pen_mat <- function(inner_knots) {
-  knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
-  d <- diff(inner_knots) # the vector of knot differences; b - a
-  g_ab <- splines::splineDesign(knots, inner_knots, derivs = 2)
-  knots_mid <- inner_knots[-length(inner_knots)] + d / 2
-  g_ab_mid <- splines::splineDesign(knots, knots_mid, derivs = 2)
-  g_a <- g_ab[-nrow(g_ab), ]
-  g_b <- g_ab[-1, ]
-  (crossprod(d * g_a, g_a) +
-    4 * crossprod(d * g_ab_mid, g_ab_mid) +
-    crossprod(d * g_b, g_b)) /
-    6
-}
-
-omega <- pen_mat(seq(0, 1, 0.1))
-
-nuuk <- read_table(
-  here::here("data", "nuuk.txt"),
-  col_names = c("Year", 1:12),
-  na = "-999",
-  skip = 1
-) |>
-  gather(key = "Month", value = "Temperature", -Year, convert = TRUE) |>
-  mutate(Temperature = Temperature / 10) |>
-  filter(Year > 1866)
-
-nuuk_year <- group_by(nuuk, Year) |>
-  summarise(
-    Temperature = mean(Temperature),
-    Median = median(Temperature),
-    High = max(Temperature),
-    Low = min(Temperature)
-  )
-N <- nrow(nuuk_year)
-```
-
-When $n$ is large, computing $\symbf{S}_{\lambda} \symbf{y}$ directly is
-expensive.
-
-\medskip\pause
-
-In practice, we therefore often use fewer basis functions than data points,
-$p < N$.
-
-\pause
-
-### Singular Value Decomposition
-
-Using the singular value decomposition
-$$
-  \symbf{\Phi} = \symbf{U} \symbf{D} \symbf{V}^T
-$$
-\pause we can rewrite the smoother matrix as
-$$
-  \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda \operatorname{diag}(\symbf{\gamma}))^{-1} \widetilde{\symbf{U}}^T
-$$
-where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and \pause
-$$
-  \symbf{D}^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} \symbf{D}^{-1} = \symbf{W} \operatorname{diag}(\symbf{\gamma}) \symbf{W}^T.
-$$
-
-\medskip\pause
-
-The columns of $\widetilde{\symbf{U}}$ form the **Demmler-Reinsch basis**.
-
-\pdfpcnote{
-  Can be done whether we use all or a subset of our basis functions
-
-  S_\lambda is diagonalized
-
-  Derive $\symbf{S}_\lambda$ on blackboard.
-}
-
-## Interpretation
-
-Project the data $y$ onto the Demmler-Reinsch basis (columns of
-$\widetilde{\symbf{U}}$) to get coefficients
-$\hat{\symbf{\beta}} = \widetilde{\symbf{U}}^T\symbf{y}$.
-
-\pause\medskip
-
-Each coefficient is shrunk according to the corresponding eigenvalue $\gamma_i$
-and smoothing parameter $\lambda$:
-$$
-  \hat{\symbf{\beta}}_i(\lambda) = \frac{\hat{\beta}_i}{1 + \lambda \gamma_i}.
-$$
-
-\pause\medskip
-
-The final smoothed values are reconstructed by combining the shrunk coefficients
-with the basis functions.
-$$
-  \hat{\symbf{f}} = \widetilde{\symbf{U}} \hat{\symbf{\beta}}(\lambda)
-$$
-
-\pdfpcnote{
-  \hat\beta are the original coefficients (if lambda = 0).
-}
-
-## The Demmler-Reinsch Basis (Columns of $\widetilde{\symbf{U}}$)
-
-```{r}
-#| label: spline-diagonalization
-#| echo: false
-#| fig-width: 5.5
-#| fig-height: 3
-
-inner_knots <- seq(1867, 2013, length.out = 18)
-Phi <- splines::splineDesign(
-  c(rep(range(inner_knots), 3), inner_knots),
-  nuuk_year$Year
-)
-omega <- pen_mat(inner_knots)
-Phi_svd <- svd(Phi)
-omega_tilde <- t(t(crossprod(Phi_svd$v, omega %*% Phi_svd$v)) / Phi_svd$d) /
-  Phi_svd$d
-
-Omega_tilde_svd <- svd(omega_tilde)
-U_tilde <- Phi_svd$u %*% Omega_tilde_svd$u
-
-colnames(U_tilde) <- paste0(rep("u", 20), 1:20)
-bind_cols(select(nuuk_year, Year), as_tibble(U_tilde)) |>
-  gather(key = "term", value = "value", -Year, factor_key = TRUE) |>
-  ggplot(aes(Year, value, color = term)) +
-  geom_line() +
-  facet_wrap(~term) +
-  theme(legend.position = "none") +
-  ylab("")
-```
-
-##
-
-```{r}
-#| label: spline-gamma
-#| echo: false
-#| fig-width: 5.5
-#| fig-height: 3
-#| fig-cap: The eigenvalues $\gamma_i$ of the penalty matrix in the
-#|   Demmler-Reinsch basis.
-
-library(patchwork)
-
-d <- Omega_tilde_svd$d
-
-eigen_data <- tibble(i = 1:20, Eigenvalues = d)
-
-p1 <- ggplot(eigen_data, aes(i, Eigenvalues)) +
-  geom_point() +
-  labs(y = expression(gamma[i]))
-
-p2 <- p1 + scale_y_log10()
-
-p1 / p2 + plot_layout(axes = "collect")
-```
 
 ## Pseudo-Random Numbers
 
@@ -242,7 +46,7 @@ A research field in itself, see `?RNG` in R for available algorithms.
 
 The default in R, which generates integers in the range
 $$
-  \{0, 1, \ldots, 2^{32} -1\}.
+  \{0, 1, \ldots, 2^{32} - 1\}.
 $$
 
 \medskip\pause
@@ -426,7 +230,7 @@ random variables.
 
 The density on $(-\pi, \pi]$ is
 $$
-  f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x - \mu)}
+  f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x-\mu)}
 $$
 for $\kappa > 0$ and $\mu \in (-\pi, \pi]$ parameters and $I_0$ is the modified
 Bessel function.
@@ -442,7 +246,9 @@ Bessel function.
 
 library(ggplot2)
 
-dvm <- function(x, k) exp(k * cos(x - 2)) / (2 * pi * besselI(k, 0))
+dvm <- function(x, k) {
+  exp(k * cos(x - 2)) / (2 * pi * besselI(k, 0))
+}
 
 xy <- tibble(x = seq(0, 2 * pi, length.out = 400), y = dvm(x, 9))
 
@@ -501,7 +307,9 @@ ggplot(tibble(x = x), aes(x)) +
   ) +
   stat_function(
     aes(color = "Theoretical Density"),
-    fun = function(x) exp(0.5 * cos(x + 1.5)) / (2 * pi * besselI(0.5, 0))
+    fun = function(x) {
+      exp(0.5 * cos(x + 1.5)) / (2 * pi * besselI(0.5, 0))
+    }
   ) +
   geom_density(
     aes(color = "SJ density estimate"),
@@ -525,7 +333,8 @@ $U_1, U_2, \ldots$ be i.i.d. uniform and independent of $Y_i$ for all $i$.
 
 Define
 $$
-  \sigma = \inf\left\{n \geq 1 \mid U_n \leq \alpha \frac{f(Y_n)}{g(Y_n)}\right\},
+  \sigma
+  = \inf\left\{ n \geq 1 \mid U_n \leq \alpha \frac{f(Y_n)}{g(Y_n)} \right\},
 $$
 for $\alpha \in (0, 1]$, where $f$ is a density.
 
@@ -575,7 +384,11 @@ ggplot() +
     col = "black",
     fill = "grey90"
   ) +
-  geom_point(data = df, aes(x = y, y = u, color = accepted), size = 0.5) +
+  geom_point(
+    data = df,
+    aes(x = y, y = u, color = accepted),
+    size = 0.5
+  ) +
   scale_color_manual(
     values = c("red", "steelblue2"),
     labels = c("Rejected", "Accepted")
@@ -629,7 +442,7 @@ $$
 
 We can try to solve the problem
 $$
-  \alpha' = \inf_{y: q(y) > 0} \frac{p(y)}{q(y)} > 0.
+  \alpha' = \inf_{y: q(y)>0} \frac{p(y)}{q(y)} > 0.
 $$
 
 \medskip\pause
@@ -648,11 +461,11 @@ Rejection sampling using the uniform proposal, $g(y) \propto 1$.
 
 Since
 $$
-  e^{\kappa(\cos(y) - 1)} = \alpha' e^{\kappa \cos(y)} \leq 1,
+  e^{\kappa(\cos(y)-1)} = \alpha' e^{\kappa \cos(y)} \leq 1,
 $$
 where $\alpha' = \exp(-\kappa)$, we reject if
 $$
-  U > e^{\kappa(\cos(Y) - 1)}.
+  U > e^{\kappa(\cos(Y)-1)}.
 $$
 
 . . .
@@ -705,13 +518,18 @@ sample_vonmises_slow <- function(N, kappa) {
 #| fig-cap: Histogram of samples from `sample_vonmises_slow()`, with theoretical
 #|   density overlaid.
 
-f <- function(y, kappa) exp(kappa * cos(y)) / (2 * pi * besselI(kappa, 0))
+f <- function(y, kappa) {
+  exp(kappa * cos(y)) / (2 * pi * besselI(kappa, 0))
+}
 
 # Simulate data
 x1 <- sample_vonmises_slow(100000, 0.5)
 x2 <- sample_vonmises_slow(100000, 2)
 
-df <- tibble(x = c(x1, x2), kappa = factor(rep(c(0.5, 2), each = 100000)))
+df <- tibble(
+  x = c(x1, x2),
+  kappa = factor(rep(c(0.5, 2), each = 100000))
+)
 
 ggplot(df, aes(x)) +
   geom_histogram(
@@ -724,13 +542,19 @@ ggplot(df, aes(x)) +
     fun = f,
     args = list(kappa = 0.5),
     color = "steelblue3",
-    data = data.frame(x = seq(-pi, pi, length.out = 200), kappa = 0.5)
+    data = data.frame(
+      x = seq(-pi, pi, length.out = 200),
+      kappa = 0.5
+    )
   ) +
   stat_function(
     fun = f,
     args = list(kappa = 2),
     color = "steelblue3",
-    data = data.frame(x = seq(-pi, pi, length.out = 200), kappa = 2)
+    data = data.frame(
+      x = seq(-pi, pi, length.out = 200),
+      kappa = 2
+    )
   ) +
   labs(y = "Density", x = "x") +
   facet_wrap(~kappa, ncol = 2, labeller = "label_both")
@@ -864,7 +688,7 @@ $$
 $$
 where
 $$
-  V(x) = \sum_{i=1}^m  (a_i x + b_i) \symbf{1}_{I_i}(x)
+  V(x) = \sum_{i=1}^m (a_i x + b_i) \symbf{1}_{I_i}(x)
 $$
 for intervals $I_i$ forming a partition of $I$.
 :::::
@@ -897,7 +721,11 @@ envelope_log <- ifelse(
 )
 envelope <- exp(envelope_log)
 
-df <- data.frame(x = xseq, curve = curve_fun(xseq), envelope = envelope)
+df <- data.frame(
+  x = xseq,
+  curve = curve_fun(xseq),
+  envelope = envelope
+)
 
 ggplot(df, aes(x)) +
   geom_line(aes(y = curve), color = "grey60") +
@@ -930,7 +758,9 @@ $$
 #| fig-height: 2.5
 
 fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
-  lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+  lf <- function(x) {
+    (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+  }
   lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
   a1 <- lf_deriv(x1)
   a2 <- lf_deriv(x2)
@@ -951,7 +781,10 @@ fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
   u <- runif(m)
   i <- uy < Q1
   y[i] <- z <- log(a1 * exp(-b1) * uy[i] + 1) / a1
-  y[!i] <- zz <- log(a2 * exp(-b2) * (uy[!i] - Q1) + exp(a2 * z1)) / a2
+  y[!i] <- zz <- log(
+    a2 * exp(-b2) * (uy[!i] - Q1) + exp(a2 * z1)
+  ) /
+    a2
   ratio[i] <- exp(lf(z) - a1 * z - b1)
   ratio[!i] <- exp(lf(zz) - a2 * zz - b2)
   accept <- u <= ratio
@@ -983,7 +816,13 @@ params <- data.frame(
 )
 
 make_beta_df <- function(N, x1, x2, alpha, beta, label) {
-  x <- sample_beta(N, x1 = x1, x2 = x2, alpha = alpha, beta = beta)$x
+  x <- sample_beta(
+    N,
+    x1 = x1,
+    x2 = x2,
+    alpha = alpha,
+    beta = beta
+  )$x
   data.frame(x = x, label = label)
 }
 
@@ -992,7 +831,10 @@ sample_df <- do.call(
   lapply(
     seq_len(nrow(params)),
     function(i) {
-      with(params[i, ], make_beta_df(100000, x1, x2, alpha, beta, label))
+      with(
+        params[i, ],
+        make_beta_df(100000, x1, x2, alpha, beta, label)
+      )
     }
   )
 )
@@ -1002,15 +844,21 @@ xseq <- seq(0, 1, length.out = 400)
 make_density_df <- function(xseq, alpha, beta, label) {
   data.frame(
     x = xseq,
-    density = xseq^(alpha - 1) * (1 - xseq)^(beta - 1) / beta(alpha, beta),
+    density = xseq^(alpha - 1) *
+      (1 - xseq)^(beta - 1) /
+      beta(alpha, beta),
     label = label
   )
 }
 
 make_envelope_df <- function(xseq, x1, x2, alpha, beta, label) {
   envelope <- function(x, x1, x2, alpha, beta) {
-    lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
-    lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
+    lf <- function(x) {
+      (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+    }
+    lf_deriv <- function(x) {
+      (alpha - 1) / x - (beta - 1) / (1 - x)
+    }
     a1 <- lf_deriv(x1)
     a2 <- lf_deriv(x2)
     b1 <- lf(x1) - a1 * x1
@@ -1020,7 +868,8 @@ make_envelope_df <- function(xseq, x1, x2, alpha, beta, label) {
   }
   data.frame(
     x = xseq,
-    envelope = envelope(xseq, x1, x2, alpha, beta) / beta(alpha, beta),
+    envelope = envelope(xseq, x1, x2, alpha, beta) /
+      beta(alpha, beta),
     label = label
   )
 }
@@ -1029,7 +878,12 @@ dens_df <- do.call(
   rbind,
   lapply(
     seq_len(nrow(params)),
-    function(i) with(params[i, ], make_density_df(xseq, alpha, beta, label))
+    function(i) {
+      with(
+        params[i, ],
+        make_density_df(xseq, alpha, beta, label)
+      )
+    }
   )
 )
 env_df <- do.call(
@@ -1037,15 +891,30 @@ env_df <- do.call(
   lapply(
     seq_len(nrow(params)),
     function(i) {
-      with(params[i, ], make_envelope_df(xseq, x1, x2, alpha, beta, label))
+      with(
+        params[i, ],
+        make_envelope_df(xseq, x1, x2, alpha, beta, label)
+      )
     }
   )
 )
 
 ggplot(sample_df, aes(x)) +
-  geom_histogram(aes(y = ..density..), bins = 50, fill = "grey80") +
-  geom_line(data = dens_df, aes(x = x, y = density), color = "steelblue3") +
-  geom_line(data = env_df, aes(x = x, y = envelope), color = "dark orange") +
+  geom_histogram(
+    aes(y = ..density..),
+    bins = 50,
+    fill = "grey80"
+  ) +
+  geom_line(
+    data = dens_df,
+    aes(x = x, y = density),
+    color = "steelblue3"
+  ) +
+  geom_line(
+    data = env_df,
+    aes(x = x, y = envelope),
+    color = "dark orange"
+  ) +
   ylim(0, 3) +
   facet_wrap(~label, ncol = 2)
 ```
@@ -1076,8 +945,12 @@ xseq <- seq(0.05, 0.95, length.out = 400)
 
 make_df <- function(xseq, alpha, beta, x1, x2, label) {
   envelope_fun <- function(x, x1, x2, alpha, beta) {
-    lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
-    lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
+    lf <- function(x) {
+      (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+    }
+    lf_deriv <- function(x) {
+      (alpha - 1) / x - (beta - 1) / (1 - x)
+    }
     a1 <- lf_deriv(x1)
     a2 <- lf_deriv(x2)
     b1 <- lf(x1) - a1 * x1
@@ -1087,8 +960,11 @@ make_df <- function(xseq, alpha, beta, x1, x2, label) {
   }
   data.frame(
     x = xseq,
-    density = xseq^(alpha - 1) * (1 - xseq)^(beta - 1) / beta(alpha, beta),
-    envelope = envelope_fun(xseq, x1, x2, alpha, beta) / beta(alpha, beta),
+    density = xseq^(alpha - 1) *
+      (1 - xseq)^(beta - 1) /
+      beta(alpha, beta),
+    envelope = envelope_fun(xseq, x1, x2, alpha, beta) /
+      beta(alpha, beta),
     label = label
   )
 }
@@ -1097,7 +973,12 @@ plot_df <- do.call(
   rbind,
   lapply(
     seq_len(nrow(params)),
-    function(i) with(params[i, ], make_df(xseq, alpha, beta, x1, x2, label))
+    function(i) {
+      with(
+        params[i, ],
+        make_df(xseq, alpha, beta, x1, x2, label)
+      )
+    }
   )
 )
 
@@ -1119,7 +1000,7 @@ The von Mises density is unfortunately not globally log-concave.
 But, it *is*
 
 - log-concave on $(-\pi, \pi/2)$ and $(\pi/2, \pi)$ and
-- log-convex on $(-\pi, -\pi/2)$ and $(-\pi/2, \pi/2)$.
+- log-convex on $(-\pi,-\pi/2)$ and $(-\pi/2, \pi/2)$.
 :::::
 
 ::::: {.column width="47%"}
@@ -1131,15 +1012,24 @@ theta <- 0.5 * c(cos(-1.5), sin(-1.5))
 
 dvm <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
 
-xy <- tibble(x = seq(-pi, pi, length.out = 400), y = log(dvm(x, 0.5)))
+xy <- tibble(
+  x = seq(-pi, pi, length.out = 400),
+  y = log(dvm(x, 0.5))
+)
 
 a <- seq(-2 * pi, 2 * pi, length.out = 100)
 
 ggplot(xy, aes(x = x, y = y)) +
-  geom_vline(xintercept = c(-pi, -pi / 2, pi / 2, pi), color = "grey60") +
+  geom_vline(
+    xintercept = c(-pi, -pi / 2, pi / 2, pi),
+    color = "grey60"
+  ) +
   geom_line() +
   labs(y = "log-density") +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 ```
 :::::
 :::
@@ -1264,7 +1154,9 @@ sample_df <- do.call(
   rbind,
   lapply(
     seq_len(nrow(params)),
-    function(i) with(params[i, ], make_vm_df(100000, x1, x2, kappa, label))
+    function(i) {
+      with(params[i, ], make_vm_df(100000, x1, x2, kappa, label))
+    }
   )
 )
 
@@ -1275,7 +1167,8 @@ make_density_df <- function(xseq, kappa, label) {
 }
 
 make_envelope_df <- function(xseq, x1, x2, kappa, label) {
-  env <- envelope(xseq, x1, x2, kappa) / (2 * pi * besselI(kappa, 0))
+  env <- envelope(xseq, x1, x2, kappa) /
+    (2 * pi * besselI(kappa, 0))
   data.frame(x = xseq, envelope = env, label = label)
 }
 
@@ -1283,21 +1176,40 @@ dens_df <- do.call(
   rbind,
   lapply(
     seq_len(nrow(params)),
-    function(i) with(params[i, ], make_density_df(xseq, kappa, label))
+    function(i) {
+      with(params[i, ], make_density_df(xseq, kappa, label))
+    }
   )
 )
 env_df <- do.call(
   rbind,
   lapply(
     seq_len(nrow(params)),
-    function(i) with(params[i, ], make_envelope_df(xseq, x1, x2, kappa, label))
+    function(i) {
+      with(
+        params[i, ],
+        make_envelope_df(xseq, x1, x2, kappa, label)
+      )
+    }
   )
 )
 
 ggplot(sample_df, aes(x)) +
-  geom_histogram(aes(y = ..density..), bins = 30, fill = "grey80") +
-  geom_line(data = dens_df, aes(x = x, y = density), color = "steelblue3") +
-  geom_line(data = env_df, aes(x = x, y = envelope), color = "dark orange") +
+  geom_histogram(
+    aes(y = ..density..),
+    bins = 30,
+    fill = "grey80"
+  ) +
+  geom_line(
+    data = dens_df,
+    aes(x = x, y = density),
+    color = "steelblue3"
+  ) +
+  geom_line(
+    data = env_df,
+    aes(x = x, y = envelope),
+    color = "dark orange"
+  ) +
   ylim(0, 1.5) +
   facet_wrap(~label, ncol = 2)
 ```
@@ -1365,7 +1277,9 @@ when transformation is impractical or impossible.
 
 Use the fact that
 $$
-  W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k \quad \text{for} \quad X_1, \ldots, X_k \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
+  W = X_1^2 + \ldots + X_k^2
+    \sim \chi^2_k \quad \text{for} \quad X_1, \ldots, X_k
+    \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
 $$
 to implement a function, `my_rchisq()`, such that `my_rchisq(N, k)` returns a
 sample of $N$ i.i.d. observations from $\chi^2_k$.
