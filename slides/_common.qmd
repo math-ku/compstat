@@ -13,7 +13,9 @@ options(width = 60)
 ```{r}
 #| label: setup-xmpmulti
 #| echo: false
+#| cache: false
 
+# Cached chunks do not restore hooks, so registration must run on every render.
 # Render a chunk's plots as a beamer overlay via xmpmulti's \multiinclude,
 # instead of quarto's \animategraphics. Opt in per chunk with
 # `fig-show: animate`; the overlay spec defaults to <+> (one plot per click)

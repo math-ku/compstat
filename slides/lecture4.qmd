@@ -93,29 +93,27 @@ Several backends are available as separate packages (**doParallel**, **doMC**,
 . . .
 
 ::: {.columns}
-::::: {.column width="47%"}
+::::: {.column width="43%"}
 ```{r}
 #| label: doparallel
-#| eval: false
 
 library(doParallel)
 cl <- makeCluster(2)
 registerDoParallel(cl)
-
-foreach(i = seq_len(3)) %dopar%
-  {
-    paste("Hello from process", Sys.getpid())
-  }
 ```
 :::::
 
 . . .
 
-::::: {.column width="47%"}
+::::: {.column width="51%"}
 ```{r}
-#| echo: false
+#| label: doparallel-execute
 #| message: false
-#| ref-label: "doparallel"
+
+foreach(i = seq_len(3)) %dopar%
+  {
+    paste("Hi from", Sys.getpid())
+  }
 ```
 :::::
 :::
@@ -157,7 +155,7 @@ between them.
 
 ### Thread Safety
 
-Some operations are not thread-safe—for example, writing to the same file from
+Some operations are not thread-safe---for example, writing to the same file from
 multiple workers.
 
 . . .
@@ -169,7 +167,38 @@ Parallelizing a task that is already parallelized may not help and may even
 
 ## Parallelization on One Computer
 
-![](../images/parallelization-cores.png){width=100%}
+\begin{center}
+\begin{tikzpicture}[
+    font=\small,
+    box/.style={draw, rounded corners=2pt, minimum height=0.45cm,
+      minimum width=1.7cm, inner sep=3pt},
+    flow/.style={-{Stealth}, draw=RoyalBlue3}
+  ]
+  \draw[rounded corners=4pt, draw=black!50, fill=black!2]
+    (-2, -1.35) rectangle (2, 3.25);
+  \node at (0, 2.95) {One computer};
+  \draw[rounded corners=2pt, draw=RoyalBlue3, fill=RoyalBlue3!5]
+    (-1.35, -0.2) rectangle (1.35, 2.6);
+  \node at (0, 2.3) {Processor};
+  \node at (-4, 2.95) {Tasks};
+  \node at (4, 2.95) {Results};
+
+  \foreach \i in {1,...,4} {
+    \node[box, draw=RoyalBlue3, fill=RoyalBlue3!10]
+      (task-\i) at (-4, {2.35 - 0.55*\i}) {Task \i};
+    \node[box, draw=RoyalBlue3, fill=RoyalBlue3!15]
+      (core-\i) at (0, {2.35 - 0.55*\i}) {Core \i};
+    \node[box, draw=DarkOrange3, fill=DarkOrange1!15]
+      (result-\i) at (4, {2.35 - 0.55*\i}) {Result \i};
+    \draw[flow] (task-\i) -- (core-\i);
+    \draw[flow, draw=DarkOrange3] (core-\i) -- (result-\i);
+  }
+
+  \node[box, draw=black!50, fill=black!5, minimum width=2.7cm]
+    (memory) at (0, -0.85) {Shared memory};
+  \draw[{Stealth}-{Stealth}, draw=black!50] (0, -0.2) -- (memory.north);
+\end{tikzpicture}
+\end{center}
 
 \pause
 
@@ -183,7 +212,43 @@ Independent tasks can run simultaneously on different cores of one processor.
 
 ## Parallelization on an HPC Cluster
 
-![](../images/hpc-cluster.png){width=88%}
+\begin{center}
+\begin{tikzpicture}[
+    font=\small,
+    box/.style={draw, rounded corners=2pt, align=center, inner sep=4pt},
+    flow/.style={-{Stealth}, draw=RoyalBlue3}
+  ]
+  \node[box, draw=RoyalBlue3, fill=RoyalBlue3!10, minimum width=1.5cm]
+    (jobs) at (-5.45, 0) {Job\\queue};
+  \node[box, draw=RoyalBlue3, fill=RoyalBlue3!10, minimum height=0.9cm]
+    (scheduler) at (-3, 0) {Scheduler};
+  \node[box, draw=DarkOrange3, fill=DarkOrange1!15, minimum height=0.9cm]
+    (results) at (5.25, 0) {Results};
+  \draw[flow] (jobs) -- (scheduler);
+
+  \foreach \i/\y in {1/1.7, 2/0, 3/-1.7} {
+    \node[box, draw=black!50, fill=black!2,
+      minimum width=4.3cm, minimum height=1.5cm]
+      (node-\i) at (1.3, \y) {};
+    \node at (1.3, {\y + 0.52}) {Node \i};
+    \node[box, font=\scriptsize, draw=black!50, fill=black!5,
+      minimum width=3.8cm, minimum height=0.34cm, inner sep=1pt]
+      (memory-\i) at (1.3, {\y - 0.49}) {Shared memory};
+
+    \foreach \j in {1,...,4} {
+      \node[box, font=\scriptsize, draw=RoyalBlue3, fill=RoyalBlue3!15,
+        minimum width=0.88cm, minimum height=0.42cm, inner sep=1pt]
+        (core-\i-\j) at ({1.3 + (\j - 2.5)}, {\y + 0.02}) {Core \j};
+      \draw[draw=black!50] (core-\i-\j.south)
+        -- (core-\i-\j.south |- memory-\i.north);
+    }
+
+    \draw[flow] (scheduler.east) to[out=0, in=180] (node-\i.west);
+    \draw[flow, draw=DarkOrange3]
+      (node-\i.east) to[out=0, in=180] (results.west);
+  }
+\end{tikzpicture}
+\end{center}
 
 \pause
 
@@ -218,7 +283,12 @@ nuuk <- read_table(
   na = "-999",
   skip = 1
 ) |>
-  gather(key = "Month", value = "Temperature", -Year, convert = TRUE) |>
+  gather(
+    key = "Month",
+    value = "Temperature",
+    -Year,
+    convert = TRUE
+  ) |>
   mutate(Temperature = Temperature / 10) |>
   filter(Year > 1866)
 
@@ -236,7 +306,8 @@ N <- nrow(nuuk_year)
 #| fig-cap: Annual average temperature in Nuuk, Greenland
 #| fig-width: 4
 
-nuuk_plot <- ggplot(nuuk_year, aes(Year, Temperature)) + geom_point()
+nuuk_plot <- ggplot(nuuk_year, aes(Year, Temperature)) +
+  geom_point()
 nuuk_plot
 ```
 
@@ -249,7 +320,8 @@ estimator at $x_i$ is
 $$
   \hat{f}_i = \frac{1}{k} \sum_{j \in \mathcal{N}_i} y_j
 $$
-where $\mathcal{N}_i$ is the set of indices for the $k$ nearest neighbors of $x_i$.
+where $\mathcal{N}_i$ is the set of indices for the $k$ nearest neighbors of
+$x_i$.
 
 \medskip\pause
 
@@ -287,18 +359,47 @@ where $\symbf{1}_{\{j \in \mathcal{N}_i\}}$ is 1 if $j$ is a neighbor of $i$ and
 0 otherwise.
 
 \pdfpcnote{
-  Each fitted value is a weighted average of the y-values.
+  - Each fitted value is a weighted average of the y-values.\\
+   -S is a relatively sparse N x N matrix.
+}
 
-  S is a relatively sparse N x N matrix.
+## Smoother Matrix: An Example
+
+Take $x_i = i$ for $i = 1, \ldots, 5$ and $k = 3$. Include each point itself
+among its neighbors.
+
+$$
+  \symbf{S} = \frac{1}{3} \begin{pmatrix}
+                            1                 & 1                 & 1                 & 0                 & 0                 \\
+                            1                 & 1                 & 1                 & 0                 & 0                 \\
+                            \alert < 2- > {0} & \alert < 2- > {1} & \alert < 2- > {1} & \alert < 2- > {1} & \alert < 2- > {0} \\
+                            0                 & 0                 & 1                 & 1                 & 1                 \\
+                            0                 & 0                 & 1                 & 1                 & 1
+                          \end{pmatrix}.
+$$
+
+\pause
+
+The third row selects and averages the neighbors of $x_3$:
+$$
+  \hat{f}_3 = \frac{y_2 + y_3 + y_4}{3}.
+$$
+
+\pdfpcnote{
+  Each row has three nonzero entries, each with weight 1/3.
+
+  At the endpoints, we still select the three closest points. This explains
+  why the first two rows are identical, as are the last two rows.
 }
 
 ## Linear Smoothers
 
-Smoothers of the form $\hat{\symbf{f}} = \symbf{S} \symbf{y}$ are called
-*linear smoothers*.
+Smoothers of the form $\hat{\symbf{f}} = \symbf{S} \symbf{y}$ are called *linear
+smoothers*.
+
+Here, linear means linear in $\symbf{y}$, with the $x$-values and $k$ fixed.
 
 \pause\medskip
-
 The $k$-nearest-neighbor smoother is a simple example of a linear smoother that
 works for $x$-values in any metric space.
 
@@ -316,7 +417,8 @@ $\hat{\symbf{f}}$.
 When $x_i \in \mathbb{R}$, we can sort the data according to the $x$-values and
 then use a *symmetric* neighbor definition:
 $$
-  \mathcal{N}_i = \left\{i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2}\right\}
+  \mathcal{N}_i
+  = \left\{ i - \frac{k - 1}{2}, i - \frac{k - 1}{2} + 1, \ldots, i - 1 , i, i + 1, \ldots, i + \frac{k - 1}{2} \right\}
 $$
 for odd $k$.
 
@@ -341,16 +443,15 @@ We don't need to keep track of metric comparisons. Only the order matters.
 
 ## Running Mean: An Illustration
 
-For $k = 3$, the orange bracket marks the current neighborhood. The blue points
-trace the running mean.
-
 ```{r}
 #| label: running-mean-illustration
 #| echo: false
 #| warning: false
 #| fig-show: animate
 #| fig-width: 5.5
-#| fig-height: 3
+#| fig-height: 2.8
+#| fig-cap: Illustration of the running mean with $k = 3$. The orange points are
+#|   the three nearest neighbors of the blue point.
 
 running_mean_data <- tibble(
   x = seq_len(6),
@@ -376,7 +477,7 @@ running_mean_frame <- function(step) {
   equation <- sprintf(
     paste0(
       "paste(hat(f)[%d] == frac(y[%d] + y[%d] + y[%d], 3), ",
-      "'=', frac(%d + %d + %d, 3), '=', %d)"
+      "' = ', frac(%d + %d + %d, 3), ' = ', %d)"
     ),
     center,
     neighbors[1],
@@ -395,7 +496,7 @@ running_mean_frame <- function(step) {
     geom_point(aes(color = in_window), size = 3) +
     geom_text(
       aes(label = pair, color = in_window),
-      nudge_y = 0.65,
+      nudge_y = 0.8,
       show.legend = FALSE
     ) +
     geom_line(
@@ -435,15 +536,15 @@ running_mean_frame <- function(step) {
     annotate(
       "text",
       x = center,
-      y = -0.45,
+      y = -0.55,
       label = sprintf("N[%d]", center),
       parse = TRUE,
       color = "darkorange"
     ) +
     annotate(
       "text",
-      x = 3.5,
-      y = 11.7,
+      x = 2,
+      y = 10,
       label = equation,
       parse = TRUE,
       color = "royalblue"
@@ -455,7 +556,7 @@ running_mean_frame <- function(step) {
     scale_x_continuous(breaks = running_mean_data$x) +
     coord_cartesian(
       xlim = c(0.65, 6.35),
-      ylim = c(-0.8, 12.7),
+      ylim = c(-1.3, 12.7),
       expand = FALSE
     ) +
     labs(x = expression(x[i]), y = expression(y[i]))
@@ -502,7 +603,8 @@ run_mean_naive <- function(y, k) {
 
 We can achieve a more efficient implementation by noting that
 $$
-  \hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i - (k-1)/2}}{k} + \frac{y_{i + (k + 1)/2}}{k}.
+  \hat{f}_{i+1} = \hat{f}_{i} - \frac{y_{i-(k-1)/2}}{k}
+                  + \frac{y_{i+(k+1)/2}}{k}.
 $$
 
 . . .
@@ -526,11 +628,9 @@ run_mean <- function(y, k) {
 ```
 
 \pdfpcnote{
-  This ensures that k is odd.
-
-  The complexity decreases from O(Nk) to O(N).
-
-  This approach maintains and updates a running sum.
+  - A sliding window of size k is used to compute the running mean.\\
+  - This ensures that k is odd.\\
+  - The complexity decreases from O(Nk) to O(N).
 }
 
 ## Visualization
@@ -560,7 +660,10 @@ nuuk_plot + geom_line(aes(y = f_hat), color = "blue")
 #| label: run-mean-nas
 
 op <- options(digits = 2)
-f_hat_filter <- stats::filter(nuuk_year$Temperature, rep(1 / 11, 11))
+f_hat_filter <- stats::filter(
+  nuuk_year$Temperature,
+  rep(1 / 11, 11)
+)
 f_hat_filter[c(1:10, 137:147)]
 options(digits = op$digits)
 ```
@@ -630,8 +733,10 @@ $f(x) = \E(Y \mid X = x)$,
 
 $$
   \begin{aligned}
-    \mathrm{MSE}(x) & = \E(f(x) - \hat{f}(x))^2 \\ \pause
-                    & = \V\big(f(x)-\hat{f}(x)\big) + \big(\E(f(x)-\hat{f}(x))\big)^2\\ \pause
+    \mathrm{MSE}(x) & = \E(f(x) - \hat{f}(x))^2                                                                                                                              \\
+    \pause
+                    & = \V\big(f(x) - \hat{f}(x)\big) + \big(\E(f(x) - \hat{f}(x))\big)^2                                                                                    \\
+    \pause
                     & = \underbrace{\frac{\sigma^2}{k}}_{\text{variance}} + \bigg( \underbrace{f(x) - \frac{1}{k} \sum_{l \in \mathcal{N}(x)} f(x_l)}_{\text{bias}}\bigg)^2.
   \end{aligned}
 $$
@@ -652,8 +757,8 @@ We know there is a bias-variance trade-off in $k$---so how do we choose $k$?
 
 ### Leave-One-Out Cross-Validation (LOOCV)
 
-Leave out one observation at a time, predict using the remaining data, and measure
-the prediction error.
+Leave out one observation at a time, predict using the remaining data, and
+measure the prediction error.
 
 \pause\medskip
 
@@ -666,7 +771,8 @@ $$
 
 \pause
 
-For a *linear* smoother, we have
+Keeping the neighborhoods fixed, we can express the leave-one-out fitted values
+as
 $$
   \hat{f}^{-i}_i = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}},
 $$
@@ -677,7 +783,8 @@ $$
 ::::: {.column width="47%"}
 This leads to the simplified formula
 $$
-  \mathrm{LOOCV} = \frac{1}{N} \sum_{i=1}^N \left(\frac{y_i - \hat{f}_i}{1 - S_{ii}}\right)^2.
+  \mathrm{LOOCV}
+  = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - S_{ii}} \right)^2.
 $$
 :::::
 :::
@@ -691,7 +798,8 @@ observations.
 
 For nearest neighbors, $S_{ii} = \frac{1}{k}$ for all $i$, so
 $$
-  \mathrm{LOOCV} = \frac{1}{N} \sum_{i=1}^N \left(\frac{y_i - \hat{f}_i}{1 - 1/k}\right)^2.
+  \mathrm{LOOCV}
+  = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - 1/k} \right)^2.
 $$
 
 . . .
@@ -721,13 +829,35 @@ over the remaining observations.
 - **Derive the formula on the blackboard!**
 }
 
+## LOOCV for Nearest Neighbors
+
+Define
+$$
+  \hat{f}_i^{-i}
+  = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}}, \qquad \hat{f}_i
+                 = \frac{1}{k} \sum_{j \in \mathcal{N}_i} y_j.
+$$
+
+Then
+$$
+  \begin{aligned}
+    \mathrm{LOOCV}
+     & = \frac{1}{N} \sum_{i=1}^N (y_i - \hat{f}^{-i}_i)^2                            \\
+     & = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - S_{ii}} \right)^2 \\
+     & = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - 1/k} \right)^2.
+  \end{aligned}
+$$
+
 ##
 
 ```{r}
 #| label: nuuk-running-loocv
 
 k <- seq(3, 40, 2)
-cv_error <- sapply(k, function(kk) loocv(kk, nuuk_year$Temperature))
+cv_error <- sapply(
+  k,
+  function(kk) loocv(kk, nuuk_year$Temperature)
+)
 k_opt <- k[which.min(cv_error)]
 ```
 
@@ -758,7 +888,10 @@ ggplot(tibble(k, cv_error), aes(k, cv_error)) +
 #| fig-cap: Nearest-neighbor smoother with LOOCV-optimal $k=15$.
 
 nuuk_plot +
-  geom_line(aes(y = run_mean(nuuk_year$Temperature, k_opt)), color = "blue")
+  geom_line(
+    aes(y = run_mean(nuuk_year$Temperature, k_opt)),
+    color = "blue"
+  )
 ```
 
 ## Wiggliness
@@ -783,7 +916,8 @@ We want a smooth function $f$ that balances goodness of fit and wiggliness.
 
 To do this, we minimize an objective function that penalizes wiggliness:
 $$
-  L(f) = \sum_{i=1}^N (y_i - f(x_i))^2 + \lambda \underbrace{\int f''(z)^2 \ \mathrm{d}z}_{\|f''\|_2^2}
+  L(f) = \sum_{i=1}^N (y_i - f(x_i))^2
+         + \lambda \underbrace{\int f''(z)^2 \ \mathrm{d}z}_{\|f''\|_2^2}
 $$
 where $\lambda \geq 0$ is a tuning parameter that controls the trade-off.
 
@@ -819,7 +953,7 @@ $$
 where $\symbf{\Phi}_{ij} = \varphi_j(x_i)$. Then \pause
 $$
   \begin{aligned}
-    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \|f''\|_2^2 \\
+    L(\symbf{f}) & = (\symbf{y} - \symbf{f})^T (\symbf{y} - \symbf{f}) + \lambda \|f''\|_2^2                                                                  \\
                  & = (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
   \end{aligned}
 $$
@@ -869,7 +1003,10 @@ b_splines <- splines::splineDesign(knots, xx)
 df <- data.frame(
   x = rep(xx, times = ncol(b_splines)),
   y = as.vector(b_splines),
-  group = as.character(rep(seq_len(ncol(b_splines)), each = length(xx)))
+  group = as.character(rep(
+    seq_len(ncol(b_splines)),
+    each = length(xx)
+  ))
 )
 
 knot_points <- c(0, 0.2, 0.4, 0.6, 0.8, 1)
@@ -913,7 +1050,10 @@ omega_mat <- as.matrix(omega)
 n_row <- nrow(omega_mat)
 n_col <- ncol(omega_mat)
 
-omega_df <- expand.grid(Row = seq_len(n_row), Col = seq_len(n_col))
+omega_df <- expand.grid(
+  Row = seq_len(n_row),
+  Col = seq_len(n_col)
+)
 omega_df$Value <- as.vector(omega_mat)
 
 ggplot(omega_df, aes(x = Col, y = Row, fill = Value)) +
@@ -978,10 +1118,11 @@ compute.
 ### Idea
 
 Replace $S_{ii}$ in LOOCV with $\mathrm{df} / N$, where
-$\mathrm{df} = \operatorname{trace}(\symbf{S}) = \sum_{i=1}^N S_{ii}$. This gives
-the **generalized** cross-validation criterion
+$\mathrm{df} = \operatorname{trace}(\symbf{S}) = \sum_{i=1}^N S_{ii}$. This
+gives the **generalized** cross-validation criterion
 $$
-  \mathrm{GCV} = \frac{1}{N} \sum_{i=1}^N \left(\frac{y_i - \hat{f}_i}{1 - \mathrm{df} / N}\right)^2.
+  \mathrm{GCV}
+  = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - \mathrm{df} / N} \right)^2.
 $$
 
 . . .
@@ -1075,11 +1216,13 @@ $$
 $$
 \pause we can rewrite the smoother matrix as
 $$
-  \symbf{S}_{\lambda} = \widetilde{\symbf{U}}  (I + \lambda  \Gamma)^{-1} \widetilde{\symbf{U}}^T
+  \symbf{S}_{\lambda}
+  = \widetilde{\symbf{U}} (I + \lambda \Gamma)^{-1} \widetilde{\symbf{U}}^T
 $$
 where $\widetilde{\symbf{U}} = \symbf{U} \symbf{W}$ and \pause
 $$
-  D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1} = \symbf{W} \Gamma \symbf{W}^T.
+  D^{-1} \symbf{V}^T \symbf{\Omega} \symbf{V} D^{-1}
+  = \symbf{W} \Gamma \symbf{W}^T.
 $$
 
 \medskip\pause
@@ -1135,7 +1278,9 @@ Phi <- splines::splineDesign(
 )
 omega <- pen_mat(inner_knots)
 Phi_svd <- svd(Phi)
-omega_tilde <- t(t(crossprod(Phi_svd$v, omega %*% Phi_svd$v)) / Phi_svd$d) /
+omega_tilde <- t(
+  t(crossprod(Phi_svd$v, omega %*% Phi_svd$v)) / Phi_svd$d
+) /
   Phi_svd$d
 
 Omega_tilde_svd <- svd(omega_tilde)
@@ -1143,7 +1288,12 @@ U_tilde <- Phi_svd$u %*% Omega_tilde_svd$u
 
 colnames(U_tilde) <- paste0(rep("u", 20), 1:20)
 bind_cols(select(nuuk_year, Year), as_tibble(U_tilde)) |>
-  gather(key = "term", value = "value", -Year, factor_key = TRUE) |>
+  gather(
+    key = "term",
+    value = "value",
+    -Year,
+    factor_key = TRUE
+  ) |>
   ggplot(aes(Year, value, color = term)) +
   geom_line() +
   facet_wrap(~term) +
@@ -1218,16 +1368,20 @@ parallel_square <- function(x) {
 cl <- makeCluster(detectCores() / 2)
 registerDoParallel(cl)
 
-bench::mark(loop = loop_square(x), parallel = parallel_square(x), check = FALSE)
+bench::mark(
+  loop = loop_square(x),
+  parallel = parallel_square(x),
+  check = FALSE
+)
 ```
 
 . . .
 
 ### Exercise 2: Future
 
-Create a future that waits for five seconds using `Sys.sleep(5)`. When it is done,
-it should print "The future is here!" and return the value 42. Try accessing
-the value of the future before and after the computation is complete.
+Create a future that waits for five seconds using `Sys.sleep(5)`. When it is
+done, it should print "The future is here!" and return the value 42. Try
+accessing the value of the future before and after the computation is complete.
 
 ```{r}
 #| echo: false
@@ -1257,7 +1411,8 @@ the spline. Plot and compare the results.
 
 ### Parallelization
 
-- Parallelization delegates work across your CPU cores to speed up computations.\pause
+- Parallelization delegates work across your CPU cores to speed up
+  computations.\pause
 - Use `foreach` and `%dopar%` to parallelize computations.
 
 . . .
