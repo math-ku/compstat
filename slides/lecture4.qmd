@@ -88,17 +88,18 @@ foreach(i = seq_len(3)) %dopar%
 
 ## Backends
 
+::: {.columns}
+::::: {.column width="43%"}
 Several backends are available as separate packages (**doParallel**, **doMC**,
 **doFuture**). Load and **register** one before using `%dopar%`.
 
-. . .
+\pause
 
-::: {.columns}
-::::: {.column width="43%"}
 ```{r}
 #| label: doparallel
 
 library(doParallel)
+
 cl <- makeCluster(2)
 registerDoParallel(cl)
 ```
@@ -121,7 +122,7 @@ foreach(i = seq_len(3)) %dopar%
 
 ## Combining Results
 
-`foreach()` returns a list by default.
+`foreach()` returns a **list** by default.
 
 \medskip\pause
 
@@ -170,7 +171,7 @@ Parallelizing a task that is already parallelized may not help and may even
 
 ## Parallelization on One Computer
 
-\begin{center}
+\begin{figure}
 \begin{tikzpicture}[
     font=\small,
     box/.style={draw, rounded corners=2pt, minimum height=0.45cm,
@@ -200,12 +201,9 @@ Parallelizing a task that is already parallelized may not help and may even
   \node[box, draw=black!50, fill=black!5, minimum width=2.7cm]
     (memory) at (0, -0.85) {Shared memory};
   \draw[{Stealth}-{Stealth}, draw=black!50] (0, -0.2) -- (memory.north);
-\end{tikzpicture}
-\end{center}
-
-\pause
-
-Independent tasks can run simultaneously on different cores of one processor.
+  \end{tikzpicture}
+  \caption{Independent tasks can run simultaneously on different cores of one processor.}
+\end{figure}
 
 \pdfpcnote{
   The cores share the memory of one computer.
@@ -213,9 +211,9 @@ Independent tasks can run simultaneously on different cores of one processor.
   Most R code uses only one core unless we explicitly parallelize it.
 }
 
-## Parallelization on an HPC Cluster
+## Parallelization on a Cluster
 
-\begin{center}
+\begin{figure}
 \begin{tikzpicture}[
     font=\small,
     box/.style={draw, rounded corners=2pt, align=center, inner sep=4pt},
@@ -250,12 +248,9 @@ Independent tasks can run simultaneously on different cores of one processor.
     \draw[flow, draw=DarkOrange3]
       (node-\i.east) to[out=0, in=180] (results.west);
   }
-\end{tikzpicture}
-\end{center}
-
-\pause
-
-A scheduler assigns independent jobs to cores across several **nodes**.
+  \end{tikzpicture}
+  \caption{A scheduler assigns independent jobs to cores across several **nodes**.}
+\end{figure}
 
 \pdfpcnote{
   A node is one physical computer containing several cores and shared memory.
@@ -730,51 +725,40 @@ run_mean <- function(y, k) {
 
 ```{r}
 #| label: nuuk-NN-plot2
+#| echo: false
 #| warning: false
-#| fig-width: 5
+#| fig-width: 4
 #| fig-height: 2.2
 #| fig-cap: Running mean smoother with $k = 11$.
 
 f_hat <- run_mean(nuuk_year$Temperature, 11)
 nuuk_plot + geom_line(aes(y = f_hat), color = "blue")
 ```
+. . .
+
+For a response vector `y`, R provides the same running mean:
+
+```{r}
+#| label: run-mean-filter
+#| eval: false
+
+stats::filter(y, rep(1 / 11, 11))
+```
 
 \pdfpcnote{
   This takes five observations to the right and five to the left.
-}
 
-## `stats::filter()`
-
-`stats::filter()` applies linear filtering (moving averages or autoregression).
-
-. . .
-
-```{r, echo=2}
-#| label: run-mean-nas
-
-op <- options(digits = 2)
-f_hat_filter <- stats::filter(
-  nuuk_year$Temperature,
-  rep(1 / 11, 11)
-)
-f_hat_filter[c(1:10, 137:147)]
-options(digits = op$digits)
-```
-
-. . .
-
-```{r}
-#| label: runmean-test
-
-f_hat <- run_mean(nuuk_year$Temperature, 11)
-
-all.equal(f_hat, as.numeric(f_hat_filter))
-```
-
-\pdfpcnote{
   Warn about the name clash with dplyr::filter().
 
   `rep(1 / 11, 11)` contains the moving-average coefficients.
+
+  For this example, set `y <- nuuk_year$Temperature` and
+  `f_hat_filter <- stats::filter(y, rep(1 / 11, 11))`.
+  Inspect the boundary values with `f_hat_filter[c(1:10, 137:147)]`.
+  The first and last five fitted values are NA.
+
+  Check agreement with `all.equal(f_hat, as.numeric(f_hat_filter))`,
+  which returns TRUE.
 }
 
 ##
@@ -784,8 +768,9 @@ all.equal(f_hat, as.numeric(f_hat_filter))
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-width: 5.5
-#| fig-height: 3
+#| fig-width: 4
+#| fig-height: 2.6
+#| fig-cap: "Dense matrix-vector multiplication is $O(N^2)$."
 
 nn_bench <- bench::press(N = c(512, 1024, 2048, 4096), {
   k <- 11
@@ -817,8 +802,6 @@ mutate(nn_bench, method = as.character(expression)) |>
   geom_line() +
   labs(y = "time (s)")
 ```
-
-Dense matrix-vector multiplication is $O(N^2)$.
 
 \medskip\pause
 
@@ -1556,6 +1539,11 @@ the spline. Plot and compare the results.
 . . .
 
 ### Smoothing Splines
+
+- A smoothing spline is a natural cubic spline that minimizes a penalized least
+  squares criterion.\pause
+- The penalty term controls the trade-off between goodness of fit and
+  wiggliness.
 
 ## Next Time
 
