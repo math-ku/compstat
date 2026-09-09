@@ -71,6 +71,7 @@ foreach(i = seq_len(3)) %dopar%
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: foreach-sqrt-display
 #| echo: false
 #| ref-label: "foreach-sqrt"
 ```
@@ -130,6 +131,8 @@ manually reduce the resulting list.
 . . .
 
 ```{r}
+#| label: foreach-combine
+
 x <- c(4, 1, 1e2, 2)
 
 foreach(i = seq_len(4), .combine = c) %dopar%
@@ -303,6 +306,7 @@ N <- nrow(nuuk_year)
 ```
 
 ```{r}
+#| label: nuuk-plot
 #| fig-cap: Annual average temperature in Nuuk, Greenland
 #| fig-width: 4
 
@@ -394,34 +398,41 @@ $$
 
 ## Sparse Storage
 
-When $k \ll N$, most entries of $\symbf{S}$ are zero: it is a **sparse
-matrix**.
+When $k \ll N$, most entries of $\symbf{S}$ are zero: it is a **sparse matrix**.
 
-The third row of our example is
-$$
-  \begin{pmatrix} 0 & 1/3 & 1/3 & 1/3 & 0 \end{pmatrix}.
-$$
+\medskip\pause
 
-\pause
-
-Store only the nonzero values and their positions:
+**Compressed sparse column (CSC)** storage uses three arrays. For our example:
 $$
-  \begin{array}{c|ccc}
-    \text{Column index} & 2 & 3 & 4 \\
-    \hline
-    \text{Value} & 1/3 & 1/3 & 1/3
-  \end{array}
+  \begin{aligned}
+    \text{Values}          & :\quad \underbrace{(1/3, \ldots, 1/3)}_{15\text{ entries}} \\
+    \text{Row indices}     & :\quad (0,1,\;0,1,2,\;0,1,2,3,4,\;2,3,4,\;3,4)             \\
+    \text{Column pointers} & :\quad (0,2,5,10,13,15).
+  \end{aligned}
 $$
 
 \pause
 
-For $N$ rows with $k$ nonzeros each, storage grows as $O(Nk)$.
+Row indices and offsets start at zero. Pointers 2 and 5 delimit the second
+column: offsets 2, 3, and 4 contain its values and row indices.
+
+\pause\medskip
+
+With $Nk$ nonzeros, we store $Nk$ values, $Nk$ row indices, and $N + 1$ column
+pointers: $O(Nk + N) = O(Nk)$ storage.
 
 \pdfpcnote{
   A dense matrix stores all N squared entries, including the zeros.
 
-  Sparse storage also needs indices to locate the nonzero entries. The table
-  illustrates one row; there are several formats for organizing a whole matrix.
+  Values are grouped by column. Each value has a row index; its column is
+  identified by the pointer ranges, so no column index is stored per value.
+
+  These are the x, i, and p slots of the dgCMatrix constructed on the next slide.
+  The constructor accepts one-based R indices, but the stored indices are
+  zero-based. Offsets 2, 3, and 4 correspond to positions 3, 4, and 5 in R.
+
+  The final pointer is the total number of stored entries. An empty column has
+  equal start and end pointers.
 
   Our five-point example is small. The savings become substantial when k is
   small relative to N; sparse storage can cost more for tiny matrices.
@@ -456,6 +467,8 @@ Matrix::printSpMatrix(3 * S_example)
 ```
 :::::
 :::
+
+\bigskip
 
 The display is scaled by 3. Dots represent zeros that are not stored.
 
@@ -798,7 +811,11 @@ nn_bench <- bench::press(N = c(512, 1024, 2048, 4096), {
   )
 })
 
-plot(nn_bench)
+mutate(nn_bench, method = as.character(expression)) |>
+  ggplot(aes(N, median, color = method)) +
+  geom_point() +
+  geom_line() +
+  labs(y = "time (s)")
 ```
 
 Dense matrix-vector multiplication is $O(N^2)$.
@@ -817,11 +834,11 @@ For fixed $k$, sparse multiplication and the other two algorithms are $O(N)$.
 
 ## Three Ways to Compute a Running Mean
 
-| Method | Storage for $\symbf{S}$ | Work for all fitted values |
-|:--|:--|:--|
-| Dense matrix | $O(N^2)$ | $O(N^2)$ |
-| Sparse matrix | $O(Nk)$ | $O(Nk)$ |
-| Sliding-window update | No matrix | $O(N)$ |
+  | Method                | Storage for $\symbf{S}$ | Work for all fitted values |
+  | :-------------------- | :---------------------- | :------------------------- |
+  | Dense matrix          | $O(N^2)$                | $O(N^2)$                   |
+  | Sparse matrix         | $O(Nk)$                 | $O(Nk)$                    |
+  | Sliding-window update | No matrix               | $O(N)$                     |
 
 \pause\medskip
 
@@ -952,26 +969,7 @@ over the remaining observations.
 - **Derive the formula on the blackboard!**
 }
 
-## LOOCV for Nearest Neighbors
-
-Define
-$$
-  \hat{f}_i^{-i}
-  = \sum_{j \neq i} \frac{S_{ij}y_j}{1 - S_{ii}}, \qquad \hat{f}_i
-                 = \frac{1}{k} \sum_{j \in \mathcal{N}_i} y_j.
-$$
-
-Then
-$$
-  \begin{aligned}
-    \mathrm{LOOCV}
-     & = \frac{1}{N} \sum_{i=1}^N (y_i - \hat{f}^{-i}_i)^2                            \\
-     & = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - S_{ii}} \right)^2 \\
-     & = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - 1/k} \right)^2.
-  \end{aligned}
-$$
-
-##
+--------------------------------------------------------------------------------
 
 ```{r}
 #| label: nuuk-running-loocv
@@ -1046,8 +1044,8 @@ where $\lambda \geq 0$ is a tuning parameter that controls the trade-off.
 
 \pause\medskip
 
-The minimizer of this objective is a **natural cubic spline** with **knots** at
-the data points $x_i$.
+The minimizer is a **natural cubic spline** with **knots** at the data points
+$x_i$.
 
 \medskip\pause
 
@@ -1117,6 +1115,7 @@ b_splines <- splines::splineDesign(knots, xx)
 . . .
 
 ```{r}
+#| label: splines-plot
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2
@@ -1189,14 +1188,15 @@ ggplot(omega_df, aes(x = Col, y = Row, fill = Value)) +
 ## Sparsity in Spline Computations
 
 B-spline basis functions have **local support**: each is nonzero only on a few
-neighboring knot intervals. This makes $\symbf{\Phi}$ and $\symbf{\Omega}$ sparse.
+neighboring knot intervals. This makes $\symbf{\Phi}$ and $\symbf{\Omega}$
+sparse.
 
 \pause\medskip
 
 The coefficients solve
 $$
-  (\symbf{\Phi}^T \symbf{\Phi} + \lambda \symbf{\Omega})
-  \hat{\symbf{\beta}} = \symbf{\Phi}^T \symbf{y}.
+  (\symbf{\Phi}^T \symbf{\Phi} + \lambda \symbf{\Omega}) \hat{\symbf{\beta}}
+  = \symbf{\Phi}^T \symbf{y}.
 $$
 With the basis ordered by knot location, this system is **banded**: its nonzero
 entries lie near the diagonal.
@@ -1204,8 +1204,8 @@ entries lie near the diagonal.
 \pause\medskip
 
 Solve for $\hat{\symbf{\beta}}$, then compute
-$\hat{\symbf{f}} = \symbf{\Phi}\hat{\symbf{\beta}}$.
-The full smoother matrix $\symbf{S}_{\lambda}$ is generally dense.
+$\hat{\symbf{f}} = \symbf{\Phi}\hat{\symbf{\beta}}$. The full smoother matrix
+$\symbf{S}_{\lambda}$ is generally dense.
 
 \pause\medskip
 
@@ -1245,7 +1245,7 @@ Phi <- splines::splineDesign(knots, inner_knots)
 ```{r}
 #| label: nuuk-smooth-spline2
 
-# The penalty matrix can be reused because it depends only on the knots.
+# Omega can be reused because it depends only on the knots.
 omega <- pen_mat(inner_knots)
 smoother <- function(lambda) {
   Phi %*%
@@ -1498,6 +1498,7 @@ in parallel. Benchmark the parallel version against a regular `for` loop using
 `bench::mark()`.
 
 ```{r}
+#| label: parallel-square
 #| echo: false
 #| eval: false
 
@@ -1538,31 +1539,7 @@ bench::mark(
 
 . . .
 
-### Exercise 2: Future
-
-Create a future that waits for five seconds using `Sys.sleep(5)`. When it is
-done, it should print "The future is here!" and return the value 42. Try
-accessing the value of the future before and after the computation is complete.
-
-```{r}
-#| echo: false
-#| eval: false
-
-library(future)
-plan(multicore) # Not on Windows or RStudio!
-v %<-%
-  {
-    Sys.sleep(5)
-    cat("The future is here!\n")
-    42
-  }
-
-v # This line blocks until v is available
-```
-
-. . .
-
-### Exercise 3: Smoothing Air Quality Data
+### Exercise 2: Smoothing Air Quality Data
 
 Apply `stats::filter()` and `smooth.spline()` to the `airquality$Temp` data. Try
 different window sizes for the moving average and different `spar` values for
@@ -1579,3 +1556,15 @@ the spline. Plot and compare the results.
 . . .
 
 ### Smoothing Splines
+
+## Next Time
+
+### Pseudo-Random Numbers
+
+How do you simulate random numbers in R?
+
+. . .
+
+### Rejection Sampling
+
+General and useful method for sampling from a target distribution
