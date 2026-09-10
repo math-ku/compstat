@@ -31,9 +31,9 @@ Unless instructed otherwise, only a single core is used.
 The computer doesn't automatically know that your computations are safe to do in
 parallel.
 
-## Embarrassingly Parallel Tasks
+### Embarrassingly Parallel Tasks
 
-These tasks separate easily into independent subtasks.
+Tasks that separate into independent subtasks.
 
 \pause\medskip
 
@@ -91,7 +91,11 @@ foreach(i = seq_len(3)) %dopar%
 ::: {.columns}
 ::::: {.column width="43%"}
 Several backends are available as separate packages (**doParallel**, **doMC**,
-**doFuture**). Load and **register** one before using `%dopar%`.
+**doFuture**).
+
+\medskip\pause
+
+Load and **register** one before using `%dopar%`.
 
 \pause
 
