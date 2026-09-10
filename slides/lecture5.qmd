@@ -118,6 +118,133 @@ has distribution function $F$.
 Computing $F^{-1}$ can be simple (e.g., for the exponential distribution) or
 require a search or numerical approximation.
 
+## Following the Inverse CDF
+
+For $X \sim \mathrm{Exp}(1)$, $F(x) = 1 - e^{-x}$ for $x \geq 0$.
+
+```{r}
+#| label: inversion-cdf-arrows
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5
+#| fig-height: 2.2
+
+inverse_example <- tibble(u = c(0.2, 0.6, 0.9)) |>
+  mutate(x = -log1p(-u))
+
+inverse_curve <- tibble(x = seq(0, 3, length.out = 300)) |>
+  mutate(cdf = pexp(x))
+
+for (stage in 1:3) {
+  p <- ggplot(inverse_curve, aes(x, cdf)) +
+    geom_line() +
+    geom_point(
+      data = inverse_example,
+      aes(x = 0, y = u),
+      color = "royalblue"
+    ) +
+    scale_y_continuous(breaks = c(0, 0.2, 0.6, 0.9, 1)) +
+    coord_cartesian(xlim = c(0, 3), ylim = c(0, 1)) +
+    labs(x = expression(x), y = expression(F(x)))
+  if (stage >= 2) {
+    p <- p +
+      geom_segment(
+        data = inverse_example,
+        aes(x = 0, xend = x, y = u, yend = u),
+        arrow = grid::arrow(length = grid::unit(0.07, "inches")),
+        color = "royalblue"
+      )
+  }
+  if (stage >= 3) {
+    p <- p +
+      geom_segment(
+        data = inverse_example,
+        aes(x = x, xend = x, y = u, yend = 0),
+        arrow = grid::arrow(length = grid::unit(0.07, "inches")),
+        color = "darkorange"
+      )
+  }
+  print(p)
+}
+```
+
+Move right from $U$ to the CDF, then down to $X = F^{-1}(U) = -\log(1 - U)$.
+
+## Inversion for a Discrete Distribution
+
+The **generalized inverse** is $F^{-1}(u) = \inf\{x : F(x) \geq u\}$.
+
+```{r}
+#| label: inversion-discrete-cdf
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5
+#| fig-height: 2.2
+
+discrete_cdf <- tibble(
+  left = c(-0.4, 0, 1, 2),
+  right = c(0, 1, 2, 2.4),
+  cdf = c(0, 0.2, 0.7, 1)
+)
+
+for (stage in 1:2) {
+  p <- ggplot(discrete_cdf) +
+    geom_segment(aes(
+      x = left,
+      xend = right,
+      y = cdf,
+      yend = cdf
+    )) +
+    geom_point(
+      data = discrete_cdf[-1, ],
+      aes(x = left, y = cdf)
+    ) +
+    geom_point(
+      data = discrete_cdf[-4, ],
+      aes(x = right, y = cdf),
+      shape = 21,
+      fill = "white"
+    ) +
+    scale_x_continuous(breaks = 0:2) +
+    scale_y_continuous(breaks = c(0, 0.2, 0.7, 1)) +
+    coord_cartesian(ylim = c(0, 1)) +
+    labs(x = expression(x), y = expression(F(x)))
+  if (stage >= 2) {
+    p <- p +
+      annotate(
+        "segment",
+        x = -0.2,
+        xend = -0.2,
+        y = 0.2,
+        yend = 0.7,
+        color = "darkorange"
+      ) +
+      annotate(
+        "segment",
+        x = -0.2,
+        xend = 1,
+        y = 0.55,
+        yend = 0.55,
+        arrow = grid::arrow(length = grid::unit(0.07, "inches")),
+        color = "darkorange"
+      ) +
+      annotate(
+        "segment",
+        x = 1,
+        xend = 1,
+        y = 0.55,
+        yend = 0,
+        arrow = grid::arrow(length = grid::unit(0.07, "inches")),
+        color = "darkorange"
+      ) +
+      annotate("text", x = 0.4, y = 0.6, label = "u = 0.55")
+  }
+  print(p)
+}
+```
+
+Every $u \in (0.2, 0.7]$ maps to 1, so $\Pr(X = 1) = 0.7 - 0.2 = 0.5$.
+
 ## Gaussian Random Variables
 
 ### Box--Muller Method
@@ -163,8 +290,6 @@ sampler](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010
 uses a [numerical approximation of
 $\Phi^{-1}$](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52)
 to generate samples from $\mathcal{N}(0,1)$.
-
-\medskip\pause
 
 ## Sampling in R
 
@@ -408,6 +533,70 @@ ggplot() +
   theme(legend.position = "right")
 ```
 
+## Why Rejection Sampling Works
+
+For one proposal $Y \sim g$, let $A = \{U \leq \alpha f(Y)/g(Y)\}$ be the
+acceptance event.
+
+\medskip\pause
+
+Writing $F$ for the target CDF,
+$$
+  \Pr(Y \leq x, A) = \int_{-\infty}^x g(y)\frac{\alpha f(y)}{g(y)}\,\mathrm{d}y
+                   = \alpha F(x).
+$$
+
+. . .
+
+Taking $x \to \infty$ gives $\Pr(A) = \alpha$. Therefore,
+$$
+  \Pr(Y \leq x \mid A) = \frac{\alpha F(x)}{\alpha} = F(x).
+$$
+
+. . .
+
+Each accepted proposal has the target distribution. Fresh independent attempts
+give the first accepted proposal, $Y_\sigma$, this same distribution.
+
+## The Number of Proposals
+
+Each attempt succeeds with probability $\alpha$, independently:
+$$
+  \Pr(\sigma = n) = (1 - \alpha)^{n-1}\alpha, \qquad n = 1, 2, \ldots.
+$$
+
+. . .
+
+```{r}
+#| label: rejection-geometric-cost
+#| echo: false
+#| fig-width: 5
+#| fig-height: 1.7
+
+proposal_counts <- tidyr::expand_grid(
+  n = 1:25,
+  alpha = c(0.2, 0.8)
+) |>
+  mutate(
+    probability = dgeom(n - 1, alpha),
+    label = paste("alpha ==", alpha)
+  )
+
+ggplot(proposal_counts, aes(n, probability)) +
+  geom_segment(aes(xend = n, yend = 0), color = "royalblue") +
+  facet_wrap(~label, labeller = "label_parsed") +
+  labs(x = expression(n), y = expression(Pr(sigma == n)))
+```
+
+. . .
+
+$\sigma$ counts attempts **including the accepted one**:
+$\mathbb{E}[\sigma] = 1/\alpha$.
+
+\medskip
+
+Stopping at the $N$th acceptance takes $N/\alpha$ proposals on average.
+
 ## Normalizing Constants
 
 Rejection sampling works with unnormalized densities!
@@ -465,6 +654,53 @@ An analytic bound guarantees validity.
 
 Numerical optimization (e.g., `optimize()` in R) can suggest a bound, but the
 envelope inequality must hold everywhere.
+
+## When No Envelope Exists
+
+We need $g(y) > 0$ wherever $f(y) > 0$ and $\sup_y f(y)/g(y) < \infty$.
+
+\bigskip
+
+```{r}
+#| label: rejection-invalid-proposals
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 2.2
+
+invalid_proposals <- tibble(x = seq(-4, 4, length.out = 500)) |>
+  mutate(
+    target = dnorm(x),
+    proposal = dunif(x, -2, 2),
+    log_ratio = dnorm(x, log = TRUE) -
+      dnorm(x, sd = 0.5, log = TRUE)
+  )
+
+support_plot <- ggplot(invalid_proposals, aes(x)) +
+  geom_line(aes(y = target), color = "royalblue") +
+  geom_line(aes(y = proposal), color = "darkorange") +
+  labs(
+    title = "Missing support",
+    subtitle = "Blue: target; orange: proposal",
+    x = expression(y),
+    y = "Density"
+  )
+
+tail_plot <- ggplot(invalid_proposals, aes(x, log_ratio)) +
+  geom_line(color = "darkorange") +
+  labs(
+    title = "Tails too light",
+    subtitle = "Normal proposal with SD 0.5",
+    x = expression(y),
+    y = expression(log(f(y) / g(y)))
+  )
+
+support_plot + tail_plot
+```
+
+. . .
+
+For a standard normal target, neither a $\mathcal{U}(-2,2)$ proposal nor a
+$\mathcal{N}(0,1/4)$ proposal admits a finite envelope.
 
 ## Von Mises Rejection Sampling
 
@@ -629,6 +865,49 @@ Simple and fast, but returns a **random** number of samples!
 We need a function that returns exactly $N$ samples. We can estimate $\alpha$ to
 choose batch sizes without computing it in advance.
 
+## How Many Samples Does a Batch Return?
+
+From $m$ independent proposals, the accepted count satisfies
+$$
+  B_m \sim \mathrm{Binomial}(m,\alpha), \qquad \mathbb{E}[B_m] = m\alpha.
+$$
+
+```{r}
+#| label: rejection-binomial-batches
+#| echo: false
+#| fig-width: 5
+#| fig-height: 1.9
+
+batch_counts <- tidyr::expand_grid(
+  count = 60:170,
+  m = c(500, 600)
+) |>
+  mutate(
+    probability = dbinom(count, m, 0.2),
+    enough = count >= 100,
+    label = sprintf(
+      "m = %d: %.0f%% reach 100",
+      m,
+      100 * pbinom(99, m, 0.2, lower.tail = FALSE)
+    )
+  )
+
+ggplot(batch_counts, aes(count, probability, color = enough)) +
+  geom_segment(aes(xend = count, yend = 0)) +
+  geom_vline(xintercept = 100, linetype = "dashed") +
+  scale_color_manual(
+    values = c("darkorange", "royalblue"),
+    guide = "none"
+  ) +
+  facet_wrap(~label) +
+  labs(x = "Accepted samples", y = "Probability")
+```
+
+. . .
+
+Here $N = 100$ and $\alpha = 0.2$. Even with $m = N/\alpha = 500$, a batch may
+fall short. Generate another batch when needed.
+
 ##
 
 \begin{algorithm}[H]
@@ -763,6 +1042,136 @@ $x_i \in I_i = (z_{i-1}, z_i]$ for
 $$
   z_0 < x_1 < z_1 < x_2 < \ldots < z_{m-1} < x_m < z_m.
 $$
+
+## Why Tangents Give Upper Bounds
+
+If $h = \log f$ is differentiable and concave, then
+$$
+  h(x) \leq h(x_i) + h'(x_i)(x - x_i) = a_i x + b_i.
+$$
+
+```{r}
+#| label: envelope-tangent-bounds
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5
+#| fig-height: 2.1
+
+normal_log_tangent <- function(x, at) {
+  dnorm(at, log = TRUE) - at * (x - at)
+}
+
+tangent_example <- tibble(x = seq(-3, 3, length.out = 401)) |>
+  mutate(
+    log_density = dnorm(x, log = TRUE),
+    left = normal_log_tangent(x, -1.5),
+    right = normal_log_tangent(x, 1.5),
+    envelope = pmin(left, right)
+  )
+
+for (stage in 1:2) {
+  p <- ggplot(tangent_example, aes(x)) +
+    geom_line(aes(y = log_density), color = "grey50") +
+    geom_line(aes(y = left), color = "royalblue") +
+    annotate(
+      "point",
+      x = -1.5,
+      y = dnorm(-1.5, log = TRUE),
+      color = "royalblue"
+    ) +
+    coord_cartesian(ylim = c(-5.5, 2)) +
+    labs(x = expression(x), y = expression(h(x)))
+  if (stage >= 2) {
+    p <- p +
+      geom_line(aes(y = right), color = "darkorange") +
+      annotate(
+        "point",
+        x = 1.5,
+        y = dnorm(1.5, log = TRUE),
+        color = "darkorange"
+      )
+  }
+  print(p)
+}
+```
+
+Choose $a_i = h'(x_i)$ and $b_i = h(x_i) - a_i x_i$. Exponentiating gives
+$f(x) \leq e^{a_i x+b_i}$.
+
+## Where Should the Pieces Meet?
+
+Use the smallest tangent bound at each point: $V(x) = \min_i\{a_i x + b_i\}$.
+
+```{r}
+#| label: envelope-tangent-intersections
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5
+#| fig-height: 1.9
+
+for (stage in 1:2) {
+  p <- ggplot(tangent_example, aes(x)) +
+    geom_line(aes(y = log_density), color = "grey50") +
+    geom_line(
+      aes(y = left),
+      color = "royalblue",
+      linetype = "dashed"
+    ) +
+    geom_line(
+      aes(y = right),
+      color = "darkorange",
+      linetype = "dashed"
+    ) +
+    geom_vline(xintercept = 0, color = "grey70") +
+    coord_cartesian(ylim = c(-5.5, 2)) +
+    labs(x = expression(x), y = expression(h(x)))
+  if (stage >= 2) {
+    p <- p + geom_line(aes(y = envelope))
+  }
+  print(p)
+}
+```
+
+Adjacent tangents meet at
+$$
+  z_i = \frac{b_{i+1} - b_i}{a_i - a_{i+1}} \qquad (a_i \neq a_{i+1}).
+$$
+Here $z_1 = 0$. Keep the blue tangent to the left and the orange tangent to the
+right.
+
+## Sampling from the Envelope
+
+For each piece $I_i = (L_i,R_i]$, compute its finite mass
+$$
+  w_i = \int_{L_i}^{R_i} e^{a_i x+b_i}\,\mathrm{d}x, \qquad C = \sum_i w_i.
+$$
+
+. . .
+
+Choose a piece $J$ with $\Pr(J = i) = w_i/C$.
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.6cm, >=stealth]
+  \node[draw, rounded corners, fill=blue!10] (piece) {Choose $J$};
+  \node[draw, rounded corners, fill=orange!10, right=of piece] (draw) {Draw $Y$ in $I_J$};
+  \node[draw, rounded corners, fill=green!10, right=of draw] (test) {Rejection test};
+  \draw[->] (piece) -- (draw);
+  \draw[->] (draw) -- (test);
+\end{tikzpicture}
+\end{center}
+
+. . .
+
+Given $J = i$ and $a_i \neq 0$, draw $U \sim \mathcal{U}(0,1)$ and set
+$$
+  Y = \frac{1}{a_i}\log\!\left[ (1 - U)e^{a_i L_i} + Ue^{a_i R_i} \right].
+$$
+Use endpoint limits for infinite bounds. If $a_i = 0$, sample uniformly on the
+finite interval.
+
+\medskip\pause
+
+This gives $g(y) = e^{V(y)}/C$. Accept with probability $f(y)/e^{V(y)}$.
 
 ## Beta Distribution
 
@@ -1242,6 +1651,53 @@ and evaluating proposals.
 
 A tighter envelope reduces rejections, but updating it adds computational cost.
 
+## One Adaptive Update
+
+For a log-concave target, use a rejected proposal $Y$ as a new tangent point.
+
+```{r}
+#| label: envelope-adaptive-update
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5
+#| fig-height: 2.1
+
+adaptive_example <- tangent_example |>
+  mutate(
+    new_tangent = normal_log_tangent(x, 0),
+    updated = pmin(envelope, new_tangent)
+  )
+
+for (stage in 1:3) {
+  p <- ggplot(adaptive_example, aes(x)) +
+    geom_line(aes(y = exp(log_density))) +
+    geom_line(aes(y = exp(envelope)), color = "royalblue") +
+    coord_cartesian(ylim = c(0, 1.3)) +
+    labs(x = expression(x), y = "Density")
+  if (stage >= 2) {
+    p <- p +
+      annotate("point", x = 0, y = 0.9, color = "darkorange") +
+      annotate(
+        "text",
+        x = 1.1,
+        y = 0.95,
+        label = "Rejected at Y = 0"
+      )
+  }
+  if (stage >= 3) {
+    p <- p +
+      geom_line(aes(y = exp(updated)), color = "darkorange")
+  }
+  print(p)
+}
+```
+
+$$
+  V_{\mathrm{new}}(x) = \min\{V_{\mathrm{old}}(x),\ h(Y) + h'(Y)(x - Y)\}.
+$$
+\uncover<3->{The orange envelope is tighter. Update the piece masses before the
+next draw.}
+
 ## Transformation Methods vs. Rejection Sampling
 
 ::: {.columns}
@@ -1289,9 +1745,57 @@ dimensions.
 Use a simple transformation when available. Otherwise, consider rejection
 sampling with a suitable envelope.
 
+## Check the Distribution Before Timing
+
+For independent $Z_1,\ldots,Z_5 \sim \mathcal{N}(0,1)$,
+$\sum_{j=1}^5 Z_j^2 \sim \chi^2_5$. What if we reuse one normal draw five times?
+
+```{r}
+#| label: sampler-validation-example
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+#| fig-cap: Empirical CDFs of independent and dependent $\chi^2_5$ samples, with
+#|   the theoretical CDF overlaid in black.
+
+set.seed(510)
+validation_n <- 20000
+independent_chisq <- rowSums(matrix(
+  rnorm(5 * validation_n)^2,
+  ncol = 5
+))
+# Reusing one draw preserves the mean but breaks independence.
+dependent_chisq <- 5 * rnorm(validation_n)^2
+
+validation_samples <- tibble(
+  x = c(independent_chisq, dependent_chisq),
+  method = rep(
+    c("Independent normals", "Same normal reused"),
+    each = validation_n
+  )
+)
+
+ggplot(validation_samples, aes(x)) +
+  stat_ecdf(aes(color = method)) +
+  stat_function(fun = pchisq, args = list(df = 5)) +
+  scale_color_manual(
+    values = c("royalblue", "darkorange"),
+    guide = "none"
+  ) +
+  coord_cartesian(xlim = c(0, 20)) +
+  facet_wrap(~method) +
+  labs(x = expression(x), y = "CDF")
+```
+
+. . .
+
+Both constructions have mean 5, but their variances are 10 and 50. The black
+curve is the target CDF. Check support, distribution, and moments before
+benchmarking.
+
 ## Exercises
 
-### Step 1
+### Exercise 1
 
 For a positive integer $k$, use the fact that
 $$
@@ -1327,7 +1831,7 @@ my_fast_rchisq <- function(N, k) {
 
 . . .
 
-### Step 2
+### Exercise 2
 
 Make another function, `my_other_rchisq()`, that uses inversion sampling.
 
@@ -1343,7 +1847,7 @@ my_other_rchisq <- function(N, k) {
 
 . . .
 
-### Step 3
+### Exercise 3
 
 Benchmark your implementations against one another and `rchisq()`.
 
@@ -1362,3 +1866,15 @@ bench::mark(
 ) |>
   plot()
 ```
+
+## Summary
+
+### Random Number Generation
+
+### Rejection Sampling
+
+## Next Time
+
+### Monte Carlo Methods
+
+### Importance Sampling
