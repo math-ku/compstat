@@ -384,53 +384,167 @@ $$
   \hat{f}_3 = \frac{y_2 + y_3 + y_4}{3}.
 $$
 
-\pdfpcnote{
-  Each row has three nonzero entries, each with weight 1/3.
-
-  At the endpoints, we still select the three closest points. This explains
-  why the first two rows are identical, as are the last two rows.
-}
-
-## Sparse Storage
-
-When $k \ll N$, most entries of $\symbf{S}$ are zero: it is a **sparse matrix**.
-
 \medskip\pause
 
-**Compressed sparse column (CSC)** storage uses three arrays. For our example:
-$$
-  \begin{aligned}
-    \text{Values}          & :\quad \underbrace{(1/3, \ldots, 1/3)}_{15\text{ entries}} \\
-    \text{Row indices}     & :\quad (0,1,\;0,1,2,\;0,1,2,3,4,\;2,3,4,\;3,4)             \\
-    \text{Column pointers} & :\quad (0,2,5,10,13,15).
-  \end{aligned}
-$$
+### Sparsity
+
+Our smoother has $N^2$ entries, but only $Nk$ nonzero values.
 
 \pause
 
-Row indices and offsets start at zero. Pointers 2 and 5 delimit the second
-column: offsets 2, 3, and 4 contain its values and row indices.
+For $N = 10\,000$ and $k = 3$: **100 million entries, but only 30,000
+nonzeros.**
 
-\pause\medskip
+\medskip\pause
 
-With $Nk$ nonzeros, we store $Nk$ values, $Nk$ row indices, and $N + 1$ column
-pointers: $O(Nk + N) = O(Nk)$ storage.
+We can take advantage of this!
 
 \pdfpcnote{
-  A dense matrix stores all N squared entries, including the zeros.
+  - Each row has three nonzero entries, each with weight 1/3.\\
+  - At the endpoints, we still select the three closest points. This explains
+    why the first two rows are identical, as are the last two rows.
+}
 
-  Values are grouped by column. Each value has a row index; its column is
-  identified by the pointer ranges, so no column index is stored per value.
+## Sparse Matrices
 
-  These are the x, i, and p slots of the dgCMatrix constructed on the next slide.
-  The constructor accepts one-based R indices, but the stored indices are
-  zero-based. Offsets 2, 3, and 4 correspond to positions 3, 4, and 5 in R.
+A **sparse matrix** has mostly zero entries.
 
-  The final pointer is the total number of stored entries. An empty column has
-  equal start and end pointers.
+```{=latex}
+\begin{center}
+\begin{tikzpicture}[font=\normalsize]
+  \foreach \row/\entries in {0/{4,0,0,0}, 1/{0,7,0,0},
+                            2/{2,0,6,0}, 3/{0,9,0,5}} {
+    \foreach \value [count=\col from 0] in \entries {
+      \ifnum\value=0
+        \node[text=black!35] at ({0.65*\col}, {-0.6*\row}) {$\value$};
+      \else
+        \node[text=RoyalBlue3] at ({0.65*\col}, {-0.6*\row}) {$\value$};
+      \fi
+    }
+  }
+  \draw (-0.2, 0.3) -- (-0.35, 0.3) -- (-0.35, -2.1) -- (-0.2, -2.1);
+  \draw (2.15, 0.3) -- (2.3, 0.3) -- (2.3, -2.1) -- (2.15, -2.1);
+  \node at (-0.9, -0.9) {$\symbf{A} =$};
+  \node[anchor=west, align=left] at (3.3, 0.2)
+    {\textbf{Dense storage}\\Store all 16 entries.};
+  \uncover<2->{
+    \node[anchor=west, align=left, text=RoyalBlue3] at (3.3, -2)
+      {\textbf{Sparse storage}\\Store 6 nonzero values\\and their positions.};
+  }
+\end{tikzpicture}
+\end{center}
+```
 
-  Our five-point example is small. The savings become substantial when k is
-  small relative to N; sparse storage can cost more for tiny matrices.
+\pause\pause
+
+\pdfpcnote{
+  Start with the matrix: which entries do we actually need to remember?
+  On the first click, introduce sparse storage. Unstored entries are zero;
+  this is an exact representation, not an approximation.
+
+  On the second click, return to the smoother as motivation. It is sparse
+  when k is small relative to N. Sparsity does not require a diagonal band
+  or any other particular pattern.
+
+  Positions also cost memory, so sparse storage need not save space for this
+  tiny example. The benefit grows when the fraction of nonzeros is small.
+}
+
+## Sparse Storage: Column by Column
+
+**Compressed sparse column (CSC):** read down each column, skipping zeros.
+
+```{=latex}
+\begin{center}
+\begin{tikzpicture}[
+    font=\small,
+    cell/.style={draw=black!35, minimum width=0.72cm,
+      minimum height=0.5cm, inner sep=0pt},
+    flow/.style={-{Stealth}, draw=DarkOrange3}
+  ]
+  \fill[DarkOrange1!15] (0.39, 0.3) rectangle (0.91, -2.1);
+  \node[text=DarkOrange3, font=\scriptsize] at (0.65, 0.6) {column 2};
+  \node[text=black!60, font=\scriptsize] at (-0.85, 0.6) {row};
+  \foreach \row/\entries in {0/{4,0,0,0}, 1/{0,7,0,0},
+                            2/{2,0,6,0}, 3/{0,9,0,5}} {
+    \node[text=black!60, font=\scriptsize]
+      at (-0.85, {-0.6*\row}) {$\row$};
+    \foreach \value [count=\col from 0] in \entries {
+      \ifnum\value=0
+        \node[text=black!35] at ({0.65*\col}, {-0.6*\row}) {$\value$};
+      \else
+        \ifnum\col=1
+          \node[text=DarkOrange3] at ({0.65*\col}, {-0.6*\row}) {$\value$};
+        \else
+          \node[text=RoyalBlue3] at ({0.65*\col}, {-0.6*\row}) {$\value$};
+        \fi
+      \fi
+    }
+  }
+  \draw (-0.2, 0.3) -- (-0.35, 0.3) -- (-0.35, -2.1) -- (-0.2, -2.1);
+  \draw (2.15, 0.3) -- (2.3, 0.3) -- (2.3, -2.1) -- (2.15, -2.1);
+
+  \uncover<2->{
+    \fill[DarkOrange1!15] (6.78, 0.25) rectangle (8.22, -1.05);
+    \node[anchor=east, font=\scriptsize, text=black!60] at (5.1, 0.6) {offset};
+    \node[anchor=east] at (5.1, 0) {Values};
+    \node[anchor=east] at (5.1, -0.8) {Row indices};
+    \foreach \offset/\value/\row in {0/4/0, 1/2/2, 2/7/1, 3/9/3, 4/6/2, 5/5/3} {
+      \node[font=\scriptsize, text=black!60]
+        at ({5.7 + 0.72*\offset}, 0.6) {$\offset$};
+      \node[cell] at ({5.7 + 0.72*\offset}, 0) {$\value$};
+      \node[cell] at ({5.7 + 0.72*\offset}, -0.8) {$\row$};
+    }
+    \draw[flow] (0.91, 0.3) to[out=35, in=150] (7.14, 0.85);
+  }
+
+  \uncover<3->{
+    \node[anchor=east] at (5.1, -2.5) {Column pointers};
+    \foreach \col/\offset in {0/0, 1/2, 2/4, 3/5, 4/6} {
+      \ifnum\col=1
+        \node[cell, fill=DarkOrange1!15] (pointer-\col)
+          at ({5.7 + 0.72*\col}, -2.5) {$\offset$};
+      \else
+        \ifnum\col=2
+          \node[cell, fill=DarkOrange1!15] (pointer-\col)
+            at ({5.7 + 0.72*\col}, -2.5) {$\offset$};
+        \else
+          \node[cell] (pointer-\col)
+            at ({5.7 + 0.72*\col}, -2.5) {$\offset$};
+        \fi
+      \fi
+    }
+    \draw[flow] (pointer-1.north) -- (6.78, -1.1);
+    \draw[flow] (pointer-2.north) -- (8.22, -1.1);
+    \node[anchor=west, align=left, text=DarkOrange3] at (3.3, -3.4)
+      {Column 2 starts at offset 2 and stops before offset 4.};
+  }
+\end{tikzpicture}
+\end{center}
+```
+
+\pause\pause
+
+Row indices and offsets start at zero. Unstored entries are zero.
+
+\pdfpcnote{
+  First trace down the highlighted column: skip the zeros, keep 7 and 9.
+
+  On the first click, show the values and row indices. The pair (7, 1) means
+  value 7 in row index 1. Ask where the 9 belongs before reading its row index.
+  The offsets above the arrays identify positions in storage, not matrix rows.
+
+  On the second click, show the pointers. Column 1 occupies offsets 0 and 1;
+  column 2 occupies offsets 2 and 3. Its pointers are 2 and 4, so it has
+  4 minus 2 equals 2 stored entries. No column index is needed for each value.
+  The final pointer, 6, is the total number of stored entries. An empty column
+  would have equal start and end pointers.
+
+  These arrays are the x, i, and p slots of a dgCMatrix. R's sparseMatrix
+  constructor accepts one-based indices, but stores zero-based indices.
+
+  For the smoother, CSC stores Nk values, Nk row indices, and N + 1 pointers:
+  O(Nk + N) = O(Nk) storage instead of O(N squared).
 }
 
 ## Sparse Matrices in R
@@ -485,9 +599,12 @@ entries when multiplying by a vector.
 Smoothers of the form $\hat{\symbf{f}} = \symbf{S} \symbf{y}$ are called *linear
 smoothers*.
 
+\medskip
+
 Here, linear means linear in $\symbf{y}$, with the $x$-values and $k$ fixed.
 
 \pause\medskip
+
 The $k$-nearest-neighbor smoother is a simple example of a linear smoother that
 works for $x$-values in any metric space.
 
@@ -1083,7 +1200,46 @@ and penalty matrix $\symbf{\Omega}$.
   Derive the minimizer on the blackboard.
 }
 
-## Splines in R
+## From Basis Functions to a Design Matrix
+
+To compute $\symbf{\Phi}$, we need concrete basis functions $\varphi_j$.
+
+\pause\medskip
+
+**Cubic B-splines** are piecewise cubic basis functions with local support.
+Their weighted sum gives the spline:
+$$
+  f(x) = \sum_j \beta_j \varphi_j(x).
+$$
+
+\pause\medskip
+
+Evaluating the basis at the observations gives
+$\symbf{\Phi}_{ij} = \varphi_j(x_i)$: one column per basis function.
+
+\medskip
+
+In R, `splineDesign(knots, x)` computes this matrix.
+
+\pause\medskip
+
+Natural cubic splines additionally satisfy $f''(a) = f''(b) = 0$ at the
+boundaries.
+
+\pdfpcnote{
+  The next slide illustrates an ordinary cubic B-spline basis with equally
+  spaced knots. This spans a larger space than the natural cubic splines
+  with the same knots. Natural boundary conditions restrict the coefficients
+  of their weighted sum.
+
+  The smoothing-spline result uses knots at the observations. The small,
+  equally spaced set in the illustration makes the basis functions easier
+  to see.
+}
+
+## A Cubic B-Spline Basis in R
+
+Illustration: an ordinary cubic basis with equally spaced knots.
 
 ```{r}
 #| label: splines
@@ -1115,13 +1271,269 @@ df <- data.frame(
 )
 
 knot_points <- c(0, 0.2, 0.4, 0.6, 0.8, 1)
+spline_colors <- setNames(
+  RColorBrewer::brewer.pal(ncol(b_splines), "Dark2"),
+  seq_len(ncol(b_splines))
+)
 
 ggplot(df, aes(x = x, y = y, group = group, color = group)) +
   scale_x_continuous(breaks = knot_points, minor_breaks = NULL) +
+  scale_color_manual(values = spline_colors, guide = "none") +
   geom_line() +
-  labs(x = "x", y = "Basis Value") +
-  guides(color = "none")
+  labs(x = expression(x), y = expression(varphi[j](x)))
 ```
+
+\pdfpcnote{
+  Each column of b\_splines contains one basis function evaluated on xx,
+  a grid used for plotting. Evaluating at the observed predictor values
+  instead would give the design matrix from the loss function.
+
+  splineDesign defaults to order four, which means cubic polynomials.
+  Each endpoint occurs four times in the knot vector, including its entry
+  in seq. This constructs the full cubic basis on the interval; it does
+  not impose natural boundary conditions.
+
+  No response values or fitted coefficients are involved yet. The curves
+  show the basis functions that we will combine to construct a fit.
+}
+
+```{r}
+#| label: spline-illustration-setup
+#| echo: false
+
+pen_mat <- function(inner_knots) {
+  knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
+  d <- diff(inner_knots)
+  g_ab <- splines::splineDesign(knots, inner_knots, derivs = 2)
+  knots_mid <- inner_knots[-length(inner_knots)] + d / 2
+  g_ab_mid <- splines::splineDesign(knots, knots_mid, derivs = 2)
+  g_a <- g_ab[-nrow(g_ab), ]
+  g_b <- g_ab[-1, ]
+  (crossprod(d * g_a, g_a) +
+    4 * crossprod(d * g_ab_mid, g_ab_mid) +
+    crossprod(d * g_b, g_b)) /
+    6
+}
+
+spline_illustration <- local({
+  data <- running_mean_data |>
+    transmute(x = (x - min(x)) / diff(range(x)), y)
+  Phi <- splines::splineDesign(knots, data$x)
+  omega <- pen_mat(knot_points)
+  lambdas <- 10^seq(-4, 0)
+  coefficients <- vapply(
+    lambdas,
+    function(lambda) {
+      drop(solve(
+        crossprod(Phi) + lambda * omega,
+        crossprod(Phi, data$y)
+      ))
+    },
+    numeric(ncol(Phi))
+  )
+
+  basis <- tibble(
+    x = rep(xx, times = ncol(b_splines)),
+    y = as.vector(b_splines),
+    group = rep(names(spline_colors), each = length(xx))
+  )
+  fits <- lapply(seq_along(lambdas), function(i) {
+    components <- sweep(b_splines, 2, coefficients[, i], `*`)
+    list(
+      components = mutate(basis, y = as.vector(components)),
+      curve = tibble(x = xx, y = rowSums(components))
+    )
+  })
+
+  list(
+    data = data,
+    basis = basis,
+    lambdas = lambdas,
+    coefficients = coefficients,
+    fits = fits
+  )
+})
+
+spline_illustration_frame <- function(stage = 3, fit_index = 2) {
+  fit <- spline_illustration$fits[[fit_index]]
+  basis_plot <- ggplot(
+    spline_illustration$basis,
+    aes(x, y, color = group)
+  ) +
+    geom_line() +
+    scale_color_manual(values = spline_colors, guide = "none") +
+    scale_x_continuous(breaks = c(0, 0.5, 1)) +
+    coord_cartesian(ylim = c(0, 1.05)) +
+    labs(
+      title = "Basis functions",
+      x = expression(x),
+      y = expression(varphi[j](x))
+    )
+
+  component_plot <- ggplot(
+    fit$components,
+    aes(x, y, color = group)
+  ) +
+    geom_blank() +
+    scale_color_manual(values = spline_colors, guide = "none") +
+    scale_x_continuous(breaks = c(0, 0.5, 1)) +
+    coord_cartesian(ylim = c(0, 10.5)) +
+    labs(
+      title = "Weighted functions",
+      x = expression(x),
+      y = expression(hat(beta)[j] * varphi[j](x))
+    )
+
+  fit_plot <- ggplot(spline_illustration$data, aes(x, y)) +
+    geom_point(color = "grey45", size = 1.8) +
+    scale_x_continuous(breaks = c(0, 0.5, 1)) +
+    coord_cartesian(ylim = c(0, 10.5)) +
+    labs(
+      title = "Fitted curve",
+      x = expression(x),
+      y = expression(y)
+    )
+
+  if (stage >= 2) {
+    component_plot <- component_plot + geom_line()
+  }
+  if (stage >= 3) {
+    fit_plot <- fit_plot +
+      geom_line(data = fit$curve, color = "royalblue")
+  }
+  if (stage >= 4) {
+    point_basis <- filter(
+      spline_illustration$basis,
+      near(x, 0.4),
+      y > 1e-8
+    )
+    point_components <- filter(
+      fit$components,
+      near(x, 0.4),
+      abs(y) > 1e-8
+    )
+    point_fit <- filter(fit$curve, near(x, 0.4))
+    basis_plot <- basis_plot +
+      geom_vline(
+        xintercept = 0.4,
+        color = "grey65",
+        linetype = "dashed"
+      ) +
+      geom_point(data = point_basis, size = 2)
+    component_plot <- component_plot +
+      geom_vline(
+        xintercept = 0.4,
+        color = "grey65",
+        linetype = "dashed"
+      ) +
+      geom_point(data = point_components, size = 2)
+    fit_plot <- fit_plot +
+      geom_vline(
+        xintercept = 0.4,
+        color = "grey65",
+        linetype = "dashed"
+      ) +
+      geom_point(
+        data = point_fit,
+        color = "royalblue",
+        size = 2.5
+      )
+  }
+
+  basis_plot + component_plot + fit_plot + plot_layout(nrow = 1)
+}
+```
+
+## From Basis Functions to a Fitted Curve
+
+```{r}
+#| label: spline-basis-illustration
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5.5
+#| fig-height: 2.8
+#| fig-cap: The six observations from the running-mean example, with $x$
+#|   rescaled to $[0, 1]$. Here $\lambda = 0.001$.
+
+point_components <- spline_illustration$fits[[2]]$components |>
+  filter(near(x, 0.4), abs(y) > 1e-8)
+point_equation <- sprintf(
+  "At x = 0.4: %s = %.1f (rounded)",
+  paste(sprintf("%.1f", point_components$y), collapse = " + "),
+  sum(point_components$y)
+)
+spline_stages <- c(
+  "Start with the basis functions",
+  "Multiply by the fitted coefficients",
+  "Add the weighted functions",
+  point_equation
+)
+
+for (stage in seq_along(spline_stages)) {
+  print(
+    spline_illustration_frame(stage) +
+      plot_annotation(title = spline_stages[stage])
+  )
+}
+```
+
+\pdfpcnote{
+  The colors identify the same eight basis functions as in the preceding
+  slide. The left panel stays fixed throughout.
+
+  First show the basis and the observations. On the first click, multiply
+  each basis function by its fitted coefficient. The coefficients have
+  already been estimated jointly by minimizing the penalized loss.
+  They are not the observed responses, and they need not be positive.
+
+  On the second click, add the colored contributions vertically at each x.
+  Their sum is the blue fitted curve. This is the operation Phi times beta.
+
+  On the third click, focus on x = 0.4. Only three basis functions are
+  nonzero at this knot. Add their weighted values to obtain about 6.2,
+  the blue point. Its observed response is 4.
+
+  Here every observation is a knot. With positive lambda, minimizing the
+  penalized loss over the full cubic basis gives a natural smoothing spline.
+}
+
+## The Penalty Changes the Coefficients
+
+```{r}
+#| label: spline-penalty-illustration
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5.5
+#| fig-height: 2.8
+#| fig-cap: The basis and observations stay fixed. Increasing $\lambda$
+#|   penalizes curvature more strongly, giving a smoother fitted curve.
+
+for (i in seq_along(spline_illustration$lambdas)) {
+  print(
+    spline_illustration_frame(fit_index = i) +
+      plot_annotation(
+        title = bquote(
+          lambda == 10^.(log10(spline_illustration$lambdas[i]))
+        )
+      )
+  )
+}
+```
+
+\pdfpcnote{
+  Each click increases lambda by a factor of ten. The left panel never
+  changes: the basis determines which curves we can represent.
+
+  The coefficients are re-estimated for each lambda. Follow the changing
+  contributions in the middle and their sum on the right. All axes stay
+  fixed across the animation.
+
+  The penalty controls the curvature of the sum. Individual coefficients
+  need not shrink toward zero as lambda increases. Straight lines have
+  zero curvature, so the fit approaches the least-squares line.
+
+  The next slide shows the penalty matrix used to compute these fits.
+}
 
 ## Penalty Matrix $\symbf{\Omega}$
 
@@ -1134,20 +1546,6 @@ ggplot(df, aes(x = x, y = y, group = group, color = group)) +
 #| fig-height: 3
 
 library(Matrix)
-pen_mat <- function(inner_knots) {
-  knots <- sort(c(rep(range(inner_knots), 3), inner_knots))
-  d <- diff(inner_knots) # the vector of knot differences; b - a
-  g_ab <- splines::splineDesign(knots, inner_knots, derivs = 2)
-  knots_mid <- inner_knots[-length(inner_knots)] + d / 2
-  g_ab_mid <- splines::splineDesign(knots, knots_mid, derivs = 2)
-  g_a <- g_ab[-nrow(g_ab), ]
-  g_b <- g_ab[-1, ]
-  (crossprod(d * g_a, g_a) +
-    4 * crossprod(d * g_ab_mid, g_ab_mid) +
-    crossprod(d * g_b, g_b)) /
-    6
-}
-
 omega <- pen_mat(seq(0, 1, 0.1))
 
 omega_mat <- as.matrix(omega)
@@ -1381,6 +1779,97 @@ The columns of $\widetilde{\symbf{U}}$ form the **Demmler-Reinsch basis**.
   Derive $\symbf{S}_\lambda$ on blackboard.
 }
 
+# Exercises
+
+## Exercises
+
+### Exercise 1: Parallel Square
+
+Use the `foreach` and `doParallel` packages to compute the squares of a vector
+in parallel. Benchmark the parallel version against a regular `for` loop using
+`bench::mark()`.
+
+```{r}
+#| label: parallel-square
+#| echo: false
+#| eval: false
+
+library(foreach)
+library(doParallel)
+library(bench)
+
+x <- rnorm(10000)
+
+loop_square <- function(x) {
+  n <- length(x)
+  out <- numeric(n)
+
+  for (i in seq_len(n)) {
+    out[i] <- x[i]^2
+  }
+
+  out
+}
+
+parallel_square <- function(x) {
+  out <- foreach(i = seq_along(x), .combine = c) %dopar%
+    {
+      x[i]^2
+    }
+  out
+}
+
+cl <- makeCluster(detectCores() / 2)
+registerDoParallel(cl)
+
+bench::mark(
+  loop = loop_square(x),
+  parallel = parallel_square(x),
+  check = FALSE
+)
+```
+
+. . .
+
+### Exercise 2: Smoothing Air Quality Data
+
+Apply `stats::filter()` and `smooth.spline()` to the `airquality$Temp` data. Try
+different window sizes for the moving average and different `spar` values for
+the spline. Plot and compare the results.
+
+## Summary
+
+### Parallelization
+
+- Parallelization delegates work across your CPU cores to speed up
+  computations.\pause
+- Use `foreach` and `%dopar%` to parallelize computations.
+
+. . .
+
+### Smoothing Splines
+
+- A smoothing spline is a natural cubic spline that minimizes a penalized least
+  squares criterion.\pause
+- The penalty term controls the trade-off between goodness of fit and
+  wiggliness.
+
+## Next Time
+
+### Pseudo-Random Numbers
+
+How do you simulate random numbers in R?
+
+. . .
+
+### Rejection Sampling
+
+General and useful method for sampling from a target distribution
+
+\appendix
+
+# Appendix
+
 ## Interpretation
 
 Project the data $\symbf{y}$ onto the Demmler-Reinsch basis (the columns of
@@ -1469,90 +1958,3 @@ p2 <- p1 + scale_y_log10()
 
 p1 / p2 + plot_layout(axes = "collect")
 ```
-
-# Exercises
-
-## Exercises
-
-### Exercise 1: Parallel Square
-
-Use the `foreach` and `doParallel` packages to compute the squares of a vector
-in parallel. Benchmark the parallel version against a regular `for` loop using
-`bench::mark()`.
-
-```{r}
-#| label: parallel-square
-#| echo: false
-#| eval: false
-
-library(foreach)
-library(doParallel)
-library(bench)
-
-x <- rnorm(10000)
-
-loop_square <- function(x) {
-  n <- length(x)
-  out <- numeric(n)
-
-  for (i in seq_len(n)) {
-    out[i] <- x[i]^2
-  }
-
-  out
-}
-
-parallel_square <- function(x) {
-  out <- foreach(i = seq_along(x), .combine = c) %dopar%
-    {
-      x[i]^2
-    }
-  out
-}
-
-cl <- makeCluster(detectCores() / 2)
-registerDoParallel(cl)
-
-bench::mark(
-  loop = loop_square(x),
-  parallel = parallel_square(x),
-  check = FALSE
-)
-```
-
-. . .
-
-### Exercise 2: Smoothing Air Quality Data
-
-Apply `stats::filter()` and `smooth.spline()` to the `airquality$Temp` data. Try
-different window sizes for the moving average and different `spar` values for
-the spline. Plot and compare the results.
-
-## Summary
-
-### Parallelization
-
-- Parallelization delegates work across your CPU cores to speed up
-  computations.\pause
-- Use `foreach` and `%dopar%` to parallelize computations.
-
-. . .
-
-### Smoothing Splines
-
-- A smoothing spline is a natural cubic spline that minimizes a penalized least
-  squares criterion.\pause
-- The penalty term controls the trade-off between goodness of fit and
-  wiggliness.
-
-## Next Time
-
-### Pseudo-Random Numbers
-
-How do you simulate random numbers in R?
-
-. . .
-
-### Rejection Sampling
-
-General and useful method for sampling from a target distribution
