@@ -55,6 +55,7 @@ rsconnect/
 _site/
 
 *.html
+!tests/fixtures/*.html
 *_cache
 *_files
 

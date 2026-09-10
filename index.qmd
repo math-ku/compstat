@@ -3,10 +3,23 @@ title: Computational Statistics
 format: html
 ---
 
+```{r}
+#| label: timetable-setup
+#| include: false
+#| cache: false
+
+source(here::here("R", "timetable.R"))
+timetable <- read_timetable()
+session_info <- function(...) format_session(timetable, ...)
+```
+
 This is main resources site for the Computational Statistics course. This is
 where all the material, including slides, assignments, and data, are collected.
 
 ## Schedule
+
+Times and rooms are checked daily against the
+[official KU timetable](`r timetable_url`). All times are local to Copenhagen.
 
 **Note on the exercises:**
 
@@ -18,6 +31,8 @@ for you to solve independently at your own pace.
 
 #### Lecture 1: Introduction
 
+`r session_info("2026-09-01")`
+
 - **Slides:** [Introduction and Functions in R](slides/lecture1.pdf)
   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture1.qmd))
 - **Reading:** [Chapter 6 (AdvR)](https://adv-r.hadley.nz/functions.html)
@@ -27,11 +42,15 @@ for you to solve independently at your own pace.
 
 #### Exercise Session 1
 
+`r session_info("2026-09-03", "Theoretical Exercises")`
+
 - **Main topic**: Setting up a proper development environment for R/Rcpp
 - **In class walkthrough**: A1-A7 (CSwR, Appendix A)
 - **Solutions**: [Exercise 1 Solutions](exercises/U1.qmd)
 
 #### Lecture 2: OOP and Density Estimation
+
+`r session_info("2026-09-03")`
 
 - **Slides:** [OOP and Density Estimation](slides/lecture2.pdf)
   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture2.qmd))
@@ -46,6 +65,8 @@ for you to solve independently at your own pace.
 
 #### Lecture 3: Measuring and Improving Performance
 
+`r session_info("2026-09-08")`
+
 - **Slides:** [Measuring and Improving Performance](slides/lecture3.pdf)
   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture3.qmd))
 - **Reading:** [Chapter 23](https://adv-r.hadley.nz/perf-measure.html) and
@@ -55,6 +76,8 @@ for you to solve independently at your own pace.
 
 #### Exercise Session 2
 
+`r session_info("2026-09-10", "Theoretical Exercises")`
+
 - **Main topic**: Using AI properly, memory usage and benchmarking, dependency
   injection, reverse engineering
 - **In class walkthrough:** Exercises 2.1-2.6 (CSwR, Chapter 2) + 24.4.3.2 +
@@ -63,6 +86,8 @@ for you to solve independently at your own pace.
 - **Mini-slides**: [Tips for using AI](slides/llm_use.pdf)
 
 #### Lecture 4: Parallelization and Scatterplot Smoothing
+
+`r session_info("2026-09-10")`
 
 - **Slides:** [Parallelization and Scatterplot Smoothing](slides/lecture4.pdf)
   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture4.qmd))
@@ -77,6 +102,8 @@ for you to solve independently at your own pace.
 
 #### Lecture 5: Random Number Generation and Rejection Sampling
 
+`r session_info("2026-09-15")`
+
 - **Slides:** [Random Number Generation and Rejection
   Sampling](slides/lecture5.pdf)
   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture5.qmd))
@@ -90,6 +117,8 @@ for you to solve independently at your own pace.
 
 <!-- #### Exercise Session 3 -->
 <!---->
+<!-- `r session_info("2026-09-17", "Theoretical Exercises")` -->
+<!---->
 <!-- - **Main topic**: Premature optimization -->
 <!-- - **In class walkthrough:** Exercises 3.4 (Chapter 3, CSWR) + 5.1-5.2 (Chapter -->
 <!--   5, CSWR) -->
@@ -97,17 +126,23 @@ for you to solve independently at your own pace.
 <!---->
 <!-- #### Lecture 6: Monte Carlo Methods and Importance Sampling -->
 <!---->
+<!-- `r session_info("2026-09-17")` -->
+<!---->
 <!-- - **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf) -->
 <!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture6.qmd)) -->
 <!-- - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci) -->
 <!---->
 <!-- #### Presentations of Assignment 1 -->
 <!---->
+<!-- `r session_info("2026-09-17", afternoon = TRUE)` -->
+<!---->
 <!-- - **Instructions:** [Assignment 1](assignments/assignment1.html) -->
 <!---->
 <!-- ### Week 4 -->
 <!---->
 <!-- #### Lecture 7: Optimization -->
+<!---->
+<!-- `r session_info("2026-09-22")` -->
 <!---->
 <!-- - **Slides:** [Optimization](slides/lecture7.pdf) -->
 <!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture7.qmd)) -->
@@ -117,6 +152,8 @@ for you to solve independently at your own pace.
 <!---->
 <!-- #### Exercise Session 4 -->
 <!---->
+<!-- `r session_info("2026-09-24", "Theoretical Exercises")` -->
+<!---->
 <!-- - **Main topic**: Currying and decorators -->
 <!-- - **In class walkthrough:** Exercises 25.2.6.1, 25.2.6.2, 25.4.5.1, -->
 <!--   25.4.5.2(AdvR) + Bonus Example -->
@@ -124,11 +161,15 @@ for you to solve independently at your own pace.
 <!---->
 <!-- #### Presentations of Assignment 2 -->
 <!---->
+<!-- `r session_info("2026-09-24", afternoon = TRUE)` -->
+<!---->
 <!-- - **Instructions:** [Assignment 2](assignments/assignment2.html) -->
 <!---->
 <!-- ### Week 5 -->
 <!---->
 <!-- #### Lecture 8: Testing and Debugging -->
+<!---->
+<!-- `r session_info("2026-09-29")` -->
 <!---->
 <!-- This lecture will be mostly a hands-on session. Please bring your laptop. We -->
 <!-- will work on debugging a piece of code together. You can find the code here: -->
@@ -141,9 +182,13 @@ for you to solve independently at your own pace.
 <!---->
 <!-- #### Exercise Session 5 -->
 <!---->
+<!-- `r session_info("2026-10-01", "Theoretical Exercises")` -->
+<!---->
 <!-- - **Main topic**: None - work on your assignments with TA assistance -->
 <!---->
 <!-- #### Lecture 9: Likelihood Optimization and the EM Algorithm -->
+<!---->
+<!-- `r session_info("2026-10-01")` -->
 <!---->
 <!-- - **Slides:** [Likelihood Optimization and the EM -->
 <!--   Algorithm](slides/lecture9.pdf) -->
@@ -154,20 +199,28 @@ for you to solve independently at your own pace.
 <!---->
 <!-- #### Lecture 10: More on the EM Algorithm -->
 <!---->
+<!-- `r session_info("2026-10-06")` -->
+<!---->
 <!-- - **Slides:** [The EM Algorithm](slides/lecture10.pdf) -->
 <!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture10.qmd)) -->
 <!---->
 <!-- #### Exercise Session 6 -->
 <!---->
+<!-- `r session_info("2026-10-08", "Theoretical Exercises")` -->
+<!---->
 <!-- - **Main topic**: None - work on your assignments with TA assistance -->
 <!---->
 <!-- #### Lecture 11: Stochastic Gradient Descent -->
+<!---->
+<!-- `r session_info("2026-10-08")` -->
 <!---->
 <!-- - **Slides:** [Stochastic Gradient Descent](slides/lecture11.pdf) -->
 <!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture11.qmd)) -->
 <!-- - **Reading:** [Sections 11-11.1 (CSwR)](https://cswr.nrhstat.org/stochopt) -->
 <!---->
 <!-- #### Presentations of Assignment 3 -->
+<!---->
+<!-- `r session_info("2026-10-08", afternoon = TRUE)` -->
 <!---->
 <!-- - **Instructions:** [Assignment 3](assignments/assignment3.html) -->
 <!---->
@@ -178,6 +231,8 @@ for you to solve independently at your own pace.
 <!-- ### Week 7 -->
 <!---->
 <!-- #### Lecture 12: Rcpp -->
+<!---->
+<!-- `r session_info("2026-10-20")` -->
 <!---->
 <!-- Prior to this lecture, you should have Rcpp installed. You can follow the -->
 <!-- instructions in [Rcpp for -->
@@ -196,12 +251,16 @@ for you to solve independently at your own pace.
 <!---->
 <!-- #### Exercise Session 7 -->
 <!---->
+<!-- `r session_info("2026-10-22", "Theoretical Exercises")` -->
+<!---->
 <!-- - **Main topic**: Branch prediction -->
 <!-- - **In class walkthrough:** TA will go through the topic with a live coding -->
 <!--   example. -->
 <!-- - **Solutions**: [Exercise 7](exercises/U7.qmd) -->
 <!---->
 <!-- #### Lecture 13: Variations on Stochastic Gradient Descent -->
+<!---->
+<!-- `r session_info("2026-10-22")` -->
 <!---->
 <!-- - **Slides:** [Variations on Stochastic Gradient Descent](slides/lecture13.pdf) -->
 <!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture13.qmd)) -->
@@ -210,11 +269,15 @@ for you to solve independently at your own pace.
 <!---->
 <!-- #### Presentations of Assignment 4 -->
 <!---->
+<!-- `r session_info("2026-10-22", afternoon = TRUE)` -->
+<!---->
 <!-- - **Instructions:** [Assignment 4](assignments/assignment4.html) -->
 <!---->
 <!-- ### Week 8 -->
 <!---->
 <!-- #### Lecture 14: R Packages and Wrap-Up -->
+<!---->
+<!-- `r session_info("2026-10-27")` -->
 <!---->
 <!-- This lecture will mostly be a hands-on session. Please bring your laptop. We -->
 <!-- will work on creating an R package together. Please install the -->

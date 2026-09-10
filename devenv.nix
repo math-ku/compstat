@@ -61,6 +61,9 @@ in
           doParallel
           rmarkdown
           here
+          htmltools
+          httr2
+          xml2
           dqrng
           usethis
           languageserver
