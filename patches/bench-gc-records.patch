@@ -1,0 +1,15 @@
+diff --git a/R/mark.R b/R/mark.R
+--- a/R/mark.R
++++ b/R/mark.R
+@@ -156,8 +156,10 @@ mark <- function(...,
+       stop(error)
+     }
+ 
+     results$time[[i]] <- as_bench_time(res)
+-    results$gc[[i]] <- parse_gc(gc_msg)
++    # A GC while allocating the result can follow the final iteration separator.
++    # Exclude these trailing records before computing summaries or plots.
++    results$gc[[i]] <- utils::head(parse_gc(gc_msg), length(res))
+   }
+ 
+   out <- summary(

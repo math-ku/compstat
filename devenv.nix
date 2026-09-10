@@ -6,6 +6,10 @@
 let
   pandoc = pkgs.callPackage ./pandoc-bin.nix { };
   quarto = pkgs.quartoMinimal.override { inherit pandoc; };
+  # Keep bench's GC records aligned with its measured iterations.
+  benchPatched = pkgs.rPackages.bench.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./patches/bench-gc-records.patch ];
+  });
 in
 {
   packages = [
@@ -18,6 +22,7 @@ in
     pkgs.texliveFull
     (pkgs.rstudioWrapper.override {
       packages = with pkgs.rPackages; [
+        benchPatched
         Rcpp
         RcppArmadillo
         RcppEigen
@@ -39,7 +44,7 @@ in
       enable = true;
       package = pkgs.rWrapper.override {
         packages = with pkgs.rPackages; [
-          bench
+          benchPatched
           svglite
           CSwR
           lme4
