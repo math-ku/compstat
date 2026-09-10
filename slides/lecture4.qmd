@@ -1658,6 +1658,94 @@ nuuk_plot +
   geom_line(aes(y = smoother(100000)), color = "orange")
 ```
 
+## Generalized Cross-Validation (GCV)
+
+For smoothing splines, $S_{ii}$ varies with $i$, which makes LOOCV expensive to
+compute.
+
+\medskip\pause
+
+### Idea
+
+Replace $S_{ii}$ in LOOCV with $\mathrm{df} / N$, where
+$\mathrm{df} = \operatorname{trace}(\symbf{S}) = \sum_{i=1}^N S_{ii}$. This
+gives the **generalized** cross-validation criterion
+$$
+  \mathrm{GCV}
+  = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - \mathrm{df} / N} \right)^2.
+$$
+
+. . .
+
+### Implementation
+
+```{r}
+#| label: gcv-smooth-spline
+
+gcv <- function(lambda, y) {
+  S <- Phi %*% solve(crossprod(Phi) + lambda * omega, t(Phi))
+  df <- sum(diag(S))
+  mean(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE)
+}
+```
+
+\pdfpcnote{
+  - The df approximation relies on S_ii being nearly constant.\\
+  - When S_ii is constant, GCV coincides with the LOOCV formula.
+}
+
+## GCV-Optimal $\lambda$
+
+Apply `gcv()` across a grid of $\lambda$-values and choose the $\lambda$ that
+minimizes GCV.
+
+```{r}
+#| label: nuuk-spline-gcv
+
+lambda <- seq(50, 250, 2)
+gcv <- sapply(lambda, gcv, y = nuuk_year$Temperature)
+lambda_opt <- lambda[which.min(gcv)]
+```
+
+```{r}
+#| label: gc-plot
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+
+tibble(lambda, gcv) |>
+  ggplot(aes(lambda, gcv)) +
+  geom_vline(xintercept = lambda_opt, color = "dark orange") +
+  geom_line() +
+  labs(y = "GCV Error", x = expression(lambda))
+```
+
+## GCV-Optimal Smoothing Spline
+
+```{r}
+#| label: nuuk-spline-opt
+#| fig-width: 5
+#| fig-height: 2.5
+
+smooth_opt <- smoother(lambda_opt)
+nuuk_plot + geom_line(aes(y = smooth_opt), color = "blue")
+```
+
+## Using `smooth.spline()`
+
+```{r}
+#| label: nuuk-spline-opt2
+#| fig-width: 5
+#| fig-height: 2.5
+
+smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature)
+nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
+```
+
+\pdfpcnote{
+- Disable the fast heuristic to obtain results similar to ours.
+}
+
 ## Efficient Computations
 
 When $N$ is large, computing $\symbf{S}_{\lambda} \symbf{y}$ directly is
@@ -1790,95 +1878,7 @@ General and useful method for sampling from a target distribution
 
 # Appendix
 
-## Generalized Cross-Validation (GCV)
-
-For smoothing splines, $S_{ii}$ varies with $i$, which makes LOOCV expensive to
-compute.
-
-\medskip\pause
-
-### Idea
-
-Replace $S_{ii}$ in LOOCV with $\mathrm{df} / N$, where
-$\mathrm{df} = \operatorname{trace}(\symbf{S}) = \sum_{i=1}^N S_{ii}$. This
-gives the **generalized** cross-validation criterion
-$$
-  \mathrm{GCV}
-  = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i - \hat{f}_i}{1 - \mathrm{df} / N} \right)^2.
-$$
-
-. . .
-
-### Implementation
-
-```{r}
-#| label: gcv-smooth-spline
-
-gcv <- function(lambda, y) {
-  S <- Phi %*% solve(crossprod(Phi) + lambda * omega, t(Phi))
-  df <- sum(diag(S))
-  mean(((y - S %*% y) / (1 - df / length(y)))^2, na.rm = TRUE)
-}
-```
-
-\pdfpcnote{
-  - The df approximation relies on S_ii being nearly constant.\\
-  - When S_ii is constant, GCV coincides with the LOOCV formula.
-}
-
-## GCV-Optimal $\lambda$
-
-Apply `gcv()` across a grid of $\lambda$-values and choose the $\lambda$ that
-minimizes GCV.
-
-```{r}
-#| label: nuuk-spline-gcv
-
-lambda <- seq(50, 250, 2)
-gcv <- sapply(lambda, gcv, y = nuuk_year$Temperature)
-lambda_opt <- lambda[which.min(gcv)]
-```
-
-```{r}
-#| label: gc-plot
-#| echo: false
-#| fig-width: 5
-#| fig-height: 2
-
-tibble(lambda, gcv) |>
-  ggplot(aes(lambda, gcv)) +
-  geom_vline(xintercept = lambda_opt, color = "dark orange") +
-  geom_line() +
-  labs(y = "GCV Error", x = expression(lambda))
-```
-
-## GCV-Optimal Smoothing Spline
-
-```{r}
-#| label: nuuk-spline-opt
-#| fig-width: 5
-#| fig-height: 2.5
-
-smooth_opt <- smoother(lambda_opt)
-nuuk_plot + geom_line(aes(y = smooth_opt), color = "blue")
-```
-
-## Using `smooth.spline()`
-
-```{r}
-#| label: nuuk-spline-opt2
-#| fig-width: 5
-#| fig-height: 2.5
-
-smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature)
-nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
-```
-
-\pdfpcnote{
-- Disable the fast heuristic to obtain results similar to ours.
-}
-
-## Interpretation
+## Interpretation of the Smoothing Parameter
 
 Project the data $\symbf{y}$ onto the Demmler-Reinsch basis (the columns of
 $\widetilde{\symbf{U}}$) to obtain the coefficients
