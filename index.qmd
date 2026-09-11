@@ -18,8 +18,8 @@ where all the material, including slides, assignments, and data, are collected.
 
 ## Schedule
 
-Times and rooms are checked daily against the
-[official KU timetable](`r timetable_url`). All times are local to Copenhagen.
+Times and rooms are checked daily against the [official KU
+timetable](`r timetable_url`). All times are local to Copenhagen.
 
 **Note on the exercises:**
 
@@ -114,29 +114,29 @@ for you to solve independently at your own pace.
   - [Exercises 5.1-5.2 in Chapter 5
     (CSwR)](https://cswr.nrhstat.org/random-number-generation#univariate:ex)
 
-<!-- #### Exercise Session 3 -->
-<!---->
-<!-- `r session_info("2026-09-17", "Theoretical Exercises")` -->
-<!---->
-<!-- - **Main topic**: Premature optimization -->
-<!-- - **In class walkthrough:** Exercises 3.4 (Chapter 3, CSWR) + 5.1-5.2 (Chapter -->
-<!--   5, CSWR) -->
-<!-- - **Solutions**: [Exercise 3 Solutions](exercises/U3.qmd) -->
-<!---->
-<!-- #### Lecture 6: Monte Carlo Methods and Importance Sampling -->
-<!---->
-<!-- `r session_info("2026-09-17")` -->
-<!---->
-<!-- - **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf) -->
-<!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture6.qmd)) -->
-<!-- - **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci) -->
-<!---->
-<!-- #### Presentations of Assignment 1 -->
-<!---->
-<!-- `r session_info("2026-09-17", afternoon = TRUE)` -->
-<!---->
-<!-- - **Instructions:** [Assignment 1](assignments/assignment1.html) -->
-<!---->
+#### Exercise Session 3
+
+`r session_info("2026-09-17", "Theoretical Exercises")`
+
+- **Main topic**: Premature optimization
+- **In class walkthrough:** Exercises 3.4 (Chapter 3, CSWR) + 5.1-5.2 (Chapter
+  5, CSWR)
+- **Solutions**: [Exercise 3 Solutions](exercises/U3.qmd)
+
+#### Lecture 6: Monte Carlo Integration and Importance Sampling
+
+`r session_info("2026-09-17")`
+
+- **Slides:** [Monte Carlo Methods and Importance Sampling](slides/lecture6.pdf)
+  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture6.qmd))
+- **Reading:** [Chapter 7 (CSwR)](https://cswr.nrhstat.org/mci)
+
+#### Presentations of Assignment 1
+
+`r session_info("2026-09-17", afternoon = TRUE)`
+
+- **Instructions:** [Assignment 1](assignments/assignment1.html)
+
 <!-- ### Week 4 -->
 <!---->
 <!-- #### Lecture 7: Optimization -->

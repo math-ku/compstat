@@ -1,5 +1,5 @@
 ---
-title: "Monte Carlo Methods"
+title: "Monte Carlo Integration and Importance Sampling"
 ---
 
 {{< include _common.qmd >}}
@@ -107,7 +107,8 @@ Useful when analytical solutions are infeasible.
 
 With $X_1, \ldots, X_N$ i.i.d. with density $f$,
 $$
-  \hat{\mu}_{\mathrm{MC}} = \frac{1}{N} \sum_{i=1}^N h(X_i) \rightarrow \mu = \E h(X_1) = \int h(x) f(x) \ \mathrm{d}x
+  \hat{\mu}_{\mathrm{MC}} = \frac{1}{N} \sum_{i=1}^N h(X_i) \rightarrow \mu
+                          = \E h(X_1) = \int h(x) f(x) \ \mathrm{d}x
 $$
 for $N \to \infty$ by the law of large numbers (LLN).
 
@@ -115,8 +116,8 @@ for $N \to \infty$ by the law of large numbers (LLN).
 
 By the central limit theorem (CLT), we know that
 $$
-  \frac{1}{N} \sum_{i=1}^N h(X_i) \overset{\mathrm{approx}} \sim
-  \mathcal{N}(\mu, \sigma^2_{\mathrm{MC}} / N)
+  \frac{1}{N} \sum_{i=1}^N h(X_i) \overset{\mathrm{approx}}
+  \sim \mathcal{N}(\mu, \sigma^2_{\mathrm{MC}} / N)
 $$
 where
 $$
@@ -127,7 +128,8 @@ $$
 
 We can estimate $\sigma^2_{\mathrm{MC}}$ using the empirical variance
 $$
-  \hat{\sigma}^2_{\mathrm{MC}} = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i) - \hat{\mu}_{\mathrm{MC}})^2,
+  \hat{\sigma}^2_{\mathrm{MC}}
+  = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i) - \hat{\mu}_{\mathrm{MC}})^2,
 $$
 then the variance of $\hat{\mu}_{\mathrm{MC}}$ is estimated as
 $\hat{\sigma}^2_{\mathrm{MC}} / N$ and a standard 95% confidence interval for
@@ -170,7 +172,11 @@ y <- dgamma(x, 8)
 tibble(x, y) |>
   ggplot(aes(x, y)) +
   geom_line() +
-  geom_vline(xintercept = 8, linetype = "dashed", color = "steelblue") +
+  geom_vline(
+    xintercept = 8,
+    linetype = "dashed",
+    color = "steelblue"
+  ) +
   annotate("text", x = 7, y = 0.02, label = "E(X)", hjust = -0.5)
 ```
 :::::
@@ -188,7 +194,11 @@ tibble(x, y) |>
 #|   distribution.
 
 p <- ggplot(tibble(x = 1:B, y = mu_hat), aes(x, y)) +
-  geom_hline(yintercept = 8, linetype = "dashed", col = "steelblue4") +
+  geom_hline(
+    yintercept = 8,
+    linetype = "dashed",
+    col = "steelblue4"
+  ) +
   geom_line() +
   geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10))
@@ -249,7 +259,9 @@ So let's \alert{oversample} these regions, but correct for this by
 
 We want to find $\mu = \E h(X)$. Observe that
 $$
-  \mu = \int h(x) f(x) \ \mathrm{d}x = \int h(x) \frac{f(x)}{g(x)} g(x) \ \mathrm{d}x = \int h(x) w^*(x) g(x) \ \mathrm{d}x
+  \mu = \int h(x) f(x) \ \mathrm{d}x
+      = \int h(x) \frac{f(x)}{g(x)} g(x) \ \mathrm{d}x
+      = \int h(x) w^*(x) g(x) \ \mathrm{d}x
 $$
 whenever $g$ is a density fulfilling that
 $$
@@ -297,8 +309,12 @@ p1 <- tibble(x, target, importance) |>
   ) |>
   ggplot(aes(x, value, color = Density, linetype = Density)) +
   geom_line() +
-  scale_color_manual(values = c(target = "black", importance = "steelblue")) +
-  scale_linetype_manual(values = c(target = "solid", importance = "dashed")) +
+  scale_color_manual(
+    values = c(target = "black", importance = "steelblue")
+  ) +
+  scale_linetype_manual(
+    values = c(target = "solid", importance = "dashed")
+  ) +
   theme(legend.position.inside = c(0.87, 0.82)) +
   guides(
     color = guide_legend(position = "inside"),
@@ -358,8 +374,12 @@ p1 <- tibble(x = z, target = f_x, importance = g_x) |>
   ggplot(aes(x, value, color = name, linetype = name)) +
   geom_line() +
   guides(color = guide_legend(position = "inside")) +
-  scale_color_manual(values = c(target = "black", importance = "steelblue")) +
-  scale_linetype_manual(values = c(target = "solid", importance = "dashed")) +
+  scale_color_manual(
+    values = c(target = "black", importance = "steelblue")
+  ) +
+  scale_linetype_manual(
+    values = c(target = "solid", importance = "dashed")
+  ) +
   theme(legend.position.inside = c(0.8, 0.8)) +
   labs(y = "Density", color = "Density", linetype = "Density")
 
@@ -398,7 +418,11 @@ p <- ggplot(tibble(x = 1:B, y = mu_hat_IS), aes(x, y)) +
   geom_line() +
   geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10)) +
-  geom_hline(yintercept = 8, linetype = "dashed", col = "steelblue4")
+  geom_hline(
+    yintercept = 8,
+    linetype = "dashed",
+    col = "steelblue4"
+  )
 p
 ```
 
@@ -406,30 +430,34 @@ p
 
 Again by the LLN
 $$
-  \hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1) = \mu  \quad \text{as } N \to \infty.\pause
+  \hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1)
+                            = \mu \quad \text{as } N \to \infty.\pause
 $$
 And by the CLT
 $$
-  \hat{\mu}_{\mathrm{IS}}^* \overset{\mathrm{approx}} \sim
-  \mathcal{N}(\mu, \sigma^{*2}_{\mathrm{IS}} / N)
+  \hat{\mu}_{\mathrm{IS}}^* \overset{\mathrm{approx}}
+  \sim \mathcal{N}(\mu, \sigma^{*2}_{\mathrm{IS}} / N)
 $$
 where
 $$
-  \sigma^{*2}_{\mathrm{IS}} = \V \big( h(X_1)w^*(X_1)\big) = \int (h(x) w^*(x) - \mu)^2 g(x) \ \mathrm{d}x.
+  \sigma^{*2}_{\mathrm{IS}} = \V \big( h(X_1)w^*(X_1)\big)
+                            = \int (h(x) w^*(x) - \mu)^2 g(x) \ \mathrm{d}x.
 $$
 
 ## Importance Sampling Variance
 
 The IS variance can be estimated analogously with the MC variance,
 $$
-  \hat{\sigma}^{*2}_{\mathrm{IS}} = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2.
+  \hat{\sigma}^{*2}_{\mathrm{IS}}
+  = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2.
 $$
 
 . . .
 
 And a 95% standard confidence interval is
 $$
-  \hat{\mu}^*_{\mathrm{IS}} \pm 1.96 \frac{\hat{\sigma}^*_{\mathrm{IS}}}{\sqrt{N}}.
+  \hat{\mu}^*_{\mathrm{IS}}
+  \pm 1.96 \frac{\hat{\sigma}^*_{\mathrm{IS}}}{\sqrt{N}}.
 $$
 
 \medskip\pause
@@ -548,7 +576,10 @@ dens_df <- tibble(
     values_to = "value"
   )
 
-p1 <- ggplot(dens_df, aes(x, value, color = Type, linetype = Type)) +
+p1 <- ggplot(
+  dens_df,
+  aes(x, value, color = Type, linetype = Type)
+) +
   geom_line() +
   labs(y = "Density / Integrand") +
   scale_color_manual(
@@ -621,7 +652,10 @@ dens_df_t <- tibble(
     values_to = "value"
   )
 
-p2 <- ggplot(dens_df_t, aes(x, value, color = Type, linetype = Type)) +
+p2 <- ggplot(
+  dens_df_t,
+  aes(x, value, color = Type, linetype = Type)
+) +
   geom_line() +
   labs(y = "Density / Integrand") +
   scale_color_manual(
@@ -641,7 +675,11 @@ p2 <- ggplot(dens_df_t, aes(x, value, color = Type, linetype = Type)) +
     linetype = guide_legend(position = "inside")
   ) +
   scale_linetype_manual(
-    values = c(target = "solid", importance = "dashed", integrand = "dotdash"),
+    values = c(
+      target = "solid",
+      importance = "dashed",
+      integrand = "dotdash"
+    ),
     labels = c(
       target = expression(f(x)),
       importance = expression(g(x)),
@@ -671,7 +709,8 @@ $$
 
 And
 $$
-  \mu = \frac{\int h(x) w^*(x) g(x) \ \mathrm{d}x}{\int w^*(x) g(x) \ \mathrm{d}x},
+  \mu
+  = \frac{\int h(x) w^*(x) g(x) \ \mathrm{d}x}{\int w^*(x) g(x) \ \mathrm{d}x},
 $$
 where
 $$
@@ -686,8 +725,9 @@ Note that g is still the normalized density.
 
 An importance sampling estimate of $\mu$ is thus
 $$
-  \hat{\mu}_{\mathrm{IS}} = \frac{\sum_{i=1}^N h(X_i) w^*(X_i)}{\sum_{i=1}^N w^*(X_i)} \pause
-                          = \sum_{i=1}^N h(X_i) w(X_i),
+  \hat{\mu}_{\mathrm{IS}}
+  = \frac{\sum_{i=1}^N h(X_i) w^*(X_i)}{\sum_{i=1}^N w^*(X_i)} \pause
+  = \sum_{i=1}^N h(X_i) w(X_i),
 $$
 where $w^*(X_i) = q(X_i) / g(X_i)$ and
 $$
@@ -706,7 +746,7 @@ Let's pretend that we do not know the normalizing constant of the target
 ($\mathrm{Gamma}(8,1)$) and importance ($\normal(10, 3^2)$) distributions. Then
 $$
   w^*(x) = \frac{x^7 \exp(-x)}{\exp{\left(-\frac{(x-10)^2}{18}\right)}}
-         = \exp\left(\frac{(x-10)^2}{18} - x + 7 \log(x)\right).
+         = \exp\left( \frac{(x - 10)^2}{18} - x + 7 \log(x) \right).
 $$
 
 . . .
@@ -719,7 +759,9 @@ B <- 1000
 x <- rnorm(B, 10, 3)
 w_star <- numeric(B)
 x_pos <- x[x > 0]
-w_star[x > 0] <- exp((x_pos - 10)^2 / 18 - x_pos + 7 * log(x_pos))
+w_star[x > 0] <- exp(
+  (x_pos - 10)^2 / 18 - x_pos + 7 * log(x_pos)
+)
 
 mu_hat_IS <- cumsum(x * w_star) / cumsum(w_star)
 mu_hat_IS[B] # Theoretical value 8
@@ -775,8 +817,8 @@ We can then apply the $\Delta$-method with $t(x, y) = x / y$.
 
 \medskip\pause
 
-Observe that $\nabla t(x, y) = \begin{bmatrix}1 / y \\ - x / y^2\end{bmatrix}$ ,
-whence
+Observe that $\nabla t(x, y) = \begin{bmatrix} 1 / y \\ -x / y^2 \end{bmatrix}$
+, whence
 
 $$
   \nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
@@ -787,8 +829,7 @@ $$
 
 By the $\Delta$-method,
 $$
-  \hat{\mu}_{\mathrm{IS}} \overset{\mathrm{approx}}{\sim}
-  \mathcal{N}\left(\mu, \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 N} \right).
+  \hat{\mu}_{\mathrm{IS}} \overset{\mathrm{approx}}{\sim} \mathcal{N}\left( \mu, \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 N} \right).
 $$
 
 . . .
@@ -848,7 +889,14 @@ persp3D(
 )
 
 # Add tangent plane
-persp3D(x_seq, y_seq, z_tangent, add = TRUE, col = "grey", alpha = 0.6)
+persp3D(
+  x_seq,
+  y_seq,
+  z_tangent,
+  add = TRUE,
+  col = "grey",
+  alpha = 0.6
+)
 
 # Add mean point
 points3D(
@@ -891,7 +939,9 @@ mu_hat_IS <- replicate(10000, {
   x <- rnorm(B, 10, 3)
   w_star <- numeric(B)
   x_pos <- x[x > 0]
-  w_star[x > 0] <- exp((x_pos - 10)^2 / 18 - x_pos + 7 * log(x_pos))
+  w_star[x > 0] <- exp(
+    (x_pos - 10)^2 / 18 - x_pos + 7 * log(x_pos)
+  )
   sum(x * w_star) / sum(w_star)
 })
 sd(mu_hat_IS) * sqrt(B)
@@ -989,8 +1039,7 @@ Suppose that
 $$
   X \sim \mathcal{N}(0, I_{2})
 $$
-and that we want to estimate $\E(f(X))$ where $f(X)$ is large near
-the origin.
+and that we want to estimate $\E(f(X))$ where $f(X)$ is large near the origin.
 
 \medskip\pause
 
@@ -1037,9 +1086,18 @@ tibble(
   importance = grid$importance
 ) |>
   ggplot(aes(x1, x2)) +
-  geom_contour(aes(z = target), color = "steelblue", linetype = "dashed") +
+  geom_contour(
+    aes(z = target),
+    color = "steelblue",
+    linetype = "dashed"
+  ) +
   geom_contour(aes(z = importance), color = "darkorange") +
-  geom_point(aes(x1, x2), data = as_tibble(x), alpha = 0.3, size = 0.5) +
+  geom_point(
+    aes(x1, x2),
+    data = as_tibble(x),
+    alpha = 0.3,
+    size = 0.5
+  ) +
   labs(x = expression(X[1]), y = expression(X[2])) +
   coord_fixed()
 ```
@@ -1091,7 +1149,9 @@ This indicates weight degeneracy and poor sampling efficiency.
 The effective sample size (ESS) quantifies how many samples effectively
 contribute to the estimate:
 $$
-  \mathrm{ESS} = \frac{1}{\sum_{i=1}^N w_i^2} = \frac{\left(\sum_{i=1}^N w^*_i\right)^2}{\sum_{i=1}^N ({w^*_i})^2}
+  \mathrm{ESS}
+  = \frac{1}{\sum_{i=1}^N w_i^2}
+  = \frac{\left( \sum_{i=1}^N w^*_i \right)^2}{\sum_{i=1}^N ({w^*_i})^2}
 $$
 where $w_i$ are the \alert{normalized} importance weights.
 
@@ -1120,7 +1180,8 @@ variability.
 
 It is defined as
 $$
-  \mathrm{CV} = \frac{\sqrt{\frac{1}{N} \sum_{i=1}^N (w_i - \bar{w})^2}}{\bar{w}}
+  \mathrm{CV}
+  = \frac{\sqrt{\frac{1}{N} \sum_{i=1}^N (w_i - \bar{w})^2}}{\bar{w}}
 $$
 where $\bar{w} = \frac{1}{N} \sum_{i=1}^N w_i$ is the mean weight.
 
@@ -1228,7 +1289,8 @@ where $\Lambda$ is the Hessian of $-\log f(x)$ at $x^*$.
 
 Exponentiating both sides gives:
 $$
-  f(x) \approx f(x^*) \exp\left(-\frac{1}{2}(x - x^*)^T \Lambda (x - x^*)\right)
+  f(x)
+  \approx f(x^*) \exp\left( -\frac{1}{2}(x - x^*)^T \Lambda (x - x^*) \right)
 $$
 
 ## Laplace Approximation
@@ -1296,10 +1358,17 @@ df <- tibble(
   filter(value > 0)
 
 # Plot
-ggplot(df, aes(x = x, y = value, color = Density, linetype = Density)) +
+ggplot(
+  df,
+  aes(x = x, y = value, color = Density, linetype = Density)
+) +
   geom_line() +
-  scale_color_manual(values = c(f = "black", laplace = "steelblue")) +
-  scale_linetype_manual(values = c(f = "solid", laplace = "dashed")) +
+  scale_color_manual(
+    values = c(f = "black", laplace = "steelblue")
+  ) +
+  scale_linetype_manual(
+    values = c(f = "solid", laplace = "dashed")
+  ) +
   theme(legend.position.inside = c(0.8, 0.8)) +
   guides(
     color = guide_legend(position = "inside"),
@@ -1368,10 +1437,17 @@ library(ggplot2)
 library(tibble)
 
 # Target density: bimodal mixture
-f_density <- function(x) 0.4 * dnorm(x, -2, 1) + 0.6 * dnorm(x, 3, 0.5)
+f_density <- function(x) {
+  0.4 * dnorm(x, -2, 1) + 0.6 * dnorm(x, 3, 0.5)
+}
 
 # Adaptive importance sampling function
-adaptive_is <- function(N = 1000, n_iter = 5, q_init_mean = 0, q_init_sd = 1) {
+adaptive_is <- function(
+  N = 1000,
+  n_iter = 5,
+  q_init_mean = 0,
+  q_init_sd = 1
+) {
   # Store proposal params and samples
   proposals <- list()
   samples <- list()
@@ -1396,7 +1472,11 @@ adaptive_is <- function(N = 1000, n_iter = 5, q_init_mean = 0, q_init_sd = 1) {
     sd_q <- sqrt(sum(w_norm * (x - mean_q)^2))
   }
 
-  return(list(proposals = proposals, samples = samples, weights = weights))
+  return(list(
+    proposals = proposals,
+    samples = samples,
+    weights = weights
+  ))
 }
 
 # Run adaptive importance sampling
@@ -1410,7 +1490,11 @@ plot_step <- function(iter) {
   df <- tibble(
     x = x_grid,
     target = f_density(x_grid),
-    importance = dnorm(x_grid, mean = proposal["mean"], sd = proposal["sd"])
+    importance = dnorm(
+      x_grid,
+      mean = proposal["mean"],
+      sd = proposal["sd"]
+    )
   ) |>
     pivot_longer(
       cols = c(target, importance),
@@ -1424,12 +1508,22 @@ plot_step <- function(iter) {
   ess <- (sum(w))^2 / sum(w^2)
   cv <- sqrt(mean((w - mean(w))^2)) / mean(w)
 
-  ggplot(df, aes(x = x, y = value, color = Density, linetype = Density)) +
+  ggplot(
+    df,
+    aes(x = x, y = value, color = Density, linetype = Density)
+  ) +
     geom_line() +
-    scale_color_manual(values = c(target = "black", importance = "steelblue")) +
-    scale_linetype_manual(values = c(target = "solid", importance = "dashed")) +
+    scale_color_manual(
+      values = c(target = "black", importance = "steelblue")
+    ) +
+    scale_linetype_manual(
+      values = c(target = "solid", importance = "dashed")
+    ) +
     lims(x = c(-6, 6), y = c(0, 0.6)) +
-    labs(y = "Density", subtitle = sprintf("ESS = %.0f, CV = %.1f", ess, cv))
+    labs(
+      y = "Density",
+      subtitle = sprintf("ESS = %.0f, CV = %.1f", ess, cv)
+    )
 }
 ```
 
@@ -1505,7 +1599,8 @@ Recall the Gamma(8,1) example where we used $g(x) = \mathcal{N}(10, 3^2)$.
 
 Instead we can use a mixture
 $$
-  g_{\mathrm{mix}}(x) = 0.8 \cdot \mathcal{N}(10, 3^2) + 0.2 \cdot \mathcal{N}(10, 10^2)
+  g_{\mathrm{mix}}(x) = 0.8 \cdot \mathcal{N}(10, 3^2)
+                        + 0.2 \cdot \mathcal{N}(10, 10^2)
 $$
 with heavier tails to ensure coverage.
 
@@ -1541,7 +1636,11 @@ set.seed(1234)
 B <- 1000
 mix_indicator <- rbinom(B, 1, 0.8)
 x <- rnorm(B, mean = 10, sd = 3)
-x[mix_indicator == 0] <- rnorm(sum(mix_indicator == 0), mean = 0, sd = 6)
+x[mix_indicator == 0] <- rnorm(
+  sum(mix_indicator == 0),
+  mean = 0,
+  sd = 6
+)
 g_mix <- 0.8 * dnorm(x, 10, 3) + 0.2 * dnorm(x, 10, 10)
 w_star <- dgamma(x, 8) / g_mix
 mu_hat_defensive <- cumsum(x * w_star) / (1:B)
@@ -1556,8 +1655,12 @@ p1 <- tibble(x = z, target = f_x, mixture = g_mix) |>
   ggplot(aes(x, value, color = name, linetype = name)) +
   geom_line() +
   guides(color = guide_legend(position = "inside")) +
-  scale_color_manual(values = c(target = "black", mixture = "darkorange")) +
-  scale_linetype_manual(values = c(target = "solid", mixture = "dashed")) +
+  scale_color_manual(
+    values = c(target = "black", mixture = "darkorange")
+  ) +
+  scale_linetype_manual(
+    values = c(target = "solid", mixture = "dashed")
+  ) +
   theme(legend.position.inside = c(0.8, 0.8)) +
   labs(y = "Density", color = "Density", linetype = "Density")
 
@@ -1638,7 +1741,12 @@ discon <- function(Aup) {
 
 sim_net <- function(Aup, p) {
   ones <- which(Aup == 1)
-  Aup[ones] <- sample(c(0, 1), length(ones), replace = TRUE, prob = c(p, 1 - p))
+  Aup[ones] <- sample(
+    c(0, 1),
+    length(ones),
+    replace = TRUE,
+    prob = c(p, 1 - p)
+  )
   Aup
 }
 ```
