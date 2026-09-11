@@ -41,9 +41,9 @@ interval actually achieve 95% coverage?
 
 \begin{center}
 \begin{tikzpicture}[node distance=0.4cm, >=stealth, font=\small]
-  \node[draw, rounded corners, fill=blue!10] (data) {Generate a dataset};
-  \node[draw, rounded corners, fill=orange!10, right=of data] (fit) {Apply the method};
-  \node[draw, rounded corners, fill=green!10, right=of fit] (repeat) {Repeat and summarize};
+  \node[draw, rounded corners, fill=blue!10] (data) {Simulate data};
+  \node[draw, rounded corners, fill=orange!10, right=of data] (fit) {Compute estimates};
+  \node[draw, rounded corners, fill=green!10, right=of fit] (repeat) {Assess bias, coverage, etc.};
   \draw[->] (data) -- (fit);
   \draw[->] (fit) -- (repeat);
 \end{tikzpicture}
@@ -56,12 +56,13 @@ probabilities and posterior summaries.
 
 \medskip\pause
 
-All of these applications need the same building block: **reliable, efficient
-sampling from a specified distribution.**
+All of these applications need **reliable and efficient sampling from a
+specified distribution.**
 
 ## Pseudo-Random Numbers
 
-R uses deterministic algorithms to generate **pseudo-random** numbers.
+The basis for all sampling methods is a source of random numbers and R uses
+deterministic algorithms to generate **pseudo-random** numbers.
 
 \medskip\pause
 
@@ -321,7 +322,7 @@ to generate samples from $\mathcal{N}(0,1)$.
 
 ## Numerical Inversion Is a Root Search
 
-For $u = 0.9$, solve $\Phi(x) - u = 0$. The interval $[0,2]$ brackets the root.
+For $u = 0.9$, solve $\Phi(x) - u = 0$.
 
 ```{r}
 #| label: inversion-numerical-bracket
@@ -349,11 +350,7 @@ ggplot(tibble(x = seq(0, 2, length.out = 200)), aes(x)) +
 #| results: hide
 
 u <- 0.9
-uniroot(
-  function(x) pnorm(x) - u,
-  interval = c(0, 2),
-  tol = 1e-8
-)$root
+uniroot(function(x) pnorm(x) - u, interval = c(0, 2), tol = 1e-8)
 ```
 
 \pause
