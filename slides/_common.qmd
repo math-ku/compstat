@@ -3,6 +3,7 @@
 #| echo: false
 #| message: false
 #| warning: false
+#| cache: false
 
 library(tidyverse)
 library(patchwork)
@@ -45,13 +46,22 @@ local({
         } else {
           sprintf(",graphics={width=%s}", options$out.width)
         },
-        sub(sprintf("-%d$", options$fig.num), "", xfun::sans_ext(x))
+        sub(
+          sprintf("-%d$", options$fig.num),
+          "",
+          xfun::sans_ext(x)
+        )
       )
 
       caption <- options$fig.cap
 
-      if (is.null(caption) || is.na(caption) || !nzchar(caption)) {
-        sprintf("\n\n\\begin{center}\n%s\n\\end{center}\n\n", include)
+      if (
+        is.null(caption) || is.na(caption) || !nzchar(caption)
+      ) {
+        sprintf(
+          "\n\n\\begin{center}\n%s\n\\end{center}\n\n",
+          include
+        )
       } else {
         sprintf(
           "\n\n\\begin{figure}[htpb]\n\\centering\n%s\n\\caption{%s}\n\\end{figure}\n\n",
