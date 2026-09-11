@@ -375,55 +375,25 @@ p1 + p2
 
 ## Sampling from the von Mises Distribution
 
-### Using movMF
-
-```{r}
-#| label: vMsim
-
-library(movMF)
-xy <- rmovMF(500, 0.5 * c(cos(-1.5), sin(-1.5)))
-
-# atan2 preserves the quadrant of each point on the unit circle.
-x <- atan2(xy[, 2], xy[, 1])
-```
+We can evaluate the unnormalized density
+$$
+  q(x) = e^{\kappa \cos(x-\mu)}.
+$$
 
 . . .
 
-### Problem {.alert}
+For $\kappa > 0$, the CDF has no elementary closed-form inverse. Inversion
+sampling is possible, but requires numerical approximation.
 
-Can we use inversion sampling? Yes, but it requires numerical inversion of the
-distribution function.
+. . .
 
-##
+### Sampling Problem {.alert}
 
-```{r}
-#| label: vMhist
-#| fig-height: 2.5
-#| fig-width: 5.5
-#| echo: false
-#| fig-cap: Histogram of samples from `rmovMF()`.
+Can we sample using $q$ directly, without computing or inverting the CDF?
 
-ggplot(tibble(x = x), aes(x)) +
-  geom_rug(alpha = 0.1) +
-  geom_histogram(
-    aes(y = after_stat(density)),
-    bins = 15,
-    fill = "grey70",
-    color = "white"
-  ) +
-  stat_function(
-    aes(color = "Theoretical Density"),
-    fun = function(x) {
-      exp(0.5 * cos(x + 1.5)) / (2 * pi * besselI(0.5, 0))
-    }
-  ) +
-  geom_density(
-    aes(color = "SJ density estimate"),
-    bw = "sj",
-    key_glyph = "path"
-  ) +
-  labs(y = "Density", x = "x", color = NULL)
-```
+\medskip\pause
+
+Yes! We can use **rejection sampling**.
 
 ## Rejection Sampling
 
@@ -931,7 +901,58 @@ new_rejection_sampler <- function(generator) {
 }
 ```
 
+## Sampling with movMF
+
+We can compare our samplers with the implementation in `movMF`.
+
+\medskip\pause
+
+For $\mu = 0$, use the parameter vector $(\kappa, 0)$. The package returns
+points on the unit circle, which we convert to angles.
+
+```{r}
+#| label: vMsim
+
+library(movMF)
+
+sample_vonmises_movMF <- function(N, kappa) {
+  xy <- rmovMF(N, c(kappa, 0))
+  # atan2 preserves the quadrant of each point on the unit circle.
+  atan2(xy[, 2], xy[, 1])
+}
+
+x <- sample_vonmises_movMF(500, 5)
+```
+
 ##
+
+```{r}
+#| label: vMhist
+#| fig-height: 2.5
+#| fig-width: 5.5
+#| echo: false
+#| fig-cap: Histogram of samples from `rmovMF()` for $\mu = 0$ and $\kappa = 5$,
+#|   with the theoretical density in blue.
+
+ggplot(tibble(x = x), aes(x)) +
+  geom_rug(alpha = 0.1) +
+  geom_histogram(
+    aes(y = after_stat(density)),
+    bins = 15,
+    fill = "grey70",
+    color = "white"
+  ) +
+  stat_function(
+    fun = f,
+    args = list(kappa = 5),
+    color = "royalblue"
+  ) +
+  labs(y = "Density", x = "x")
+```
+
+## Benchmarking the von Mises Samplers
+
+Each method returns $N = 10^5$ angles with $\mu = 0$ and $\kappa = 5$.
 
 ```{r}
 #| label: vmises-bench
@@ -941,8 +962,9 @@ new_rejection_sampler <- function(generator) {
 sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
 
 bench::mark(
-  sample_vonmises(1e5, 5),
-  sample_vonmises_slow(1e5, 5),
+  vectorized = sample_vonmises(1e5, 5)$x,
+  scalar = sample_vonmises_slow(1e5, 5),
+  movMF = sample_vonmises_movMF(1e5, 5),
   check = FALSE
 ) |>
   plot()
