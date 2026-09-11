@@ -1948,6 +1948,12 @@ bench::mark(
 
 ## Next Time
 
-### Monte Carlo Methods
+### Monte Carlo Integration
+
+Sample from a distribution to estimate expectations of functions of the random
+variable.
 
 ### Importance Sampling
+
+Weight samples from a proposal distribution to estimate expectations with
+respect to a target distribution.
