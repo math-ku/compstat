@@ -1864,15 +1864,17 @@ the spline. Plot and compare the results.
 
 ## Next Time
 
-### Pseudo-Random Numbers
+### Inversion Sampling
 
-How do you simulate random numbers in R?
+Simple method for sampling from a target distribution provided we can compute
+its cumulative distribution function (CDF) and its quantile function.
 
 . . .
 
 ### Rejection Sampling
 
-General and useful method for sampling from a target distribution
+General and useful method for sampling from a target distribution that only
+requires the ability to evaluate its density function.
 
 \appendix
 
