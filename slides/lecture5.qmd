@@ -603,6 +603,107 @@ An analytic bound guarantees validity.
 Numerical optimization (e.g., `optimize()` in R) can suggest a bound, but the
 envelope inequality must hold everywhere.
 
+## Finding the von Mises Bound
+
+For $\mu = 0$, take $q(y) = e^{\kappa\cos y}$ and $p(y) = 1$ on $(-\pi,\pi)$.
+
+```{r}
+#| label: vonmises-bound
+#| echo: false
+#| fig-show: animate
+#| fig-width: 4
+#| fig-height: 2.4
+
+bound_curve <- tibble(y = seq(-pi, pi, length.out = 401)) |>
+  mutate(tight_bound = exp(2 * (cos(y) - 1)))
+
+bound_scales <- c(0.5, 1, 1.25)
+bound_labels <- c(
+  "Valid, with room to spare",
+  "Largest valid value",
+  "Invalid"
+)
+
+for (stage in 1:3) {
+  bound_color <- if (stage < 3) "royalblue" else "darkorange"
+  p <- ggplot(
+    bound_curve,
+    aes(y, bound_scales[stage] * tight_bound)
+  ) +
+    geom_hline(
+      yintercept = 1,
+      color = "grey40",
+      linetype = "dashed"
+    ) +
+    geom_line(color = bound_color) +
+    annotate(
+      "point",
+      x = 0,
+      y = bound_scales[stage],
+      color = bound_color
+    ) +
+    annotate(
+      "text",
+      x = -2.9,
+      y = 1.2,
+      label = "p(y) == 1",
+      parse = TRUE,
+      hjust = 0
+    ) +
+    scale_x_continuous(
+      breaks = c(-pi, 0, pi),
+      labels = expression(-pi, 0, pi)
+    ) +
+    coord_cartesian(ylim = c(0, 1.4)) +
+    labs(
+      title = bound_labels[stage],
+      subtitle = bquote(
+        kappa == 2 ~
+          "," ~
+          alpha^minute ==
+            .(bound_scales[stage]) *
+              e^{
+                -kappa
+              }
+      ),
+      x = expression(y),
+      y = expression(alpha^minute * q(y))
+    )
+  print(p)
+}
+```
+
+\uncover<2->{Since $\cos y \leq 1$,
+$\alpha'_{\max} = \inf_y e^{-\kappa\cos y} = e^{-\kappa}$, attained at $y = 0$.}
+
+## Von Mises Rejection Sampling
+
+For $\mu = 0$, use the uniform proposal on $(-\pi, \pi)$: $g(y) = 1/(2\pi)$.
+
+\medskip\pause
+
+Since
+$$
+  e^{\kappa(\cos(y)-1)} = \alpha' e^{\kappa \cos(y)} \leq 1,
+$$
+where $\alpha' = \exp(-\kappa)$, we reject if
+$$
+  U > e^{\kappa(\cos(Y)-1)}.
+$$
+
+. . .
+
+\begin{algorithm}[H]
+  \caption{Rejection sampling for the von Mises distribution}
+  \Repeat{sample is accepted}{
+    Generate $Y \sim \mathcal{U}(-\pi, \pi)$\;
+    Generate $U \sim \mathcal{U}(0, 1)$\;
+    \If{$U \leq e^{\kappa(\cos(Y) - 1)}$}{
+      Accept $Y$\;
+    }
+  }
+\end{algorithm}
+
 ## When No Envelope Exists
 
 We need $g(y) > 0$ wherever $f(y) > 0$ and $\sup_y f(y)/g(y) < \infty$.
@@ -649,34 +750,6 @@ support_plot + tail_plot
 
 For a standard normal target, neither a $\mathcal{U}(-2,2)$ proposal nor a
 $\mathcal{N}(0,1/4)$ proposal admits a finite envelope.
-
-## Von Mises Rejection Sampling
-
-For $\mu = 0$, use the uniform proposal on $(-\pi, \pi)$: $g(y) = 1/(2\pi)$.
-
-\medskip\pause
-
-Since
-$$
-  e^{\kappa(\cos(y)-1)} = \alpha' e^{\kappa \cos(y)} \leq 1,
-$$
-where $\alpha' = \exp(-\kappa)$, we reject if
-$$
-  U > e^{\kappa(\cos(Y)-1)}.
-$$
-
-. . .
-
-\begin{algorithm}[H]
-  \caption{Rejection sampling for the von Mises distribution}
-  \Repeat{sample is accepted}{
-    Generate $Y \sim \mathcal{U}(-\pi, \pi)$\;
-    Generate $U \sim \mathcal{U}(0, 1)$\;
-    \If{$U \leq e^{\kappa(\cos(Y) - 1)}$}{
-      Accept $Y$\;
-    }
-  }
-\end{algorithm}
 
 ## Implementation
 
