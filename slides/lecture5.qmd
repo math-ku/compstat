@@ -62,7 +62,25 @@ adjustments to exclude 0 and 1.
 
 \pdfpcnote{
   Random numbers are used in many applications.
+  Use \texttt{RNGkind()} to inspect the selected pseudo-random number generator,
+  normal sampler, and discrete sampling method used by \texttt{sample()}.
 }
+
+## From Uniform Random Numbers to Target Distributions
+
+\begin{figure}
+  \begin{tikzpicture}[node distance=1cm, auto, >=stealth, thick]
+    \node[draw, rectangle, rounded corners, fill=gray!20] (A) {Integers from Pseudo-RNG};
+    \node[draw, rectangle, rounded corners, below=of A, fill=green!10] (B) {$\mathcal{U}(0, 1)$};
+    \node[draw, rectangle, rounded corners, below right=of B, fill=orange!10] (D1) {Transformation methods};
+    \node[draw, rectangle, rounded corners, below left=of B, fill=red!10] (D2) {Rejection sampling};
+
+    \draw[->] (A) -- (B);
+    \draw[->] (B) -- (D1);
+    \draw[->] (B) -- (D2);
+  \end{tikzpicture}
+  \caption{Main categories of sampling methods (in this course).}
+\end{figure}
 
 ## Transformation Methods
 
@@ -237,7 +255,7 @@ for (stage in 1:2) {
         arrow = grid::arrow(length = grid::unit(0.07, "inches")),
         color = "darkorange"
       ) +
-      annotate("text", x = 0.4, y = 0.6, label = "u = 0.55")
+      annotate("text", x = 0.4, y = 0.63, label = "u = 0.55")
   }
   print(p)
 }
@@ -268,42 +286,6 @@ sampler](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010
 uses a [numerical approximation of
 $\Phi^{-1}$](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52)
 to generate samples from $\mathcal{N}(0,1)$.
-
-## Sampling in R
-
-R has three basic options for customizing the behavior, set through `RNGkind()`.
-
-```{r}
-#| label: rng-kind
-
-RNGkind()
-```
-
-. . .
-
-### Options
-
-- `kind`: type of pseudo-random number generator
-- `normal.kind`: type of sampler for normal random variables
-- `sample.kind`: type of sampler for `sample()`
-
-##
-
-\begin{figure}
-  \begin{tikzpicture}[node distance=1cm, auto, >=stealth, thick]
-    % Nodes
-    \node[draw, rectangle, rounded corners, fill=gray!20] (A) {Integers from Pseudo-RNG};
-    \node[draw, rectangle, rounded corners, below=of A, fill=green!10] (B) {$\mathcal{U}(0, 1)$};
-    \node[draw, rectangle, rounded corners, below right=of B, fill=orange!10] (D1) {Transformation methods};
-    \node[draw, rectangle, rounded corners, below left=of B, fill=red!10] (D2) {Rejection sampling};
-
-    % Arrows
-    \draw[->] (A) -- (B);
-    \draw[->] (B) -- (D1);
-    \draw[->] (B) -- (D2);
-  \end{tikzpicture}
-  \caption{Main categories of sampling methods (in this course).}
-\end{figure}
 
 ## Example: Sampling from a $t$-Distribution
 
