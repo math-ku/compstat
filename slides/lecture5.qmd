@@ -93,7 +93,7 @@ variable we can sample, then we can sample $X = T(Z)$.
 Transformation methods let us generate samples from complex distributions by
 applying a function to samples from a simpler distribution.
 
-\medskip
+\medskip\pause
 
 ### Example {.example}
 
@@ -245,39 +245,17 @@ for (stage in 1:2) {
 
 Every $u \in (0.2, 0.7]$ maps to 1, so $\Pr(X = 1) = 0.7 - 0.2 = 0.5$.
 
-## Gaussian Random Variables
+## Inversion Without a Closed Form
 
-### Box--Muller Method
-
-A transformation of two independent uniforms into two independent Gaussian
-random variables (polar coordinates).
-
-. . .
-
-### Inverse Transform
-
-$X = \Phi^{-1}(U)$, where $U \sim \mathcal{U}(0, 1)$ and $\Phi$ is the standard
-Gaussian distribution function.
-
-. . .
-
-### Rejection Sampling
-
-See [Exercise 6.1 in
-CSwR](https://cswr.nrhstat.org/reject-samp#exr:reject-gaussian) or the [Ziggurat
-algorithm](https://en.wikipedia.org/wiki/Ziggurat_algorithm).
-
-## Computing $\Phi^{-1}$
-
-Recall that
+The standard Gaussian distribution function is
 $$
   \Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \ \mathrm{d}z.
 $$
 
 . . .
 
-But $\Phi^{-1}$ (the quantile function) has no elementary closed-form
-expression.
+Inversion gives $X = \Phi^{-1}(U)$ with $U \sim \mathcal{U}(0, 1)$, but
+$\Phi^{-1}$ has no elementary closed-form expression.
 
 \medskip\pause
 
