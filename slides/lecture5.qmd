@@ -25,7 +25,39 @@ Sample from a target distribution using its inverse CDF.
 
 ### Rejection Sampling
 
-General and useful method for sampling from a target distribution
+Sample using a density that may be known only up to normalization.
+
+## Why Do We Need a Sampler?
+
+Simulation lets us explore the consequences of a statistical model when analytic
+calculations are difficult.
+
+\medskip\pause
+
+How biased is an estimator in a small sample? Does a nominal 95% confidence
+interval actually achieve 95% coverage?
+
+\medskip\pause
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.4cm, >=stealth, font=\small]
+  \node[draw, rounded corners, fill=blue!10] (data) {Generate a dataset};
+  \node[draw, rounded corners, fill=orange!10, right=of data] (fit) {Apply the method};
+  \node[draw, rounded corners, fill=green!10, right=of fit] (repeat) {Repeat and summarize};
+  \draw[->] (data) -- (fit);
+  \draw[->] (fit) -- (repeat);
+\end{tikzpicture}
+\end{center}
+
+\medskip\pause
+
+Draws also let us estimate probabilities and expectations, including tail
+probabilities and posterior summaries.
+
+\medskip\pause
+
+All of these applications need the same building block: **reliable, efficient
+sampling from a specified distribution.**
 
 ## Pseudo-Random Numbers
 
@@ -286,6 +318,49 @@ sampler](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010
 uses a [numerical approximation of
 $\Phi^{-1}$](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52)
 to generate samples from $\mathcal{N}(0,1)$.
+
+## Numerical Inversion Is a Root Search
+
+For $u = 0.9$, solve $\Phi(x) - u = 0$. The interval $[0,2]$ brackets the root.
+
+```{r}
+#| label: inversion-numerical-bracket
+#| echo: false
+#| fig-width: 5
+#| fig-height: 1.25
+
+ggplot(tibble(x = seq(0, 2, length.out = 200)), aes(x)) +
+  geom_line(aes(y = pnorm(x) - 0.9), color = "royalblue") +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    color = "grey50"
+  ) +
+  geom_point(
+    data = tibble(x = c(0, 2)),
+    aes(y = pnorm(x) - 0.9),
+    color = "darkorange"
+  ) +
+  labs(x = expression(x), y = expression(Phi(x) - u))
+```
+
+```{r}
+#| label: inversion-numerical-root
+#| results: hide
+
+u <- 0.9
+uniroot(
+  function(x) pnorm(x) - u,
+  interval = c(0, 2),
+  tol = 1e-8
+)$root
+```
+
+\pause
+
+The bracket must contain the root for the chosen $u$; `tol` controls accuracy in
+$x$. General root finding repeatedly evaluates the CDF; `qnorm()` uses a
+specialized approximation.
 
 ## Example: Sampling from a $t$-Distribution
 
@@ -686,6 +761,38 @@ $$
   }
 \end{algorithm}
 
+## Compute the Acceptance Test on the Log Scale
+
+The same rejection test can be written as
+$$
+  \log U \leq \log\alpha' + \log q(Y) - \log p(Y).
+$$
+
+\medskip\pause
+
+For the posterior in Assignment 2A, compute the log-density as a sum:
+
+```{r}
+#| label: posterior-log-density
+
+log_q <- function(theta, x, z) {
+  if (theta < 0) {
+    return(-Inf)
+  }
+  eta <- theta * x
+  sum(z * eta - exp(eta))
+}
+```
+
+\pause
+
+Multiplying many small likelihood contributions can underflow to zero. Work with
+log-densities and subtract them before exponentiating, if needed.
+
+\medskip\pause
+
+For von Mises sampling, the log acceptance ratio is simply $\kappa(\cos Y - 1)$.
+
 ## When No Envelope Exists
 
 We need $g(y) > 0$ wherever $f(y) > 0$ and $\sup_y f(y)/g(y) < \infty$.
@@ -742,7 +849,7 @@ get_one_sample_vmises <- function(kappa) {
   repeat {
     Y <- runif(1, -pi, pi)
     U <- runif(1)
-    if (U <= exp(kappa * (cos(Y) - 1))) {
+    if (log(U) <= kappa * (cos(Y) - 1)) {
       break
     }
   }
@@ -854,7 +961,7 @@ once.
 fixed_vonmises_sampler <- function(m, kappa) {
   Y <- runif(m, -pi, pi)
   u <- runif(m)
-  accept <- u <= exp(kappa * (cos(Y) - 1))
+  accept <- log(u) <= kappa * (cos(Y) - 1)
   Y[accept]
 }
 ```
@@ -938,6 +1045,8 @@ short, generate another batch.
 
 ## Function Factory for Rejection Sampling
 
+\footnotesize
+
 ```{r}
 #| label: new_rejection_sampler
 
@@ -945,17 +1054,22 @@ new_rejection_sampler <- function(generator) {
   function(N, ...) {
     alpha <- 1
     y <- numeric(0)
-    n_accepted <- 0
+    n_accepted <- n_proposed <- 0
     while (n_accepted < N) {
       m <- ceiling((N - n_accepted) / alpha)
       y_new <- generator(m, ...)
+      n_proposed <- n_proposed + m
       n_accepted <- n_accepted + length(y_new)
       if (length(y) == 0) {
         alpha <- (n_accepted + 1) / (m + 1)
       }
       y <- c(y, y_new)
     }
-    list(x = y[seq_len(N)], alpha = alpha)
+    list(
+      x = y[seq_len(N)],
+      proposed = n_proposed,
+      accepted = n_accepted
+    )
   }
 }
 ```
@@ -1008,6 +1122,54 @@ ggplot(tibble(x = x), aes(x)) +
   ) +
   labs(y = "Density", x = "x")
 ```
+
+## Check the Distribution Before Timing
+
+For independent $Z_1,\ldots,Z_5 \sim \mathcal{N}(0,1)$,
+$\sum_{j=1}^5 Z_j^2 \sim \chi^2_5$. What if we reuse one normal draw five times?
+
+```{r}
+#| label: sampler-validation-example
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+#| fig-cap: Empirical CDFs of $\chi^2_5$ and $5\chi^2_1$ samples, with the
+#|   target $\chi^2_5$ CDF overlaid in black.
+
+set.seed(510)
+validation_n <- 20000
+independent_chisq <- rowSums(matrix(
+  rnorm(5 * validation_n)^2,
+  ncol = 5
+))
+# Dependence among terms within each sum changes the output distribution.
+reused_normal_chisq <- 5 * rnorm(validation_n)^2
+
+validation_samples <- tibble(
+  x = c(independent_chisq, reused_normal_chisq),
+  method = rep(
+    c("Independent normals", "Same normal reused"),
+    each = validation_n
+  )
+)
+
+ggplot(validation_samples, aes(x)) +
+  stat_ecdf(aes(color = method)) +
+  stat_function(fun = pchisq, args = list(df = 5)) +
+  scale_color_manual(
+    values = c("royalblue", "darkorange"),
+    guide = "none"
+  ) +
+  coord_cartesian(xlim = c(0, 20)) +
+  facet_wrap(~method) +
+  labs(x = expression(x), y = "CDF")
+```
+
+. . .
+
+Both constructions give independent outputs with mean 5, but their variances are
+10 and 50. Reusing the normal changes the marginal distribution. Check support,
+distribution, and moments before benchmarking.
 
 ## Benchmarking the von Mises Samplers
 
@@ -1247,9 +1409,7 @@ For shape parameters $\alpha, \beta > 1$, the beta density is log-concave.
 #| fig-height: 2.5
 
 fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
-  lf <- function(x) {
-    (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
-  }
+  lf <- function(x) (alpha - 1) * log(x) + (beta - 1) * log1p(-x)
   lf_deriv <- function(x) (alpha - 1) / x - (beta - 1) / (1 - x)
   a1 <- lf_deriv(x1)
   a2 <- lf_deriv(x2)
@@ -1265,7 +1425,7 @@ fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
   Q1 <- exp(b1) * (exp(a1 * z1) - 1) / a1
   c <- Q1 + exp(b2) * (exp(a2 * 1) - exp(a2 * z1)) / a2
 
-  y <- ratio <- numeric(m)
+  y <- log_ratio <- numeric(m)
   uy <- c * runif(m)
   u <- runif(m)
   i <- uy < Q1
@@ -1274,9 +1434,9 @@ fixed_beta_sampler <- function(m, x1, x2, alpha, beta) {
     a2 * exp(-b2) * (uy[!i] - Q1) + exp(a2 * z1)
   ) /
     a2
-  ratio[i] <- exp(lf(z) - a1 * z - b1)
-  ratio[!i] <- exp(lf(zz) - a2 * zz - b2)
-  accept <- u <= ratio
+  log_ratio[i] <- lf(z) - a1 * z - b1
+  log_ratio[!i] <- lf(zz) - a2 * zz - b2
+  accept <- log(u) <= log_ratio
   y[accept]
 }
 
@@ -1343,7 +1503,7 @@ make_density_df <- function(xseq, alpha, beta, label) {
 make_envelope_df <- function(xseq, x1, x2, alpha, beta, label) {
   envelope <- function(x, x1, x2, alpha, beta) {
     lf <- function(x) {
-      (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+      (alpha - 1) * log(x) + (beta - 1) * log1p(-x)
     }
     lf_deriv <- function(x) {
       (alpha - 1) / x - (beta - 1) / (1 - x)
@@ -1435,7 +1595,7 @@ xseq <- seq(0.05, 0.95, length.out = 400)
 make_df <- function(xseq, alpha, beta, x1, x2, label) {
   envelope_fun <- function(x, x1, x2, alpha, beta) {
     lf <- function(x) {
-      (alpha - 1) * log(x) + (beta - 1) * log(1 - x)
+      (alpha - 1) * log(x) + (beta - 1) * log1p(-x)
     }
     lf_deriv <- function(x) {
       (alpha - 1) / x - (beta - 1) / (1 - x)
@@ -1477,6 +1637,368 @@ ggplot(plot_df, aes(x = x)) +
   scale_y_log10() +
   facet_wrap(~label, ncol = 2)
 ```
+
+## Adapting the Envelope
+
+The examples above use fixed envelopes. Adaptive rejection sampling updates the
+envelope using new points.
+
+\medskip\pause
+
+For a fixed envelope, a simple cost model is
+$$
+  \mathbb{E}[T] \approx T_{\mathrm{setup}}
+                        + \frac{N}{\alpha}\,c_{\mathrm{attempt}},
+$$
+where $c_{\mathrm{attempt}}$ includes generating and testing a proposal.
+
+\medskip\pause
+
+Batching reduces overhead per proposal. A tighter envelope reduces rejections,
+but constructing, sampling, and updating it also cost time.
+
+## One Adaptive Update
+
+For a log-concave target, use a rejected proposal $Y$ as a new tangent point.
+
+```{r}
+#| label: envelope-adaptive-update
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5
+#| fig-height: 2.1
+
+adaptive_example <- tangent_example |>
+  mutate(
+    new_tangent = normal_log_tangent(x, 0),
+    updated = pmin(envelope, new_tangent)
+  )
+
+for (stage in 1:3) {
+  p <- ggplot(adaptive_example, aes(x)) +
+    geom_line(aes(y = exp(log_density))) +
+    geom_line(aes(y = exp(envelope)), color = "royalblue") +
+    coord_cartesian(ylim = c(0, 1.3)) +
+    labs(x = expression(x), y = "Density")
+  if (stage >= 2) {
+    p <- p +
+      annotate("point", x = 0, y = 0.9, color = "darkorange") +
+      annotate(
+        "text",
+        x = 1.1,
+        y = 0.95,
+        label = "Rejected at Y = 0"
+      )
+  }
+  if (stage >= 3) {
+    p <- p +
+      geom_line(aes(y = exp(updated)), color = "darkorange")
+  }
+  print(p)
+}
+```
+
+$$
+  V_{\mathrm{new}}(x) = \min\{V_{\mathrm{old}}(x),\ h(Y) + h'(Y)(x - Y)\}.
+$$
+\uncover<3->{The orange envelope is tighter. Update the piece masses before the
+next draw.}
+
+## Does a Tighter Envelope Run Faster?
+
+Compare uniform and two-piece exponential proposals for $\mathrm{Beta}(a,a)$.
+Larger $a$ concentrates the target near $1/2$.
+
+```{r}
+#| label: envelope-benchmark-helpers
+#| include: false
+
+compare_rejection_pair <- function(N, uniform, piecewise) {
+  draws <- list(uniform = uniform(N), piecewise = piecewise(N))
+  timings <- bench::mark(
+    uniform = uniform(N)$x,
+    piecewise = piecewise(N)$x,
+    check = FALSE,
+    min_iterations = 10,
+    min_time = 0.1
+  )
+  methods <- as.character(timings$expression)
+  tibble(
+    method = methods,
+    acceptance = vapply(
+      draws[methods],
+      function(draw) draw$accepted / draw$proposed,
+      numeric(1)
+    ),
+    microseconds = 1e6 * as.numeric(timings$median) / N
+  )
+}
+
+plot_envelope_comparison <- function(results, x_label) {
+  results |>
+    pivot_longer(
+      c(acceptance, microseconds),
+      names_to = "metric",
+      values_to = "value"
+    ) |>
+    mutate(
+      metric = factor(
+        metric,
+        levels = c("acceptance", "microseconds"),
+        labels = c("Acceptance", "Time")
+      )
+    ) |>
+    ggplot(aes(parameter, value, color = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(
+      metric ~ N,
+      scales = "free_y",
+      labeller = labeller(N = function(x) paste("N =", x))
+    ) +
+    scale_x_continuous(
+      breaks = sort(unique(results$parameter))
+    ) +
+    scale_color_manual(
+      values = c(
+        piecewise = "darkorange",
+        uniform = "royalblue"
+      ),
+      labels = c(piecewise = "Piecewise", uniform = "Uniform")
+    ) +
+    labs(x = x_label, y = NULL, color = NULL)
+}
+
+fixed_beta_uniform_sampler <- function(m, shape) {
+  log_target <- function(x) (shape - 1) * (log(x) + log1p(-x))
+  y <- runif(m)
+  log_ratio <- log_target(y) - log_target(0.5)
+  y[log(runif(m)) <= log_ratio]
+}
+
+sample_beta_uniform <- new_rejection_sampler(
+  fixed_beta_uniform_sampler
+)
+
+set.seed(511)
+beta_comparison <- pmap_dfr(
+  expand_grid(N = c(100, 10000), shape = c(2, 5, 20)),
+  function(N, shape) {
+    # Points one standard deviation from the mode follow its concentration.
+    delta <- sqrt(1 / (4 * (2 * shape + 1)))
+    compare_rejection_pair(
+      N,
+      uniform = function(n) sample_beta_uniform(n, shape),
+      piecewise = function(n) {
+        sample_beta(n, 0.5 - delta, 0.5 + delta, shape, shape)
+      }
+    ) |>
+      mutate(N = N, parameter = shape)
+  }
+)
+```
+
+```{r}
+#| label: beta-envelope-benchmark
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 2.25
+
+plot_envelope_comparison(beta_comparison, expression(a))
+```
+
+\pause
+
+Time is median microseconds per returned sample, including setup and all
+batches. Acceptance is accepted/proposed, including surplus draws.
+
+\pdfpcnote{
+  The uniform envelope has height equal to the beta density at its mode, 1/2.
+  For the piecewise envelope, place tangent points one standard deviation
+  either side of 1/2. The acceptance proportions come from separate sampler
+  runs; the timings are medians over repeated runs. A higher acceptance rate
+  need not give a lower runtime.
+}
+
+## Transformation Methods vs. Rejection Sampling
+
+::: {.columns}
+::::: {.column width="47%"}
+### Transformation Methods
+
+Transform samples from a simple distribution to the target distribution.
+
+\medskip\pause
+
+Efficient if the transformation is available and cheap to compute.
+
+\medskip\pause
+
+Finding or evaluating a transformation can be difficult for complex or
+unnormalized distributions.
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+### Rejection Sampling
+
+Uses a proposal distribution and accepts/rejects samples.
+
+\medskip\pause
+
+Works even if the quantile function is unavailable or expensive.
+
+\medskip\pause
+
+Efficiency depends on the proposal and acceptance probability.
+
+\medskip\pause
+
+Works with unnormalized densities, but acceptance can be very low in high
+dimensions.
+:::::
+:::
+
+. . .
+
+### Takeaway {.example}
+
+Use a simple transformation when available. Otherwise, consider rejection
+sampling with a suitable envelope.
+
+## Exercises
+
+### Exercise 1
+
+For a positive integer $k$, use the fact that
+$$
+  W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k \quad \text{for} \quad X_1,
+  \ldots, X_k \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
+$$
+to implement a function, `my_rchisq()`, such that `my_rchisq(N, k)` returns a
+sample of $N$ i.i.d. observations from $\chi^2_k$.
+
+```{r}
+#| label: rchisq2-implementation
+#| include: false
+
+my_rchisq <- function(N, k) {
+  y <- numeric(N)
+  for (i in seq_len(N)) {
+    x <- rnorm(k)
+    y[i] <- sum(x^2)
+  }
+  y
+}
+```
+
+```{r}
+#| label: rchisq2-implementation-faster
+#| include: false
+
+my_fast_rchisq <- function(N, k) {
+  x <- matrix(rnorm(k * N), k)
+  colSums(x^2)
+}
+```
+
+. . .
+
+### Exercise 2
+
+Make another function, `my_other_rchisq()`, that uses inversion sampling.
+
+```{r}
+#| label: rchisq2
+#| include: false
+
+my_other_rchisq <- function(N, k) {
+  x <- runif(N)
+  qchisq(x, k)
+}
+```
+
+. . .
+
+### Exercise 3
+
+Benchmark your implementations against one another and `rchisq()`.
+
+```{r}
+#| label: rchisq-bench
+#| include: false
+
+N <- 1e4
+k <- 5
+bench::mark(
+  rchisq(N, k),
+  my_rchisq(N, k),
+  my_fast_rchisq(N, k),
+  my_other_rchisq(N, k),
+  check = FALSE
+) |>
+  plot()
+```
+
+## Exercise: Rejection Sampling
+
+The $\mathrm{Beta}(2,2)$ density is
+$$
+  f(x) = 6x(1 - x), \qquad 0 < x < 1.
+$$
+
+Use a $\mathcal{U}(0,1)$ proposal. Find a valid envelope and predict the
+acceptance probability.
+
+\medskip\pause
+
+1. Implement a sampler that returns exactly $N$ values, using
+   `new_rejection_sampler()` to handle batches.
+2. Check support, compare the empirical CDF with `pbeta(x, 2, 2)`, and check the
+   mean $1/2$ and variance $1/20$.
+3. Compare accepted/proposed with your prediction, then benchmark against
+   `rbeta()` for small and large $N$.
+
+```{r}
+#| label: beta-rejection-exercise-solution
+#| include: false
+
+fixed_beta22_sampler <- function(m) {
+  y <- runif(m)
+  y[log(runif(m)) <= log(4) + log(y) + log1p(-y)]
+}
+sample_beta22 <- new_rejection_sampler(fixed_beta22_sampler)
+```
+
+## Summary
+
+### Inversion Sampling
+
+- Use the quantile function to transform uniform samples to the target
+  distribution.\pause
+- Efficient if the quantile function is available and cheap to compute.\pause
+
+### Rejection Sampling
+
+- Use a proposal distribution and accept/reject samples.\pause
+- Works even if the quantile function is unavailable or expensive.
+
+## Next Time
+
+### Monte Carlo Integration
+
+Sample from a distribution to estimate expectations of functions of the random
+variable.
+
+### Importance Sampling
+
+Weight samples from a proposal distribution to estimate expectations with
+respect to a target distribution.
+
+\appendix
+
+# Appendix
 
 ## Von Mises Envelopes
 
@@ -1567,13 +2089,13 @@ von_mises_adapt_random <- function(N, x1, x2, kappa) {
   x <- numeric(N)
   accept <- logical(N)
   x[I1] <- log(a1 * exp(-b1) * u0[I1] + exp(a1 * z0)) / a1
-  accept[I1] <- u[I1] <= exp(lf(x[I1]) - a1 * x[I1] - b1)
+  accept[I1] <- log(u[I1]) <= lf(x[I1]) - a1 * x[I1] - b1
   x[I2] <- log(a2 * exp(-b2) * (u0[I2] - Q1) + exp(a2 * z1)) / a2
-  accept[I2] <- u[I2] <= exp(lf(x[I2]) - a2 * x[I2] - b2)
+  accept[I2] <- log(u[I2]) <= lf(x[I2]) - a2 * x[I2] - b2
   x[I3] <- log(a3 * exp(-b3) * (u0[I3] - Q2) + exp(a3 * z2)) / a3
-  accept[I3] <- u[I3] <= exp(lf(x[I3]) - a3 * x[I3] - b3)
+  accept[I3] <- log(u[I3]) <= lf(x[I3]) - a3 * x[I3] - b3
   x[I4] <- log(a4 * exp(-b4) * (u0[I4] - Q3) + exp(a4 * z3)) / a4
-  accept[I4] <- u[I4] <= exp(lf(x[I4]) - a4 * x[I4] - b4)
+  accept[I4] <- log(u[I4]) <= lf(x[I4]) - a4 * x[I4] - b4
 
   x[accept]
 }
@@ -1703,257 +2225,37 @@ ggplot(sample_df, aes(x)) +
   facet_wrap(~label, ncol = 2)
 ```
 
-## Adapting the Envelope
+## Comparing the von Mises Envelopes
 
-The examples above use fixed envelopes. Adaptive rejection sampling updates the
-envelope using new points.
-
-\medskip\pause
-
-Efficiency depends on both the number of rejections and the cost of generating
-and evaluating proposals.
-
-\medskip\pause
-
-A tighter envelope reduces rejections, but updating it adds computational cost.
-
-## One Adaptive Update
-
-For a log-concave target, use a rejected proposal $Y$ as a new tangent point.
+Compare the uniform proposal with the four-piece envelope. Use central tangent
+points $\pm\min(1,\kappa^{-1/2})$ to follow the target's concentration.
 
 ```{r}
-#| label: envelope-adaptive-update
+#| label: vonmises-envelope-benchmark
 #| echo: false
-#| fig-show: animate
-#| fig-width: 5
-#| fig-height: 2.1
+#| fig-width: 5.5
+#| fig-height: 2.25
 
-adaptive_example <- tangent_example |>
-  mutate(
-    new_tangent = normal_log_tangent(x, 0),
-    updated = pmin(envelope, new_tangent)
-  )
-
-for (stage in 1:3) {
-  p <- ggplot(adaptive_example, aes(x)) +
-    geom_line(aes(y = exp(log_density))) +
-    geom_line(aes(y = exp(envelope)), color = "royalblue") +
-    coord_cartesian(ylim = c(0, 1.3)) +
-    labs(x = expression(x), y = "Density")
-  if (stage >= 2) {
-    p <- p +
-      annotate("point", x = 0, y = 0.9, color = "darkorange") +
-      annotate(
-        "text",
-        x = 1.1,
-        y = 0.95,
-        label = "Rejected at Y = 0"
-      )
+set.seed(512)
+vonmises_comparison <- pmap_dfr(
+  expand_grid(N = c(100, 10000), kappa = c(0.5, 5, 20)),
+  function(N, kappa) {
+    delta <- min(1, 1 / sqrt(kappa))
+    compare_rejection_pair(
+      N,
+      uniform = function(n) sample_vonmises(n, kappa),
+      piecewise = function(n) {
+        von_mises_adapt(n, -delta, delta, kappa)
+      }
+    ) |>
+      mutate(N = N, parameter = kappa)
   }
-  if (stage >= 3) {
-    p <- p +
-      geom_line(aes(y = exp(updated)), color = "darkorange")
-  }
-  print(p)
-}
-```
-
-$$
-  V_{\mathrm{new}}(x) = \min\{V_{\mathrm{old}}(x),\ h(Y) + h'(Y)(x - Y)\}.
-$$
-\uncover<3->{The orange envelope is tighter. Update the piece masses before the
-next draw.}
-
-## Transformation Methods vs. Rejection Sampling
-
-::: {.columns}
-::::: {.column width="47%"}
-### Transformation Methods
-
-Transform samples from a simple distribution to the target distribution.
-
-\medskip\pause
-
-Efficient if the transformation is available and cheap to compute.
-
-\medskip\pause
-
-Finding or evaluating a transformation can be difficult for complex or
-unnormalized distributions.
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-### Rejection Sampling
-
-Uses a proposal distribution and accepts/rejects samples.
-
-\medskip\pause
-
-Works even if the quantile function is unavailable or expensive.
-
-\medskip\pause
-
-Efficiency depends on the proposal and acceptance probability.
-
-\medskip\pause
-
-Works with unnormalized densities, but acceptance can be very low in high
-dimensions.
-:::::
-:::
-
-. . .
-
-### Takeaway {.example}
-
-Use a simple transformation when available. Otherwise, consider rejection
-sampling with a suitable envelope.
-
-## Check the Distribution Before Timing
-
-For independent $Z_1,\ldots,Z_5 \sim \mathcal{N}(0,1)$,
-$\sum_{j=1}^5 Z_j^2 \sim \chi^2_5$. What if we reuse one normal draw five times?
-
-```{r}
-#| label: sampler-validation-example
-#| echo: false
-#| fig-width: 5
-#| fig-height: 2
-#| fig-cap: Empirical CDFs of independent and dependent $\chi^2_5$ samples, with
-#|   the theoretical CDF overlaid in black.
-
-set.seed(510)
-validation_n <- 20000
-independent_chisq <- rowSums(matrix(
-  rnorm(5 * validation_n)^2,
-  ncol = 5
-))
-# Reusing one draw preserves the mean but breaks independence.
-dependent_chisq <- 5 * rnorm(validation_n)^2
-
-validation_samples <- tibble(
-  x = c(independent_chisq, dependent_chisq),
-  method = rep(
-    c("Independent normals", "Same normal reused"),
-    each = validation_n
-  )
 )
-
-ggplot(validation_samples, aes(x)) +
-  stat_ecdf(aes(color = method)) +
-  stat_function(fun = pchisq, args = list(df = 5)) +
-  scale_color_manual(
-    values = c("royalblue", "darkorange"),
-    guide = "none"
-  ) +
-  coord_cartesian(xlim = c(0, 20)) +
-  facet_wrap(~method) +
-  labs(x = expression(x), y = "CDF")
+plot_envelope_comparison(vonmises_comparison, expression(kappa))
 ```
 
-. . .
+\pause
 
-Both constructions have mean 5, but their variances are 10 and 50. The black
-curve is the target CDF. Check support, distribution, and moments before
-benchmarking.
-
-## Exercises
-
-### Exercise 1
-
-For a positive integer $k$, use the fact that
-$$
-  W = X_1^2 + \ldots + X_k^2 \sim \chi^2_k \quad \text{for} \quad X_1,
-  \ldots, X_k \sim_{\text{i.i.d.}} \mathcal{N}(0, 1)
-$$
-to implement a function, `my_rchisq()`, such that `my_rchisq(N, k)` returns a
-sample of $N$ i.i.d. observations from $\chi^2_k$.
-
-```{r}
-#| label: rchisq2-implementation
-#| include: false
-
-my_rchisq <- function(N, k) {
-  y <- numeric(N)
-  for (i in seq_len(N)) {
-    x <- rnorm(k)
-    y[i] <- sum(x^2)
-  }
-  y
-}
-```
-
-```{r}
-#| label: rchisq2-implementation-faster
-#| include: false
-
-my_fast_rchisq <- function(N, k) {
-  x <- matrix(rnorm(k * N), k)
-  colSums(x^2)
-}
-```
-
-. . .
-
-### Exercise 2
-
-Make another function, `my_other_rchisq()`, that uses inversion sampling.
-
-```{r}
-#| label: rchisq2
-#| include: false
-
-my_other_rchisq <- function(N, k) {
-  x <- runif(N)
-  qchisq(x, k)
-}
-```
-
-. . .
-
-### Exercise 3
-
-Benchmark your implementations against one another and `rchisq()`.
-
-```{r}
-#| label: rchisq-bench
-#| include: false
-
-N <- 1e4
-k <- 5
-bench::mark(
-  rchisq(N, k),
-  my_rchisq(N, k),
-  my_fast_rchisq(N, k),
-  my_other_rchisq(N, k),
-  check = FALSE
-) |>
-  plot()
-```
-
-## Summary
-
-### Inversion Sampling
-
-- Use the quantile function to transform uniform samples to the target
-  distribution.\pause
-- Efficient if the quantile function is available and cheap to compute.\pause
-
-### Rejection Sampling
-
-- Use a proposal distribution and accept/reject samples.\pause
-- Works even if the quantile function is unavailable or expensive.
-
-## Next Time
-
-### Monte Carlo Integration
-
-Sample from a distribution to estimate expectations of functions of the random
-variable.
-
-### Importance Sampling
-
-Weight samples from a proposal distribution to estimate expectations with
-respect to a target distribution.
+These envelopes stay fixed during sampling. Time is median microseconds per
+returned sample, including setup and all batches. Compare both rows as $N$ and
+$\kappa$ change.
