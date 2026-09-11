@@ -151,6 +151,32 @@ applying a function to samples from a simpler distribution.
 To sample $X \sim \mathrm{Exp}(\lambda)$ with rate $\lambda > 0$, use
 $X = -\log(U)/\lambda$ with $U \sim \mathcal{U}(0, 1)$.
 
+## Example: Sampling from a $t$-Distribution
+
+If we let
+$$
+  T(z,w) = \frac{z}{\sqrt{w/k}},
+$$
+and take independent $Z \sim \mathcal{N}(0,1)$ and $W \sim \chi^2_k$ with
+$k > 0$, then
+$$
+  X = T(Z, W) = \frac{Z}{\sqrt{W/k}} \sim t_k.
+$$
+
+. . .
+
+This transformation is used in R and other software to simulate $t$-distributed
+random variables.
+
+\medskip\pause
+
+\begin{algorithm}[H]
+  \caption{Transformation sampling for the $t$-distribution}
+  $z \gets $ sample from $\mathcal{N}(0, 1)$\;
+  $w \gets $ sample from $\chi^2_k$, independently of $z$\;
+  \KwRet{$z / \sqrt{w / k}$}\;
+\end{algorithm}
+
 ## Inversion Sampling
 
 A type of **transformation** sampling.
@@ -322,13 +348,13 @@ to generate samples from $\mathcal{N}(0,1)$.
 
 ## Numerical Inversion Is a Root Search
 
-For $u = 0.9$, solve $\Phi(x) - u = 0$.
-
 ```{r}
 #| label: inversion-numerical-bracket
 #| echo: false
-#| fig-width: 5
-#| fig-height: 1.25
+#| fig-width: 2.5
+#| fig-height: 1.5
+#| fig-cap: >-
+#|  For $u = 0.9$, solve $\Phi(x) - u = 0$.
 
 ggplot(tibble(x = seq(0, 2, length.out = 200)), aes(x)) +
   geom_line(aes(y = pnorm(x) - 0.9), color = "royalblue") +
@@ -355,35 +381,7 @@ uniroot(function(x) pnorm(x) - u, interval = c(0, 2), tol = 1e-8)
 
 \pause
 
-The bracket must contain the root for the chosen $u$; `tol` controls accuracy in
-$x$. General root finding repeatedly evaluates the CDF; `qnorm()` uses a
-specialized approximation.
-
-## Example: Sampling from a $t$-Distribution
-
-If we let
-$$
-  T(z,w) = \frac{z}{\sqrt{w/k}},
-$$
-and take independent $Z \sim \mathcal{N}(0,1)$ and $W \sim \chi^2_k$ with
-$k > 0$, then
-$$
-  X = T(Z, W) = \frac{Z}{\sqrt{W/k}} \sim t_k.
-$$
-
-. . .
-
-This transformation is used in R and other software to simulate $t$-distributed
-random variables.
-
-\medskip\pause
-
-\begin{algorithm}[H]
-  \caption{Transformation sampling for the $t$-distribution}
-  $z \gets $ sample from $\mathcal{N}(0, 1)$\;
-  $w \gets $ sample from $\chi^2_k$, independently of $z$\;
-  \KwRet{$z / \sqrt{w / k}$}\;
-\end{algorithm}
+The bracket must contain the root for the chosen $u$.
 
 ## Von Mises Distribution
 
