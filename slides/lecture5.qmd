@@ -870,7 +870,11 @@ choose batch sizes without computing it in advance.
 
 ## How Many Samples Does a Batch Return?
 
-From $m$ independent proposals, the accepted count satisfies
+We want **100 accepted samples**. How many proposals should we generate?
+
+. . .
+
+Suppose $\alpha = 0.2$. From $m$ independent proposals, the accepted count is
 $$
   B_m \sim \mathrm{Binomial}(m,\alpha), \qquad \mathbb{E}[B_m] = m\alpha.
 $$
@@ -908,8 +912,8 @@ ggplot(batch_counts, aes(count, probability, color = enough)) +
 
 . . .
 
-Here $N = 100$ and $\alpha = 0.2$. Even with $m = N/\alpha = 500$, a batch may
-fall short. Generate another batch when needed.
+$m = 100/0.2 = 500$ gives 100 accepted samples **on average**. If a batch falls
+short, generate another batch.
 
 ##
 
@@ -1010,11 +1014,16 @@ ggplot(tibble(x = x), aes(x)) +
 Each method returns $N = 10^5$ angles with $\mu = 0$ and $\kappa = 5$.
 
 ```{r}
+#| label: vmises-bench-setup
+
+sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
+```
+
+```{r}
 #| label: vmises-bench
 #| fig-width: 5
 #| fig-height: 1.5
-
-sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
+#| echo: false
 
 bench::mark(
   vectorized = sample_vonmises(1e5, 5)$x,
@@ -1483,6 +1492,8 @@ Since $(\log f)''(x) = -\kappa\cos(x)$, it is
 - log-concave on $(-\pi/2, \pi/2)$ and
 - log-convex on $(-\pi,-\pi/2)$ and $(\pi/2, \pi)$.
 
+\medskip\pause
+
 Use tangents in the center and chords in the tails to bound $\log f$.
 :::::
 
@@ -1926,7 +1937,14 @@ bench::mark(
 
 ### Inversion Sampling
 
+- Use the quantile function to transform uniform samples to the target
+  distribution.\pause
+- Efficient if the quantile function is available and cheap to compute.\pause
+
 ### Rejection Sampling
+
+- Use a proposal distribution and accept/reject samples.\pause
+- Works even if the quantile function is unavailable or expensive.
 
 ## Next Time
 
