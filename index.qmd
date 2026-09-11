@@ -100,11 +100,11 @@ for you to solve independently at your own pace.
 
 ### Week 3
 
-#### Lecture 5: Inversion and Rejection Sampling
+#### Lecture 5: Transformation and Rejection Sampling
 
 `r session_info("2026-09-15")`
 
-- **Slides:** [Inversion and Rejection Sampling](slides/lecture5.pdf)
+- **Slides:** [Transformation and Rejection Sampling](slides/lecture5.pdf)
   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture5.qmd))
 - **Reading:**
   - [Chapter 5, but skip 5.1

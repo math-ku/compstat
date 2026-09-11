@@ -1,5 +1,5 @@
 ---
-title: "Inversion and Rejection Sampling"
+title: "Transformation and Rejection Sampling"
 ---
 
 {{< include _common.qmd >}}
@@ -17,9 +17,9 @@ source(here::here("R", "vMSim.R"), keep.source = TRUE)
 
 ## Today
 
-### Inversion Sampling
+### Transformation Methods
 
-Sample from a target distribution using its inverse CDF.
+Transform samples from a simpler distribution, including by inversion of the CDF.
 
 . . .
 
@@ -1968,11 +1968,11 @@ sample_beta22 <- new_rejection_sampler(fixed_beta22_sampler)
 
 ## Summary
 
-### Inversion Sampling
+### Transformation Methods
 
-- Use the quantile function to transform uniform samples to the target
-  distribution.\pause
-- Efficient if the quantile function is available and cheap to compute.\pause
+- Transform samples from a simpler distribution to the target distribution.\pause
+- Inversion uses the target's quantile function to transform uniform samples.\pause
+- Efficient if the transformation is available and cheap to compute.\pause
 
 ### Rejection Sampling
 
