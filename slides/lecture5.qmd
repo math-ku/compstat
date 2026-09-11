@@ -1,5 +1,5 @@
 ---
-title: "Random Number Generation and Rejection Sampling"
+title: "Inversion and Rejection Sampling"
 ---
 
 {{< include _common.qmd >}}
@@ -17,9 +17,9 @@ source(here::here("R", "vMSim.R"), keep.source = TRUE)
 
 ## Today
 
-### Pseudo-Random Numbers
+### Inversion Sampling
 
-How do you simulate random numbers in R?
+Sample from a target distribution using its inverse CDF.
 
 . . .
 
@@ -1869,7 +1869,7 @@ bench::mark(
 
 ## Summary
 
-### Random Number Generation
+### Inversion Sampling
 
 ### Rejection Sampling
 
