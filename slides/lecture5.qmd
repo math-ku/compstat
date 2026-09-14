@@ -846,54 +846,116 @@ log-densities and subtract them before exponentiating, if needed.
 
 For von Mises sampling, the log acceptance ratio is simply $\kappa(\cos Y - 1)$.
 
-## When No Envelope Exists
+## Pitfalls: Missing Support
 
-We need $g(y) > 0$ wherever $f(y) > 0$ and $\sup_y f(y)/g(y) < \infty$.
-
-\bigskip
+Take a standard normal target $f$ and a $\mathcal{U}(-2,2)$ proposal $g$.
 
 ```{r}
-#| label: rejection-invalid-proposals
+#| label: rejection-missing-support
 #| echo: false
-#| fig-width: 5.5
-#| fig-height: 2.2
+#| fig-width: 5
+#| fig-height: 2
+#| fig-cap: The uniform proposal cannot cover the normal target. No finite
+#|   multiple of the proposal can envelope the target.
 
-invalid_proposals <- tibble(x = seq(-4, 4, length.out = 500)) |>
-  mutate(
-    target = dnorm(x),
-    proposal = dunif(x, -2, 2),
-    log_ratio = dnorm(x, log = TRUE) -
-      dnorm(x, sd = 0.5, log = TRUE)
-  )
+support_densities <- tibble(x = seq(-4, 4, length.out = 500)) |>
+  mutate(target = dnorm(x), proposal = dunif(x, -2, 2))
 
-support_plot <- ggplot(invalid_proposals, aes(x)) +
-  geom_line(aes(y = target), color = "royalblue") +
-  geom_line(aes(y = proposal), color = "darkorange") +
-  labs(
-    title = "Missing support",
-    subtitle = "Blue: target; orange: proposal",
-    x = expression(y),
-    y = "Density"
-  )
-
-tail_plot <- ggplot(invalid_proposals, aes(x, log_ratio)) +
-  geom_line(color = "darkorange") +
-  labs(
-    title = "Tails too light",
-    subtitle = "Normal proposal with SD 0.5",
-    x = expression(y),
-    y = expression(log(f(y) / g(y)))
-  )
-
-support_plot + tail_plot
+ggplot(support_densities, aes(x)) +
+  geom_line(aes(y = target, color = "Target")) +
+  geom_line(aes(y = proposal, color = "Proposal")) +
+  scale_color_manual(
+    name = NULL,
+    values = c(Target = "royalblue", Proposal = "darkorange"),
+    breaks = c("Target", "Proposal")
+  ) +
+  guides(color = guide_legend(position = "top", nrow = 1)) +
+  labs(x = expression(y), y = "Density")
 ```
 
 . . .
 
-For a standard normal target, neither a $\mathcal{U}(-2,2)$ proposal nor a
-$\mathcal{N}(0,1/4)$ proposal admits a finite envelope.
+Here $g(y) = 0$ for $|y| > 2$, where $f(y) > 0$. No finite multiple of $g$ can
+cover $f$.
 
-## Implementation
+## Pitfalls: Tails Too Light
+
+Take a standard normal target $f$ and a $\mathcal{N}(0,1/4)$ proposal $g$. Both
+densities are positive on $\mathbb{R}$.
+
+```{r}
+#| label: rejection-light-tails
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 1.8
+#| fig-cap: The normal proposal has lighter tails than the target. No finite
+#|   multiple of the proposal can envelope the target.
+
+tail_densities <- tibble(x = seq(-4, 4, length.out = 500)) |>
+  mutate(
+    target = dnorm(x),
+    proposal = dnorm(x, sd = 0.5),
+    log_ratio = dnorm(x, log = TRUE) -
+      dnorm(x, sd = 0.5, log = TRUE)
+  )
+
+density_plot <- ggplot(tail_densities, aes(x)) +
+  geom_line(aes(y = target, color = "Target")) +
+  geom_line(aes(y = proposal, color = "Proposal")) +
+  scale_color_manual(
+    name = NULL,
+    values = c(Target = "royalblue", Proposal = "darkorange"),
+    breaks = c("Target", "Proposal")
+  ) +
+  guides(color = guide_legend(position = "top", nrow = 1)) +
+  labs(title = "Densities", x = expression(y), y = "Density")
+
+ratio_plot <- ggplot(tail_densities, aes(x, log_ratio)) +
+  geom_line(color = "grey30") +
+  geom_hline(
+    yintercept = log(10),
+    linetype = "dashed",
+    color = "grey60"
+  ) +
+  annotate(
+    "text",
+    x = 0,
+    y = 5.2,
+    label = "log(M)==log(10)",
+    parse = TRUE,
+    size = 3
+  ) +
+  labs(
+    title = "Log density ratio",
+    x = expression(y),
+    y = expression(log(f(y) / g(y)))
+  )
+
+density_plot + ratio_plot
+```
+
+. . .
+
+$$
+  \log\frac{f(y)}{g(y)} = -\log 2 + \frac{3}{2}y^2
+                        \longrightarrow \infty \quad\text{as } |y|
+                        \longrightarrow \infty.
+$$
+
+. . .
+
+No finite $M$ satisfies $f(y) \leq M g(y)$ for every $y$.
+
+\pdfpcnote{
+  The dashed line illustrates $M = 10$. An envelope would require the entire
+  log-ratio curve to lie below $\log M$. Increasing $M$ raises the line, but
+  the quadratic eventually exceeds any finite height.
+  This failure relies on the unbounded normal target. A Gaussian proposal
+  can envelope the bounded von Mises density on $[-\pi, \pi]$, though the
+  required constant may be large.
+}
+
+## Implementing the von Mises Sampler
 
 ```{r}
 #| label: vMsim-slow
@@ -1032,7 +1094,7 @@ choose batch sizes without computing it in advance.
 
 We want **100 accepted samples**. How many proposals should we generate?
 
-. . .
+\medskip\pause
 
 Suppose $\alpha = 0.2$. From $m$ independent proposals, the accepted count is
 $$
@@ -2054,36 +2116,6 @@ bench::mark(
   check = FALSE
 ) |>
   plot()
-```
-
-## Exercise: Rejection Sampling
-
-The $\mathrm{Beta}(2,2)$ density is
-$$
-  f(x) = 6x(1 - x), \qquad 0 < x < 1.
-$$
-
-Use a $\mathcal{U}(0,1)$ proposal. Find a valid envelope and predict the
-acceptance probability.
-
-\medskip\pause
-
-1. Implement a sampler that returns exactly $N$ values, using
-   `new_rejection_sampler()` to handle batches.
-2. Check support, compare the empirical CDF with `pbeta(x, 2, 2)`, and check the
-   mean $1/2$ and variance $1/20$.
-3. Compare accepted/proposed with your prediction, then benchmark against
-   `rbeta()` for small and large $N$.
-
-```{r}
-#| label: beta-rejection-exercise-solution
-#| include: false
-
-fixed_beta22_sampler <- function(m) {
-  y <- runif(m)
-  y[log(runif(m)) <= log(4) + log(y) + log1p(-y)]
-}
-sample_beta22 <- new_rejection_sampler(fixed_beta22_sampler)
 ```
 
 ## Summary
