@@ -2137,60 +2137,6 @@ bench::mark(
   plot()
 ```
 
-## Check the Chi-Square Sampler
-
-For independent $Z_1,\ldots,Z_5 \sim \mathcal{N}(0,1)$,
-$\sum_{j=1}^5 Z_j^2 \sim \chi^2_5$. What if we reuse one normal draw in all five
-terms?
-
-```{r}
-#| label: chisq-validation-example
-#| echo: false
-#| fig-width: 5
-#| fig-height: 2
-#| fig-cap: Empirical CDFs of $\chi^2_5$ and $5\chi^2_1$ samples, with the
-#|   target $\chi^2_5$ CDF overlaid in black.
-
-set.seed(510)
-validation_n <- 20000
-independent_chisq <- rowSums(matrix(
-  rnorm(5 * validation_n)^2,
-  ncol = 5
-))
-# Dependence among terms within each sum changes the output distribution.
-reused_normal_chisq <- 5 * rnorm(validation_n)^2
-
-validation_samples <- tibble(
-  x = c(independent_chisq, reused_normal_chisq),
-  method = rep(
-    c("Independent normals", "Same normal reused"),
-    each = validation_n
-  )
-)
-
-ggplot(validation_samples, aes(x)) +
-  stat_ecdf(aes(color = method)) +
-  stat_function(fun = pchisq, args = list(df = 5)) +
-  scale_color_manual(
-    values = c("royalblue", "darkorange"),
-    guide = "none"
-  ) +
-  coord_cartesian(xlim = c(0, 20)) +
-  facet_wrap(~method) +
-  labs(x = expression(x), y = "CDF")
-```
-
-. . .
-
-Both constructions have mean 5, but their variances are 10 and 50. Matching the
-mean is not enough: check the distribution before timing.
-
-\pdfpcnote{
-  Each construction uses fresh normals for each output, so the outputs are
-  independent. The shortcut reuses a normal within a single sum, producing
-  $5Z^2 \sim 5\chi^2_1$ instead of $\chi^2_5$.
-}
-
 ## Summary
 
 ### Transformation Methods
