@@ -1265,18 +1265,25 @@ sample_vonmises_inversion <- function(N, kappa) {
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 2.3
-#| fig-cap: $N = 1000$ draws per method. The target CDF is evaluated by numerical
-#|   integration.
+#| fig-cap: $N = 1000$ draws per method. The target CDF is evaluated by
+#|   numerical integration.
 
 set.seed(510)
 vm_validation_n <- 1000
 vm_validation_samples <- tibble(
-  `Numerical inversion` = sample_vonmises_inversion(vm_validation_n, 5),
+  `Numerical inversion` = sample_vonmises_inversion(
+    vm_validation_n,
+    5
+  ),
   `Scalar rejection` = sample_vonmises_slow(vm_validation_n, 5),
   `Vectorized rejection` = sample_vonmises(vm_validation_n, 5)$x,
   movMF = sample_vonmises_movMF(vm_validation_n, 5)
 ) |>
-  pivot_longer(everything(), names_to = "method", values_to = "x") |>
+  pivot_longer(
+    everything(),
+    names_to = "method",
+    values_to = "x"
+  ) |>
   mutate(method = factor(method, levels = unique(method)))
 
 vm_reference_cdf <- tibble(x = seq(-pi, pi, length.out = 201)) |>
@@ -1847,14 +1854,14 @@ but constructing, sampling, and updating it also cost time.
 
 ## One Adaptive Update
 
-For a log-concave target, use a rejected proposal $Y$ as a new tangent point.
-
 ```{r}
 #| label: envelope-adaptive-update
 #| echo: false
 #| fig-show: animate
 #| fig-width: 5
 #| fig-height: 2.1
+#| fig-cap: For a log-concave target, use a rejected proposal $Y$ as a new
+#|   tangent point.
 
 adaptive_example <- tangent_example |>
   mutate(
@@ -1894,12 +1901,12 @@ next draw.}
 
 ## Does a Tighter Envelope Run Faster?
 
-Compare uniform and two-piece exponential proposals for $\mathrm{Beta}(a,a)$.
-Larger $a$ concentrates the target near $1/2$.
-
 ```{r}
 #| label: envelope-benchmark-helpers
 #| include: false
+#| fig-cap: >
+#|   Compare uniform and two-piece exponential proposals for
+#|   $\mathrm{Beta}(a,a)$. Larger $a$ concentrates the target near $1/2$.
 
 compare_rejection_pair <- function(N, uniform, piecewise) {
   draws <- list(uniform = uniform(N), piecewise = piecewise(N))
@@ -2111,8 +2118,8 @@ my_other_rchisq <- function(N, k) {
 
 ### Exercise 3
 
-Check the output distributions, then benchmark your implementations against
-one another and `rchisq()`.
+Check the output distributions, then benchmark your implementations against one
+another and `rchisq()`.
 
 ```{r}
 #| label: rchisq-bench
@@ -2133,8 +2140,8 @@ bench::mark(
 ## Check the Chi-Square Sampler
 
 For independent $Z_1,\ldots,Z_5 \sim \mathcal{N}(0,1)$,
-$\sum_{j=1}^5 Z_j^2 \sim \chi^2_5$. What if we reuse one normal draw in all
-five terms?
+$\sum_{j=1}^5 Z_j^2 \sim \chi^2_5$. What if we reuse one normal draw in all five
+terms?
 
 ```{r}
 #| label: chisq-validation-example
@@ -2175,8 +2182,8 @@ ggplot(validation_samples, aes(x)) +
 
 . . .
 
-Both constructions have mean 5, but their variances are 10 and 50.
-Matching the mean is not enough: check the distribution before timing.
+Both constructions have mean 5, but their variances are 10 and 50. Matching the
+mean is not enough: check the distribution before timing.
 
 \pdfpcnote{
   Each construction uses fresh normals for each output, so the outputs are
@@ -2210,6 +2217,11 @@ variable.
 
 Weight samples from a proposal distribution to estimate expectations with
 respect to a target distribution.
+
+```{=latex}
+% Start the appendix between frames. The section heading supplies its divider.
+\AddToHookNext{cmd/section/before}{\AtBeginPart{}\appendix}
+```
 
 # Appendix
 
