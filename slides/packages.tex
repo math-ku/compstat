@@ -7,6 +7,13 @@
 \usepackage{pdfpc}
 \usepackage{pgfplots}
 \usepackage{tikzducks}
+
+% Use before an appendix section heading so the switch runs between frames.
+% The section heading supplies the divider, so suppress Beamer's part page.
+\newcommand{\lectureappendix}{%
+  \AddToHookNext{cmd/section/before}{\AtBeginPart{}\appendix}%
+}
+
 \usetikzlibrary{positioning}
 \usetikzlibrary{intersections}
 \usetikzlibrary{fit}

@@ -2218,10 +2218,7 @@ variable.
 Weight samples from a proposal distribution to estimate expectations with
 respect to a target distribution.
 
-```{=latex}
-% Start the appendix between frames. The section heading supplies its divider.
-\AddToHookNext{cmd/section/before}{\AtBeginPart{}\appendix}
-```
+\lectureappendix
 
 # Appendix
 

@@ -1876,7 +1876,7 @@ its cumulative distribution function (CDF) and its quantile function.
 General and useful method for sampling from a target distribution that only
 requires the ability to evaluate its density function.
 
-\appendix
+\lectureappendix
 
 # Appendix
 
