@@ -607,7 +607,8 @@ $$
 
 Taking $x \to \infty$ gives $\Pr(A) = \alpha$. Therefore,
 $$
-  \Pr(Y \leq x \mid A) = \frac{\alpha F(x)}{\alpha} = F(x).
+  \Pr(Y \leq x \mid A) = \frac{\Pr(Y \leq x, A)}{\Pr(A)}
+                       = \frac{\alpha F(x)}{\alpha} = F(x).
 $$
 
 . . .
