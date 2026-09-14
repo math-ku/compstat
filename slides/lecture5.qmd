@@ -920,7 +920,7 @@ ratio_plot <- ggplot(tail_densities, aes(x, log_ratio)) +
   annotate(
     "text",
     x = 0,
-    y = 5.2,
+    y = 5.6,
     label = "log(M)==log(10)",
     parse = TRUE,
     size = 3
@@ -1158,12 +1158,9 @@ short, generate another batch.
   \KwRet{$\symbf{y}_{1:N}$}
 \end{algorithm}
 
-## Function Factory for Rejection Sampling
-
-\footnotesize
-
 ```{r}
 #| label: new_rejection_sampler
+#| echo: false
 
 new_rejection_sampler <- function(generator) {
   function(N, ...) {
@@ -1238,61 +1235,13 @@ ggplot(tibble(x = x), aes(x)) +
   labs(y = "Density", x = "x")
 ```
 
-## Check the Distribution Before Timing
+## Check the von Mises Samplers Before Timing
 
-For independent $Z_1,\ldots,Z_5 \sim \mathcal{N}(0,1)$,
-$\sum_{j=1}^5 Z_j^2 \sim \chi^2_5$. What if we reuse one normal draw five times?
-
-```{r}
-#| label: sampler-validation-example
-#| echo: false
-#| fig-width: 5
-#| fig-height: 2
-#| fig-cap: Empirical CDFs of $\chi^2_5$ and $5\chi^2_1$ samples, with the
-#|   target $\chi^2_5$ CDF overlaid in black.
-
-set.seed(510)
-validation_n <- 20000
-independent_chisq <- rowSums(matrix(
-  rnorm(5 * validation_n)^2,
-  ncol = 5
-))
-# Dependence among terms within each sum changes the output distribution.
-reused_normal_chisq <- 5 * rnorm(validation_n)^2
-
-validation_samples <- tibble(
-  x = c(independent_chisq, reused_normal_chisq),
-  method = rep(
-    c("Independent normals", "Same normal reused"),
-    each = validation_n
-  )
-)
-
-ggplot(validation_samples, aes(x)) +
-  stat_ecdf(aes(color = method)) +
-  stat_function(fun = pchisq, args = list(df = 5)) +
-  scale_color_manual(
-    values = c("royalblue", "darkorange"),
-    guide = "none"
-  ) +
-  coord_cartesian(xlim = c(0, 20)) +
-  facet_wrap(~method) +
-  labs(x = expression(x), y = "CDF")
-```
-
-. . .
-
-Both constructions give independent outputs with mean 5, but their variances are
-10 and 50. Reusing the normal changes the marginal distribution. Check support,
-distribution, and moments before benchmarking.
-
-## Benchmarking the von Mises Samplers
-
-Each method returns $N = 1000$ angles with $\mu = 0$ and $\kappa = 5$.
+Each sampler should reproduce the von Mises CDF with $\mu = 0$ and $\kappa = 5$.
 
 ```{r}
-#| label: vmises-bench-setup
-#| echo: false
+#| label: vmises-sampler-setup
+#| include: false
 
 sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
 
@@ -1309,6 +1258,68 @@ sample_vonmises_inversion <- function(N, kappa) {
     numeric(1)
   )
 }
+```
+
+```{r}
+#| label: vmises-validation
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 2.3
+#| fig-cap: $N = 1000$ draws per method. The target CDF is evaluated by numerical
+#|   integration.
+
+set.seed(510)
+vm_validation_n <- 1000
+vm_validation_samples <- tibble(
+  `Numerical inversion` = sample_vonmises_inversion(vm_validation_n, 5),
+  `Scalar rejection` = sample_vonmises_slow(vm_validation_n, 5),
+  `Vectorized rejection` = sample_vonmises(vm_validation_n, 5)$x,
+  movMF = sample_vonmises_movMF(vm_validation_n, 5)
+) |>
+  pivot_longer(everything(), names_to = "method", values_to = "x") |>
+  mutate(method = factor(method, levels = unique(method)))
+
+vm_reference_cdf <- tibble(x = seq(-pi, pi, length.out = 201)) |>
+  mutate(cdf = vapply(x, pvm, numeric(1), kappa = 5))
+
+ggplot(vm_validation_samples, aes(x)) +
+  stat_ecdf(aes(color = "Empirical")) +
+  geom_line(
+    data = vm_reference_cdf,
+    aes(y = cdf, color = "Target"),
+    linetype = "dashed"
+  ) +
+  scale_color_manual(
+    name = NULL,
+    values = c(Empirical = "royalblue", Target = "black"),
+    breaks = c("Empirical", "Target")
+  ) +
+  guides(color = guide_legend(position = "top", nrow = 1)) +
+  scale_x_continuous(
+    breaks = c(-pi, 0, pi),
+    labels = expression(-pi, 0, pi)
+  ) +
+  facet_wrap(~method, ncol = 2) +
+  labs(x = expression(theta), y = "CDF")
+```
+
+. . .
+
+The empirical CDFs agree with the target. Next, compare the time per draw.
+
+\pdfpcnote{
+  Small deviations are expected with finite samples. The CDF comparison checks
+  the marginal distribution. It does not establish independence between draws
+  or replace the mathematical justification of each sampler.
+}
+
+## Benchmarking the von Mises Samplers
+
+Each method returns $N = 1000$ angles with $\mu = 0$ and $\kappa = 5$.
+
+```{r}
+#| label: vmises-bench-setup
+#| echo: false
 
 vm_benchmark_n <- 1000
 ```
@@ -2100,7 +2111,8 @@ my_other_rchisq <- function(N, k) {
 
 ### Exercise 3
 
-Benchmark your implementations against one another and `rchisq()`.
+Check the output distributions, then benchmark your implementations against
+one another and `rchisq()`.
 
 ```{r}
 #| label: rchisq-bench
@@ -2117,6 +2129,60 @@ bench::mark(
 ) |>
   plot()
 ```
+
+## Check the Chi-Square Sampler
+
+For independent $Z_1,\ldots,Z_5 \sim \mathcal{N}(0,1)$,
+$\sum_{j=1}^5 Z_j^2 \sim \chi^2_5$. What if we reuse one normal draw in all
+five terms?
+
+```{r}
+#| label: chisq-validation-example
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+#| fig-cap: Empirical CDFs of $\chi^2_5$ and $5\chi^2_1$ samples, with the
+#|   target $\chi^2_5$ CDF overlaid in black.
+
+set.seed(510)
+validation_n <- 20000
+independent_chisq <- rowSums(matrix(
+  rnorm(5 * validation_n)^2,
+  ncol = 5
+))
+# Dependence among terms within each sum changes the output distribution.
+reused_normal_chisq <- 5 * rnorm(validation_n)^2
+
+validation_samples <- tibble(
+  x = c(independent_chisq, reused_normal_chisq),
+  method = rep(
+    c("Independent normals", "Same normal reused"),
+    each = validation_n
+  )
+)
+
+ggplot(validation_samples, aes(x)) +
+  stat_ecdf(aes(color = method)) +
+  stat_function(fun = pchisq, args = list(df = 5)) +
+  scale_color_manual(
+    values = c("royalblue", "darkorange"),
+    guide = "none"
+  ) +
+  coord_cartesian(xlim = c(0, 20)) +
+  facet_wrap(~method) +
+  labs(x = expression(x), y = "CDF")
+```
+
+. . .
+
+Both constructions have mean 5, but their variances are 10 and 50.
+Matching the mean is not enough: check the distribution before timing.
+
+\pdfpcnote{
+  Each construction uses fresh normals for each output, so the outputs are
+  independent. The shortcut reuses a normal within a single sum, producing
+  $5Z^2 \sim 5\chi^2_1$ instead of $\chi^2_5$.
+}
 
 ## Summary
 
@@ -2145,7 +2211,7 @@ variable.
 Weight samples from a proposal distribution to estimate expectations with
 respect to a target distribution.
 
-\appendix
+# Appendix
 
 ## Von Mises Envelopes
 
