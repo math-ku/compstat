@@ -19,7 +19,8 @@ source(here::here("R", "vMSim.R"), keep.source = TRUE)
 
 ### Transformation Methods
 
-Transform samples from a simpler distribution, including by inversion of the CDF.
+Transform samples from a simpler distribution, including by inversion of the
+CDF.
 
 . . .
 
@@ -147,9 +148,8 @@ $X = -\log(U)/\lambda$ with $U \sim \mathcal{U}(0, 1)$.
 
 For $x \ge 0$,
 $$
-  \Pr\!\left(-\frac{\log U}{\lambda} \le x\right)
-  = \Pr(U \ge e^{-\lambda x})
-  = 1 - e^{-\lambda x}.
+  \Pr\!\left( -\frac{\log U}{\lambda} \le x \right) = \Pr(U \ge e^{-\lambda x})
+                                                    = 1 - e^{-\lambda x}.
 $$
 
 ## Example: Sampling from a $t$-Distribution
@@ -347,42 +347,72 @@ uses a [numerical approximation of
 $\Phi^{-1}$](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52)
 to generate samples from $\mathcal{N}(0,1)$.
 
-## Numerical Inversion Is a Root Search
+## Sampling by Solving $F(x) = U$
 
+For a continuous, strictly increasing CDF, draw $U \sim \mathcal{U}(0, 1)$, then
+solve $F(x) - U = 0$.
+
+\medskip\pause
+
+For one draw, suppose $u = 0.9$.
+
+::: {.columns}
+::::: {.column width="50%"}
+```{r}
+#| label: inversion-numerical-root
+
+u <- 0.9
+sample_x <- uniroot(
+  function(x) pnorm(x) - u,
+  interval = c(0, 2),
+  tol = 1e-8
+)$root
+sample_x
+```
+:::::
+::::: {.column width="50%"}
 ```{r}
 #| label: inversion-numerical-bracket
 #| echo: false
 #| fig-width: 2.5
-#| fig-height: 1.5
-#| fig-cap: >-
-#|  For $u = 0.9$, solve $\Phi(x) - u = 0$.
+#| fig-height: 1.7
 
 ggplot(tibble(x = seq(0, 2, length.out = 200)), aes(x)) +
-  geom_line(aes(y = pnorm(x) - 0.9), color = "royalblue") +
+  geom_line(aes(y = pnorm(x) - u), color = "royalblue") +
   geom_hline(
     yintercept = 0,
     linetype = "dashed",
     color = "grey50"
   ) +
-  geom_point(
-    data = tibble(x = c(0, 2)),
-    aes(y = pnorm(x) - 0.9),
-    color = "darkorange"
+  annotate("point", x = sample_x, y = 0, color = "darkorange") +
+  annotate(
+    "text",
+    x = 1.25,
+    y = -0.25,
+    label = paste0(
+      "x == Phi^{-1} * '(",
+      u,
+      ")' %~~% ",
+      round(sample_x, 3)
+    ),
+    parse = TRUE,
+    size = 3
   ) +
   labs(x = expression(x), y = expression(Phi(x) - u))
 ```
+:::::
+:::
 
-```{r}
-#| label: inversion-numerical-root
-#| results: hide
+\medskip\pause
 
-u <- 0.9
-uniroot(function(x) pnorm(x) - u, interval = c(0, 2), tol = 1e-8)
-```
+Each new draw requires another solve and repeated CDF evaluations. Can we sample
+using only the density?
 
-\pause
-
-The bracket must contain the root for the chosen $u$.
+\pdfpcnote{
+  The bracket must contain the root for the chosen $u$.
+  The interval $[0, 2]$ works for $u = 0.9$, but a general sampler must find a
+  suitable bracket for each draw.
+}
 
 ## Von Mises Distribution
 
@@ -1971,8 +2001,10 @@ sample_beta22 <- new_rejection_sampler(fixed_beta22_sampler)
 
 ### Transformation Methods
 
-- Transform samples from a simpler distribution to the target distribution.\pause
-- Inversion uses the target's quantile function to transform uniform samples.\pause
+- Transform samples from a simpler distribution to the target
+  distribution.\pause
+- Inversion uses the target's quantile function to transform uniform
+  samples.\pause
 - Efficient if the transformation is available and cheap to compute.\pause
 
 ### Rejection Sampling
