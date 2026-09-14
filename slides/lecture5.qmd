@@ -323,34 +323,95 @@ for (stage in 1:2) {
 
 Every $u \in (0.2, 0.7]$ maps to 1, so $\Pr(X = 1) = 0.7 - 0.2 = 0.5$.
 
-## Inversion Without a Closed Form
+## Von Mises Distribution
 
-The standard Gaussian distribution function is
+The density on $(-\pi, \pi]$ is
 $$
-  \Phi(x) = \frac{1}{\sqrt{2 \pi}} \int_{-\infty}^x e^{-z^2/2} \ \mathrm{d}z.
+  f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x-\mu)},
 $$
+where $\mu \in (-\pi, \pi]$ is the location, $\kappa \geq 0$ is the
+concentration, and $I_0$ is the modified Bessel function of the first kind of
+order 0.
 
-. . .
+\medskip
 
-Inversion gives $X = \Phi^{-1}(U)$ with $U \sim \mathcal{U}(0, 1)$, but
-$\Phi^{-1}$ has no elementary closed-form expression.
+```{r}
+#| label: vMdensity
+#| fig-cap: The von Mises density for $\mu = 0$ and $\kappa = 5$.
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+
+dvm <- function(x, k) exp(k * cos(x)) / (2 * pi * besselI(k, 0))
+
+xy <- tibble(x = seq(-pi, pi, length.out = 400), y = dvm(x, 5))
+
+p1 <- ggplot(xy, aes(x, y)) +
+  geom_line(color = "royalblue") +
+  scale_x_continuous(
+    breaks = c(-pi, 0, pi),
+    labels = expression(-pi, 0, pi)
+  ) +
+  labs(x = expression(x), y = "Density")
+
+p2 <- ggplot(xy, aes(x, y)) +
+  geom_line(color = "royalblue") +
+  scale_x_continuous(
+    limits = c(-pi, pi),
+    breaks = c(-pi, -pi / 2, 0, pi / 2),
+    labels = NULL,
+    expand = expansion(mult = 0)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1.2),
+    breaks = c(0, 0.4, 0.8)
+  ) +
+  annotate(
+    "text",
+    x = c(-pi, -pi / 2, 0, pi / 2),
+    y = 0.95,
+    label = c("-pi", "-pi/2", "0", "pi/2"),
+    parse = TRUE,
+    size = 3
+  ) +
+  coord_polar(theta = "x", start = -pi, direction = 1) +
+  labs(x = "Angle (radians)", y = NULL)
+
+p1 + p2
+```
+
+## Inverting the von Mises CDF
+
+For the same distribution with $\mu = 0$ and $\kappa = 5$,
+$$
+  F(x) = \int_{-\pi}^x f(t)\,\mathrm{d}t, \qquad x \in [-\pi, \pi].
+$$
 
 \medskip\pause
 
-We need to approximate $\Phi^{-1}$ numerically.
+We can evaluate $F$ by numerically integrating the density `dvm`:
+
+```{r}
+#| label: vonmises-numerical-cdf
+
+pvm <- function(x, kappa = 5) {
+  integrate(
+    function(t) dvm(t, kappa),
+    lower = -pi,
+    upper = x,
+    rel.tol = 1e-10
+  )$value
+}
+```
 
 \medskip\pause
 
-[R's default normal
-sampler](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/snorm.c#L265)
-uses a [numerical approximation of
-$\Phi^{-1}$](https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/nmath/qnorm.c#L52)
-to generate samples from $\mathcal{N}(0,1)$.
+There is no elementary inverse CDF. We solve $F(x) - u = 0$ numerically.
 
 ## Sampling by Solving $F(x) = U$
 
-For a continuous, strictly increasing CDF, draw $U \sim \mathcal{U}(0, 1)$, then
-solve $F(x) - U = 0$.
+To sample from this von Mises distribution, draw $U \sim \mathcal{U}(0, 1)$,
+then solve $F(x) - U = 0$.
 
 \medskip\pause
 
@@ -363,8 +424,8 @@ For one draw, suppose $u = 0.9$.
 
 u <- 0.9
 sample_x <- uniroot(
-  function(x) pnorm(x) - u,
-  interval = c(0, 2),
+  function(x) pvm(x) - u,
+  interval = c(-pi, pi),
   tol = 1e-8
 )$root
 sample_x
@@ -377,8 +438,13 @@ sample_x
 #| fig-width: 2.5
 #| fig-height: 1.7
 
-ggplot(tibble(x = seq(0, 2, length.out = 200)), aes(x)) +
-  geom_line(aes(y = pnorm(x) - u), color = "royalblue") +
+vm_cdf <- tibble(
+  x = seq(-pi, pi, length.out = 200),
+  cdf = vapply(x, pvm, numeric(1))
+)
+
+ggplot(vm_cdf, aes(x)) +
+  geom_line(aes(y = cdf - u), color = "royalblue") +
   geom_hline(
     yintercept = 0,
     linetype = "dashed",
@@ -387,86 +453,46 @@ ggplot(tibble(x = seq(0, 2, length.out = 200)), aes(x)) +
   annotate("point", x = sample_x, y = 0, color = "darkorange") +
   annotate(
     "text",
-    x = 1.25,
-    y = -0.25,
+    x = 1.75,
+    y = -0.5,
     label = paste0(
-      "x == Phi^{-1} * '(",
+      "atop(x == F^{-1} * '(",
       u,
-      ")' %~~% ",
-      round(sample_x, 3)
+      ")', x %~~% ",
+      round(sample_x, 3),
+      ")"
     ),
     parse = TRUE,
     size = 3
   ) +
-  labs(x = expression(x), y = expression(Phi(x) - u))
+  scale_x_continuous(
+    breaks = c(-pi, 0, pi),
+    labels = expression(-pi, 0, pi)
+  ) +
+  labs(x = expression(x), y = expression(F(x) - u))
 ```
 :::::
 :::
 
 \medskip\pause
 
-Each new draw requires another solve and repeated CDF evaluations. Can we sample
-using only the density?
+Each new draw requires another solve, with numerical integration at each CDF
+evaluation.
 
 \pdfpcnote{
-  The bracket must contain the root for the chosen $u$.
-  The interval $[0, 2]$ works for $u = 0.9$, but a general sampler must find a
-  suitable bracket for each draw.
+  The interval $[-\pi, \pi]$ brackets the root for every $u \in (0, 1)$ because
+  $F(-\pi) = 0$ and $F(\pi) = 1$.
+  This simple implementation integrates the density at each root-finding step.
+  Specialized CDF approximations or a precomputed inverse can reduce the cost.
 }
 
-## Von Mises Distribution
+## Sampling Directly from the von Mises Density
 
-The density on $(-\pi, \pi]$ is
+We can now sample by numerical inversion. Evaluating the unnormalized density
 $$
-  f(x) = \frac{1}{2 \pi I_0(\kappa)} \ e^{\kappa \cos(x-\mu)}
+  q(x) = e^{\kappa \cos(x-\mu)}
 $$
-where $\kappa \geq 0$ is the concentration, $\mu \in (-\pi, \pi]$ is the
-location, and $I_0$ is the modified Bessel function of the first kind of order
-0.
-
-\medskip
-
-```{r}
-#| label: vMdensity
-#| fig-cap: The von Mises density for $\mu = 2$ and $\kappa = 9$.
-#| echo: false
-#| fig-width: 5
-#| fig-height: 2
-
-library(ggplot2)
-
-dvm <- function(x, k) {
-  exp(k * cos(x - 2)) / (2 * pi * besselI(k, 0))
-}
-
-xy <- tibble(x = seq(0, 2 * pi, length.out = 400), y = dvm(x, 9))
-
-p1 <- ggplot(xy, aes(x, y)) +
-  geom_line() +
-  coord_fixed(ratio = 2 * pi / 1.2) +
-  labs(y = "Density") +
-  theme_minimal()
-
-p2 <- ggplot(xy, aes(x = x, y = y)) +
-  geom_line() +
-  coord_polar(theta = "x", start = 0, direction = 1) +
-  labs(x = "Angle (radians)", y = NULL) +
-  theme_minimal()
-
-p1 + p2
-```
-
-## Sampling from the von Mises Distribution
-
-We can evaluate the unnormalized density
-$$
-  q(x) = e^{\kappa \cos(x-\mu)}.
-$$
-
-. . .
-
-For $\kappa > 0$, the CDF has no elementary closed-form inverse. Inversion
-sampling is possible, but requires numerical approximation.
+is much simpler than computing the CDF.
 
 . . .
 
@@ -1199,28 +1225,90 @@ distribution, and moments before benchmarking.
 
 ## Benchmarking the von Mises Samplers
 
-Each method returns $N = 10^5$ angles with $\mu = 0$ and $\kappa = 5$.
+Each method returns $N = 1000$ angles with $\mu = 0$ and $\kappa = 5$.
 
 ```{r}
 #| label: vmises-bench-setup
+#| echo: false
 
 sample_vonmises <- new_rejection_sampler(fixed_vonmises_sampler)
+
+sample_vonmises_inversion <- function(N, kappa) {
+  vapply(
+    runif(N),
+    function(u) {
+      uniroot(
+        function(x) pvm(x, kappa) - u,
+        interval = c(-pi, pi),
+        tol = 1e-8
+      )$root
+    },
+    numeric(1)
+  )
+}
+
+vm_benchmark_n <- 1000
 ```
 
 ```{r}
 #| label: vmises-bench
 #| fig-width: 5
-#| fig-height: 1.5
+#| fig-height: 2.1
+#| fig-cap: Median time per returned sample over five runs, on a logarithmic
+#|   scale.
 #| echo: false
 
-bench::mark(
-  vectorized = sample_vonmises(1e5, 5)$x,
-  scalar = sample_vonmises_slow(1e5, 5),
-  movMF = sample_vonmises_movMF(1e5, 5),
+set.seed(514)
+vm_bench <- bench::mark(
+  inversion = sample_vonmises_inversion(vm_benchmark_n, 5),
+  scalar = sample_vonmises_slow(vm_benchmark_n, 5),
+  vectorized = sample_vonmises(vm_benchmark_n, 5)$x,
+  movMF = sample_vonmises_movMF(vm_benchmark_n, 5),
   check = FALSE
-) |>
-  plot()
+)
+
+vm_timings <- tibble(
+  method = factor(
+    as.character(vm_bench$expression),
+    levels = c("movMF", "vectorized", "scalar", "inversion"),
+    labels = c(
+      "movMF",
+      "Vectorized rejection",
+      "Scalar rejection",
+      "Numerical inversion"
+    )
+  ),
+  microseconds = 1e6 *
+    as.numeric(vm_bench$median) /
+    vm_benchmark_n
+)
+
+ggplot(vm_timings, aes(microseconds, method)) +
+  geom_point(
+    aes(color = method == "Numerical inversion"),
+    size = 2
+  ) +
+  scale_color_manual(
+    values = c("FALSE" = "royalblue", "TRUE" = "darkorange"),
+    guide = "none"
+  ) +
+  scale_x_log10(labels = scales::label_number()) +
+  labs(x = "Time per sample (microseconds)", y = NULL)
 ```
+
+\pause
+
+Repeated integration and root finding make this direct inversion sampler
+expensive.
+
+\pdfpcnote{
+  Numerical inversion uses the earlier CDF implementation with integration
+  tolerance $10^{-10}$ and root-finding tolerance $10^{-8}$.
+  Each timed call returns 1000 angles, including random-number generation and
+  all numerical work. Timings include garbage collection.
+  This compares these implementations: specialized CDF approximations or a
+  precomputed inverse can make inversion sampling much faster.
+}
 
 ## Piecewise Exponential Envelopes
 
@@ -2025,8 +2113,6 @@ Weight samples from a proposal distribution to estimate expectations with
 respect to a target distribution.
 
 \appendix
-
-# Appendix
 
 ## Von Mises Envelopes
 
