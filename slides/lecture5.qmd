@@ -117,16 +117,13 @@ adjustments to exclude 0 and 1.
 
 ## Transformation Methods
 
-What if we want to sample from a different distribution?
+To sample from a target distribution with CDF $F$, choose a random variable $Z$
+that we can simulate and a computable, measurable transformation $T$ such that
+$$
+  \Pr(T(Z) \le x) = F(x), \qquad x \in \mathbb{R}.
+$$
 
-\medskip\pause
-
-We could use **the transformation method**, which relies on the following fact:
-
-\medskip
-
-If $T : \mathcal{Z} \to \mathbb{R}$ is a map and $Z \in \mathcal{Z}$ is a random
-variable we can sample, then we can sample $X = T(Z)$.
+\pause
 
 \begin{figure}
 \centering
@@ -141,15 +138,19 @@ variable we can sample, then we can sample $X = T(Z)$.
 
 \pause
 
-Transformation methods let us generate samples from complex distributions by
-applying a function to samples from a simpler distribution.
-
-\medskip\pause
-
 ### Example {.example}
 
 To sample $X \sim \mathrm{Exp}(\lambda)$ with rate $\lambda > 0$, use
 $X = -\log(U)/\lambda$ with $U \sim \mathcal{U}(0, 1)$.
+
+\medskip\pause
+
+For $x \ge 0$,
+$$
+  \Pr\!\left(-\frac{\log U}{\lambda} \le x\right)
+  = \Pr(U \ge e^{-\lambda x})
+  = 1 - e^{-\lambda x}.
+$$
 
 ## Example: Sampling from a $t$-Distribution
 
