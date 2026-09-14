@@ -292,6 +292,7 @@ It has mean $\mu$.
 ##
 
 ```{r}
+#| label: importance-sampling-plot
 #| echo: false
 #| fig-cap: "Target and importance densities with corresponding importance weights."
 #| fig-width: 5
@@ -1107,6 +1108,7 @@ tibble(
 ##
 
 ```{r}
+#| label: weight-degeneracy-plot
 #| fig-width: 5.3
 #| fig-height: 3.2
 #| echo: false
@@ -1331,6 +1333,7 @@ So the Laplace approximation is $\mathcal{N}(2, 2^2)$.
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: laplace-approx-plot
 #| echo: false
 #| fig-cap: >-
 #|   Target (solid black) and Laplace approximation (dashed blue) densities for
@@ -1707,6 +1710,8 @@ A # Graph adjacency matrix
 . . .
 
 ```{r}
+#| label: network_adj_upper
+
 Aup <- A
 Aup[lower.tri(Aup)] <- 0
 ```
@@ -1823,12 +1828,16 @@ mu_hat_IS
 Confidence interval using empirical variance estimate $\hat{\sigma}^2$.
 
 ```{r}
+#| label: sim2-confint
+
 mu_hat_IS + 1.96 * sd(tmp) / sqrt(N) * c(-1, 0, 1)
 ```
 
 . . .
 
 ```{r}
+#| label: sim2-sd
+
 c(sd(tmp), sqrt(mu_hat * (1 - mu_hat))) # Est. standard deviations
 ```
 
@@ -1837,6 +1846,8 @@ c(sd(tmp), sqrt(mu_hat * (1 - mu_hat))) # Est. standard deviations
 The ratio of variances is estimated as
 
 ```{r}
+#| label: sim2-var-ratio
+
 mu_hat * (1 - mu_hat) / var(tmp)
 ```
 
@@ -1895,6 +1906,8 @@ sum(prob)
 And here's the MC estimate with confidence interval:
 
 ```{r}
+#| label: sim-confint2
+
 mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / N) * c(-1, 0, 1)
 ```
 
@@ -1903,6 +1916,8 @@ mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / N) * c(-1, 0, 1)
 And the IS estimate with confidence interval:
 
 ```{r}
+#| label: sim2-confint2
+
 mu_hat_IS + 1.96 * sd(tmp) / sqrt(N) * c(-1, 0, 1)
 ```
 
