@@ -2116,8 +2116,6 @@ my_other_rchisq <- function(N, k) {
 
 . . .
 
-### Exercise 3
-
 Check the output distributions, then benchmark your implementations against one
 another and `rchisq()`.
 
