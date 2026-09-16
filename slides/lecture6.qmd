@@ -80,7 +80,7 @@ $$
   \sigma^2_{\mathrm{MC}} = \V h(X_1) = \int (h(x) - \mu)^2 f(x) \ \mathrm{d}x.
 $$
 
-## Monte Carlo Integration
+. . .
 
 We can estimate $\sigma^2_{\mathrm{MC}}$ using the empirical variance
 $$
