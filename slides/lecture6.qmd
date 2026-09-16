@@ -653,6 +653,173 @@ p2 / p2b + plot_layout(heights = c(2, 1), axes = "collect")
 :::::
 :::
 
+## The Ideal Importance Density
+
+For $0 < \E_f|h(X)| < \infty$, the variance-minimizing density for ordinary IS is
+$$
+  g_{\mathrm{opt}}(x)
+  = \frac{|h(x)|f(x)}{\int |h(u)|f(u)\,\mathrm{d}u}.
+$$
+
+. . .
+
+If $h \geq 0$, then $g_{\mathrm{opt}} = hf / \mu$. Every draw gives
+$$
+  \frac{h(X)f(X)}{g_{\mathrm{opt}}(X)} = \mu,
+  \qquad X \sim g_{\mathrm{opt}},
+$$
+so the estimator has \alert{zero variance}.
+
+. . .
+
+But evaluating these weights requires the normalizing constant $\mu$, the
+integral we want. Use the shape of $|h|f$ to guide a practical proposal.
+
+\pdfpcnote{
+Ordinary IS only requires proposal support wherever the integrand is nonzero.
+For sign-changing h, the optimal proposal still minimizes variance, but the
+weighted contributions generally have different signs and the variance is not
+zero. This result is for ordinary IS, not self-normalized IS.
+}
+
+## A Rare Event: No Hits
+
+For $Z \sim \mathcal{N}(0,1)$, estimate
+$$
+  p = P(Z > 4) \approx 3.17 \times 10^{-5}.
+$$
+
+```{r, echo=-1}
+#| label: rare-event-mc
+
+set.seed(1)
+n_rare <- 10000
+rare_hits <- rnorm(n_rare) > 4
+mean(rare_hits)
+```
+
+. . .
+
+This is typical: with $N = 10{,}000$,
+$$
+  P(\text{no exceedances}) = (1 - p)^N \approx 0.729.
+$$
+
+The empirical standard error is also zero. We have missed the event, not
+established that its probability is zero.
+
+## A Rare Event: Shift the Proposal
+
+Draw $X_i \sim g = \mathcal{N}(4,1)$, so half the draws exceed 4. The weights are
+$$
+  w^*(x) = \frac{f(x)}{g(x)} = e^{8 - 4x}.
+$$
+
+```{r}
+#| label: rare-event-proposal
+#| echo: false
+#| fig-width: 5
+#| fig-height: 1.8
+
+rare_grid <- tibble(
+  x = seq(-4, 8, length.out = 601),
+  target = dnorm(x),
+  proposal = dnorm(x, mean = 4)
+)
+
+rare_grid |>
+  pivot_longer(c(target, proposal), names_to = "density") |>
+  ggplot(aes(x, value, color = density, linetype = density)) +
+  geom_area(
+    data = filter(rare_grid, x > 4),
+    aes(x = x, y = proposal),
+    inherit.aes = FALSE,
+    fill = "darkorange",
+    alpha = 0.2
+  ) +
+  geom_line() +
+  geom_vline(xintercept = 4, linetype = "dotted") +
+  scale_color_manual(
+    values = c(target = "royalblue", proposal = "darkorange")
+  ) +
+  scale_linetype_manual(values = c(target = "solid", proposal = "dashed")) +
+  labs(x = expression(x), y = "Density", color = NULL, linetype = NULL)
+```
+
+. . .
+
+$$
+  \hat{p}_{\mathrm{IS}}
+  = \frac{1}{N} \sum_{i=1}^N \mathbf{1}\{X_i > 4\}\,e^{8 - 4X_i}.
+$$
+
+\pdfpcnote{
+The ideal proposal is the standard normal conditional on exceeding 4. Its
+normalizing constant is p. The shifted normal is a simple approximation that
+makes exceedances common and has an evaluable, normalized density.
+}
+
+## A Rare Event: Repeated Runs
+
+```{r}
+#| label: rare-event-replicates
+#| include: false
+
+set.seed(2026)
+p_rare <- pnorm(4, lower.tail = FALSE)
+rare_estimates <- replicate(500, {
+  z <- rnorm(n_rare)
+  x <- rnorm(n_rare, mean = 4)
+  c(
+    MC = mean(z > 4),
+    IS = mean((x > 4) * exp(8 - 4 * x))
+  )
+})
+
+rare_runs <- tibble(
+  run = seq_len(ncol(rare_estimates)),
+  MC = rare_estimates["MC", ],
+  IS = rare_estimates["IS", ]
+) |>
+  pivot_longer(c(MC, IS), names_to = "method", values_to = "estimate") |>
+  mutate(method = factor(
+    method,
+    levels = c("MC", "IS"),
+    labels = c("Ordinary MC", "Importance sampling")
+  ))
+
+rare_zero_percent <- 100 * mean(rare_estimates["MC", ] == 0)
+rare_sd_ratio <- sd(rare_estimates["MC", ]) / sd(rare_estimates["IS", ])
+```
+
+500 independent runs per method, with $N = 10{,}000$ draws per run.
+
+```{r}
+#| label: rare-event-comparison
+#| echo: false
+#| fig-width: 5.2
+#| fig-height: 2.3
+
+ggplot(rare_runs, aes(run, estimate / p_rare, color = method)) +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  geom_point(size = 0.6, alpha = 0.6) +
+  facet_wrap(vars(method), nrow = 1) +
+  scale_color_manual(values = c(
+    "Ordinary MC" = "royalblue",
+    "Importance sampling" = "darkorange"
+  )) +
+  guides(color = "none") +
+  labs(x = "Run", y = expression(hat(p) / p))
+```
+
+The dashed line is the truth. MC returned zero in
+`r sprintf("%.1f", rare_zero_percent)`% of runs.
+
+. . .
+
+IS had about `r round(rare_sd_ratio)` times smaller empirical standard deviation
+at the same sample size.
+
 ## Normalized Weights
 
 If $f = c^{-1} q$ with $c$ unknown then
