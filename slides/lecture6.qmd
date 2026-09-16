@@ -173,28 +173,33 @@ p +
   coord_cartesian(ylim = c(6, 10))
 ```
 
-## When to Stop?
+## Choosing the Sample Size
 
-Concentration inequalities can give a sample size for a desired error bound.
-
-\medskip\pause
-
-Chebyshev requires a known variance or upper bound; Chernoff requires control of
-moment-generating functions. Plugging in a variance estimate loses the
-guarantee.
-
-\medskip\pause
-
-Stopping when an empirical confidence interval is narrow is a practical
-heuristic. Ordinary fixed-sample intervals do not guarantee coverage at a
-data-dependent stopping time.
+Monte Carlo standard errors decrease as $1 / \sqrt{N}$: halving the error
+requires four times as many samples.
 
 . . .
 
-### Trade-Offs
+Use a pilot run to estimate the variance and plan a \alert{fresh run} with a
+fixed sample size:
+$$
+  N \approx \left(
+    \frac{1.96\,\hat{\sigma}_{\mathrm{pilot}}}{\varepsilon}
+  \right)^2.
+$$
 
-Overshooting wastes computing time; stopping too early risks an imprecise
-estimate. Sequential guarantees require a suitable stopping procedure.
+. . .
+
+This targets a 95% confidence-interval half-width of $\varepsilon$.
+
+\pdfpcnote{
+Round the planned sample size up to an integer. Use independent samples for the
+fresh run, fixing its size before generating them. This is approximate
+planning: the pilot variance estimate and the normal approximation can be
+inaccurate, so the requested precision is not guaranteed. Repeatedly checking
+an ordinary confidence interval and stopping when it is narrow does not
+guarantee coverage at the resulting data-dependent stopping time.
+}
 
 ## Importance Sampling
 
@@ -682,144 +687,6 @@ weighted contributions generally have different signs and the variance is not
 zero. This result is for ordinary IS, not self-normalized IS.
 }
 
-## A Rare Event: No Hits
-
-For $Z \sim \mathcal{N}(0,1)$, estimate
-$$
-  p = P(Z > 4) \approx 3.17 \times 10^{-5}.
-$$
-
-```{r, echo=-1}
-#| label: rare-event-mc
-
-set.seed(1)
-n_rare <- 10000
-rare_hits <- rnorm(n_rare) > 4
-mean(rare_hits)
-```
-
-. . .
-
-This is typical: with $N = 10{,}000$,
-$$
-  P(\text{no exceedances}) = (1 - p)^N \approx 0.729.
-$$
-
-The empirical standard error is also zero. We have missed the event, not
-established that its probability is zero.
-
-## A Rare Event: Shift the Proposal
-
-Draw $X_i \sim g = \mathcal{N}(4,1)$, so half the draws exceed 4. The weights are
-$$
-  w^*(x) = \frac{f(x)}{g(x)} = e^{8 - 4x}.
-$$
-
-```{r}
-#| label: rare-event-proposal
-#| echo: false
-#| fig-width: 5
-#| fig-height: 1.8
-
-rare_grid <- tibble(
-  x = seq(-4, 8, length.out = 601),
-  target = dnorm(x),
-  proposal = dnorm(x, mean = 4)
-)
-
-rare_grid |>
-  pivot_longer(c(target, proposal), names_to = "density") |>
-  ggplot(aes(x, value, color = density, linetype = density)) +
-  geom_area(
-    data = filter(rare_grid, x > 4),
-    aes(x = x, y = proposal),
-    inherit.aes = FALSE,
-    fill = "darkorange",
-    alpha = 0.2
-  ) +
-  geom_line() +
-  geom_vline(xintercept = 4, linetype = "dotted") +
-  scale_color_manual(
-    values = c(target = "royalblue", proposal = "darkorange")
-  ) +
-  scale_linetype_manual(values = c(target = "solid", proposal = "dashed")) +
-  labs(x = expression(x), y = "Density", color = NULL, linetype = NULL)
-```
-
-. . .
-
-$$
-  \hat{p}_{\mathrm{IS}}
-  = \frac{1}{N} \sum_{i=1}^N \mathbf{1}\{X_i > 4\}\,e^{8 - 4X_i}.
-$$
-
-\pdfpcnote{
-The ideal proposal is the standard normal conditional on exceeding 4. Its
-normalizing constant is p. The shifted normal is a simple approximation that
-makes exceedances common and has an evaluable, normalized density.
-}
-
-## A Rare Event: Repeated Runs
-
-```{r}
-#| label: rare-event-replicates
-#| include: false
-
-set.seed(2026)
-p_rare <- pnorm(4, lower.tail = FALSE)
-rare_estimates <- replicate(500, {
-  z <- rnorm(n_rare)
-  x <- rnorm(n_rare, mean = 4)
-  c(
-    MC = mean(z > 4),
-    IS = mean((x > 4) * exp(8 - 4 * x))
-  )
-})
-
-rare_runs <- tibble(
-  run = seq_len(ncol(rare_estimates)),
-  MC = rare_estimates["MC", ],
-  IS = rare_estimates["IS", ]
-) |>
-  pivot_longer(c(MC, IS), names_to = "method", values_to = "estimate") |>
-  mutate(method = factor(
-    method,
-    levels = c("MC", "IS"),
-    labels = c("Ordinary MC", "Importance sampling")
-  ))
-
-rare_zero_percent <- 100 * mean(rare_estimates["MC", ] == 0)
-rare_sd_ratio <- sd(rare_estimates["MC", ]) / sd(rare_estimates["IS", ])
-```
-
-500 independent runs per method, with $N = 10{,}000$ draws per run.
-
-```{r}
-#| label: rare-event-comparison
-#| echo: false
-#| fig-width: 5.2
-#| fig-height: 2.3
-
-ggplot(rare_runs, aes(run, estimate / p_rare, color = method)) +
-  geom_hline(yintercept = 1, linetype = "dashed") +
-  geom_point(size = 0.6, alpha = 0.6) +
-  facet_wrap(vars(method), nrow = 1) +
-  scale_color_manual(values = c(
-    "Ordinary MC" = "royalblue",
-    "Importance sampling" = "darkorange"
-  )) +
-  guides(color = "none") +
-  labs(x = "Run", y = expression(hat(p) / p))
-```
-
-The dashed line is the truth. MC returned zero in
-`r sprintf("%.1f", rare_zero_percent)`% of runs.
-
-. . .
-
-IS had about `r round(rare_sd_ratio)` times smaller empirical standard deviation
-at the same sample size.
-
 ## Normalized Weights
 
 If $f = c^{-1} q$ with $c$ unknown then
@@ -1255,6 +1122,13 @@ Heavier tails than the target are often a useful safeguard.
 
 ## Common Strategies
 
+### Exponential Tilting
+
+Multiply the target density by an exponential factor to favor a rare-event
+region.
+
+. . .
+
 ### Laplace Approximation
 
 Use a Gaussian approximation centered at the mode of the target distribution.
@@ -1267,16 +1141,159 @@ Iteratively refine the importance distribution based on pilot runs.
 
 . . .
 
-### Defensive Mixtures
+### Mixture and Defensive Proposals
 
-Add a component that covers the target support and controls the tails of the
-weighted contributions.
+Combine components to capture multiple modes. A defensive component covers the
+support and controls the tails of the weighted contributions.
+
+## A Rare Event: No Hits
+
+For $Z \sim \mathcal{N}(0,1)$, estimate
+$$
+  p = P(Z > 4) \approx 3.17 \times 10^{-5}.
+$$
+
+```{r, echo=-1}
+#| label: rare-event-mc
+
+set.seed(1)
+n_rare <- 10000
+rare_hits <- rnorm(n_rare) > 4
+mean(rare_hits)
+```
 
 . . .
 
-### Mixture Distributions
+This is typical: with $N = 10{,}000$,
+$$
+  P(\text{no exceedances}) = (1 - p)^N \approx 0.729.
+$$
 
-Use a mixture of distributions to capture multiple modes or complex shapes.
+The empirical standard error is also zero. We have missed the event, not
+established that its probability is zero.
+
+## A Rare Event: Exponential Tilting
+
+For the standard normal density $f = \phi$, an \alert{exponential tilt} shifts
+the mean:
+$$
+  g_\theta(x) = e^{\theta x - \theta^2 / 2} f(x) = \phi(x - \theta).
+$$
+
+Choose $\theta = 4$: $X_i \sim \mathcal{N}(4,1)$ and
+$w^*(x) = f(x) / g_4(x) = e^{8 - 4x}$.
+
+```{r}
+#| label: rare-event-proposal
+#| echo: false
+#| fig-width: 5
+#| fig-height: 1.6
+
+rare_grid <- tibble(
+  x = seq(-4, 8, length.out = 601),
+  target = dnorm(x),
+  proposal = dnorm(x, mean = 4)
+)
+
+rare_grid |>
+  pivot_longer(c(target, proposal), names_to = "density") |>
+  ggplot(aes(x, value, color = density, linetype = density)) +
+  geom_area(
+    data = filter(rare_grid, x > 4),
+    aes(x = x, y = proposal),
+    inherit.aes = FALSE,
+    fill = "darkorange",
+    alpha = 0.2
+  ) +
+  geom_line() +
+  geom_vline(xintercept = 4, linetype = "dotted") +
+  scale_color_manual(
+    values = c(target = "royalblue", proposal = "darkorange")
+  ) +
+  scale_linetype_manual(values = c(target = "solid", proposal = "dashed")) +
+  labs(x = expression(x), y = "Density", color = NULL, linetype = NULL)
+```
+
+. . .
+
+$$
+  \hat{p}_{\mathrm{IS}}
+  = \frac{1}{N} \sum_{i=1}^N \mathbf{1}\{X_i > 4\}\,e^{8 - 4X_i}.
+$$
+
+\pdfpcnote{
+Exponential tilting multiplies the density by exp(theta times x) and divides
+by the moment-generating function. For a standard normal, this normalizing
+constant is exp(theta squared divided by 2). Completing the square gives a
+normal distribution with mean theta and variance 1. At theta = 4, half the
+proposal draws exceed 4. Shifting a general density need not be an exponential
+tilt.
+
+The ideal proposal is the standard normal conditional on exceeding 4. Its
+normalizing constant is p. The shifted normal is a simple approximation that
+makes exceedances common and has an evaluable, normalized density.
+}
+
+## A Rare Event: Repeated Runs
+
+```{r}
+#| label: rare-event-replicates
+#| include: false
+
+set.seed(2026)
+p_rare <- pnorm(4, lower.tail = FALSE)
+rare_estimates <- replicate(500, {
+  z <- rnorm(n_rare)
+  x <- rnorm(n_rare, mean = 4)
+  c(
+    MC = mean(z > 4),
+    IS = mean((x > 4) * exp(8 - 4 * x))
+  )
+})
+
+rare_runs <- tibble(
+  run = seq_len(ncol(rare_estimates)),
+  MC = rare_estimates["MC", ],
+  IS = rare_estimates["IS", ]
+) |>
+  pivot_longer(c(MC, IS), names_to = "method", values_to = "estimate") |>
+  mutate(method = factor(
+    method,
+    levels = c("MC", "IS"),
+    labels = c("Ordinary MC", "Importance sampling")
+  ))
+
+rare_zero_percent <- 100 * mean(rare_estimates["MC", ] == 0)
+rare_sd_ratio <- sd(rare_estimates["MC", ]) / sd(rare_estimates["IS", ])
+```
+
+500 independent runs per method, with $N = 10{,}000$ draws per run.
+
+```{r}
+#| label: rare-event-comparison
+#| echo: false
+#| fig-width: 5.2
+#| fig-height: 2.3
+
+ggplot(rare_runs, aes(run, estimate / p_rare, color = method)) +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  geom_point(size = 0.6, alpha = 0.6) +
+  facet_wrap(vars(method), nrow = 1) +
+  scale_color_manual(values = c(
+    "Ordinary MC" = "royalblue",
+    "Importance sampling" = "darkorange"
+  )) +
+  guides(color = "none") +
+  labs(x = "Run", y = expression(hat(p) / p))
+```
+
+The dashed line is the truth. MC returned zero in
+`r sprintf("%.1f", rare_zero_percent)`% of runs.
+
+. . .
+
+IS had about `r round(rare_sd_ratio)` times smaller empirical standard deviation
+at the same sample size.
 
 ## Laplace Approximation
 
@@ -1561,89 +1578,101 @@ for (iter in seq_along(res$proposals)) {
 
 ## Defensive Importance Sampling
 
-Defensive importance sampling adds a component that covers the target support
-and controls extreme weighted contributions.
-
-\medskip\pause
-
-For the Gamma(8,1) target, let $g_s$ be the density of $10 + sT$, where
-$T \sim t_3$. Our earlier proposal was $g_3$.
-
-\medskip\pause
-
-Instead we can use a mixture
-$$
-  g_{\mathrm{mix}}(x) = 0.8 g_3(x) + 0.2 g_{10}(x).
-$$
-Both components have tails heavy enough for finite variance in this example; the
-broader component increases sampling away from the bulk.
-
-##
-
-::: {.columns}
-::::: {.column width="47%"}
-```{r}
-#| label: gamma-importance-fig
-#| echo: false
-#| fig-cap: >-
-#|   Target (black) and importance (blue) densities, with importance weights
-#|   below.
-#| ref-label: gammasim-fig
-#| fig-height: 3
-#| fig-width: 2.7
-```
-:::::
+Return to the $\mathrm{Gamma}(3,1)$ target and estimating $\E_f[X] = 3$.
+The Laplace proposal $g_L = \mathcal{N}(2,2)$ has a right tail that is too light:
+ordinary IS has \alert{infinite variance}.
 
 . . .
 
-::::: {.column width="47%"}
+Add a heavy-tailed component $g_t$, the density of $2 + \sqrt{2}T$ with
+$T \sim t_3$:
+$$
+  g_{\mathrm{mix}}(x) = 0.9 g_L(x) + 0.1 g_t(x).
+$$
+
+. . .
+
+Since $g_{\mathrm{mix}} \geq 0.1g_t$, the mixture inherits protection from the
+Student-$t$ tails. For this Gamma mean, it restores \alert{finite variance}.
+
+\pdfpcnote{
+For h(x) = x, the second moment of an ordinary IS contribution is the integral
+of x squared times f squared divided by g. For the Gaussian proposal, this
+integrand is proportional to x to the sixth power times
+exp(x squared divided by 4 minus 3x), whose integral diverges.
+
+The Student-t density decays as x to the minus fourth power, so its second-moment
+integrand decays as x to the tenth power times exp(-2x), which is integrable.
+Since the mixture is at least 0.1 times the Student-t density, its second moment
+is at most ten times the Student-t second moment. This restores finite variance,
+although it need not give a smaller variance than direct Monte Carlo.
+}
+
+##
+
 ```{r}
 #| label: gamma-defensive-fig
-#| fig-height: 3
-#| fig-width: 2.7
-#| fig-cap: >-
-#|   Target (black) and defensive mixture (orange) densities, with importance
-#|   weights below.
 #| echo: false
+#| fig-width: 5.4
+#| fig-height: 3
+#| fig-cap: >-
+#|   Gamma(3,1) target and proposals (left); importance weights on a logarithmic
+#|   scale (right).
 
-set.seed(1234)
-B <- 1000
-mix_indicator <- rbinom(B, 1, 0.8)
-x <- 10 + 3 * rt(B, df = 3)
-x[mix_indicator == 0] <- 10 +
-  10 * rt(sum(mix_indicator == 0), df = 3)
-g_mix <- 0.8 * dt((x - 10) / 3, df = 3) / 3 +
-  0.2 * dt((x - 10) / 10, df = 3) / 10
-w_star <- dgamma(x, 8) / g_mix
+gamma_defensive <- tibble(
+  x = seq(-3, 20, length.out = 601),
+  target = dgamma(x, shape = 3, rate = 1),
+  laplace = dnorm(x, mean = 2, sd = sqrt(2)),
+  student = dt((x - 2) / sqrt(2), df = 3) / sqrt(2),
+  mixture = 0.9 * laplace + 0.1 * student
+)
 
-z <- seq(-12, 12, length.out = 100) + 10
-f_x <- dgamma(z, 8)
-g_mix <- 0.8 * dt((z - 10) / 3, df = 3) / 3 +
-  0.2 * dt((z - 10) / 10, df = 3) / 10
-w <- f_x / g_mix
+defensive_colors <- c(
+  target = "black", laplace = "royalblue", mixture = "darkorange"
+)
+defensive_lines <- c(
+  target = "solid", laplace = "dashed", mixture = "dotdash"
+)
+defensive_labels <- c(
+  target = "Target", laplace = "Laplace", mixture = "Mixture"
+)
 
-p1 <- tibble(x = z, target = f_x, mixture = g_mix) |>
-  pivot_longer(c(target, mixture)) |>
-  ggplot(aes(x, value, color = name, linetype = name)) +
+p_defensive_densities <- gamma_defensive |>
+  filter(x <= 12) |>
+  pivot_longer(c(target, laplace, mixture), names_to = "density") |>
+  ggplot(aes(x, value, color = density, linetype = density)) +
   geom_line() +
-  guides(color = guide_legend(position = "inside")) +
-  scale_color_manual(
-    values = c(target = "black", mixture = "darkorange")
+  scale_color_manual(values = defensive_colors, labels = defensive_labels) +
+  scale_linetype_manual(values = defensive_lines, labels = defensive_labels) +
+  guides(
+    color = guide_legend(position = "bottom"),
+    linetype = guide_legend(position = "bottom")
   ) +
-  scale_linetype_manual(
-    values = c(target = "solid", mixture = "dashed")
+  labs(x = expression(x), y = "Density", color = NULL, linetype = NULL)
+
+p_defensive_weights <- gamma_defensive |>
+  filter(x > 0) |>
+  transmute(x, laplace = target / laplace, mixture = target / mixture) |>
+  pivot_longer(c(laplace, mixture), names_to = "proposal", values_to = "weight") |>
+  ggplot(aes(x, weight, color = proposal, linetype = proposal)) +
+  geom_line() +
+  scale_y_log10(
+    breaks = 10^c(0, 10, 20, 30),
+    labels = function(breaks) parse(text = paste0("10^", log10(breaks)))
   ) +
-  theme(legend.position.inside = c(0.8, 0.8)) +
-  labs(y = "Density", color = "Density", linetype = "Density")
+  scale_color_manual(values = defensive_colors, labels = defensive_labels) +
+  scale_linetype_manual(values = defensive_lines, labels = defensive_labels) +
+  guides(
+    color = guide_legend(position = "bottom"),
+    linetype = guide_legend(position = "bottom")
+  ) +
+  labs(
+    x = expression(x), y = expression(f(x) / g(x)),
+    color = NULL, linetype = NULL
+  )
 
-p2 <- tibble(x = z, w) |>
-  ggplot(aes(x, w)) +
-  geom_line()
-
-p1 / p2 + plot_layout(axes = "collect")
+p_defensive_densities + p_defensive_weights
 ```
-:::::
-:::
 
 ## Exercise: Von Mises Importance Sampling
 
