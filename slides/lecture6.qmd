@@ -748,13 +748,11 @@ p
 
 ## Variance for IS with Normalized Weights
 
-Let $w_i = w(X_i)$ be the normalized weights. If $w^*(X)$ and
-$h(X)w^*(X)$ have finite variances, the $\Delta$-method gives the standard error
-estimate
+Let $w_i = w(X_i)$ be the normalized weights. If $w^*(X)$ and $h(X)w^*(X)$ have
+finite variances, the $\Delta$-method gives the standard error estimate
 $$
   \widehat{\mathrm{se}}(\hat{\mu}_{\mathrm{IS}})
-  = \sqrt{\frac{N}{N - 1} \sum_{i=1}^N
-    w_i^2 \big(h(X_i) - \hat{\mu}_{\mathrm{IS}}\big)^2}.
+  = \sqrt{\frac{N}{N - 1} \sum_{i=1}^N w_i^2 \big(h(X_i) - \hat{\mu}_{\mathrm{IS}}\big)^2}.
 $$
 
 This accounts for uncertainty in both the weighted sum and the sum of weights.
@@ -1371,67 +1369,27 @@ plot_step <- function(iter) {
     lims(x = c(-6, 6), y = c(0, 0.6)) +
     labs(
       y = "Density",
-      subtitle = sprintf("ESS = %.0f, CV = %.1f", ess, cv)
+      subtitle = sprintf(
+        "Iteration %d: ESS = %.0f, CV = %.1f",
+        iter,
+        ess,
+        cv
+      )
     )
 }
 ```
 
 ```{r}
-#| label: adaptive-importance-fig1
+#| label: adaptive-importance-fig
 #| echo: false
+#| fig-show: animate
 #| fig-width: 5.4
 #| fig-height: 2.5
-#| fig-cap: "Adaptive importance sampling step 1."
+#| fig-cap: "Adaptive importance sampling with a Gaussian proposal."
 
-plot_step(1)
-```
-
-##
-
-```{r}
-#| label: adaptive-importance-fig2
-#| echo: false
-#| fig-width: 5.4
-#| fig-height: 2.5
-#| fig-cap: "Adaptive importance sampling, step 2."
-
-plot_step(2)
-```
-
-##
-
-```{r}
-#| label: adaptive-importance-fig3
-#| echo: false
-#| fig-width: 5.4
-#| fig-height: 2.5
-#| fig-cap: "Adaptive importance sampling, step 3."
-
-plot_step(3)
-```
-
-##
-
-```{r}
-#| label: adaptive-importance-fig4
-#| echo: false
-#| fig-width: 5.4
-#| fig-height: 2.5
-#| fig-cap: "Adaptive importance sampling, step 4."
-
-plot_step(4)
-```
-
-##
-
-```{r}
-#| label: adaptive-importance-fig5
-#| echo: false
-#| fig-width: 5.4
-#| fig-height: 2.5
-#| fig-cap: "Adaptive importance sampling, step 5."
-
-plot_step(5)
+for (iter in seq_along(res$proposals)) {
+  print(plot_step(iter))
+}
 ```
 
 ## Defensive Importance Sampling
