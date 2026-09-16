@@ -612,8 +612,6 @@ p1 / p1b + plot_layout(heights = c(2, 1), axes = "collect")
 ```
 :::::
 
-. . .
-
 ::::: {.column width="47%"}
 ```{r}
 #| label: is-t-plot
@@ -1646,7 +1644,6 @@ x[mix_indicator == 0] <- rnorm(
 )
 g_mix <- 0.8 * dnorm(x, 10, 3) + 0.2 * dnorm(x, 10, 10)
 w_star <- dgamma(x, 8) / g_mix
-mu_hat_defensive <- cumsum(x * w_star) / (1:B)
 
 z <- seq(-12, 12, length.out = 100) + 10
 f_x <- dgamma(z, 8)
@@ -1675,6 +1672,93 @@ p1 / p2 + plot_layout(axes = "collect")
 ```
 :::::
 :::
+
+## Exercise: Von Mises Importance Sampling
+
+### Step 1
+
+Implement an importance sampler for computing the mean of the von Mises
+distribution. Plot the result and check convergence towards $\mu$.
+
+```{r}
+#| label: vonmises-density
+
+dvmises <- function(x, mu = 0, kappa = 2) {
+  exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0))
+}
+```
+
+. . .
+
+### Step 2
+
+Compute the estimate of the mean and its standard error.
+
+. . .
+
+### Step 3
+
+Compute the effective sample size and coefficient of variation of the importance
+weights. Experiment with different importance densities to see if you find a
+better one.
+
+```{r}
+#| label: vmises-importance
+#| include: false
+
+vonmises_importance <- function(N, mu = 0, kappa = 2) {
+  x <- rnorm(N, 0, pi / 2)
+  w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)
+  cumsum(x * w) / 1:N
+}
+
+x <- seq(-pi, pi, length.out = 100)
+plot(x, dvmises(x))
+lines(x, dnorm(x, 0, pi / 2))
+```
+
+## Summary
+
+### Monte Carlo Methods
+
+Estimate integrals and means using random sampling when analytic solutions are
+not possible.
+
+. . .
+
+### Importance Sampling
+
+Focus samples where they matter most, but choose your proposal carefully to
+avoid large or variable weights.
+
+. . .
+
+### Diagnostics
+
+Examine weight distribution and check effective sample size to ensure reliable
+estimates.
+
+. . .
+
+### Picking Importance Distributions
+
+It's hard! But use adaptive and defensive methods to help fix poor coverage and
+improve robustness.
+
+## Next Time
+
+### Optimization
+
+We introduce optimization methods for minimizing and maximizing functions.
+
+\medskip\pause
+
+We'll focus on **convex optimization**, a special class of optimization problems
+that are easier to solve and have nice properties.
+
+\lectureappendix
+
+# Appendix
 
 ## Case Study: Network Failure
 
@@ -1926,76 +2010,4 @@ mu_hat_IS + 1.96 * sd(tmp) / sqrt(N) * c(-1, 0, 1)
 #| echo: false
 
 options(digits = old_options$digits)
-```
-
-## Summary
-
-### Monte Carlo Methods
-
-Estimate integrals and means using random sampling when analytic solutions are
-not possible.
-
-. . .
-
-### Importance Sampling
-
-Focus samples where they matter most, but choose your proposal carefully to
-avoid large or variable weights.
-
-. . .
-
-### Diagnostics
-
-Examine weight distribution and check effective sample size to ensure reliable
-estimates.
-
-. . .
-
-### Picking Importance Distributions
-
-It's hard! But use adaptive and defensive methods to help fix poor coverage and
-improve robustness.
-
-## Exercise: Von Mises Importance Sampling
-
-### Step 1
-
-Implement an importance sampler for computing the mean of the von Mises
-distribution. Plot the result and check convergence towards $\mu$.
-
-```{r}
-#| label: vonmises-density
-
-dvmises <- function(x, mu = 0, kappa = 2) {
-  exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0))
-}
-```
-
-. . .
-
-### Step 2
-
-Compute the estimate of the mean and its standard error.
-
-. . .
-
-### Step 3
-
-Compute the effective sample size and coefficient of variation of the importance
-weights. Experiment with different importance densities to see if you find a
-better one.
-
-```{r}
-#| label: vmises-importance
-#| include: false
-
-vonmises_importance <- function(N, mu = 0, kappa = 2) {
-  x <- rnorm(N, 0, pi / 2)
-  w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)
-  cumsum(x * w) / 1:N
-}
-
-x <- seq(-pi, pi, length.out = 100)
-plot(x, dvmises(x))
-lines(x, dnorm(x, 0, pi / 2))
 ```
