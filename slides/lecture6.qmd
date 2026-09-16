@@ -178,14 +178,13 @@ p +
 Monte Carlo standard errors decrease as $1 / \sqrt{N}$: halving the error
 requires four times as many samples.
 
-. . .
+\medskip\pause
 
 Use a pilot run to estimate the variance and plan a \alert{fresh run} with a
 fixed sample size:
 $$
-  N \approx \left(
-    \frac{1.96\,\hat{\sigma}_{\mathrm{pilot}}}{\varepsilon}
-  \right)^2.
+  N
+  \approx \left( \frac{1.96\,\hat{\sigma}_{\mathrm{pilot}}}{\varepsilon} \right)^2.
 $$
 
 . . .
@@ -477,14 +476,7 @@ mu_hat_IS <- replicate(10000, {
 sd(mu_hat_IS) * sqrt(B)
 ```
 
-## Nonlinear Functions
-
-It is not always the case that the best importance distribution is close to the
-target distribution.
-
-. . .
-
-### Example
+## Accounting for the Integrand
 
 Suppose we want to estimate
 $$
@@ -494,17 +486,25 @@ where $f(x)$ is the standard normal density.
 
 \medskip\pause
 
-If we use $g(x) = f(x) = \mathcal{N}(0,1)$, the weights are $w^*(x) = 1$, so the
-estimator is just the sample mean of $x^4$.
+Direct Monte Carlo samples from $f$, placing most draws near zero.
 
 \medskip\pause
 
-But $h(x) = x^4$ is large in the tails, so sampling from a normal may not be
-efficient, as most samples are near zero.
+The \alert{integrand} $x^4f(x)$ peaks at $x = \pm2$ and decays to zero in the
+far tails. We want more draws around those peaks.
 
 \medskip\pause
 
-Instead, we can try a heavy-tailed importance distribution, such as Student-$t$.
+Try a wider Gaussian: $g = \mathcal{N}(0,4)$, with standard deviation $2$. This
+puts more mass near $\pm2$ and reduces the variance of $X^4f(X)/g(X)$.
+
+\pdfpcnote{
+The proposal should account for the shape of the integrand. Nonlinearity alone
+does not tell us which proposal to choose. Differentiating x^4 f(x) gives
+x^3 (4 - x^2) f(x), so the two maxima are at -2 and 2. The wider Gaussian is a
+simple approximation to this shape; it is not the optimal proposal. The next
+two slides illustrate the improvement and give the ideal density.
+}
 
 ##
 
@@ -513,17 +513,16 @@ Instead, we can try a heavy-tailed importance distribution, such as Student-$t$.
 ```{r}
 #| label: is-normal-plot
 #| echo: false
-#| fig-height: 3
+#| fig-height: 2.65
 #| fig-cap: >-
-#|   Densities, integrand, and weighted integrand values for the example with a
-#|   normal importance distribution.
+#|   Direct MC: $g = f = \mathcal{N}(0,1)$.
 
 set.seed(1)
 N <- 1000
 x_norm <- rnorm(N)
 target <- dnorm(x_norm, 0, 1)
 importance_norm <- dnorm(x_norm, 0, 1)
-weights_norm <- target / importance_norm # All 1
+weights_norm <- target / importance_norm
 w_h <- x_norm^4 * weights_norm
 
 x_grid <- seq(-6, 6, length.out = 200)
@@ -543,6 +542,13 @@ p1 <- ggplot(
   aes(x, value, color = Type, linetype = Type)
 ) +
   geom_line() +
+  annotate(
+    "point",
+    x = c(-2, 2),
+    y = 2^4 * dnorm(2),
+    color = "darkorange"
+  ) +
+  scale_x_continuous(breaks = c(-4, -2, 0, 2, 4)) +
   labs(y = "Density / Integrand") +
   scale_color_manual(
     values = c(target = "black", integrand = "darkorange"),
@@ -566,44 +572,32 @@ p1 <- ggplot(
   theme(legend.position.inside = c(0.85, 0.85))
 
 p1b <- ggplot(tibble(x = w_h), aes(x)) +
-  geom_histogram() +
-  labs(x = expression(abs(h(x)) * w^"*"))
+  geom_histogram(binwidth = 2, boundary = 0) +
+  labs(x = expression(h(x) * w^"*"))
 
-p1 / p1b + plot_layout(heights = c(2, 1), axes = "collect")
+p1 / p1b + plot_layout(heights = c(2, 1))
 ```
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
-#| label: is-t-plot
+#| label: is-wide-normal-plot
 #| echo: false
-#| fig-height: 3
+#| fig-height: 2.65
 #| fig-cap: >-
-#|   Densities, integrand, and weighted integrand values for the example with
-#|   Student-$t$ as the importance distribution.
-
-dens_df_t <- tibble(
-  x = x_grid,
-  target = dnorm(x_grid, 0, 1),
-  importance = dt(x_grid, df = 3)
-) |>
-  pivot_longer(
-    cols = c(target, importance),
-    names_to = "Density",
-    values_to = "value"
-  )
+#|   Importance sampling: $g = \mathcal{N}(0,4)$.
 
 set.seed(1)
-x_t <- rt(N, df = 3)
-target_t <- dnorm(x_t, 0, 1)
-importance_t <- dt(x_t, df = 3)
-weights_t <- target_t / importance_t
-w_h_t <- x_t^4 * weights_t
+x_wide <- rnorm(N, sd = 2)
+target_wide <- dnorm(x_wide)
+importance_wide <- dnorm(x_wide, sd = 2)
+weights_wide <- target_wide / importance_wide
+w_h_wide <- x_wide^4 * weights_wide
 
-dens_df_t <- tibble(
+dens_df_wide <- tibble(
   x = x_grid,
   target = dnorm(x_grid, 0, 1),
-  importance = dt(x_grid, df = 3),
+  importance = dnorm(x_grid, sd = 2),
   integrand = x_grid^4 * dnorm(x_grid, 0, 1)
 ) |>
   pivot_longer(
@@ -613,15 +607,22 @@ dens_df_t <- tibble(
   )
 
 p2 <- ggplot(
-  dens_df_t,
+  dens_df_wide,
   aes(x, value, color = Type, linetype = Type)
 ) +
   geom_line() +
+  annotate(
+    "point",
+    x = c(-2, 2),
+    y = 2^4 * dnorm(2),
+    color = "darkorange"
+  ) +
+  scale_x_continuous(breaks = c(-4, -2, 0, 2, 4)) +
   labs(y = "Density / Integrand") +
   scale_color_manual(
     values = c(
       target = "black",
-      importance = "steelblue",
+      importance = "royalblue",
       integrand = "darkorange"
     ),
     labels = c(
@@ -649,33 +650,52 @@ p2 <- ggplot(
   labs(color = NULL, linetype = NULL) +
   theme(legend.position.inside = c(0.85, 0.85))
 
-p2b <- ggplot(tibble(x = abs(w_h_t)), aes(x)) +
-  geom_histogram() +
-  labs(x = expression(abs(h(x)) * w^"*"))
+p2b <- ggplot(tibble(x = w_h_wide), aes(x)) +
+  geom_histogram(binwidth = 2, boundary = 0) +
+  labs(x = expression(h(x) * w^"*"))
 
-p2 / p2b + plot_layout(heights = c(2, 1), axes = "collect")
+p2 / p2b + plot_layout(heights = c(2, 1))
 ```
 :::::
 :::
 
+. . .
+
+For the same $N$, the estimator variances are
+$$
+  \V(\hat\mu_{\mathrm{MC}}) = \frac{96}{N},
+  \qquad
+  \V(\hat\mu_{\mathrm{IS}}^*) \approx \frac{7.93}{N}.
+$$
+
+\pdfpcnote{
+Each histogram shows 1000 weighted contributions, with bin width 2. The
+horizontal scales differ. Direct MC contributions are X^4, while the wider
+Gaussian gives 2 X^4 exp(-3 X^2 / 8), which is bounded above by about 7.70.
+The variances shown are theoretical, not estimates from these histograms:
+Var under f of X^4 is E under f of X^8 minus 9 = 105 - 9 = 96.
+For g = N(0,4), the second moment is
+210 / (7/4)^{9/2}, giving variance approximately 7.925756.
+The wider Gaussian reduces variance by a factor of about 12.
+}
+
 ## The Ideal Importance Density
 
-For $0 < \E_f|h(X)| < \infty$, the variance-minimizing density for ordinary IS is
+For $0 < \E_f|h(X)| < \infty$, the variance-minimizing density for ordinary IS
+is
 $$
-  g_{\mathrm{opt}}(x)
-  = \frac{|h(x)|f(x)}{\int |h(u)|f(u)\,\mathrm{d}u}.
+  g_{\mathrm{opt}}(x) = \frac{|h(x)|f(x)}{\int |h(u)|f(u)\,\mathrm{d}u}.
 $$
 
 . . .
 
 If $h \geq 0$, then $g_{\mathrm{opt}} = hf / \mu$. Every draw gives
 $$
-  \frac{h(X)f(X)}{g_{\mathrm{opt}}(X)} = \mu,
-  \qquad X \sim g_{\mathrm{opt}},
+  \frac{h(X)f(X)}{g_{\mathrm{opt}}(X)} = \mu, \qquad X \sim g_{\mathrm{opt}},
 $$
 so the estimator has \alert{zero variance}.
 
-. . .
+\medskip\pause
 
 But evaluating these weights requires the normalizing constant $\mu$, the
 integral we want. Use the shape of $|h|f$ to guide a practical proposal.
@@ -791,7 +811,7 @@ $$
 
 This accounts for uncertainty in both the weighted sum and the sum of weights.
 
-. . .
+\medskip\pause
 
 An approximate 95% confidence interval is
 $$
@@ -1177,17 +1197,18 @@ established that its probability is zero.
 For the standard normal density $f = \phi$, an \alert{exponential tilt} shifts
 the mean:
 $$
-  g_\theta(x) = e^{\theta x - \theta^2 / 2} f(x) = \phi(x - \theta).
+  g_\theta(x) = e^{\theta x-\theta^2 / 2} f(x) = \phi(x - \theta).
 $$
 
 Choose $\theta = 4$: $X_i \sim \mathcal{N}(4,1)$ and
-$w^*(x) = f(x) / g_4(x) = e^{8 - 4x}$.
+$w^*(x) = f(x) / g_4(x) = e^{8-4x}$.
 
 ```{r}
 #| label: rare-event-proposal
 #| echo: false
 #| fig-width: 5
 #| fig-height: 1.6
+#| fig-cap: "Target and proposal densities for the rare-event example."
 
 rare_grid <- tibble(
   x = seq(-4, 8, length.out = 601),
@@ -1210,15 +1231,22 @@ rare_grid |>
   scale_color_manual(
     values = c(target = "royalblue", proposal = "darkorange")
   ) +
-  scale_linetype_manual(values = c(target = "solid", proposal = "dashed")) +
-  labs(x = expression(x), y = "Density", color = NULL, linetype = NULL)
+  scale_linetype_manual(
+    values = c(target = "solid", proposal = "dashed")
+  ) +
+  labs(
+    x = expression(x),
+    y = "Density",
+    color = NULL,
+    linetype = NULL
+  )
 ```
 
 . . .
 
 $$
   \hat{p}_{\mathrm{IS}}
-  = \frac{1}{N} \sum_{i=1}^N \mathbf{1}\{X_i > 4\}\,e^{8 - 4X_i}.
+  = \frac{1}{N} \sum_{i=1}^N \mathbf{1}\{X_i > 4\}\,e^{8-4X_i}.
 $$
 
 \pdfpcnote{
@@ -1245,10 +1273,7 @@ p_rare <- pnorm(4, lower.tail = FALSE)
 rare_estimates <- replicate(500, {
   z <- rnorm(n_rare)
   x <- rnorm(n_rare, mean = 4)
-  c(
-    MC = mean(z > 4),
-    IS = mean((x > 4) * exp(8 - 4 * x))
-  )
+  c(MC = mean(z > 4), IS = mean((x > 4) * exp(8 - 4 * x)))
 })
 
 rare_runs <- tibble(
@@ -1256,15 +1281,22 @@ rare_runs <- tibble(
   MC = rare_estimates["MC", ],
   IS = rare_estimates["IS", ]
 ) |>
-  pivot_longer(c(MC, IS), names_to = "method", values_to = "estimate") |>
-  mutate(method = factor(
-    method,
-    levels = c("MC", "IS"),
-    labels = c("Ordinary MC", "Importance sampling")
-  ))
+  pivot_longer(
+    c(MC, IS),
+    names_to = "method",
+    values_to = "estimate"
+  ) |>
+  mutate(
+    method = factor(
+      method,
+      levels = c("MC", "IS"),
+      labels = c("Ordinary MC", "Importance sampling")
+    )
+  )
 
 rare_zero_percent <- 100 * mean(rare_estimates["MC", ] == 0)
-rare_sd_ratio <- sd(rare_estimates["MC", ]) / sd(rare_estimates["IS", ])
+rare_sd_ratio <- sd(rare_estimates["MC", ]) /
+  sd(rare_estimates["IS", ])
 ```
 
 500 independent runs per method, with $N = 10{,}000$ draws per run.
@@ -1274,15 +1306,20 @@ rare_sd_ratio <- sd(rare_estimates["MC", ]) / sd(rare_estimates["IS", ])
 #| echo: false
 #| fig-width: 5.2
 #| fig-height: 2.3
+#| fig-cap: >-
+#|   Estimates of the rare-event probability $p$ from 500 independent runs of
+#|   ordinary Monte Carlo and importance sampling.
 
 ggplot(rare_runs, aes(run, estimate / p_rare, color = method)) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   geom_point(size = 0.6, alpha = 0.6) +
   facet_wrap(vars(method), nrow = 1) +
-  scale_color_manual(values = c(
-    "Ordinary MC" = "royalblue",
-    "Importance sampling" = "darkorange"
-  )) +
+  scale_color_manual(
+    values = c(
+      "Ordinary MC" = "royalblue",
+      "Importance sampling" = "darkorange"
+    )
+  ) +
   guides(color = "none") +
   labs(x = "Run", y = expression(hat(p) / p))
 ```
@@ -1290,7 +1327,7 @@ ggplot(rare_runs, aes(run, estimate / p_rare, color = method)) +
 The dashed line is the truth. MC returned zero in
 `r sprintf("%.1f", rare_zero_percent)`% of runs.
 
-. . .
+\medskip\pause
 
 IS had about `r round(rare_sd_ratio)` times smaller empirical standard deviation
 at the same sample size.
@@ -1578,11 +1615,11 @@ for (iter in seq_along(res$proposals)) {
 
 ## Defensive Importance Sampling
 
-Return to the $\mathrm{Gamma}(3,1)$ target and estimating $\E_f[X] = 3$.
-The Laplace proposal $g_L = \mathcal{N}(2,2)$ has a right tail that is too light:
+Return to the $\mathrm{Gamma}(3,1)$ target and estimating $\E_f[X] = 3$. The
+Laplace proposal $g_L = \mathcal{N}(2,2)$ has a right tail that is too light:
 ordinary IS has \alert{infinite variance}.
 
-. . .
+\medskip\pause
 
 Add a heavy-tailed component $g_t$, the density of $2 + \sqrt{2}T$ with
 $T \sim t_3$:
@@ -1628,47 +1665,85 @@ gamma_defensive <- tibble(
 )
 
 defensive_colors <- c(
-  target = "black", laplace = "royalblue", mixture = "darkorange"
+  target = "black",
+  laplace = "royalblue",
+  mixture = "darkorange"
 )
 defensive_lines <- c(
-  target = "solid", laplace = "dashed", mixture = "dotdash"
+  target = "solid",
+  laplace = "dashed",
+  mixture = "dotdash"
 )
 defensive_labels <- c(
-  target = "Target", laplace = "Laplace", mixture = "Mixture"
+  target = "Target",
+  laplace = "Laplace",
+  mixture = "Mixture"
 )
 
 p_defensive_densities <- gamma_defensive |>
   filter(x <= 12) |>
-  pivot_longer(c(target, laplace, mixture), names_to = "density") |>
+  pivot_longer(
+    c(target, laplace, mixture),
+    names_to = "density"
+  ) |>
   ggplot(aes(x, value, color = density, linetype = density)) +
   geom_line() +
-  scale_color_manual(values = defensive_colors, labels = defensive_labels) +
-  scale_linetype_manual(values = defensive_lines, labels = defensive_labels) +
-  guides(
-    color = guide_legend(position = "bottom"),
-    linetype = guide_legend(position = "bottom")
+  scale_color_manual(
+    values = defensive_colors,
+    labels = defensive_labels
   ) +
-  labs(x = expression(x), y = "Density", color = NULL, linetype = NULL)
-
-p_defensive_weights <- gamma_defensive |>
-  filter(x > 0) |>
-  transmute(x, laplace = target / laplace, mixture = target / mixture) |>
-  pivot_longer(c(laplace, mixture), names_to = "proposal", values_to = "weight") |>
-  ggplot(aes(x, weight, color = proposal, linetype = proposal)) +
-  geom_line() +
-  scale_y_log10(
-    breaks = 10^c(0, 10, 20, 30),
-    labels = function(breaks) parse(text = paste0("10^", log10(breaks)))
+  scale_linetype_manual(
+    values = defensive_lines,
+    labels = defensive_labels
   ) +
-  scale_color_manual(values = defensive_colors, labels = defensive_labels) +
-  scale_linetype_manual(values = defensive_lines, labels = defensive_labels) +
   guides(
     color = guide_legend(position = "bottom"),
     linetype = guide_legend(position = "bottom")
   ) +
   labs(
-    x = expression(x), y = expression(f(x) / g(x)),
-    color = NULL, linetype = NULL
+    x = expression(x),
+    y = "Density",
+    color = NULL,
+    linetype = NULL
+  )
+
+p_defensive_weights <- gamma_defensive |>
+  filter(x > 0) |>
+  transmute(
+    x,
+    laplace = target / laplace,
+    mixture = target / mixture
+  ) |>
+  pivot_longer(
+    c(laplace, mixture),
+    names_to = "proposal",
+    values_to = "weight"
+  ) |>
+  ggplot(aes(x, weight, color = proposal, linetype = proposal)) +
+  geom_line() +
+  scale_y_log10(
+    breaks = 10^c(0, 10, 20, 30),
+    labels = function(breaks) {
+      parse(text = paste0("10^", log10(breaks)))
+    }
+  ) +
+  scale_color_manual(
+    values = defensive_colors,
+    labels = defensive_labels
+  ) +
+  scale_linetype_manual(
+    values = defensive_lines,
+    labels = defensive_labels
+  ) +
+  guides(
+    color = guide_legend(position = "bottom"),
+    linetype = guide_legend(position = "bottom")
+  ) +
+  labs(
+    x = expression(x),
+    y = expression(f(x) / g(x)),
+    color = NULL,
+    linetype = NULL
   )
 
 p_defensive_densities + p_defensive_weights
@@ -1693,12 +1768,7 @@ dvmises <- function(x, mu = 0, kappa = 2) {
 }
 ```
 
-\pdfpcnote{
-For nonzero mu, the arithmetic mean on this fixed interval generally differs
-from mu, the circular mean direction. Keep mu = 0 for this exercise.
-}
-
-## Exercise: Von Mises Importance Sampling
+. . .
 
 ### Step 2
 
@@ -1726,6 +1796,11 @@ x <- seq(-pi, pi, length.out = 100)
 plot(x, dvmises(x))
 lines(x, dnorm(x, 0, pi / 2))
 ```
+
+\pdfpcnote{
+For nonzero mu, the arithmetic mean on this fixed interval generally differs
+from mu, the circular mean direction. Keep mu = 0 for this exercise.
+}
 
 ## Summary
 
