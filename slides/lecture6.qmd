@@ -39,8 +39,8 @@ for some $\alpha' > 0$.
 
 \medskip\pause
 
-If $Y$ has density $g$ and $U$ is uniform on $(0,1)$ then the conditional
-distribution
+If $Y$ has density $g$ and $U$ is uniform on $(0,1)$, independently of $Y$, then
+the conditional distribution
 $$
   Y \mid U \leq \alpha' \frac{q(Y)}{p(Y)}
 $$
@@ -49,7 +49,7 @@ has density $f$.
 ## Basic Rejection Sampling Algorithm
 
 \begin{algorithm}[H]
-  \caption{Rejection sampling to simulate from a random variable $X$ with density
+  \caption{Rejection sampling to simulate a random variable $X$ with density
            $f \propto q$ using proposal $Z$ with density $g \propto p$.}
   \Repeat{$x$ is accepted}{
     Generate $x \sim Z$\;
@@ -105,7 +105,7 @@ Useful when analytical solutions are infeasible.
 
 ### Monte Carlo Integration
 
-With $X_1, \ldots, X_N$ i.i.d. with density $f$,
+With $X_1, \ldots, X_N$ i.i.d. with density $f$ and $\E|h(X_1)| < \infty$,
 $$
   \hat{\mu}_{\mathrm{MC}} = \frac{1}{N} \sum_{i=1}^N h(X_i) \rightarrow \mu
                           = \E h(X_1) = \int h(x) f(x) \ \mathrm{d}x
@@ -114,7 +114,7 @@ for $N \to \infty$ by the law of large numbers (LLN).
 
 ## Monte Carlo Integration
 
-By the central limit theorem (CLT), we know that
+If $\sigma^2_{\mathrm{MC}} < \infty$, the central limit theorem (CLT) gives
 $$
   \frac{1}{N} \sum_{i=1}^N h(X_i) \overset{\mathrm{approx}}
   \sim \mathcal{N}(\mu, \sigma^2_{\mathrm{MC}} / N)
@@ -132,7 +132,7 @@ $$
   = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i) - \hat{\mu}_{\mathrm{MC}})^2,
 $$
 then the variance of $\hat{\mu}_{\mathrm{MC}}$ is estimated as
-$\hat{\sigma}^2_{\mathrm{MC}} / N$ and a standard 95% confidence interval for
+$\hat{\sigma}^2_{\mathrm{MC}} / N$ and an approximate 95% confidence interval for
 $\mu$ is
 $$
   \hat{\mu}_{\mathrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\mathrm{MC}}}{\sqrt{N}}.
@@ -156,7 +156,7 @@ x <- rgamma(B, 8)
 mu_hat <- cumsum(x) / 1:B
 sigma_hat <- sd(x)
 mu_hat[B] # Theoretical: 8
-sigma_hat # Theoretical: √8
+sigma_hat # Theoretical: sqrt(8)
 ```
 :::::
 
@@ -219,25 +219,25 @@ p +
 
 ## When to Stop?
 
-We could use concentration inequalities (Chebyshev/Chernoff) to get a stopping
-rule.
+Concentration inequalities can give a sample size for a desired error bound.
 
 \medskip\pause
 
-But need variance estimate for Chebychev-based bound and moment generating
-functions for Chernoff-based bounds.
+Chebyshev requires a known variance or upper bound; Chernoff requires control of
+moment-generating functions. Plugging in a variance estimate loses the guarantee.
 
 \medskip\pause
 
-More commonly, just run until the empirical confidence interval is sufficiently
-narrow.
+Stopping when an empirical confidence interval is narrow is a practical
+heuristic. Ordinary fixed-sample intervals do not guarantee coverage at a
+data-dependent stopping time.
 
 . . .
 
 ### Trade-Offs
 
-If you overshoot then you waste computer resources, and if you undershoot then
-you get a bad estimate.
+Overshooting wastes computing time; stopping too early risks an imprecise
+estimate. Sequential guarantees require a suitable stopping procedure.
 
 ## Importance Sampling
 
@@ -263,14 +263,14 @@ $$
       = \int h(x) \frac{f(x)}{g(x)} g(x) \ \mathrm{d}x
       = \int h(x) w^*(x) g(x) \ \mathrm{d}x
 $$
-whenever $g$ is a density fulfilling that
+whenever $g$ is a density satisfying
 $$
   g(x) = 0 \Rightarrow f(x) = 0.
 $$
 
 ## Weights
 
-With $X_1, \ldots, X_N$ i.i.d. with density $g$ define the *weights*
+With $X_1, \ldots, X_N$ i.i.d. with density $g$, define the *weights*
 $$
   w^*(X_i) = \frac{f(X_i)}{g(X_i)}.
 $$
@@ -342,18 +342,24 @@ p1 / p2 + plot_layout(heights = c(2, 1), axes = "collect")
 
 ::: {.columns}
 ::::: {.column width="47%"}
+Use $X = 10 + 3T$, where $T \sim t_3$. This proposal has heavier tails than the
+Gamma target.
+
 ```{r, echo=-1}
 #| label: gamma-sim-IS
 
 set.seed(1234)
 B <- 1000
-x <- rnorm(B, 10, 3)
-w_star <- dgamma(x, 8) / dnorm(x, 10, 3)
-mu_hat_IS <- cumsum(x * w_star) / (1:B)
+t <- rt(B, df = 3)
+x <- 10 + 3 * t
+g_x <- dt(t, df = 3) / 3
+w_star <- dgamma(x, 8) / g_x
+mu_hat_IS <- cumsum(x * w_star) /
+  (1:B)
 mu_hat_IS[B]
 ```
 
-Close to theoretical value (8).
+Close to the theoretical value (8).
 :::::
 
 . . .
@@ -367,7 +373,7 @@ Close to theoretical value (8).
 
 z <- seq(-12, 12, length.out = 100) + 10
 f_x <- dgamma(z, 8)
-g_x <- dnorm(z, 10, 3)
+g_x <- dt((z - 10) / 3, df = 3) / 3
 w <- f_x / g_x
 
 p1 <- tibble(x = z, target = f_x, importance = g_x) |>
@@ -400,7 +406,8 @@ p1 / p2 + plot_layout(axes = "collect")
 #| echo: false
 #| fig-cap: >-
 #|   Convergence of the importance sampling estimate of the mean of a Gamma(8,1)
-#|   distribution using a N(10,3) importance distribution.
+#|   distribution using a Student-t proposal with 3 degrees of freedom,
+#|   location 10, and scale 3.
 #| fig-width: 5
 #| fig-height: 2.5
 
@@ -408,14 +415,6 @@ mu_hat_IS <- cumsum(x * w_star) / (1:B)
 sigma_hat_IS <- sd(x * w_star)
 
 p <- ggplot(tibble(x = 1:B, y = mu_hat_IS), aes(x, y)) +
-  geom_ribbon(
-    aes(
-      ymin = mu_hat_IS - 1.96 * sigma_hat_IS / sqrt(1:B),
-      ymax = mu_hat_IS + 1.96 * sigma_hat_IS / sqrt(1:B)
-    ),
-    fill = "dark orange",
-    alpha = 0.4
-  ) +
   geom_line() +
   geom_point(size = 0.5) +
   coord_cartesian(ylim = c(6, 10)) +
@@ -429,12 +428,12 @@ p
 
 ## Importance Sampling Variance
 
-Again by the LLN
+Again by the LLN, assuming $\E_f|h(X)| < \infty$,
 $$
   \hat{\mu}_{\mathrm{IS}}^* \rightarrow \E h(X_1) w^*(X_1)
                             = \mu \quad \text{as } N \to \infty.\pause
 $$
-And by the CLT
+If $\sigma^{*2}_{\mathrm{IS}} < \infty$, the CLT gives
 $$
   \hat{\mu}_{\mathrm{IS}}^* \overset{\mathrm{approx}}
   \sim \mathcal{N}(\mu, \sigma^{*2}_{\mathrm{IS}} / N)
@@ -447,7 +446,7 @@ $$
 
 ## Importance Sampling Variance
 
-The IS variance can be estimated analogously with the MC variance,
+The IS variance can be estimated analogously to the MC variance,
 $$
   \hat{\sigma}^{*2}_{\mathrm{IS}}
   = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i)w^*(X_i) - \hat{\mu}_{\mathrm{IS}}^*)^2.
@@ -455,7 +454,7 @@ $$
 
 . . .
 
-And a 95% standard confidence interval is
+An approximate 95% confidence interval is
 $$
   \hat{\mu}^*_{\mathrm{IS}}
   \pm 1.96 \frac{\hat{\sigma}^*_{\mathrm{IS}}}{\sqrt{N}}.
@@ -488,7 +487,8 @@ sigma_hat_IS
 #| label: gamma-IS-fig2
 #| echo: false
 #| fig-width: 4.5
-#| fig-cap: "Importance sampling estimate of the mean of a Gamma(8,1)."
+#| fig-height: 2
+#| fig-cap: "Gamma mean estimate with approximate pointwise 95% intervals."
 
 p +
   geom_ribbon(
@@ -509,8 +509,8 @@ p +
 #| eval: false
 
 mu_hat_IS <- replicate(10000, {
-  x <- rnorm(B, 10, 3)
-  w_star <- dgamma(x, 8) / dnorm(x, 10, 3)
+  x <- 10 + 3 * rt(B, df = 3)
+  w_star <- dgamma(x, 8) / (dt((x - 10) / 3, df = 3) / 3)
   mean(x * w_star)
 })
 sd(mu_hat_IS) * sqrt(B)
@@ -554,7 +554,7 @@ Instead, we can try a heavy-tailed importance distribution, such as Student-$t$.
 #| echo: false
 #| fig-height: 3
 #| fig-cap: >-
-#|   Densities, integrand, and weights for the importance sampling example with
+#|   Densities, integrand, and weighted integrand values for the example with
 #|   a normal importance distribution.
 
 set.seed(1)
@@ -618,8 +618,8 @@ p1 / p1b + plot_layout(heights = c(2, 1), axes = "collect")
 #| echo: false
 #| fig-height: 3
 #| fig-cap: >-
-#|   Densities, integrand, and weights for the importance sampling example with
-#|   Student-$t$ as importance distribution.
+#|   Densities, integrand, and weighted integrand values for the example with
+#|   Student-$t$ as the importance distribution.
 
 dens_df_t <- tibble(
   x = x_grid,
@@ -642,7 +642,7 @@ w_h_t <- x_t^4 * weights_t
 dens_df_t <- tibble(
   x = x_grid,
   target = dnorm(x_grid, 0, 1),
-  importance = dt(x_grid, df = 2),
+  importance = dt(x_grid, df = 3),
   integrand = x_grid^4 * dnorm(x_grid, 0, 1)
 ) |>
   pivot_longer(
@@ -736,16 +736,20 @@ are the *normalized weights*.
 
 \medskip\pause
 
-Works irrespectively of the value of the normalizing constant $c$, and also if
-an unnormalized $g$ is used.
+This works regardless of the normalizing constant $c$, and also if an
+unnormalized proposal density is used in the weights.
+
+\medskip\pause
+
+The estimator is generally biased for finite $N$, but is consistent under the
+support and integrability assumptions.
 
 ## Gamma Sampling with Normalized Weights
 
-Let's pretend that we do not know the normalizing constant of the target
-($\mathrm{Gamma}(8,1)$) and importance ($\normal(10, 3^2)$) distributions. Then
+Ignore the normalizing constants of the Gamma target and proposal $10 + 3T$,
+$T \sim t_3$. Set $w^*(x) = 0$ for $x \leq 0$, and otherwise use
 $$
-  w^*(x) = \frac{x^7 \exp(-x)}{\exp{\left(-\frac{(x-10)^2}{18}\right)}}
-         = \exp\left( \frac{(x - 10)^2}{18} - x + 7 \log(x) \right).
+  w^*(x) = x^7 e^{-x} \left(1 + \frac{(x-10)^2}{27}\right)^2.
 $$
 
 . . .
@@ -755,11 +759,11 @@ $$
 
 set.seed(1234)
 B <- 1000
-x <- rnorm(B, 10, 3)
+x <- 10 + 3 * rt(B, df = 3)
 w_star <- numeric(B)
 x_pos <- x[x > 0]
 w_star[x > 0] <- exp(
-  (x_pos - 10)^2 / 18 - x_pos + 7 * log(x_pos)
+  2 * log1p((x_pos - 10)^2 / 27) - x_pos + 7 * log(x_pos)
 )
 
 mu_hat_IS <- cumsum(x * w_star) / cumsum(w_star)
@@ -793,7 +797,8 @@ the estimator is a \alert{ratio of random variables}.
 
 \medskip\pause
 
-From the multivariate CLT, we have
+Write $c = \E_g[w^*(X)]$. If both $h(X)w^*(X)$ and $w^*(X)$ have finite
+variances, the multivariate CLT gives
 $$
   \frac{1}{N} \sum_{i=1}^N \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
   \overset{\mathrm{approx}}{\sim}
@@ -820,7 +825,7 @@ Observe that $\nabla t(x, y) = \begin{bmatrix} 1 / y \\ -x / y^2 \end{bmatrix}$
 , whence
 
 $$
-  \nabla t(c\mu, c)^T \left(\begin{array}{cc} \hat{\sigma}^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
+  \nabla t(c\mu, c)^T \left(\begin{array}{cc} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
   \end{array} \right) \nabla t(c\mu, c) = \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^{2}}.
 $$
 
@@ -833,11 +838,13 @@ $$
 
 . . .
 
-For $c = 1$, the asymptotic variance can be estimated by plugging in empirical
-estimates. For $c \neq 1$ it is necessary to estimate $c$ as
+Plug in empirical estimates, estimating $c$ when it is unknown by
 $$
-  \hat{c} = \frac{1}{N} \sum_{i=1}^N w^*(X_i)
+  \hat{c} = \frac{1}{N} \sum_{i=1}^N w^*(X_i).
 $$
+
+If both densities in the weights are unnormalized, $c$ is the ratio of their
+normalizing constants.
 
 \pdfpcnote{
 hat(c) is just the MC estimate of c.
@@ -935,11 +942,11 @@ sigma_hat_IS_w
 #| eval: false
 
 mu_hat_IS <- replicate(10000, {
-  x <- rnorm(B, 10, 3)
+  x <- 10 + 3 * rt(B, df = 3)
   w_star <- numeric(B)
   x_pos <- x[x > 0]
   w_star[x > 0] <- exp(
-    (x_pos - 10)^2 / 18 - x_pos + 7 * log(x_pos)
+    2 * log1p((x_pos - 10)^2 / 27) - x_pos + 7 * log(x_pos)
   )
   sum(x * w_star) / sum(w_star)
 })
@@ -954,7 +961,7 @@ sd(mu_hat_IS) * sqrt(B)
 #| fig-width: 4.5
 #| fig-cap: >-
 #|   Importance sampling estimate of the mean of a Gamma(8,1) distribution with
-#|   95% confidence bands using normalized weights.
+#|   approximate pointwise 95% confidence intervals using normalized weights.
 
 p +
   geom_ribbon(
@@ -991,31 +998,33 @@ related importance distribution is easy.
 
 ## Poor Importance Distribution
 
-If the importance distribution does not cover regions where the target is large,
-weights become highly variable and estimates unreliable.
+If the importance distribution assigns little mass to important regions,
+weighted contributions can be highly variable and estimates unreliable.
 
 \medskip\pause
 
 ### Remedies
 
-Increase sample size (if feasible).
+More samples may help with poor overlap. They cannot repair missing support:
+if $g = 0$ where $hf \neq 0$, ordinary IS misses part of the integral.
 
 \medskip\pause
 
-Redesign importance density to better match the target density.
+Redesign the importance density to cover the required support and put more
+mass where the integrand is large. Self-normalized IS must cover the target
+support, including where $h = 0$.
 
 ## Diagnostics for Importance Sampling
 
 ### Weight Distribution
 
-Visualize the weight distribution with, for example, histograms or box plots to
-identify degeneracies.
+Plot the weights and weighted integrand values to identify extreme contributions.
 
 . . .
 
 ### Effective Sample Size (ESS)
 
-ESS measures how many samples are effectively contributing to the estimate.
+ESS summarizes weight concentration. A high ESS cannot rule out missed regions.
 
 . . .
 
@@ -1038,15 +1047,15 @@ Suppose that
 $$
   X \sim \mathcal{N}(0, I_{2})
 $$
-and that we want to estimate $\E(f(X))$ where $f(X)$ is large near the origin.
+and that we want to estimate $\E(h(X))$ where $h(X)$ is large near the origin.
 
 \medskip\pause
 
-If we use a importance density $g(x)$ from
+If we use an importance density $g(x)$ from
 $$
   \mathcal{N}(\mu, I_{2})
 $$
-with large $|\mu|$, most samples are far from the origin, so $f(X)$ is nearly
+with large $\|\mu\|$, most samples are far from the origin, so $h(X)$ is nearly
 zero and weights are highly variable.
 :::::
 
@@ -1114,27 +1123,25 @@ tibble(
 
 target_density <- function(x) dmvnorm(x, mean = rep(0, d))
 importance_density <- function(x) dmvnorm(x, mean = mu)
-f <- function(x) exp(-sum(x^2) / 2) # Large near origin
+h <- function(x) exp(-sum(x^2) / 2)
 
 w_star <- apply(
   x,
   1,
   function(row) target_density(row) / importance_density(row)
 )
-values <- apply(x, 1, f)
+values <- apply(x, 1, h)
 estimate <- sum(values * w_star) / sum(w_star)
 
 df <- tibble(weights = w_star)
 
-p1 <- ggplot(df, aes(w_star)) +
+p1 <- ggplot(df, aes(weights)) +
   geom_histogram() +
-  lims(x = c(-5, 160)) +
   labs(x = "Importance Weights", y = "Frequency")
 
-p2 <- ggplot(df, aes(w_star)) +
+p2 <- ggplot(df, aes(weights)) +
   geom_boxplot(alpha = 0.5) +
   scale_y_discrete() +
-  lims(x = c(-5, 160)) +
   labs(x = "Importance Weights")
 
 p1 + p2 + plot_layout(heights = c(2, 1), axes = "collect")
@@ -1146,8 +1153,8 @@ This indicates weight degeneracy and poor sampling efficiency.
 
 ## Effective Sample Size (ESS)
 
-The effective sample size (ESS) quantifies how many samples effectively
-contribute to the estimate:
+The weight-based effective sample size (ESS) summarizes how evenly the total
+weight is distributed across samples:
 $$
   \mathrm{ESS}
   = \frac{1}{\sum_{i=1}^N w_i^2}
@@ -1158,17 +1165,17 @@ where $w_i$ are the \alert{normalized} importance weights.
 \medskip\pause
 
 If all weights are equal, $\mathrm{ESS} = N$. If one weight dominates,
-$\mathrm{ESS} \approx 1$, and the estimate is unreliable.
+$\mathrm{ESS} \approx 1$, which warns of possible instability.
 
 . . .
 
-### Gamma Importance Example
+### Bivariate Normal Example
 
 ```{r}
 #| label: ess-demo
 
 ess <- (sum(w_star))^2 / sum(w_star^2)
-ess # out of N = 1000 samples
+ess # Out of N = 1000 samples.
 ```
 
 ## Coefficient of Variation (CV)
@@ -1189,13 +1196,13 @@ where $\bar{w} = \frac{1}{N} \sum_{i=1}^N w_i$ is the mean weight.
 
 ### Interpretation
 
-A high CV indicates that a few samples dominate the estimate, leading to high
-variance.
+A high CV indicates uneven weights, which can make estimates unstable.
 
 \medskip\pause
 
-CV near 0 means weights are nearly uniform---great! As a rule of thumb, CV below
-1 ($\mathrm{ESS} > N/2$) is good.
+CV near 0 means nearly uniform weights. Even CV below 1 ($\mathrm{ESS} > N/2$)
+does not guarantee accuracy: the integrand matters, and samples can miss
+important regions.
 
 . . .
 
@@ -1219,28 +1226,30 @@ The importance distribution determines the weights
 $$
   w^*(x) = \frac{f(x)}{g(x)}
 $$
-and the variance of these weights drives the variance of the IS estimator.
+but ordinary IS variance depends on $h(X)w^*(X)$, not just the weights.
+For self-normalized IS, the asymptotic variance depends on
+$(h(X) - \mu)w^*(X)$.
 
 ## Principles for Choosing the Importance Distribution
 
 ### Cover the Support
 
-Ensure the importance distribution covers all regions where the target
-distribution is significant.
+Require $g(x) > 0$ wherever $|h(x)|f(x) > 0$ for ordinary IS, and wherever
+$f(x) > 0$ for self-normalized IS, up to sets of measure zero.
 
 . . .
 
 ### Match the Bulk
 
-The mean and spread of the importance distribution should roughly match the
-regions of large $|h(x)|f(x)$.
+For ordinary IS, put more mass where $|h(x)|f(x)$ is large. For self-normalized
+IS, the corresponding quantity is $|h(x) - \mu|f(x)$.
 
 . . .
 
 ### Give it Heavy-Enough Tails
 
-The importance distribution should have heavier tails than the target to avoid
-extreme weights.
+Use tails heavy enough that the weighted contributions have finite variance.
+Heavier tails than the target are often a useful safeguard.
 
 ## Common Strategies
 
@@ -1258,8 +1267,8 @@ Iteratively refine the importance distribution based on pilot runs.
 
 ### Defensive Mixtures
 
-Combine a well-chosen importance distribution with a broader distribution to
-ensure coverage of the entire target support.
+Add a component that covers the target support and controls the tails of the
+weighted contributions.
 
 . . .
 
@@ -1278,12 +1287,12 @@ importance distribution.
 
 ### Motivation
 
-Connection comes from the second-order Taylor expansion of $\log f(x)$ at the
-mode $x^*$,
+The connection comes from the second-order Taylor expansion of $\log f(x)$ at
+an interior mode $x^*$,
 $$
   \log f(x) \approx \log f(x^*) - \frac{1}{2}(x - x^*)^T \Lambda (x - x^*)
 $$
-where $\Lambda$ is the Hessian of $-\log f(x)$ at $x^*$.
+where $\Lambda$ is the Hessian of $-\log f(x)$ at $x^*$, assumed positive definite.
 
 \medskip\pause
 
@@ -1298,15 +1307,16 @@ $$
 ### Steps
 
 1. Find the mode $x^* = \argmax_x f(x)$.\pause
-2. Compute the Hessian $\Lambda$ of the first-order Taylor approximation of
-   $-\log f(x)$ around $x^*$.\pause
-3. Use $\mathcal{N}(x^*, \Lambda^{-1})$ as importance distribution.
+2. Compute the Hessian $\Lambda$ of $-\log f(x)$ at $x^*$.\pause
+3. If $\Lambda$ is positive definite, use $\mathcal{N}(x^*, \Lambda^{-1})$ as the
+   importance distribution.
 
 . . .
 
 ### When to Use
 
-Best for unimodal, smooth, and symmetric target densities.
+Useful for smooth targets with an approximately Gaussian shape near the mode.
+Check the tails before using it for importance sampling.
 
 ## Example: Gamma Distribution
 
@@ -1326,7 +1336,8 @@ $$
 
 \medskip\pause
 
-So the Laplace approximation is $\mathcal{N}(2, 2^2)$.
+So the Laplace approximation is $\mathcal{N}(2, 2)$, with standard deviation
+$\sqrt{2}$.
 :::::
 
 ::::: {.column width="47%"}
@@ -1396,11 +1407,11 @@ weights.
 
 ### Steps
 
-1. Choose an initial importance distribution $g_0(x)$.\pause
-2. Draw samples from $g_0$ and compute weights.\pause
-3. Update the importance distribution parameters based on weighted samples.
+1. Choose an initial importance distribution $g_0(x)$ and set $n = 0$.\pause
+2. Draw samples from the current proposal $g_n$ and compute weights.\pause
+3. Fit $g_{n+1}$ using the weighted samples, then increment $n$.
    \pause
-4. Repeat steps 2-3 until convergence.
+4. Repeat steps 2-3 until the proposal stabilizes.
 
 ## Moment-Matching Importance Sampling
 
@@ -1412,7 +1423,7 @@ importance distribution.
 At iteration $n$, draw samples $x_1, \ldots, x_N \sim g_n(x)$ and compute
 weights
 $$
-  w_i^* = \frac{f(X_i)}{g_n(X_i)}.
+  w_i^* = \frac{f(x_i)}{g_n(x_i)}.
 $$
 
 . . .
@@ -1588,22 +1599,22 @@ plot_step(5)
 
 ## Defensive Importance Sampling
 
-Defensive importance sampling uses a mixture of a well-chosen importance
-distribution and a broader distribution to ensure coverage of the entire target
-support.
+Defensive importance sampling adds a component that covers the target support
+and controls extreme weighted contributions.
 
 \medskip\pause
 
-Recall the Gamma(8,1) example where we used $g(x) = \mathcal{N}(10, 3^2)$.
+For the Gamma(8,1) target, let $g_s$ be the density of $10 + sT$, where
+$T \sim t_3$. Our earlier proposal was $g_3$.
 
 \medskip\pause
 
 Instead we can use a mixture
 $$
-  g_{\mathrm{mix}}(x) = 0.8 \cdot \mathcal{N}(10, 3^2)
-                        + 0.2 \cdot \mathcal{N}(10, 10^2)
+  g_{\mathrm{mix}}(x) = 0.8 g_3(x) + 0.2 g_{10}(x).
 $$
-with heavier tails to ensure coverage.
+Both components have tails heavy enough for finite variance in this example;
+the broader component increases sampling away from the bulk.
 
 ##
 
@@ -1613,8 +1624,7 @@ with heavier tails to ensure coverage.
 #| label: gamma-importance-fig
 #| echo: false
 #| fig-cap: >-
-#|   Target (black) and importance (blue) densities with samples from the
-#|   importance distribution.
+#|   Target (black) and importance (blue) densities, with importance weights below.
 #| ref-label: gammasim-fig
 #| fig-height: 3
 #| fig-width: 2.7
@@ -1629,25 +1639,23 @@ with heavier tails to ensure coverage.
 #| fig-height: 3
 #| fig-width: 2.7
 #| fig-cap: >-
-#|   Target (black) and importance (orange) densities with samples from the
-#|   defensive importance mixture distribution.
+#|   Target (black) and defensive mixture (orange) densities, with importance
+#|   weights below.
 #| echo: false
 
 set.seed(1234)
 B <- 1000
 mix_indicator <- rbinom(B, 1, 0.8)
-x <- rnorm(B, mean = 10, sd = 3)
-x[mix_indicator == 0] <- rnorm(
-  sum(mix_indicator == 0),
-  mean = 0,
-  sd = 6
-)
-g_mix <- 0.8 * dnorm(x, 10, 3) + 0.2 * dnorm(x, 10, 10)
+x <- 10 + 3 * rt(B, df = 3)
+x[mix_indicator == 0] <- 10 + 10 * rt(sum(mix_indicator == 0), df = 3)
+g_mix <- 0.8 * dt((x - 10) / 3, df = 3) / 3 +
+  0.2 * dt((x - 10) / 10, df = 3) / 10
 w_star <- dgamma(x, 8) / g_mix
 
 z <- seq(-12, 12, length.out = 100) + 10
 f_x <- dgamma(z, 8)
-g_mix <- 0.8 * dnorm(z, 10, 3) + 0.2 * dnorm(z, 10, 10)
+g_mix <- 0.8 * dt((z - 10) / 3, df = 3) / 3 +
+  0.2 * dt((z - 10) / 10, df = 3) / 10
 w <- f_x / g_mix
 
 p1 <- tibble(x = z, target = f_x, mixture = g_mix) |>
@@ -1677,18 +1685,27 @@ p1 / p2 + plot_layout(axes = "collect")
 
 ### Step 1
 
-Implement an importance sampler for computing the mean of the von Mises
-distribution. Plot the result and check convergence towards $\mu$.
+Estimate the arithmetic mean of the von Mises distribution on $[-\pi,\pi]$ with
+$\mu = 0$ and $\kappa = 2$. Plot convergence toward $\E X = 0$.
 
 ```{r}
 #| label: vonmises-density
 
 dvmises <- function(x, mu = 0, kappa = 2) {
-  exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0))
+  ifelse(
+    abs(x) <= pi,
+    exp(kappa * cos(x - mu)) / (2 * pi * besselI(kappa, 0)),
+    0
+  )
 }
 ```
 
-. . .
+\pdfpcnote{
+For nonzero mu, the arithmetic mean on this fixed interval generally differs
+from mu, the circular mean direction. Keep mu = 0 for this exercise.
+}
+
+## Exercise: Von Mises Importance Sampling
 
 ### Step 2
 
@@ -1706,9 +1723,9 @@ better one.
 #| label: vmises-importance
 #| include: false
 
-vonmises_importance <- function(N, mu = 0, kappa = 2) {
+vonmises_importance <- function(N) {
   x <- rnorm(N, 0, pi / 2)
-  w <- dvmises(x, mu, kappa) / dnorm(x, 0, pi / 2)
+  w <- dvmises(x) / dnorm(x, 0, pi / 2)
   cumsum(x * w) / 1:N
 }
 
@@ -1735,8 +1752,8 @@ avoid large or variable weights.
 
 ### Diagnostics
 
-Examine weight distribution and check effective sample size to ensure reliable
-estimates.
+Examine weights, weighted integrand values, and ESS to detect instability.
+These checks cannot guarantee accuracy or reveal every missed region.
 
 . . .
 
@@ -1937,13 +1954,13 @@ mu_hat * (1 - mu_hat) / var(tmp)
 
 . . .
 
-Need about `r round(mu_hat * (1 - mu_hat) / var(tmp))` times more naive samples
-compared to importance sampling for same precision.
+We need about `r round(mu_hat * (1 - mu_hat) / var(tmp))` times as many naive
+samples to achieve the same precision as importance sampling.
 
 \medskip\pause
 
-Benchmarking would should that the extra computing time for importance sampling
-is small compared to the reduction of variance.
+Benchmarking would show that the extra computing time for importance sampling
+is small compared to the reduction in variance.
 
 \medskip\pause
 

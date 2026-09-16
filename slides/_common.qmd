@@ -76,7 +76,7 @@ local({
 
 ::: {.content-hidden when-format="beamer"}
 \DeclareMathOperator*{\argmin}{\arg\,\min}
-\DeclareMathOperator*{\argmax}{\arg\,\min}
+\DeclareMathOperator*{\argmax}{\arg\,\max}
 \DeclareMathOperator*{\minimize}{minimize}
 \DeclareMathOperator{\kl}{KL}
 \DeclareMathOperator{\var}{Var}
