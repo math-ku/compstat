@@ -748,176 +748,57 @@ p
 
 ## Variance for IS with Normalized Weights
 
-Computing the variance of IS with normalized weights is more complicated because
-the estimator is a \alert{ratio of random variables}.
-
-\medskip\pause
-
-Write $c = \E_g[w^*(X)]$. If both $h(X)w^*(X)$ and $w^*(X)$ have finite
-variances, the multivariate CLT gives
+Let $w_i = w(X_i)$ be the normalized weights. If $w^*(X)$ and
+$h(X)w^*(X)$ have finite variances, the $\Delta$-method gives the standard error
+estimate
 $$
-  \frac{1}{N} \sum_{i=1}^N \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
-  \overset{\mathrm{approx}}{\sim}
-  \mathcal{N}\left(
-    c \begin{bmatrix} \mu \\ 1\end{bmatrix},
-    \frac{1}{N} \begin{bmatrix} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
-  \right),
-$$
-where $$
-\begin{aligned}
-  \sigma^2_{\mathrm{IS}} & = \V \big(h(X_1) w^*(X_1)\big) \\
-  \gamma & = \cov (h(X_1) w^*(X_1), w^*(X_1)) \\
-  \sigma^2_{w^*} & = \V (w^*(X_1))
-\end{aligned}
+  \widehat{\mathrm{se}}(\hat{\mu}_{\mathrm{IS}})
+  = \sqrt{\frac{N}{N - 1} \sum_{i=1}^N
+    w_i^2 \big(h(X_i) - \hat{\mu}_{\mathrm{IS}}\big)^2}.
 $$
 
-## Importance Sampling Variance
-
-We can then apply the $\Delta$-method with $t(x, y) = x / y$.
-
-\medskip\pause
-
-Observe that $\nabla t(x, y) = \begin{bmatrix} 1 / y \\ -x / y^2 \end{bmatrix}$
-, whence
-
-$$
-  \nabla t(c\mu, c)^T \left(\begin{array}{cc} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
-  \end{array} \right) \nabla t(c\mu, c) = \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^{2}}.
-$$
+This accounts for uncertainty in both the weighted sum and the sum of weights.
 
 . . .
 
-By the $\Delta$-method,
+An approximate 95% confidence interval is
 $$
-  \hat{\mu}_{\mathrm{IS}} \overset{\mathrm{approx}}{\sim} \mathcal{N}\left( \mu, \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 N} \right).
-$$
-
-. . .
-
-Plug in empirical estimates, estimating $c$ when it is unknown by
-$$
-  \hat{c} = \frac{1}{N} \sum_{i=1}^N w^*(X_i).
+  \hat{\mu}_{\mathrm{IS}}
+  \pm 1.96\,\widehat{\mathrm{se}}(\hat{\mu}_{\mathrm{IS}}).
 $$
 
-If both densities in the weights are unnormalized, $c$ is the ratio of their
-normalizing constants.
+\medskip\pause
+
+Normalizing constants cancel. The derivation is in the appendix.
 
 \pdfpcnote{
-hat(c) is just the MC estimate of c.
+The factor N/(N-1) matches the sample-variance convention used earlier.
+Equivalently, compute the sample standard deviation of
+w-star times (h minus mu-hat), divide by the mean unnormalized weight,
+and then divide by the square root of N.
 }
 
-##
-
-```{r}
-#| label: delta-method-plot3D
-#| echo: false
-#| fig-width: 5
-#| fig-height: 4.5
-#| fig-cap: Tangent plane approximation of the function $t(x,y) = x/y$ at the
-#|   point $(2,3)$.
-
-library(plot3D)
-
-# Define function and means
-t_fun <- function(x, y) x / y
-mu_x <- 2
-mu_y <- 3
-
-# Grid for surface
-x_seq <- seq(1, 3, length.out = 26)
-y_seq <- seq(2, 4, length.out = 26)
-z <- outer(x_seq, y_seq, t_fun)
-
-# Tangent plane at (mu_x, mu_y)
-grad_x <- 1 / mu_y
-grad_y <- -mu_x / mu_y^2
-tangent_plane <- function(x, y) {
-  t_fun(mu_x, mu_y) + grad_x * (x - mu_x) + grad_y * (y - mu_y)
-}
-z_tangent <- outer(x_seq, y_seq, tangent_plane)
-
-# Plot both surfaces together
-persp3D(
-  x_seq,
-  y_seq,
-  z,
-  col = "steelblue",
-  xlab = "x",
-  ylab = "y",
-  zlab = "t(x, y)",
-  theta = 30,
-  phi = 10,
-  border = "black"
-)
-
-# Add tangent plane
-persp3D(
-  x_seq,
-  y_seq,
-  z_tangent,
-  add = TRUE,
-  col = "grey",
-  alpha = 0.6
-)
-
-# Add mean point
-points3D(
-  mu_x,
-  mu_y,
-  t_fun(mu_x, mu_y),
-  col = "darkorange",
-  pch = 19,
-  add = TRUE,
-  cex = 1
-)
-```
-
-## Gamma Normalized Weights, Variance
+## Gamma Normalized Weights: Standard Error
 
 ```{r}
 #| label: sigma_hat_is_w
 
-c_hat <- mean(w_star)
-sigma_hat_IS <- sd(x * w_star)
-sigma_hat_w_star <- sd(w_star)
-gamma_hat <- cov(x * w_star, w_star)
-
-sigma_hat_IS_w <- sqrt(
-  sigma_hat_IS^2 +
-    mu_hat_IS[B]^2 * sigma_hat_w_star^2 -
-    2 * mu_hat_IS[B] * gamma_hat
-) /
-  c_hat
-
-sigma_hat_IS_w
+w <- w_star / sum(w_star)
+weighted_residuals <- w * (x - mu_hat_IS[B])
+se_hat_IS <- sqrt(B / (B - 1) * sum(weighted_residuals^2))
+se_hat_IS
 ```
 
-```{r}
-#| label: test-2
-#| echo: false
-#| eval: false
-
-mu_hat_IS <- replicate(10000, {
-  x <- 10 + 3 * rt(B, df = 3)
-  w_star <- numeric(B)
-  x_pos <- x[x > 0]
-  w_star[x > 0] <- exp(
-    2 * log1p((x_pos - 10)^2 / 27) - x_pos + 7 * log(x_pos)
-  )
-  sum(x * w_star) / sum(w_star)
-})
-sd(mu_hat_IS) * sqrt(B)
-```
-
-##
+. . .
 
 ```{r}
 #| label: gamma-ISw-fig2
 #| echo: false
 #| fig-width: 4.5
-#| fig-cap: >-
-#|   Importance sampling estimate of the mean of a Gamma(8,1) distribution with
-#|   approximate pointwise 95% confidence intervals using normalized weights.
+#| fig-height: 1.75
+#| fig-cap: "Gamma mean estimate with approximate pointwise 95% intervals."
+
+sigma_hat_IS_w <- se_hat_IS * sqrt(B)
 
 p +
   geom_ribbon(
@@ -1734,3 +1615,129 @@ that are easier to solve and have nice properties.
 \lectureappendix
 
 # Appendix
+
+## Variance for IS with Normalized Weights
+
+Computing the variance of IS with normalized weights is more complicated because
+the estimator is a \alert{ratio of random variables}.
+
+\medskip\pause
+
+Write $c = \E_g[w^*(X)]$. If both $h(X)w^*(X)$ and $w^*(X)$ have finite
+variances, the multivariate CLT gives
+$$
+  \frac{1}{N} \sum_{i=1}^N \begin{bmatrix} h(X_i) w^*(X_i) \\ w^*(X_i) \end{bmatrix}
+  \overset{\mathrm{approx}}{\sim}
+  \mathcal{N}\left(
+    c \begin{bmatrix} \mu \\ 1\end{bmatrix},
+    \frac{1}{N} \begin{bmatrix} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*} \end{bmatrix}
+  \right),
+$$
+where $$
+\begin{aligned}
+  \sigma^2_{\mathrm{IS}} & = \V \big(h(X_1) w^*(X_1)\big) \\
+  \gamma & = \cov (h(X_1) w^*(X_1), w^*(X_1)) \\
+  \sigma^2_{w^*} & = \V (w^*(X_1))
+\end{aligned}
+$$
+
+## Importance Sampling Variance
+
+We can then apply the $\Delta$-method with $t(x, y) = x / y$.
+
+\medskip\pause
+
+Observe that $\nabla t(x, y) = \begin{bmatrix} 1 / y \\ -x / y^2 \end{bmatrix}$
+, whence
+
+$$
+  \nabla t(c\mu, c)^T \left(\begin{array}{cc} \sigma^{2}_{\mathrm{IS}} & \gamma \\ \gamma & \sigma^2_{w^*}
+  \end{array} \right) \nabla t(c\mu, c) = \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^{2}}.
+$$
+
+. . .
+
+By the $\Delta$-method,
+$$
+  \hat{\mu}_{\mathrm{IS}} \overset{\mathrm{approx}}{\sim} \mathcal{N}\left( \mu, \frac{\sigma^{2}_{\mathrm{IS}} + \mu^2 \sigma_{w^*}^2 - 2 \mu \gamma}{c^2 N} \right).
+$$
+
+. . .
+
+Plug in empirical estimates, estimating $c$ when it is unknown by
+$$
+  \hat{c} = \frac{1}{N} \sum_{i=1}^N w^*(X_i).
+$$
+
+If both densities in the weights are unnormalized, $c$ is the ratio of their
+normalizing constants.
+
+\pdfpcnote{
+hat(c) is just the MC estimate of c.
+}
+
+##
+
+```{r}
+#| label: delta-method-plot3D
+#| echo: false
+#| fig-width: 5
+#| fig-height: 4.5
+#| fig-cap: Tangent plane approximation of the function $t(x,y) = x/y$ at the
+#|   point $(2,3)$.
+
+library(plot3D)
+
+# Define function and means
+t_fun <- function(x, y) x / y
+mu_x <- 2
+mu_y <- 3
+
+# Grid for surface
+x_seq <- seq(1, 3, length.out = 26)
+y_seq <- seq(2, 4, length.out = 26)
+z <- outer(x_seq, y_seq, t_fun)
+
+# Tangent plane at (mu_x, mu_y)
+grad_x <- 1 / mu_y
+grad_y <- -mu_x / mu_y^2
+tangent_plane <- function(x, y) {
+  t_fun(mu_x, mu_y) + grad_x * (x - mu_x) + grad_y * (y - mu_y)
+}
+z_tangent <- outer(x_seq, y_seq, tangent_plane)
+
+# Plot both surfaces together
+persp3D(
+  x_seq,
+  y_seq,
+  z,
+  col = "steelblue",
+  xlab = "x",
+  ylab = "y",
+  zlab = "t(x, y)",
+  theta = 30,
+  phi = 10,
+  border = "black"
+)
+
+# Add tangent plane
+persp3D(
+  x_seq,
+  y_seq,
+  z_tangent,
+  add = TRUE,
+  col = "grey",
+  alpha = 0.6
+)
+
+# Add mean point
+points3D(
+  mu_x,
+  mu_y,
+  t_fun(mu_x, mu_y),
+  col = "darkorange",
+  pch = 19,
+  add = TRUE,
+  cex = 1
+)
+```
