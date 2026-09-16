@@ -821,7 +821,7 @@ $$
 
 \medskip\pause
 
-Normalizing constants cancel. The derivation is in the appendix.
+Normalizing constants cancel.
 
 \pdfpcnote{
 The factor N/(N-1) matches the sample-variance convention used earlier.
