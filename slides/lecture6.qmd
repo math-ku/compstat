@@ -23,50 +23,6 @@ options(width = 60)
 old_options <- options(digits = 4)
 ```
 
-## Rejection Sampling Recap
-
-Suppose that $f(y) \propto q(y)$ is the **target** density, known up to
-normalization.
-
-\medskip\pause
-
-Suppose that $g(y) \propto p(y)$ is another density, known up to normalization,
-that we can simulate from, and suppose
-$$
-  \alpha' q \leq p
-$$
-for some $\alpha' > 0$.
-
-\medskip\pause
-
-If $Y$ has density $g$ and $U$ is uniform on $(0,1)$, independently of $Y$, then
-the conditional distribution
-$$
-  Y \mid U \leq \alpha' \frac{q(Y)}{p(Y)}
-$$
-has density $f$.
-
-## Basic Rejection Sampling Algorithm
-
-\begin{algorithm}[H]
-  \caption{Rejection sampling to simulate a random variable $X$ with density
-           $f \propto q$ using proposal $Z$ with density $g \propto p$.}
-  \Repeat{$x$ is accepted}{
-    Generate $x \sim Z$\;
-    Generate $u \sim \mathcal{U}(0, 1)$\;
-    \If{$u \leq \frac{\alpha' q(x)}{p(x)}$}{
-      Accept $x$\;
-    }
-  }
-\end{algorithm}
-
-. . .
-
-### Two Challenges
-
-- Finding an envelope $p/\alpha'$ of $q$.\pause
-- Finding a **tight-enough** envelope.
-
 ## Today
 
 ### Monte Carlo Methods
