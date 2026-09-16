@@ -132,8 +132,8 @@ $$
   = \frac{1}{N - 1} \sum_{i=1}^N (h(X_i) - \hat{\mu}_{\mathrm{MC}})^2,
 $$
 then the variance of $\hat{\mu}_{\mathrm{MC}}$ is estimated as
-$\hat{\sigma}^2_{\mathrm{MC}} / N$ and an approximate 95% confidence interval for
-$\mu$ is
+$\hat{\sigma}^2_{\mathrm{MC}} / N$ and an approximate 95% confidence interval
+for $\mu$ is
 $$
   \hat{\mu}_{\mathrm{MC}} \pm 1.96 \frac{\hat{\sigma}_{\mathrm{MC}}}{\sqrt{N}}.
 $$
@@ -224,7 +224,8 @@ Concentration inequalities can give a sample size for a desired error bound.
 \medskip\pause
 
 Chebyshev requires a known variance or upper bound; Chernoff requires control of
-moment-generating functions. Plugging in a variance estimate loses the guarantee.
+moment-generating functions. Plugging in a variance estimate loses the
+guarantee.
 
 \medskip\pause
 
@@ -354,8 +355,7 @@ t <- rt(B, df = 3)
 x <- 10 + 3 * t
 g_x <- dt(t, df = 3) / 3
 w_star <- dgamma(x, 8) / g_x
-mu_hat_IS <- cumsum(x * w_star) /
-  (1:B)
+mu_hat_IS <- cumsum(x * w_star) / (1:B)
 mu_hat_IS[B]
 ```
 
@@ -406,8 +406,8 @@ p1 / p2 + plot_layout(axes = "collect")
 #| echo: false
 #| fig-cap: >-
 #|   Convergence of the importance sampling estimate of the mean of a Gamma(8,1)
-#|   distribution using a Student-t proposal with 3 degrees of freedom,
-#|   location 10, and scale 3.
+#|   distribution using a Student-t proposal with 3 degrees of freedom, location
+#|   10, and scale 3.
 #| fig-width: 5
 #| fig-height: 2.5
 
@@ -554,8 +554,8 @@ Instead, we can try a heavy-tailed importance distribution, such as Student-$t$.
 #| echo: false
 #| fig-height: 3
 #| fig-cap: >-
-#|   Densities, integrand, and weighted integrand values for the example with
-#|   a normal importance distribution.
+#|   Densities, integrand, and weighted integrand values for the example with a
+#|   normal importance distribution.
 
 set.seed(1)
 N <- 1000
@@ -749,7 +749,7 @@ support and integrability assumptions.
 Ignore the normalizing constants of the Gamma target and proposal $10 + 3T$,
 $T \sim t_3$. Set $w^*(x) = 0$ for $x \leq 0$, and otherwise use
 $$
-  w^*(x) = x^7 e^{-x} \left(1 + \frac{(x-10)^2}{27}\right)^2.
+  w^*(x) = x^7 e^{-x} \left( 1 + \frac{(x - 10)^2}{27} \right)^2.
 $$
 
 . . .
@@ -1005,20 +1005,21 @@ weighted contributions can be highly variable and estimates unreliable.
 
 ### Remedies
 
-More samples may help with poor overlap. They cannot repair missing support:
-if $g = 0$ where $hf \neq 0$, ordinary IS misses part of the integral.
+More samples may help with poor overlap. They cannot repair missing support: if
+$g = 0$ where $hf \neq 0$, ordinary IS misses part of the integral.
 
 \medskip\pause
 
-Redesign the importance density to cover the required support and put more
-mass where the integrand is large. Self-normalized IS must cover the target
-support, including where $h = 0$.
+Redesign the importance density to cover the required support and put more mass
+where the integrand is large. Self-normalized IS must cover the target support,
+including where $h = 0$.
 
 ## Diagnostics for Importance Sampling
 
 ### Weight Distribution
 
-Plot the weights and weighted integrand values to identify extreme contributions.
+Plot the weights and weighted integrand values to identify extreme
+contributions.
 
 . . .
 
@@ -1226,9 +1227,8 @@ The importance distribution determines the weights
 $$
   w^*(x) = \frac{f(x)}{g(x)}
 $$
-but ordinary IS variance depends on $h(X)w^*(X)$, not just the weights.
-For self-normalized IS, the asymptotic variance depends on
-$(h(X) - \mu)w^*(X)$.
+but ordinary IS variance depends on $h(X)w^*(X)$, not just the weights. For
+self-normalized IS, the asymptotic variance depends on $(h(X) - \mu)w^*(X)$.
 
 ## Principles for Choosing the Importance Distribution
 
@@ -1287,12 +1287,13 @@ importance distribution.
 
 ### Motivation
 
-The connection comes from the second-order Taylor expansion of $\log f(x)$ at
-an interior mode $x^*$,
+The connection comes from the second-order Taylor expansion of $\log f(x)$ at an
+interior mode $x^*$,
 $$
   \log f(x) \approx \log f(x^*) - \frac{1}{2}(x - x^*)^T \Lambda (x - x^*)
 $$
-where $\Lambda$ is the Hessian of $-\log f(x)$ at $x^*$, assumed positive definite.
+where $\Lambda$ is the Hessian of $-\log f(x)$ at $x^*$, assumed positive
+definite.
 
 \medskip\pause
 
@@ -1308,8 +1309,8 @@ $$
 
 1. Find the mode $x^* = \argmax_x f(x)$.\pause
 2. Compute the Hessian $\Lambda$ of $-\log f(x)$ at $x^*$.\pause
-3. If $\Lambda$ is positive definite, use $\mathcal{N}(x^*, \Lambda^{-1})$ as the
-   importance distribution.
+3. If $\Lambda$ is positive definite, use $\mathcal{N}(x^*, \Lambda^{-1})$ as
+   the importance distribution.
 
 . . .
 
@@ -1409,8 +1410,7 @@ weights.
 
 1. Choose an initial importance distribution $g_0(x)$ and set $n = 0$.\pause
 2. Draw samples from the current proposal $g_n$ and compute weights.\pause
-3. Fit $g_{n+1}$ using the weighted samples, then increment $n$.
-   \pause
+3. Fit $g_{n+1}$ using the weighted samples, then increment $n$. \pause
 4. Repeat steps 2-3 until the proposal stabilizes.
 
 ## Moment-Matching Importance Sampling
@@ -1613,8 +1613,8 @@ Instead we can use a mixture
 $$
   g_{\mathrm{mix}}(x) = 0.8 g_3(x) + 0.2 g_{10}(x).
 $$
-Both components have tails heavy enough for finite variance in this example;
-the broader component increases sampling away from the bulk.
+Both components have tails heavy enough for finite variance in this example; the
+broader component increases sampling away from the bulk.
 
 ##
 
@@ -1624,7 +1624,8 @@ the broader component increases sampling away from the bulk.
 #| label: gamma-importance-fig
 #| echo: false
 #| fig-cap: >-
-#|   Target (black) and importance (blue) densities, with importance weights below.
+#|   Target (black) and importance (blue) densities, with importance weights
+#|   below.
 #| ref-label: gammasim-fig
 #| fig-height: 3
 #| fig-width: 2.7
@@ -1647,7 +1648,8 @@ set.seed(1234)
 B <- 1000
 mix_indicator <- rbinom(B, 1, 0.8)
 x <- 10 + 3 * rt(B, df = 3)
-x[mix_indicator == 0] <- 10 + 10 * rt(sum(mix_indicator == 0), df = 3)
+x[mix_indicator == 0] <- 10 +
+  10 * rt(sum(mix_indicator == 0), df = 3)
 g_mix <- 0.8 * dt((x - 10) / 3, df = 3) / 3 +
   0.2 * dt((x - 10) / 10, df = 3) / 10
 w_star <- dgamma(x, 8) / g_mix
@@ -1752,8 +1754,8 @@ avoid large or variable weights.
 
 ### Diagnostics
 
-Examine weights, weighted integrand values, and ESS to detect instability.
-These checks cannot guarantee accuracy or reveal every missed region.
+Examine weights, weighted integrand values, and ESS to detect instability. These
+checks cannot guarantee accuracy or reveal every missed region.
 
 . . .
 
@@ -1776,255 +1778,3 @@ that are easier to solve and have nice properties.
 \lectureappendix
 
 # Appendix
-
-## Case Study: Network Failure
-
-![A network graph. Different edges "fail" independently with probability
-$p$.](../images/networkfig.png){ width=70% }
-
-. . .
-
-**Problem:** What is the probability that nodes 1 and 10 are disconnected?
-
-## Representing Graphs
-
-We can represent a graph using an adjacency matrix.
-
-```{r, echo=13}
-#| label: network_adj
-
-options(width = 65)
-A <- matrix(0, 10, 10)
-A[1, c(2, 4, 5)] <- 1
-A[2, c(1, 3, 6)] <- 1
-A[3, c(2, 6, 7, 8, 10)] <- 1
-A[4, c(1, 5, 8)] <- 1
-A[5, c(1, 4, 8, 9)] <- 1
-A[6, c(2, 3, 7, 10)] <- 1
-A[7, c(3, 6, 10)] <- 1
-A[8, c(3, 4, 5, 9)] <- 1
-A[9, c(5, 8, 10)] <- 1
-A[10, c(3, 6, 7, 9)] <- 1
-A # Graph adjacency matrix
-```
-
-. . .
-
-```{r}
-#| label: network_adj_upper
-
-Aup <- A
-Aup[lower.tri(Aup)] <- 0
-```
-
-## Check Connectivity
-
-We begin with a function that checks if nodes 1 and 10 are disconnected.
-
-. . .
-
-```{r}
-#| label: discon-def
-
-discon <- function(Aup) {
-  A <- Matrix::forceSymmetric(Aup, "U")
-  i <- 3
-  Apow <- A %*% A %*% A # A^3
-
-  while (Apow[1, 10] == 0 && i < 9) {
-    Apow <- Apow %*% A
-    i <- i + 1
-  }
-
-  Apow[1, 10] == 0 # TRUE if nodes 1 and 10 are not connected
-}
-```
-
-## Sampling a Graph
-
-```{r}
-#| label: simNet
-
-sim_net <- function(Aup, p) {
-  ones <- which(Aup == 1)
-  Aup[ones] <- sample(
-    c(0, 1),
-    length(ones),
-    replace = TRUE,
-    prob = c(p, 1 - p)
-  )
-  Aup
-}
-```
-
-. . .
-
-```{r}
-#| label: sim-bench
-
-bench::bench_time(replicate(1e5, sim_net(Aup, 0.5)))
-```
-
-## Estimating Probability of Nodes 1 and 10 Disconnected
-
-```{r}
-#| label: sim
-
-set.seed(27092016)
-N <- 1e5
-tmp <- replicate(N, discon(sim_net(Aup, 0.05)))
-
-mu_hat <- mean(tmp)
-mu_hat
-```
-
-. . .
-
-Estimate with confidence interval using $\sigma^2 = \mu (1 - \mu)$.
-
-```{r}
-#| label: sim-confint
-
-mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / N) * c(-1, 0, 1)
-```
-
-## Importance Sampling
-
-We will simulate with failure probability $p_0$ and compute the importance
-weights.
-
-```{r}
-#| label: impw
-
-weights <- function(Aup, Aup0, p0, p) {
-  w <- discon(Aup0)
-
-  if (w) {
-    s <- sum(Aup0)
-    w <- (p / p0)^18 * (p0 * (1 - p) / (p * (1 - p0)))^s
-  }
-
-  as.numeric(w)
-}
-```
-
-. . .
-
-For the IS estimator the weights will be multiplied by the indicator that 1 and
-10 are disconnected.
-
-## Estimating Probability of Nodes 1 and 10 Disconnected
-
-```{r}
-#| label: sim2
-#| cache: true
-
-tmp <- replicate(N, weights(Aup, sim_net(Aup, 0.2), 0.2, 0.05))
-mu_hat_IS <- mean(tmp)
-mu_hat_IS
-```
-
-. . .
-
-Confidence interval using empirical variance estimate $\hat{\sigma}^2$.
-
-```{r}
-#| label: sim2-confint
-
-mu_hat_IS + 1.96 * sd(tmp) / sqrt(N) * c(-1, 0, 1)
-```
-
-. . .
-
-```{r}
-#| label: sim2-sd
-
-c(sd(tmp), sqrt(mu_hat * (1 - mu_hat))) # Est. standard deviations
-```
-
-## Comparison
-
-The ratio of variances is estimated as
-
-```{r}
-#| label: sim2-var-ratio
-
-mu_hat * (1 - mu_hat) / var(tmp)
-```
-
-. . .
-
-We need about `r round(mu_hat * (1 - mu_hat) / var(tmp))` times as many naive
-samples to achieve the same precision as importance sampling.
-
-\medskip\pause
-
-Benchmarking would show that the extra computing time for importance sampling
-is small compared to the reduction in variance.
-
-\medskip\pause
-
-It is worth the coding effort if used repeatedly, but not if it is a one-off
-computation.
-
-## Enumeration
-
-There are $2^{18} = 262,144$ different networks with any number of the edges
-failing, so complete enumeration is possible.
-
-```{r}
-#| label: enumeration
-#| cache: true
-
-ones <- which(Aup == 1)
-Atmp <- Aup
-p <- 0.05
-prob <- numeric(2^18)
-
-for (i in 0:(2^18 - 1)) {
-  on <- as.numeric(intToBits(i)[1:18])
-  Atmp[ones] <- on
-
-  if (discon(Atmp)) {
-    s <- sum(on)
-    prob[i + 1] <- p^(18 - s) * (1 - p)^s
-  }
-}
-```
-
-## Probability of 1 and 10 Being Disconnected
-
-Here is the true value:
-
-```{r}
-#| label: disconnect-prob
-
-sum(prob)
-```
-
-. . .
-
-And here's the MC estimate with confidence interval:
-
-```{r}
-#| label: sim-confint2
-
-mu_hat + 1.96 * sqrt(mu_hat * (1 - mu_hat) / N) * c(-1, 0, 1)
-```
-
-. . .
-
-And the IS estimate with confidence interval:
-
-```{r}
-#| label: sim2-confint2
-
-mu_hat_IS + 1.96 * sd(tmp) / sqrt(N) * c(-1, 0, 1)
-```
-
-```{r}
-#| label: reset-options
-#| echo: false
-
-options(digits = old_options$digits)
-```
