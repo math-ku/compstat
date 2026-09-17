@@ -710,7 +710,8 @@ zero. This result is for ordinary IS, not self-normalized IS.
 
 ## Normalized Weights
 
-If $f = c^{-1} q$ with $c$ unknown then
+If $f = c^{-1} q$ with $c$ unknown^[For instance common in Bayesian statistics.]
+then
 $$
   c = \int q(x) \ \mathrm{d}x = \int \frac{q(x)}{g(x)} g(x) \ \mathrm{d}x.
 $$
