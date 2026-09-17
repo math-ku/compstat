@@ -1065,10 +1065,13 @@ $\mathrm{ESS} \approx 1$, which warns of possible instability.
 
 ```{r}
 #| label: ess-demo
+#| include: false
 
 ess <- (sum(w_star))^2 / sum(w_star^2)
-ess # Out of N = 1000 samples.
 ```
+
+For the bivariate example, with get an ESS of about `r round(ess)` out of
+$N = 1000$ samples.
 
 ## Coefficient of Variation (CV)
 
