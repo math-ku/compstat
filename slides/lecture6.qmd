@@ -315,7 +315,8 @@ t <- rt(B, df = 3)
 x <- 10 + 3 * t
 g_x <- dt(t, df = 3) / 3
 w_star <- dgamma(x, 8) / g_x
-mu_hat_IS <- cumsum(x * w_star) / (1:B)
+cum_mean <- cumsum(x * w_star)
+mu_hat_IS <- cum_mean / (1:B)
 mu_hat_IS[B]
 ```
 
