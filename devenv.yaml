@@ -1,4 +1,8 @@
 # yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
+nixpkgs:
+  # The pinned RStudio release needs Electron 41; its native modules fail on 42.
+  permitted_insecure_packages:
+    - electron-41.10.6
 inputs:
   git-hooks:
     url: github:cachix/git-hooks.nix

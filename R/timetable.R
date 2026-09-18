@@ -175,6 +175,47 @@ update_timetable <- function(
   invisible(TRUE)
 }
 
+format_week <- function(timetable, date) {
+  date <- as.Date(date)
+  monday <- date - as.integer(format(date, "%u")) + 1L
+  sessions <- timetable[
+    timetable$date >= monday & timetable$date <= monday + 6L,
+  ]
+  if (!nrow(sessions)) {
+    return("")
+  }
+
+  dates <- range(sessions$date)
+  label_date <- function(date) {
+    paste(
+      month.name[as.integer(format(date, "%m"))],
+      as.integer(format(date, "%d"))
+    )
+  }
+  label <- label_date(dates[1])
+  if (dates[1] != dates[2]) {
+    last <- if (format(dates[1], "%m") == format(dates[2], "%m")) {
+      as.integer(format(dates[2], "%d"))
+    } else {
+      label_date(dates[2])
+    }
+    label <- paste0(label, "–", last)
+  }
+
+  # Explicit UTC timestamps keep the rollover independent of a student's timezone.
+  end <- max(as.POSIXct(
+    paste(sessions$date, sessions$end),
+    format = "%Y-%m-%d %H:%M",
+    tz = "Europe/Copenhagen"
+  ))
+  as.character(htmltools::tags$span(
+    class = "schedule-week-dates",
+    `data-week-start` = as.character(monday),
+    `data-week-end` = format(end, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+    label
+  ))
+}
+
 format_session <- function(
   timetable,
   date,

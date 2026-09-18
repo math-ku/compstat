@@ -20,7 +20,8 @@ old_options <- options(digits = 4)
 
 Estimate $\E h(X)$ with $X \sim f$ by
 $$
-  \hat{\mu}_{\mathrm{MC}} = \frac{1}{N} \sum_{i=1}^N h(X_i) \quad \text{with } X_i \overset{iid}{\sim} f.
+  \hat{\mu}_{\mathrm{MC}}
+  = \frac{1}{N} \sum_{i=1}^N h(X_i) \quad \text{with } X_i \overset{iid}{\sim} f.
 $$
 
 . . .
@@ -29,11 +30,14 @@ $$
 
 Use the "trick" that
 $$
-  \mu = \int h(x) f(x) \ \mathrm{d}x = \int h(x) \frac{f(x)}{g(x)} g(x) \ \mathrm{d}x = \int h(x) w^*(x) g(x) \ \mathrm{d}x
+  \mu = \int h(x) f(x) \mathrm{d}x
+      = \int h(x) \frac{f(x)}{g(x)} g(x) \ \mathrm{d}x
+      = \int h(x) w^*(x) g(x) \ \mathrm{d}x
 $$
 and estimate
 $$
-  \hat{\mu}^*_{\mathrm{IS}} = \frac{1}{N} \sum_{i=1}^N h(X_i) w^*(X_i) \quad \text{with } X_i \overset{iid}{\sim} g.
+  \hat{\mu}^*_{\mathrm{IS}}
+  = \frac{1}{N} \sum_{i=1}^N h(X_i) w^*(X_i) \quad \text{with } X_i \overset{iid}{\sim} g.
 $$
 
 ## Recap: Importance Sampling
@@ -103,10 +107,10 @@ minimization.
 In *standard form*, an optimization problem is written as
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_\theta && H(\theta) \\
-    &\textrm{subject to}            && g_i(\theta) \leq 0, \quad i = 1, \ldots, m \\
-    &                               && h_j(\theta) = 0, \quad j = 1, \ldots, k.
-    \end{aligned}
+     & \operatorname*{minimize}_\theta &  & H(\theta)                                  \\
+     & \textrm{subject to}             &  & g_i(\theta) \leq 0, \quad i = 1, \ldots, m \\
+     &                                 &  & h_j(\theta) = 0, \quad j = 1, \ldots, k.
+  \end{aligned}
 $$
 where
 
@@ -128,9 +132,7 @@ $$
 ### Smoothing Splines
 
 $$
-  \operatorname*{minimize}_{\symbf{\beta}} \left(
-    (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta}
-  \right)
+  \operatorname*{minimize}_{\symbf{\beta}} \left( (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta} \right)
 $$
 
 . . .
@@ -139,8 +141,8 @@ $$
 
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_\lambda  && \left( (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta} \right) \\
-    &\textrm{subject to}               && \lambda \geq 0.
+     & \operatorname*{minimize}_\lambda &  & \left( (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta} \right) \\
+     & \textrm{subject to}              &  & \lambda \geq 0.
   \end{aligned}
 $$
 
@@ -159,9 +161,9 @@ where $\ell$ is the log-likelihood function.
 
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_w  &&  w^T \Sigma w\\
-    &\textrm{subject to}         && \bar{p}^T w \geq r_\mathrm{min},\\
-    &                            && \symbf{1}^T w = 1,
+     & \operatorname*{minimize}_w &  & w^T \Sigma w                     \\
+     & \textrm{subject to}        &  & \bar{p}^T w \geq r_\mathrm{min}, \\
+     &                            &  & \symbf{1}^T w = 1,
   \end{aligned}
 $$
 where $w$ are the asset weights, $\Sigma$ is the covariance matrix of asset
@@ -173,7 +175,7 @@ the minimum acceptable return.
 The problem is to
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_{\beta \in \mathbb{R}^p} && H(\beta) = \frac{1}{2} \|y - X\beta\|_2^2.
+     & \operatorname*{minimize}_{\beta \in \mathbb{R}^p} &  & H(\beta) = \frac{1}{2} \|y - X\beta\|_2^2.
   \end{aligned}
 $$
 
@@ -214,10 +216,10 @@ Standard form:
 
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_\theta && H(\theta) \\
-    &\textrm{subject to}            && g_i(\theta) \leq 0, \quad i = 1, \ldots, m, \\
-    &                               && a_j^T \theta = b_j, \quad j = 1, \ldots, k,
-    \end{aligned}
+     & \operatorname*{minimize}_\theta &  & H(\theta)                                   \\
+     & \textrm{subject to}             &  & g_i(\theta) \leq 0, \quad i = 1, \ldots, m, \\
+     &                                 &  & a_j^T \theta = b_j, \quad j = 1, \ldots, k,
+  \end{aligned}
 $$
 
 where $H$ and $g_i$ are convex.
@@ -227,7 +229,8 @@ where $H$ and $g_i$ are convex.
 A function $H$ is convex iff for all
 $\theta_1, \theta_2 \in \operatorname{dom} H$ and $\lambda \in [0, 1]$
 $$
-  H(\lambda \theta_1 + (1 - \lambda) \theta_2) \leq \lambda H(\theta_1) + (1 - \lambda) H(\theta_2).
+  H(\lambda \theta_1 + (1 - \lambda) \theta_2) \leq \lambda H(\theta_1)
+                                                    + (1 - \lambda) H(\theta_2).
 $$
 
 This is known as **Jensen's inequality**.
@@ -261,7 +264,9 @@ pts <- data.frame(x = c(x1, x2), y = c(f(x1), f(x2)))
 
 labels <- c(
   f = expression(H(theta)),
-  chord = expression(lambda * H(theta[1]) + (1 - lambda) * H(theta[2]))
+  chord = expression(
+    lambda * H(theta[1]) + (1 - lambda) * H(theta[2])
+  )
 )
 
 ggplot(df, aes(x, y)) +
@@ -317,7 +322,9 @@ pts <- data.frame(x = x0, y = f(x0))
 
 labels <- c(
   f = expression(H(theta)),
-  tangent = expression(H(theta[2]) + nabla * H(theta[2])^T * (theta[1] - theta[2]))
+  tangent = expression(
+    H(theta[2]) + nabla * H(theta[2])^T * (theta[1] - theta[2])
+  )
 )
 
 ggplot(df, aes(x, y)) +
@@ -328,7 +335,12 @@ ggplot(df, aes(x, y)) +
     linetype = "dashed",
     color = "steelblue"
   ) +
-  geom_point(data = pts, aes(x, y), label = expression(theta[2]), nudge_y = 0.3) +
+  geom_point(
+    data = pts,
+    aes(x, y),
+    label = expression(theta[2]),
+    nudge_y = 0.3
+  ) +
   scale_linetype_manual(
     values = c(f = "solid", tangent = "dashed"),
     labels = labels
@@ -350,7 +362,8 @@ Any (local) minimum is **global** (but not necessarily unique).
 
 For differentiable $H$, $\theta^*$ is optimal iff
 $$
-  \nabla H(\theta^*)^T(\theta - \theta^*) \geq 0\quad\text{for all}\quad \theta \in C,
+  \nabla H(\theta^*)^T(\theta - \theta^*) \geq 0\quad\text{for all}\quad \theta
+                                          \in C,
 $$
 where $C$ is the feasible set.
 
@@ -369,10 +382,10 @@ $$
 
 $$
   \begin{aligned}
-    &\operatorname*{minimize}_\theta && H(\theta) \\
-    &\textrm{subject to}            && g_i(\theta) \leq 0, \quad i = 1, \ldots, m, \\
-    &                               && A^T \theta = b,
-    \end{aligned}
+     & \operatorname*{minimize}_\theta &  & H(\theta)                                   \\
+     & \textrm{subject to}             &  & g_i(\theta) \leq 0, \quad i = 1, \ldots, m, \\
+     &                                 &  & A^T \theta = b,
+  \end{aligned}
 $$
 where $g_i$ are convex but $H$ is **quasiconvex**.
 
@@ -428,7 +441,9 @@ quasi_convex_function <- function(x) sqrt(abs(x))
 # Define the gradients
 convex_gradient <- function(x) 2 * x
 non_convex_gradient <- function(x) cos(x + pi)
-quasi_convex_gradient <- function(x) sign(x) * 0.5 * abs(x)^(-0.5)
+quasi_convex_gradient <- function(x) {
+  sign(x) * 0.5 * abs(x)^(-0.5)
+}
 
 # Create a sequence of x values
 x_vals <- seq(-2, 2, length.out = 100)
@@ -474,16 +489,30 @@ add_jensens_line <- function(df, func) {
 
 # Add Jensen's inequality line segments
 convex_df <- add_jensens_line(convex_df, convex_function)
-non_convex_df <- add_jensens_line(non_convex_df, non_convex_function)
-quasi_convex_df <- add_jensens_line(quasi_convex_df, quasi_convex_function)
+non_convex_df <- add_jensens_line(
+  non_convex_df,
+  non_convex_function
+)
+quasi_convex_df <- add_jensens_line(
+  quasi_convex_df,
+  quasi_convex_function
+)
 
 # Combine data frames with Jensen's line
-df_with_jensens <- bind_rows(convex_df, non_convex_df, quasi_convex_df)
+df_with_jensens <- bind_rows(
+  convex_df,
+  non_convex_df,
+  quasi_convex_df
+)
 
 # Plot the objective functions with Jensen's inequality line segments using facets
 p1 <- ggplot(df_with_jensens, aes(x = x)) +
   geom_line(aes(y = y)) +
-  geom_line(aes(y = jensens_y), linetype = "dashed", color = "steelblue4") +
+  geom_line(
+    aes(y = jensens_y),
+    linetype = "dashed",
+    color = "steelblue4"
+  ) +
   labs(y = expression(H(theta)), x = expression(theta)) +
   facet_wrap(~type, scales = "free_y")
 
@@ -495,7 +524,11 @@ p2 <- ggplot(df, aes(x = x, y = gradient)) +
 
 # Print the plots
 p1 / p2 +
-  plot_layout(axis_title = "collect", guides = "collect", axes = "collect")
+  plot_layout(
+    axis_title = "collect",
+    guides = "collect",
+    axes = "collect"
+  )
 ```
 
 # Solving Optimization Problems
@@ -550,7 +583,9 @@ beta2_grid <- seq(-1, 4, length.out = 51)
 beta1_grid_persp <- seq(-1, 4, length.out = 21)
 beta2_grid_persp <- seq(-1, 4, length.out = 21)
 
-f <- function(beta, x, y) norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
+f <- function(beta, x, y) {
+  norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
+}
 
 f_vals <- outer(
   beta1_grid,
@@ -588,12 +623,18 @@ We are going to use a simple example of OLS as a running example.
 
 \medskip\pause
 
-We will let $p=2$, and generate some data from a multivariate normal
+We will let $p = 2$, and generate some data from a multivariate normal
 distribution:
 $$
   \symbf{x} \sim \normal(
-    \symbf{\mu} = \begin{bmatrix}1 \\ 1\end{bmatrix},
-    \symbf{\Sigma} = \begin{bmatrix}1 & 0.8 \\ 0.8 & 1\end{bmatrix}
+    \symbf{\mu} = \begin{bmatrix}
+                    1 \\
+                    1
+                  \end{bmatrix},
+    \symbf{\Sigma} = \begin{bmatrix}
+                       1   & 0.8 \\
+                       0.8 & 1
+                     \end{bmatrix}
   )
 $$
 
@@ -649,7 +690,13 @@ step_size_illustration <- function(
 
   optimizer <- switch(method, gd = gd, newton = newton)
 
-  res <- optimizer(x, y, t = t, maxit = maxit, line_search = line_search)
+  res <- optimizer(
+    x,
+    y,
+    t = t,
+    maxit = maxit,
+    line_search = line_search
+  )
 
   L <- norm(t(x) %*% x, "2") / nrow(x)
 
@@ -669,9 +716,13 @@ step_size_illustration <- function(
   beta1_grid <- seq(-1, 4, length.out = 51)
   beta2_grid <- seq(-1, 4, length.out = 51)
 
-  f <- function(beta, x, y) norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
+  f <- function(beta, x, y) {
+    norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
+  }
 
-  f_grad <- function(beta, x, y) -t(x) %*% (y - x %*% beta) / nrow(x)
+  f_grad <- function(beta, x, y) {
+    -t(x) %*% (y - x %*% beta) / nrow(x)
+  }
 
   taylor_approx <- function(beta, beta0, x, y, t) {
     f(beta, x, y) +
@@ -705,10 +756,22 @@ step_size_illustration <- function(
 
   res <- ggplot(beta_df, aes(beta1, beta2)) +
     contour_scale +
-    geom_point(data = optimum_df, color = "darkorange", size = 3, pch = 4) +
+    geom_point(
+      data = optimum_df,
+      color = "darkorange",
+      size = 3,
+      pch = 4
+    ) +
     labs(x = expression(beta[1]), y = expression(beta[2])) +
-    coord_fixed(xlim = c(-1, 4), ylim = c(-1, 4), expand = FALSE) +
-    geom_contour(aes(z = f, color = after_stat(level)), bins = 25)
+    coord_fixed(
+      xlim = c(-1, 4),
+      ylim = c(-1, 4),
+      expand = FALSE
+    ) +
+    geom_contour(
+      aes(z = f, color = after_stat(level)),
+      bins = 25
+    )
 
   if (plot_approx) {
     approx_fun <- if (method == "gd") {
@@ -720,7 +783,9 @@ step_size_illustration <- function(
     approx_vals <- outer(
       beta1_grid,
       beta2_grid,
-      Vectorize(function(b1, b2) approx_fun(c(b1, b2), approx_point, x, y, t))
+      Vectorize(function(b1, b2) {
+        approx_fun(c(b1, b2), approx_point, x, y, t)
+      })
     )
 
     colnames(approx_vals) <- beta1_grid
@@ -748,7 +813,9 @@ step_size_illustration <- function(
   }
 
   if (plot_convergence) {
-    res <- res + geom_point(data = df, size = 0.5) + geom_path(data = df)
+    res <- res +
+      geom_point(data = df, size = 0.5) +
+      geom_path(data = df)
   }
 
   res
@@ -867,11 +934,23 @@ gd_illustration <- function(f, f_prime, x0, t, n_steps) {
   }
 
   df <- data.frame(
-    x = seq(min(x_vals) - 0.5, max(x_vals) + 1, length.out = 100),
-    y = f(seq(min(x_vals) - 0.5, max(x_vals) + 1, length.out = 100))
+    x = seq(
+      min(x_vals) - 0.5,
+      max(x_vals) + 1,
+      length.out = 100
+    ),
+    y = f(seq(
+      min(x_vals) - 0.5,
+      max(x_vals) + 1,
+      length.out = 100
+    ))
   )
 
-  points_df <- data.frame(step = 0:n_steps, x = x_vals, y = f(x_vals))
+  points_df <- data.frame(
+    step = 0:n_steps,
+    x = x_vals,
+    y = f(x_vals)
+  )
 
   ggplot(df, aes(x, y)) +
     geom_line() +
@@ -932,7 +1011,10 @@ step_size_illustration(x, y, 0.0115, maxit = 35)
 
 Take the second-order Taylor expansion of $H$ around $\theta$:
 $$
-  H(\vartheta) \approx \hat{H}(\vartheta) = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta) + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\theta) (\vartheta - \theta).
+  H(\vartheta)
+  \approx \hat{H}(\vartheta)
+  = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
+    + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\theta) (\vartheta - \theta).
 $$
 
 . . .
@@ -942,7 +1024,7 @@ $$
 Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize w.r.t
 $\vartheta$ to get
 $$
-  \theta_{n + 1} = \theta_n - \gamma \nabla H(\theta_n).
+  \theta_{n+1} = \theta_n - \gamma \nabla H(\theta_n).
 $$
 
 ### Step Size {.alert}
@@ -961,7 +1043,9 @@ gd_taylor_illustration <- function(f, f_prime, x0, t) {
   df <- data.frame(
     x = x_vals,
     y = f(x_vals),
-    taylor = f(x0) + f_prime(x0) * (x_vals - x0) + (x_vals - x0)^2 / (2 * t)
+    taylor = f(x0) +
+      f_prime(x0) * (x_vals - x0) +
+      (x_vals - x0)^2 / (2 * t)
   )
 
   df_long <- df |>
@@ -971,7 +1055,10 @@ gd_taylor_illustration <- function(f, f_prime, x0, t) {
       values_to = "value"
     )
 
-  taylor_min <- tibble(x = df$x[which.min(df$taylor)], y = min(df$taylor))
+  taylor_min <- tibble(
+    x = df$x[which.min(df$taylor)],
+    y = min(df$taylor)
+  )
 
   next_step <- tibble(
     x = c(x0, x0 - t * f_prime(x0)),
@@ -980,7 +1067,11 @@ gd_taylor_illustration <- function(f, f_prime, x0, t) {
 
   ggplot(df_long, aes(x)) +
     geom_line(aes(y = value, color = type, linetype = type)) +
-    geom_point(aes(x, y), data = taylor_min, color = "steelblue") +
+    geom_point(
+      aes(x, y),
+      data = taylor_min,
+      color = "steelblue"
+    ) +
     geom_point(aes(x, y), data = next_step, color = "black") +
     geom_text(
       aes(x, y),
@@ -992,11 +1083,17 @@ gd_taylor_illustration <- function(f, f_prime, x0, t) {
     ) +
     scale_color_manual(
       values = c(y = "black", taylor = "steelblue"),
-      labels = c(y = expression(H(theta)), taylor = expression(hat(H)(theta)))
+      labels = c(
+        y = expression(H(theta)),
+        taylor = expression(hat(H)(theta))
+      )
     ) +
     scale_linetype_manual(
       values = c(y = "solid", taylor = "dashed"),
-      labels = c(y = expression(H(theta)), taylor = expression(hat(H)(theta)))
+      labels = c(
+        y = expression(H(theta)),
+        taylor = expression(hat(H)(theta))
+      )
     ) +
     labs(
       y = expression(H(theta)),
@@ -1024,7 +1121,9 @@ gd_taylor_illustration(
 For any $\theta, \vartheta$ in the domain of $H$, there exists a $\zeta$ on the
 line segment between $\theta$ and $\vartheta$ such that
 $$
-  H(\vartheta) = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta) + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\zeta) (\vartheta - \theta).
+  H(\vartheta)
+  = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
+    + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\zeta) (\vartheta - \theta).
 $$
 
 . . .
@@ -1040,7 +1139,8 @@ $$
 
 Then
 $$
-  H(\vartheta) \leq H(\theta) + \nabla H(\theta)^T (\vartheta - \theta) + \frac{L}{2} \|\vartheta - \theta\|_2^2.
+  H(\vartheta) \leq H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
+                    + \frac{L}{2} \|\vartheta - \theta\|_2^2.
 $$
 
 ## Lipschitz Constant
@@ -1110,21 +1210,39 @@ f <- function(x) ifelse(x < 0, x^2 - x, -log(1 + x))
 
 f_prime <- function(x) ifelse(x < 0, 2 * x - 1, -1 / (1 + x))
 
-p1 <- lipschitz_illustration(f = f, f_prime = f_prime, L = 2, x0 = 0)
+p1 <- lipschitz_illustration(
+  f = f,
+  f_prime = f_prime,
+  L = 2,
+  x0 = 0
+)
 
 f <- function(x) {
   ifelse(
     x < 1,
     12.5 * x^2,
-    ifelse(1 <= x & x < 2, 0.5 * x^2 + 24 * x - 12, 12.5 * x^2 - 24 * x + 36)
+    ifelse(
+      1 <= x & x < 2,
+      0.5 * x^2 + 24 * x - 12,
+      12.5 * x^2 - 24 * x + 36
+    )
   )
 }
 
 f_prime <- function(x) {
-  ifelse(x < 1, 25 * x, ifelse(1 <= x & x < 2, x + 24, 25 * x - 24))
+  ifelse(
+    x < 1,
+    25 * x,
+    ifelse(1 <= x & x < 2, x + 24, 25 * x - 24)
+  )
 }
 
-p2 <- lipschitz_illustration(f = f, f_prime = f_prime, L = 25, x0 = 0)
+p2 <- lipschitz_illustration(
+  f = f,
+  f_prime = f_prime,
+  L = 25,
+  x0 = 0
+)
 
 p1 / p2 + plot_layout(axes = "collect")
 ```
@@ -1133,17 +1251,20 @@ p1 / p2 + plot_layout(axes = "collect")
 
 ## The Connection to Gradient Descent
 
-If we apply the descent lemma with $\vartheta = \theta - \gamma \nabla H(\theta)$,
-we get
+If we apply the descent lemma with
+$\vartheta = \theta - \gamma \nabla H(\theta)$, we get
 $$
-  H(\theta - \gamma \nabla H(\theta)) \leq H(\theta) - \gamma \|\nabla H(\theta)\|_2^2 + \frac{L \gamma^2}{2} \|\nabla H(\theta)\|_2^2.
+  H(\theta - \gamma \nabla H(\theta))
+  \leq H(\theta) - \gamma \|\nabla H(\theta)\|_2^2
+       + \frac{L \gamma^2}{2} \|\nabla H(\theta)\|_2^2.
 $$
 
 . . .
 
 This means that if $\gamma \leq 1/L$, then
 $$
-  H(\theta - \gamma \nabla H(\theta)) \leq H(\theta) - \frac{\gamma}{2} \|\nabla H(\theta)\|_2^2.
+  H(\theta - \gamma \nabla H(\theta))
+  \leq H(\theta) - \frac{\gamma}{2} \|\nabla H(\theta)\|_2^2.
 $$
 
 . . .
@@ -1247,7 +1368,11 @@ backtracking_illustration <- function() {
     labs(y = expression(H(gamma)), x = expression(gamma)) +
     scale_y_continuous(limits = c(-2, 5)) +
     scale_color_manual(
-      values = c(f1 = "black", f2 = "darkorange", f3 = "steelblue"),
+      values = c(
+        f1 = "black",
+        f2 = "darkorange",
+        f3 = "steelblue"
+      ),
       labels = labels
     ) +
     scale_linetype_manual(
@@ -1308,7 +1433,9 @@ small, we say that $H$ is **well-conditioned**.
 #| echo: false
 #| fig-height: 3.2
 
-well_conditioned <- function(x) 0.5 * ((x[1] - beta[1])^2 + (x[2] - beta[2])^2)
+well_conditioned <- function(x) {
+  0.5 * ((x[1] - beta[1])^2 + (x[2] - beta[2])^2)
+}
 
 ill_conditioned <- function(x) {
   0.5 * ((x[1] - beta[1])^2 + 5 * (x[2] - beta[2])^2)
@@ -1331,19 +1458,39 @@ conditioned_df <- function(f, beta1_grid, beta2_grid) {
   )
 }
 
-well_df <- conditioned_df(well_conditioned, beta1_grid, beta2_grid) |>
+well_df <- conditioned_df(
+  well_conditioned,
+  beta1_grid,
+  beta2_grid
+) |>
   mutate(type = "Well-conditioned (L = 1)")
-ill_df <- conditioned_df(ill_conditioned, beta1_grid, beta2_grid) |>
+ill_df <- conditioned_df(
+  ill_conditioned,
+  beta1_grid,
+  beta2_grid
+) |>
   mutate(type = "Ill-conditioned (L = 5)")
 
 conditioned_df <- bind_rows(well_df, ill_df)
 
 p1 <- ggplot(conditioned_df, aes(beta1, beta2)) +
   contour_scale +
-  geom_point(data = optimum_df, color = "darkorange", size = 3, pch = 4) +
+  geom_point(
+    data = optimum_df,
+    color = "darkorange",
+    size = 3,
+    pch = 4
+  ) +
   labs(x = expression(beta[1]), y = expression(beta[2])) +
-  coord_fixed(xlim = c(-1, 4), ylim = c(0.5, 3.5), expand = FALSE) +
-  geom_contour(aes(z = f, color = after_stat(level)), bins = 35) +
+  coord_fixed(
+    xlim = c(-1, 4),
+    ylim = c(0.5, 3.5),
+    expand = FALSE
+  ) +
+  geom_contour(
+    aes(z = f, color = after_stat(level)),
+    bins = 35
+  ) +
   facet_wrap(~type, ncol = 1)
 p1
 ```
@@ -1396,7 +1543,12 @@ conditioning.
 #| fig-height: 2.8
 #| fig-cap: "The gradient descent approximation."
 
-step_size_illustration(x_ill, y_ill, t = 0.001, plot_approx = TRUE)
+step_size_illustration(
+  x_ill,
+  y_ill,
+  t = 0.001,
+  plot_approx = TRUE
+)
 ```
 :::::
 :::
@@ -1405,7 +1557,10 @@ step_size_illustration(x_ill, y_ill, t = 0.001, plot_approx = TRUE)
 
 Recall second-order expansion of $H$ around $\theta$:
 $$
-  H(\vartheta) \approx \hat{H}(\vartheta) = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta) + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\theta) (\vartheta - \theta).
+  H(\vartheta)
+  \approx \hat{H}(\vartheta)
+  = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
+    + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\theta) (\vartheta - \theta).
 $$
 
 . . .
@@ -1422,7 +1577,8 @@ Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize.
 
 Instead, minimize $\hat{H}(\vartheta)$ directly:
 $$
-  \theta_{n + 1} = \theta_n - \big(\nabla^2 H(\theta_n)\big)^{-1} \nabla H(\theta_n).
+  \theta_{n+1} = \theta_n
+                 - \big(\nabla^2 H(\theta_n)\big)^{-1} \nabla H(\theta_n).
 $$
 
 \pause\bigskip
@@ -1449,7 +1605,7 @@ step_size_illustration(
 
 This might actually not converge, so instead we use **damped** Newton:
 $$
-  \theta_{n + 1} = \theta_n - \gamma \nabla^2 H(\theta_n)^{-1} \nabla H(\theta_n),
+  \theta_{n+1} = \theta_n - \gamma \nabla^2 H(\theta_n)^{-1} \nabla H(\theta_n),
 $$
 with $\gamma > 0$ chosen by backtracking line search.
 
@@ -1458,7 +1614,8 @@ with $\gamma > 0$ chosen by backtracking line search.
 ### Phases
 
 - As long as $\gamma < 1$, we are in the **damped** phase. \pause
-- When $\gamma = 1$, we enter the **pure** phase and $\gamma$ will remain $1$.\pause
+- When $\gamma = 1$, we enter the **pure** phase and $\gamma$ will remain
+  $1$.\pause
 - In pure phase, we have quadratic convergence.
 
 ##
@@ -1558,14 +1715,12 @@ Same complexity but lower memory cost.
   \pause
 - Small relative change in $\theta$:
   $$
-  \frac{\|\theta_{n + 1} - \theta_n\|_2}{\|\theta_n + 10^{-q}\|_2}
-  \leq \epsilon
+  \frac{\|\theta_{n+1} - \theta_n\|_2}{\|\theta_n + 10^{-q}\|_2} \leq \epsilon
   $$
   \pause
 - Small relative change in $H$:
   $$
-  \frac{H(\theta_{n + 1}) - H(\theta_n)}{H(\theta_n)}
-  \leq \epsilon
+  \frac{H(\theta_{n+1}) - H(\theta_n)}{H(\theta_n)} \leq \epsilon
   $$
 :::::
 
@@ -1622,7 +1777,9 @@ H <- function(theta) log(1 + exp(theta)) + 0.5 * (theta - 2)^2
 
 curve(H, from = -2, to = 5)
 
-H_prime <- function(theta) exp(theta) / (1 + exp(theta)) + (theta - 2)
+H_prime <- function(theta) {
+  exp(theta) / (1 + exp(theta)) + (theta - 2)
+}
 ```
 
 ### Step 1

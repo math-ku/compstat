@@ -1,6 +1,10 @@
 ---
 title: Computational Statistics
-format: html
+format:
+  html:
+    css: assets/schedule.css
+    include-after-body:
+      text: '<script src="assets/schedule.js" defer></script>'
 ---
 
 ```{r}
@@ -11,6 +15,7 @@ format: html
 source(here::here("R", "timetable.R"))
 timetable <- read_timetable()
 session_info <- function(...) format_session(timetable, ...)
+week_info <- function(date) format_week(timetable, date)
 ```
 
 This is main resources site for the Computational Statistics course. This is
@@ -27,7 +32,7 @@ Each Thursday, our exercise session will center around a key topic. Together,
 we'll work through selected exercises on this topic. The remaining exercises are
 for you to solve independently at your own pace.
 
-### Week 1
+### Week 1 `r week_info("2026-09-01")` [Introduction]{.schedule-week-topic} {#week-1 .schedule-week}
 
 #### Lecture 1: Introduction
 
@@ -61,7 +66,7 @@ for you to solve independently at your own pace.
   - [A7-A10](https://cswr.nrhstat.org/app-r#app-ex) (CSwR, Appendix A)
   - [2.1-2.6](https://cswr.nrhstat.org/density#density:ex) (CSwR, Chapter 2)
 
-### Week 2
+### Week 2 `r week_info("2026-09-08")` [Performance and smoothing]{.schedule-week-topic} {#week-2 .schedule-week}
 
 #### Lecture 3: Measuring and Improving Performance
 
@@ -98,7 +103,7 @@ for you to solve independently at your own pace.
 - **Exercises:** [3.4 (Chapter 3,
   CSwR)](https://cswr.nrhstat.org/bivariate#bivariate:ex)
 
-### Week 3
+### Week 3 `r week_info("2026-09-15")` [Simulation]{.schedule-week-topic} {#week-3 .schedule-week}
 
 #### Lecture 5: Transformation and Rejection Sampling
 
@@ -137,7 +142,7 @@ for you to solve independently at your own pace.
 
 - **Instructions:** [Assignment 1](assignments/assignment1.html)
 
-### Week 4
+### Week 4 `r week_info("2026-09-22")` [Optimization]{.schedule-week-topic} {#week-4 .schedule-week}
 
 #### Lecture 7: Optimization
 
@@ -164,7 +169,7 @@ for you to solve independently at your own pace.
 
 - **Instructions:** [Assignment 2](assignments/assignment2.html)
 
-### Week 5
+### Week 5 `r week_info("2026-09-29")` [Testing and debugging]{.schedule-week-topic} {#week-5 .schedule-week}
 
 #### Lecture 8: Testing and Debugging
 
@@ -194,7 +199,7 @@ code here: [debugging.R](R/debugging.R).
 <!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture9.qmd)) -->
 <!-- - **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em) -->
 <!---->
-<!-- ### Week 6 -->
+<!-- ### Week 6 `r week_info("2026-10-06")` [EM and stochastic optimization]{.schedule-week-topic} {#week-6 .schedule-week} -->
 <!---->
 <!-- #### Lecture 10: More on the EM Algorithm -->
 <!---->
@@ -227,7 +232,7 @@ code here: [debugging.R](R/debugging.R).
 <!---->
 <!-- Enjoy your break! -->
 <!---->
-<!-- ### Week 7 -->
+<!-- ### Week 7 `r week_info("2026-10-20")` [Rcpp and stochastic optimization]{.schedule-week-topic} {#week-7 .schedule-week} -->
 <!---->
 <!-- #### Lecture 12: Rcpp -->
 <!---->
@@ -272,7 +277,7 @@ code here: [debugging.R](R/debugging.R).
 <!---->
 <!-- - **Instructions:** [Assignment 4](assignments/assignment4.html) -->
 <!---->
-<!-- ### Week 8 -->
+<!-- ### Week 8 `r week_info("2026-10-27")` [R packages and wrap-up]{.schedule-week-topic} {#week-8 .schedule-week} -->
 <!---->
 <!-- #### Lecture 14: R Packages and Wrap-Up -->
 <!---->
@@ -286,7 +291,7 @@ code here: [debugging.R](R/debugging.R).
 <!-- - **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf) -->
 <!--   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture14.qmd)) -->
 <!---->
-<!-- ### Week 9 -->
+<!-- ### Week 9 `r week_info("2026-11-04")` [Examinations]{.schedule-week-topic} {#week-9 .schedule-week} -->
 <!---->
 <!-- #### Examinations -->
 <!---->

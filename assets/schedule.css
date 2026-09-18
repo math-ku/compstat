@@ -1,0 +1,115 @@
+.schedule-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.schedule-week.is-collapsible {
+  margin: 0.75rem 0;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.35rem;
+  scroll-margin-top: 5rem;
+}
+
+.schedule-week summary {
+  padding: 0.85rem 1rem;
+  color: var(--bs-body-color);
+  cursor: pointer;
+}
+
+.schedule-week details {
+  margin-bottom: 0;
+}
+
+.schedule-week summary::marker {
+  color: var(--bs-primary);
+}
+
+.schedule-week summary:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 3px;
+}
+
+.schedule-week summary h3 {
+  display: inline;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.schedule-week-dates,
+.schedule-week-topic {
+  font-size: 0.9em;
+  font-weight: normal;
+}
+
+.schedule-week-dates::before,
+.schedule-week-topic::before {
+  content: " · ";
+}
+
+.schedule-week-content {
+  padding: 0 1.1rem 0.5rem;
+}
+
+.schedule-week-content > section:first-child > h4 {
+  margin-top: 0.5rem;
+}
+
+.schedule-week.is-current {
+  border-left: 4px solid var(--bs-primary);
+}
+
+.schedule-week.is-current summary {
+  background: rgba(var(--bs-primary-rgb), 0.07);
+}
+
+.schedule-week-badge {
+  display: inline-block;
+  margin-left: 0.65rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 1rem;
+  background: var(--bs-primary-text-emphasis, #084298);
+  color: var(--bs-body-bg, white);
+  font-size: 0.75rem;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Keep navigation compact when Quarto repeats the headings in its sidebar. */
+#TOC .schedule-week-dates,
+#TOC .schedule-week-topic {
+  display: none;
+}
+
+@media (max-width: 575.98px) {
+  .schedule-week summary {
+    padding: 0.8rem;
+  }
+
+  .schedule-week-topic {
+    display: block;
+    margin-top: 0.25rem;
+  }
+
+  .schedule-week-topic::before {
+    content: none;
+  }
+}
+
+@media print {
+  .schedule-controls,
+  .schedule-week-badge {
+    display: none;
+  }
+
+  .schedule-week.is-collapsible {
+    border: 0;
+  }
+
+  .schedule-week.is-current summary {
+    background: none;
+  }
+}

@@ -111,6 +111,22 @@ test_that("fetch and parse failures leave the saved data intact", {
   expect_identical(read_timetable(path), original)
 })
 
+test_that("week summaries include presentations and Copenhagen daylight saving", {
+  timetable <- parse_timetable(saved_timetable())
+  week <- format_week(timetable, "2026-09-15")
+  expect_match(week, "September 15–17", fixed = TRUE)
+  expect_match(week, 'data-week-start="2026-09-14"', fixed = TRUE)
+  expect_match(week, 'data-week-end="2026-09-17T13:00:00Z"', fixed = TRUE)
+  expect_identical(format_week(timetable, "2026-09-17"), week)
+  expect_match(format_week(timetable, "2026-09-29"), "September 29–October 1")
+  expect_equal(format_week(timetable, "2026-10-13"), "")
+
+  winter <- timetable[1, ]
+  winter$date <- as.Date("2026-10-27")
+  expect_match(format_week(winter, "2026-10-27"), "2026-10-27T11:00:00Z")
+  expect_match(format_week(winter, "2026-10-27"), ">October 27<")
+})
+
 test_that("inline details distinguish morning classes and afternoon presentations", {
   timetable <- parse_timetable(saved_timetable())
   expect_equal(
