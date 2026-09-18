@@ -210,6 +210,31 @@ $$
 - **Unconstrained**
 - Constrained
 
+## Optimality
+
+For **unconstrained** minimization, suppose $H$ is twice continuously
+differentiable.
+
+. . .
+
+### Necessary Conditions
+
+If $\theta^*$ is a local minimum, then
+$$
+  \nabla H(\theta^*) = 0 \quad \text{and} \quad \nabla^2 H(\theta^*) \succeq 0.
+$$
+These conditions alone do not guarantee a local minimum.
+
+. . .
+
+### Sufficient Conditions
+
+If
+$$
+  \nabla H(\theta^*) = 0 \quad \text{and} \quad \nabla^2 H(\theta^*) \succ 0,
+$$
+then $\theta^*$ is a **strict local minimum**.
+
 ## Convex Optimization Problems
 
 Standard form:
@@ -354,26 +379,28 @@ ggplot(df, aes(x, y)) +
   labs(y = expression(H(theta)), x = expression(theta))
 ```
 
-## Optimality
+## Optimality for Convex Problems
 
-Any (local) minimum is **global** (but not necessarily unique).
-
-### First-Order Condition
-
-For differentiable $H$, $\theta^*$ is optimal iff
-$$
-  \nabla H(\theta^*)^T(\theta - \theta^*) \geq 0\quad\text{for all}\quad \theta
-                                          \in C,
-$$
-where $C$ is the feasible set.
+Suppose $H$ is differentiable and convex, and $C$ is a convex feasible set.
+Any local minimum is **global** (but not necessarily unique).
 
 . . .
 
-### Second-Order Condition
+### First-Order Condition
 
-If $H$ is twice-differentiable, then $\theta^*$ is optimal iff
+A feasible point $\theta^* \in C$ is optimal iff
 $$
-  \nabla^2 H(\theta^*) \succeq 0.
+  \nabla H(\theta^*)^T(\theta - \theta^*) \geq 0\quad\text{for all}\quad \theta
+                                          \in C.
+$$
+
+. . .
+
+### Unconstrained Problems
+
+When $C = \mathbb{R}^p$, this simplifies to
+$$
+  \nabla H(\theta^*) = 0.
 $$
 
 ## Quasiconvex Optimization Problems
@@ -553,8 +580,6 @@ met.
 \medskip\pause
 
 **Examples:** gradient descent, hill-climbing
-
-. . .
 
 ## Running Example: OLS
 
@@ -1742,24 +1767,6 @@ Most principled stopping criterion, but not always available.
 :::::
 :::
 
-## Summary
-
-### Today
-
-- Optimization problems
-- Algorithms to solve optimization problems
-  - Gradient descent
-  - The Newton method
-
-. . .
-
-### Things We Did Not Cover
-
-- Accelerated gradient methods
-- Conjugate gradient
-- Constrained optimization
-- Nonsmooth objectives
-
 ## Exercise
 
 We will attempt to minimize the following function:
@@ -1798,6 +1805,24 @@ Test and benchmark your implementation against R's built-in `optimize()`.
 ### Step 3
 
 Implement Newton's method for solving this problem and repeat the analysis.
+
+## Summary
+
+### Today
+
+- Optimization problems
+- Algorithms to solve optimization problems
+  - Gradient descent
+  - The Newton method
+
+. . .
+
+### Things We Did Not Cover
+
+- Accelerated gradient methods
+- Conjugate gradient
+- Constrained optimization
+- Nonsmooth objectives
 
 ## Next Time
 
