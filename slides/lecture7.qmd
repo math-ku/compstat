@@ -1740,12 +1740,12 @@ Same complexity but lower memory cost.
   \pause
 - Small relative change in $\theta$:
   $$
-  \frac{\|\theta_{n+1} - \theta_n\|_2}{\|\theta_n + 10^{-q}\|_2} \leq \epsilon
+  \frac{\|\theta_{n+1} - \theta_n\|_2}{\max\{1, \|\theta_n\|_2\}} \leq \epsilon
   $$
   \pause
 - Small relative change in $H$:
   $$
-  \frac{H(\theta_{n+1}) - H(\theta_n)}{H(\theta_n)} \leq \epsilon
+  \frac{|H(\theta_{n+1}) - H(\theta_n)|}{\max\{1, |H(\theta_n)|\}} \leq \epsilon
   $$
 :::::
 
