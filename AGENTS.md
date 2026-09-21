@@ -1,325 +1,117 @@
-# Agent Guide for Computational Statistics Repository
+# Agent Guide for Computational Statistics
 
-## Repository Overview
+This repository contains the Quarto website and course materials for
+Computational Statistics at the University of Copenhagen. The course targets
+graduate students with prior knowledge of statistics and R. Slides use Beamer
+and XeLaTeX.
 
-This is a course website repository for the Computational Statistics course at
-the University of Copenhagen. The repository generates a static website with
-course materials including lecture slides (PDF presentations), assignments,
-exercises, and course information.
+The course has four assignments, each with versions A and B: smoothing,
+univariate simulation, the EM algorithm, and stochastic optimization.
 
-**Repository Type:** Academic course website (Quarto-based static site
-generator) **Primary Language:** R (58 R files), Quarto Markdown (30 .qmd files)
-**Repository Size:** \~63 MB **Total Source Files:** \~101 files (.R, .qmd,
-.yml, .yaml, .md) **Target Audience:** Graduate students with prerequisite
-knowledge of statistics and R
+## Environment and Dependencies
 
-### Course Structure
+Run build, test, lint, and formatting commands inside the devenv environment. If
+it is not already active, enter it with `devenv shell`, or run an individual
+command with `devenv shell -- <command>`.
 
-The course has exactly **4 assignments**, each with two versions (A and B). The
-four main topics are:
+- `devenv.nix` declares R packages, Quarto, go-task, and LaTeX dependencies.
+- `devenv.yaml` configures inputs; `devenv.lock` pins them. Do not modify the
+  lockfile unless a dependency update explicitly requires it.
+- Add missing R packages to the R wrapper in `devenv.nix`, then restart the
+  shell. Do not use `install.packages()` or install R packages outside devenv.
+- For LaTeX errors, check `slides/packages.tex` and confirm that the devenv
+  environment is active. It provides `texliveFull`.
 
-1. Smoothing
-2. Univariate Simulation
-3. The EM Algorithm
-4. Stochastic Optimization
+## Repository Layout
 
-### Key Course Files
+- `index.qmd`: course schedule and links to materials.
+- `overview.qmd`, `faq.qmd`: course overview and frequently asked questions.
+- `R/`: R examples and utilities.
+- `slides/`: lecture sources, shared setup, and Beamer support files.
+- `assignments/`: assignment descriptions.
+- `exercises/`: exercise solutions.
+- `data/`: course datasets and the saved timetable.
+- `images/`, `assets/`: figures, bibliography, and website assets.
+- `tests/`: testthat tests and fixtures.
+- `scripts/`: maintenance scripts. See `README.md` for the timetable update
+  workflow and the mapping between dates and topics in `index.qmd`.
 
-- **index.qmd** - Course schedule with links to slides, assignments, exercises,
-  and readings
-- **overview.qmd** - Complete course overview including topics, structure, and
-  literature
-- **faq.qmd** - Frequently asked questions about the course
+Preserve existing filenames and links when editing course materials:
 
-## Technology Stack
+- Lectures use `slides/lectureN.qmd`, with lectures 1–14 and additional decks
+  such as `slides/llm_use.qmd`.
+- Assignments use `assignments/assignmentN.qmd`, where N is 1–4. Each file
+  contains versions A and B.
+- Exercise solutions use `exercises/UN.qmd`, where N identifies the week.
+  Existing files include U1–U4 and U7; numbering need not be consecutive.
+- Tests use `tests/test-*.R`. Other R scripts use descriptive names.
 
-- **Build Tool:** Quarto (Quarto Markdown for content, renders to HTML/PDF)
-- **Environment Manager:** devenv (Nix-backed, reproducible environment)
-- **Task Runner:** go-task (Taskfile.yml)
-- **Runtime:** R with extensive package ecosystem
-- **PDF Generation:** XeLaTeX via Quarto (for Beamer slides)
-- **CI/CD:** GitHub Actions (publishes to GitHub Pages)
+## Building and Testing
 
-### Key R Packages (from devenv.nix)
+Run these commands from the repository root in the devenv environment:
 
-The environment includes: tidyverse, ggplot2, Rcpp, RcppArmadillo, bench,
-testthat, knitr, rmarkdown, here, lme4, profvis, foreach, doParallel, CSwR
-(course-specific package from GitHub), and many others.
+  | Task                                    | Command                                    |
+  | --------------------------------------- | ------------------------------------------ |
+  | Preview the website                     | `task preview`                             |
+  | Preview with refreshed execution caches | `task preview-refresh`                     |
+  | Render for presentations                | `task render`                              |
+  | Render for publishing                   | `quarto render --profile publish`          |
+  | Render one document                     | `quarto render slides/lecture1.qmd`        |
+  | Run the R tests                         | `Rscript -e "testthat::test_dir('tests')"` |
 
-## Project Structure
+`Taskfile.yml` defines the preview and render tasks. `task render` uses the
+`present` profile. Both `_quarto-present.yml` and `_quarto-publish.yml` disable
+execution caching; the publish profile also produces Beamer handouts.
+`_quarto.yml` holds the shared website and format configuration and enables
+execution caching by default. Use the preview-refresh task when cached output is
+stale.
 
-### Root Directory Layout
+Preview or render changed `.qmd` files before committing. When changing R code
+used by a document, also validate that document. Standalone R changes do not
+require rebuilding unrelated website pages.
 
-```
-/
-├── .github/workflows/     # CI/CD pipelines
-├── R/                     # R scripts (examples, exercises, utilities)
-├── slides/                # Lecture slides (.qmd → .pdf via Quarto)
-├── assignments/           # Assignment descriptions (.qmd)
-├── exercises/             # Exercise solutions (.qmd)
-├── data/                  # Course datasets (CSV, txt, RData files)
-├── images/                # Images, diagrams, logos
-├── assets/                # Additional assets (bibliography, images)
-├── tests/                 # R test files (test-*.R)
-├── _quarto.yml           # Main Quarto configuration
-├── _quarto-present.yml   # Quarto profile for presentations
-├── _quarto-publish.yml   # Quarto profile for publishing
-├── devenv.nix            # Development environment and dependencies
-├── devenv.yaml           # devenv inputs
-├── devenv.lock           # Locked environment inputs
-├── Taskfile.yml          # Task definitions
-├── index.qmd             # Course homepage
-└── *.qmd                 # Other top-level pages
-```
+The tests include basic teaching examples and regression coverage for density
+estimation, gradient descent, momentum, lecture optimization examples, the
+patched `bench` package, and timetable handling. Run relevant tests when
+changing those implementations; use the command above for the full suite.
 
-### Important Configuration Files
+Quarto writes the site to `_site/` and project state to `.quarto/`. Both are
+ignored by Git; do not commit generated site or cache files.
 
-1. **devenv.nix** - Development environment with all dependencies (R packages,
-   Quarto, go-task, LaTeX)
-2. **devenv.yaml** - devenv input configuration
-3. **devenv.lock** - Locked environment inputs
-4. **_quarto.yml** - Main Quarto configuration (website structure, themes,
-   formats)
-5. **_quarto-present.yml** - Disables caching for presentations
-6. **_quarto-publish.yml** - Handout mode for published content
-7. **Taskfile.yml** - Task definitions for preview and render
-8. **.lintr** - R linting configuration (excludes some strict rules)
-9. **.prettierrc.yml** - Prose wrapping configuration
-10. **.clang-format** - C++ code formatting configuration (uses Mozilla style)
-11. **air.toml** - R code formatting configuration (follows tidyverse style)
+`.github/workflows/publish.yml` renders with the publish profile, checks links,
+and deploys to GitHub Pages. It runs on pushes to `main`, manual dispatch, and
+calls from other workflows.
 
-### Slides Directory Structure
+## Linting and Formatting
 
-```
-slides/
-├── _common.qmd          # Shared setup for all slides
-├── _metadata.yml        # Default metadata for slides
-├── beamer-overlays.lua  # Quarto filter for Beamer
-├── lecture[1-14].qmd    # Individual lecture files
-├── packages.tex         # LaTeX packages for slides
-├── passoptions.latex    # Overrides quarto partial for LaTeX output
-└── tightlist.tex        # List formatting template
-```
+Use Arity for R and Panache for Markdown and Quarto. Their configuration files
+are `arity.toml` and `panache.toml`. Panache uses Arity to format and lint R
+code blocks and clang-format to format C++ blocks. `.clang-format` selects the
+Mozilla style.
 
-## Build and Development Workflow
-
-### Prerequisites
-
-**CRITICAL:** This repository requires Nix and devenv to be installed. All other
-dependencies (R, Quarto, go-task, LaTeX) are provided through devenv.
-
-### Environment Setup
-
-The repository uses devenv for a reproducible development environment. Enter it
-manually with:
+Run the tools on the files you change. For example:
 
 ```bash
-devenv shell
+arity format R/kernel.R
+arity lint R/kernel.R
+panache format slides/lecture1.qmd
+panache lint slides/lecture1.qmd
 ```
 
-For a single noninteractive command, use `devenv shell -- <command>`. If your
-shell is configured to activate devenv automatically when entering the project,
-you can run project commands directly.
+Add `--check` to either `format` command to check formatting without changing
+files. Panache excludes `AGENTS.md` during directory traversal; pass the file
+explicitly when checking or formatting it.
 
-**Environment Setup Time:** First run takes 5-15 minutes to download and build
-dependencies. Subsequent runs are instant due to Nix caching.
+## R Code and Data
 
-### Building the Website
+Use `here::here()` for file paths in R code so they resolve from the project
+root. For example:
 
-**ALWAYS run commands inside the devenv environment.**
-
-#### Preview the Website (Development)
-
-```bash
-# Option 1: Using go-task
-task preview
-
-# Option 2: Direct Quarto command
-quarto preview
-
-# With cache refresh (if you encounter caching issues)
-task preview-refresh
-# OR
-quarto preview --cache-refresh
+```r
+read.table(here::here("data", "phipsi.tsv"), header = TRUE)
 ```
 
-**Expected behavior:** Starts a development server, typically on
-http://localhost:XXXX. The preview auto-reloads on file changes.
-
-#### Render the Website (Production)
-
-```bash
-# For presentations (with caching disabled)
-task render
-# OR
-quarto render --profile present
-
-# For publishing (handout mode, no caching)
-quarto render --profile publish
-```
-
-**Expected behavior:** Generates all HTML pages and PDF slides into `_site/`
-directory. Rendering all slides takes approximately 5-10 minutes due to PDF
-generation via LaTeX.
-
-**Output Location:** `_site/` directory (ignored by .gitignore)
-
-### Testing
-
-The repository includes minimal test files in the `tests/` directory:
-
-- `tests/test-mean.R` - Basic R test using testthat
-- `tests/test-sum.R` - Basic R test using testthat
-
-**Running Tests:**
-
-```bash
-# Inside the devenv environment
-Rscript -e "testthat::test_dir('tests')"
-```
-
-**Note:** These are example tests. The repository does not have comprehensive
-test coverage or a dedicated test runner.
-
-### Linting and Formatting
-
-- arity: R code formatting and linting
-- panache: markdown adn quarto formatting and linting
-- clang-format: C++ code formatting
-
-Panache uses arity and clang-format to format Quarto code blocks.
-
-## CI/CD Pipeline
-
-### GitHub Actions Workflow (.github/workflows/publish.yml)
-
-**Trigger:** Push to `main` branch or manual workflow_dispatch
-
-**Steps:**
-
-1. Checkout repository
-2. Install Nix (cachix/install-nix-action@v31)
-3. Set up the Cachix cache (cache name: jolars)
-4. Install devenv
-5. Configure GitHub Pages
-6. Restore git timestamps (important for caching)
-7. **Build:** `devenv shell -- quarto render --profile publish`
-8. Check links
-9. Upload the artifact to GitHub Pages
-10. Deploy to GitHub Pages
-
-**Build Time:** Approximately 10-15 minutes (with cache hits)
-
-**Important:** The workflow restores git timestamps before building. This
-ensures Quarto's caching works correctly across CI runs.
-
-## Common Tasks and Workflows
-
-### Modifying R Scripts
-
-1. R scripts in `R/` are standalone examples/exercises
-2. Scripts should use `here::here()` for path resolution
-3. Test scripts interactively in an R console within the devenv environment
-4. No need to rebuild website unless scripts are referenced in .qmd files
-
-### Working with Data
-
-- All datasets are in `data/` directory
-- Always use `here::here("data", "filename")` in R code for path resolution
-- Example: `read.table(here::here("data", "phipsi.tsv"), header = TRUE)`
-
-## Known Issues and Workarounds
-
-### Issue: Quarto Caching Problems
-
-**Symptom:** Old content appears or changes don't reflect
-
-**Solution:** Use cache refresh:
-
-```bash
-quarto preview --cache-refresh
-# OR
-task preview-refresh
-```
-
-### Issue: LaTeX/PDF Generation Fails
-
-**Symptom:** Errors during slide rendering mentioning XeLaTeX or missing
-packages
-
-**Solution:**
-
-- Ensure you're in the devenv environment (all LaTeX packages are included via
-  texliveFull)
-- Check `slides/packages.tex` for required LaTeX packages
-- All required packages should be available in the devenv environment
-
-### Issue: R Package Not Found
-
-**Symptom:** Error loading R package during rendering
-
-**Solution:**
-
-1. Check if the package is listed in `devenv.nix` under the R wrapper packages
-2. If missing, add it to the list and restart `devenv shell`
-3. Do NOT install packages via `install.packages()` - all dependencies must be
-   declared in `devenv.nix`
-
-### Issue: Git Timestamp Issues in CI
-
-**Note:** The CI workflow uses `chetan/git-restore-mtime-action@v2` to restore
-timestamps. This is intentional and should not be removed, as it helps Quarto's
-caching mechanism work correctly.
-
-## File Patterns and Conventions
-
-### Quarto Document Structure
-
-Most .qmd files follow this pattern:
-
-```qmd
----
-title: "Document Title"
-format: html  # or beamer for slides
----
-
-Content goes here...
-```
-
-### Slide Presentation Guidelines
-
-- The presentation style makes liberal use of figures. Avoid bullet
-  points unless actually listing something. Use pauses liberally to incrementally
-  show content.
-- Paragraphs need `\medskip` or `\bigskip` to create vertical spacing between them.
-  Separating paragraphs with blank lines is **not sufficient**.
-- Use `\pause` for pausing.
-- Raw LaTeX commands are allowed and commonly used in slides
-- For animated figures, use raw LaTeX code with pre-made figures and the
-  `xmpmulti` package
-- For algorithms, use the `algorithm2e` package with raw LaTeX code
-- **DO NOT** use unicode characters for mathematical symbols (e.g., ∑, ∫). Always
-  use LaTeX syntax (e.g., `\sum`, `\int`).
-- Use `\pdfpcnote{}` for speaker notes. Write them as lists, beginning with `-` and
-  ending with `\\`. No more than say 5-6 lines per slide. Avoid long paragraphs.
-
-#### Plots
-
-Keep plots simple and clean. Use ggplot2 if it makes sense, otherwise base R
-plots are fine.
-
-In particular:
-
-- Try to use modern colors for the plots, for instance `"darkorange"` and
-  `"royalblue`, and palettes from ColorBrewer, Tableau, or Viridis.
-- Avoid modifying line width (`lwd`).
-- Don't add any themes. They are set globally in `slides/_common.qmd`.
-- Use `expression()` for mathematical notation in axis labels and titles.
-- For ggplot2 plots, a width of around 5 inches spans the entire slide width and
-  a height of 3 inches spans the height well. Defaults are 2.8 and 2.1 for width
-  and height respectively, which is good for a one-column plot.
-
-### R Code in Quarto
+In Quarto, use chunk options to control execution and presentation:
 
 ````qmd
 ```{r chunk-name}
@@ -331,77 +123,36 @@ In particular:
 ```
 ````
 
-Common chunk options: `echo`, `eval`, `message`, `warning`, `fig-width`,
-`fig-height`, `cache`
+## Slide Conventions
 
-### File Naming
+`slides/_metadata.yml` sets the shared Beamer metadata and selects
+`beamer-overlays.lua`. `slides/_common.qmd` contains the shared R setup and plot
+hooks. LaTeX packages live in `slides/packages.tex`; `slides/passoptions.latex`
+and `slides/tightlist.tex` customize the template.
 
-- Lectures: `lectureN.qmd` where N is 1-14
-- Assignments: `assignmentN.qmd` where N is 1-4 (each has two versions: A and B)
-- Exercises: `UN.qmd` where N is 1-4 (U for "Ugeopgave" = exercise in Danish)
-- Tests: `test-*.R`
-- R scripts: descriptive names, often matching lecture topics
+- Use figures liberally. Avoid bullet points unless actually listing something,
+  and use `\pause` to reveal content incrementally.
+- Separate paragraphs with `\medskip` or `\bigskip`. Blank lines alone do not
+  provide enough vertical spacing.
+- Raw LaTeX is allowed. For animated figures, use pre-made figures with
+  `xmpmulti`. The shared setup also supports `fig-show: animate` in R chunks
+  through an `xmpmulti` plot hook.
+- Use `algorithm2e` with raw LaTeX for algorithms.
+- Use LaTeX commands for mathematical symbols, such as `\sum` and `\int`, rather
+  than Unicode symbols.
+- Use `\pdfpcnote{}` for speaker notes. Write notes as lists, with each item
+  beginning with `-` and ending with `\\`. Keep notes to about five or six lines
+  per slide.
 
-## Dependencies Not Obvious from Structure
+### Plots
 
-**LaTeX Packages:** Extensive list in `slides/packages.tex` (xmpmulti,
-fontsetup, algorithm2e, tikz libraries, etc.)
+Keep plots simple and clean. Use ggplot2 when it makes sense; base R plots are
+also fine.
 
-## Quick Reference Commands
-
-All commands should be run inside the devenv environment. Enter it with
-`devenv shell`, or prefix an individual command with `devenv shell --`:
-
-```bash
-# Preview website (dev server with auto-reload)
-task preview
-quarto preview
-
-# Render for presentation
-task render
-quarto render --profile present
-
-# Render for publishing
-quarto render --profile publish
-
-# Render specific file
-quarto render slides/lecture1.qmd
-
-# Run R tests
-Rscript -e "testthat::test_dir('tests')"
-
-# Lint R code
-Rscript -e "lintr::lint_dir('R')"
-
-# Start R console with all packages
-R
-```
-
-## Critical Instructions for Agents
-
-1. **ALWAYS use the devenv environment:** Run build and test commands from an
-   active `devenv shell`, or use `devenv shell -- <command>`. Without this, the
-   correct R, Quarto, and other tools may not be available.
-
-2. **DO NOT modify `devenv.lock` unless a dependency update explicitly requires
-   it:** This file pins the reproducible environment.
-
-3. **DO NOT install R packages outside of devenv:** All R package dependencies
-   must be declared in `devenv.nix`. Do not use `install.packages()`.
-
-4. **ALWAYS use `here::here()` for file paths in R code:** This ensures scripts
-   work regardless of working directory.
-
-5. **DO NOT remove timestamp restoration in CI:** The `git-restore-mtime-action`
-   is critical for Quarto caching.
-
-6. **Test rendering before committing:** Always preview or render changed .qmd
-   files to ensure they compile correctly.
-
-7. **Respect existing file structure:** Lectures, assignments, and exercises
-   follow strict naming conventions referenced in index.qmd.
-
-8. **Cache directory (.quarto/) is ignored:** Don't commit cache files.
-
-9. **Generated site (\_site/) is ignored:** This directory is regenerated on
-   each build.
+- Prefer colors such as `"darkorange"` and `"royalblue"`, or palettes from
+  ColorBrewer, Tableau, or Viridis.
+- Avoid modifying line width (`lwd`).
+- Do not add themes. `slides/_common.qmd` sets the theme globally.
+- Use `expression()` for mathematical notation in axis labels and titles.
+- A figure width of about 5 inches and height of 3 inches spans a slide well.
+  The defaults are 2.8 by 2.1 inches, suitable for a plot in one column.
