@@ -235,35 +235,6 @@ ensures Quarto's caching works correctly across CI runs.
 
 ## Common Tasks and Workflows
 
-### Adding a New Lecture Slide
-
-1. Create `slides/lectureX.qmd`
-
-2. Include common setup: `{{< include _common.qmd >}}`
-
-3. Use YAML frontmatter:
-
-   ```yaml
-   ---
-   title: "Your Lecture Title"
-   ---
-
-   ```
-
-4. Render to test: `quarto render slides/lectureX.qmd`
-
-5. PDF output: `slides/lectureX.pdf`
-
-### Adding a New Assignment
-
-**Note:** There are exactly 4 assignments in the course, each with two versions
-(A and B). Do not add more unless explicitly requested.
-
-1. Create `assignments/assignmentX.qmd` where X is 1-4
-2. Each assignment covers one of the four main topics
-3. Reference in `index.qmd` schedule
-4. Preview changes: `task preview`
-
 ### Modifying R Scripts
 
 1. R scripts in `R/` are standalone examples/exercises
