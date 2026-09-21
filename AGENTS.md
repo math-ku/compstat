@@ -308,57 +308,18 @@ Content goes here...
 
 ### Slide Presentation Guidelines
 
-**Important:** The presentation style makes liberal use of figures. Avoid bullet
-points unless actually listing something. Use pauses liberally to incrementally
-show content.
-
-For slides:
-
-```qmd
----
-title: "Lecture Title"
----
-
-{{< include _common.qmd >}}
-
-## Section 1
-
-Content...
-
-. . .
-
-More content (pause in Beamer)...
-
-##
-
-Empty title frame (using ## without title)
-```
-
-**Pause Mechanisms:**
-
-- Use `. . .` (three dots with spaces) for pauses in Quarto
-- Use `\pause` for raw LaTeX pauses
-- Both methods work and are used throughout the slides
-
-**Raw LaTeX Commands:**
-
+- The presentation style makes liberal use of figures. Avoid bullet
+  points unless actually listing something. Use pauses liberally to incrementally
+  show content.
+- Paragraphs need `\medskip` or `\bigskip` to create vertical spacing between them.
+  Separating paragraphs with blank lines is **not sufficient**.
+- Use `\pause` for pausing.
 - Raw LaTeX commands are allowed and commonly used in slides
 - For animated figures, use raw LaTeX code with pre-made figures and the
   `xmpmulti` package
 - For algorithms, use the `algorithm2e` package with raw LaTeX code
-
-**Example with LaTeX:**
-
-```qmd
-\pause
-
-\begin{algorithm}[H]
-  % algorithm content
-\end{algorithm}
-```
-
-**DO NOT** use unicode characters for mathematical symbols (e.g., ∑, ∫). Always
-use LaTeX syntax (e.g., `\sum`, `\int`).
+- **DO NOT** use unicode characters for mathematical symbols (e.g., ∑, ∫). Always
+  use LaTeX syntax (e.g., `\sum`, `\int`).
 
 #### Plots
 
@@ -401,10 +362,8 @@ Common chunk options: `echo`, `eval`, `message`, `warning`, `fig-width`,
 
 ## Dependencies Not Obvious from Structure
 
-1. **CSwR Package:** Custom R package from GitHub (nielsrhansen/CSwR) provided
-   through devenv
-2. **LaTeX Packages:** Extensive list in `slides/packages.tex` (xmpmulti,
-   fontsetup, algorithm2e, tikz libraries, etc.)
+**LaTeX Packages:** Extensive list in `slides/packages.tex` (xmpmulti,
+fontsetup, algorithm2e, tikz libraries, etc.)
 
 ## Quick Reference Commands
 
@@ -464,7 +423,3 @@ R
 
 9. **Generated site (\_site/) is ignored:** This directory is regenerated on
    each build.
-
-10. **When in doubt, trust these instructions:** Only search for additional
-    information if instructions here are incomplete or incorrect. The workflow
-    described here is the authoritative method for working with this repository.
