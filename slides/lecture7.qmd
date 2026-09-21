@@ -807,7 +807,9 @@ step_size_illustration <- function(
         aes(beta1, beta2, z = f),
         color = "steelblue",
         linetype = "dashed",
-        breaks = contour_breaks[seq(1, length(contour_breaks), by = 5)]
+        breaks = contour_breaks[
+          seq(1, length(contour_breaks), by = 5)
+        ]
       ) +
       annotate(
         "point",
@@ -1772,21 +1774,247 @@ pl_newton <- step_size_illustration(
 pl_gd + pl_newton + plot_layout(guides = "collect")
 ```
 
-## Convergence in Time and Iterations
+## Comparing the Methods: Logistic Regression
+
+For binary outcomes $y_i \in \{0, 1\}$, minimize
+$$
+  H(\beta)
+  = \frac{1}{n} \sum_{i=1}^n \left[ \log\left( 1 + e^{x_i^\top\beta} \right) - y_i x_i^\top\beta \right]
+    + \frac{\lambda}{2}\|\beta\|_2^2,
+$$
+with a small ridge penalty, $\lambda = 10^{-3}$.
+
+Unlike OLS, the Hessian changes with $\beta$.
+
+. . .
+
+GD uses a fixed step size $1/L$. Newton uses backtracking line search.
+
+Both start at $\beta_0 = 0$ and stop when
+$$
+  \frac{H(\beta_k) - H(\beta^*)}{H(\beta_0) - H(\beta^*)} \leq 10^{-8}.
+$$
+
+We estimate $H(\beta^*)$ using a separate, high-accuracy fit.
+
+## Iterations and Numerical Work
+
+```{r}
+#| label: gd-newton-comparisons
+#| include: false
+
+source(here::here("R", "lecture7-comparison.R"))
+
+comparison_basic <- compare_logistic_methods(logistic_comparison_problem(
+  1500,
+  300,
+  design_condition = 5,
+  seed = 71
+))
+comparison_gd <- compare_logistic_methods(logistic_comparison_problem(
+  2000,
+  400,
+  design_condition = 2,
+  seed = 72
+))
+comparison_newton <- compare_logistic_methods(logistic_comparison_problem(
+  200,
+  20,
+  design_condition = 100,
+  seed = 73
+))
+
+comparison_plots <- function(comparison) {
+  curves <- comparison$history |>
+    mutate(
+      relative_gap = pmax(relative_gap, comparison$tolerance)
+    )
+
+  endpoints <- curves |>
+    group_by(method) |>
+    slice_tail(n = 1) |>
+    ungroup()
+  points <- bind_rows(
+    filter(curves, method == "Newton"),
+    filter(endpoints, method == "Gradient descent")
+  )
+
+  base_plot <- ggplot(
+    curves,
+    aes(y = relative_gap, color = method, linetype = method)
+  ) +
+    geom_hline(
+      yintercept = comparison$tolerance,
+      color = "grey60",
+      linetype = "dotted"
+    ) +
+    geom_line() +
+    geom_point(data = points, size = 1.5) +
+    scale_x_continuous(
+      transform = "log1p",
+      breaks = c(0, 1, 10, 100, 1000),
+      expand = expansion(mult = 0.03)
+    ) +
+    scale_y_log10(
+      breaks = 10^seq(-8, 0, by = 2),
+      labels = function(z) parse(text = paste0("10^", log10(z)))
+    ) +
+    scale_color_manual(
+      values = c(
+        "Gradient descent" = "royalblue",
+        Newton = "darkorange"
+      )
+    ) +
+    scale_linetype_manual(
+      values = c(
+        "Gradient descent" = "solid",
+        Newton = "longdash"
+      )
+    ) +
+    labs(
+      y = "Relative objective gap",
+      color = NULL,
+      linetype = NULL
+    ) +
+    guides(
+      color = guide_legend(position = "bottom", nrow = 1),
+      linetype = guide_legend(position = "bottom", nrow = 1)
+    )
+
+  iteration_plot <- base_plot +
+    aes(x = iteration) +
+    labs(x = "Iterations, log(1 + x)")
+  work_plot <- base_plot +
+    aes(x = work) +
+    labs(x = "Work (GD steps), log(1 + x)")
+
+  list(iterations = iteration_plot, work = work_plot)
+}
+```
+
+Both panels show the same runs on one simulated logistic regression problem:
+1,500 observations and 300 coefficients.
 
 ::: {.columns}
-::::: {.column width="47%"}
-![](../images/newton-gd-convergence-iteration.png){width=100%}
+::::: {.column width="48%"}
+```{r}
+#| label: gd-newton-basic-iterations
+#| echo: false
+#| fig-width: 2.6
+#| fig-height: 2.25
+#| out-width: "\\linewidth"
+
+comparison_plots(comparison_basic)$iterations
+```
 :::::
 
-::::: {.column width="47%"}
-![](../images/newton-gd-convergence-time.png){width=100%}
+. . .
+
+::::: {.column width="48%"}
+```{r}
+#| label: gd-newton-basic-work
+#| echo: false
+#| fig-width: 2.6
+#| fig-height: 2.25
+#| out-width: "\\linewidth"
+
+comparison_plots(comparison_basic)$work
+```
 :::::
 :::
 
-\bigskip
+Newton needs **`r comparison_basic$summary$iteration[2]` iterations** to GD's
+**`r comparison_basic$summary$iteration[1]`**, but uses
+**`r round(comparison_basic$summary$work[2] / comparison_basic$summary$work[1], 1)`
+times as much estimated work**.
 
-In practice, results depend on the problem.
+\pdfpcnote{
+  These are actual optimization runs on simulated binary responses. All three
+  examples use the same ridge logistic objective and penalty. The stated
+  condition numbers describe the design Gram matrix, not the changing Hessian.
+  The signal strength is held fixed across the simulated problems.
+
+  In this first example, the design Gram matrix has condition number 5. The
+  two panels use identical objective values from the same optimization runs;
+  only the horizontal coordinate changes. Newton wins by iteration count,
+  while GD wins by total estimated work. Newton's five iterations cost about
+  408 GD iterations, compared with GD's 218 iterations.
+
+  A separate high-accuracy Newton fit supplies the reference minimum. Its
+  remaining objective gap is bounded by the squared gradient norm divided by
+  twice the ridge penalty, and is below 1e-16. Computing this reference and
+  generating the data are excluded from both methods' work. Each curve ends
+  at the first iterate reaching the target. Values below the target are
+  displayed at the target. The vertical axis is logarithmic. The horizontal
+  axes use log(1 + x), retaining the common starting point at zero iterations
+  and zero work. Points mark every Newton step and the final GD step.
+
+  GD receives the known global Lipschitz bound L = ||X|| squared / (4n) + lambda
+  from the design construction. It does not form a Hessian to choose a step
+  size. Newton rebuilds its Hessian at every iteration and uses a Cholesky
+  factorization and Armijo backtracking with constant 1/4 and halving.
+
+  Work is a leading-order dense arithmetic estimate, not measured time.
+  Accepted fitted probabilities are reused, so one GD iteration costs about
+  4np operations: one matrix-vector product for the gradient and one for the
+  next objective evaluation. Newton additionally weights X, forms a symmetric
+  Gram matrix, factors it, and solves two triangular systems. Every rejected
+  line-search evaluation is charged another 2np operations. Scalar operations,
+  data generation, and the common initial evaluation are excluded. Neither
+  optimizer exploits the special structure used to generate the design.
+}
+
+## When Does Each Method Win?
+
+::: {.columns}
+::::: {.column width="48%"}
+### Gradient Descent
+
+2,000 observations, 400 coefficients. $\kappa(X^\top X) = 2$.
+
+```{r}
+#| label: gd-newton-gd-wins
+#| echo: false
+#| fig-width: 2.6
+#| fig-height: 2.25
+#| out-width: "\\linewidth"
+
+comparison_plots(comparison_gd)$work
+```
+
+A large Hessian makes Newton costly.
+:::::
+
+. . .
+
+::::: {.column width="48%"}
+### Newton's Method
+
+200 observations, 20 coefficients. $\kappa(X^\top X) = 100$.
+
+```{r}
+#| label: gd-newton-newton-wins
+#| echo: false
+#| fig-width: 2.6
+#| fig-height: 2.25
+#| out-width: "\\linewidth"
+
+comparison_plots(comparison_newton)$work
+```
+
+Curvature information pays off.
+:::::
+:::
+
+\pdfpcnote{
+  Each panel compares GD and Newton on the same logistic regression problem.
+  The problems differ between panels. Work is measured in GD-iteration
+  equivalents separately for each problem, so compare the methods within a
+  panel rather than comparing absolute computational costs across panels.
+
+  In the larger problem, GD uses 132 work units and Newton about 541. In the
+  smaller, ill-conditioned problem, GD uses 791 and Newton about 27.
+}
 
 ## Gradient Descent vs Newton's Method
 
@@ -1796,7 +2024,7 @@ Let $\theta^*$ be a minimizer and $e_n = \|\theta_n - \theta^*\|_2$.
 ::::: {.column width="47%"}
 ### Gradient Descent
 
-- Cheap iterations: $O(p)$
+- Cheap iterations: gradient evaluations
 - Sensitive to conditioning
 - **Sublinear** objective gap $O(1/n)$ for convex $H$
 - **Linear** objective gap $O(q^n)$, $0 < q < 1$, if $H$ is strongly convex
@@ -1808,8 +2036,8 @@ Let $\theta^*$ be a minimizer and $e_n = \|\theta_n - \theta^*\|_2$.
 ::::: {.column width="47%"}
 ### Newton's Method
 
-- Expensive iterations: $O(p^3)$
-- Insensitive to conditioning
+- Costly iterations: Hessian and linear solve
+- Uses curvature to rescale the step
 - **Locally quadratic** with full steps: $e_{n+1} \leq C e_n^2$
 - Reaches $e_n \leq \epsilon$ in $O(\log \log(1/\epsilon))$ local iterations
 - Assumes a locally Lipschitz Hessian that is positive definite at $\theta^*$
