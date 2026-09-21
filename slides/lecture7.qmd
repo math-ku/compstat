@@ -1689,14 +1689,17 @@ In practice, results depend on the problem.
 
 ## Gradient Descent vs Newton's Method
 
+Let $\theta^*$ be a minimizer and $e_n = \|\theta_n - \theta^*\|_2$.
+
 ::: {.columns}
 ::::: {.column width="47%"}
 ### Gradient Descent
 
 - Cheap iterations: $O(p)$
 - Sensitive to conditioning
-- Linear convergence ($O(1/n)$)
-- Few assumptions on $H$
+- **Sublinear** objective gap $O(1/n)$ for convex $H$
+- **Linear** objective gap $O(q^n)$, $0 < q < 1$, if $H$ is strongly convex
+- Assumes an $L$-Lipschitz gradient and $0 < \gamma \leq 1/L$
 :::::
 
 . . .
@@ -1706,8 +1709,9 @@ In practice, results depend on the problem.
 
 - Expensive iterations: $O(p^3)$
 - Insensitive to conditioning
-- Quadratic convergence ($O(\log \log(1/n))$)
-- Requires $H$ to be twice-differentiable and Hessian to be positive definite
+- **Locally quadratic** with full steps: $e_{n+1} \leq C e_n^2$
+- Reaches $e_n \leq \epsilon$ in $O(\log \log(1/\epsilon))$ local iterations
+- Assumes a locally Lipschitz Hessian that is positive definite at $\theta^*$
 :::::
 :::
 
