@@ -183,31 +183,11 @@ test coverage or a dedicated test runner.
 
 ### Linting and Formatting
 
-**R Code Linting:**
+- arity: R code formatting and linting
+- panache: markdown adn quarto formatting and linting
+- clang-format: C++ code formatting
 
-```bash
-# Inside the devenv environment
-Rscript -e "lintr::lint_dir('R')"
-Rscript -e "lintr::lint_dir('slides')"
-```
-
-Configuration is in `.lintr` which excludes: cyclocomp_linter,
-implicit_integer_linter, undesirable_function_linter, object_length_linter,
-object_name_linter.
-
-**R Code Formatting:** Use the `air` formatter which follows the tidyverse style
-guide:
-
-```bash
-# Inside the devenv environment
-# Configuration in air.toml
-air format R/gd.R # to format a specific file
-```
-
-**C++ Code Formatting:** Follow the Mozilla style. clang-format is not available
-in the devenv environment.
-
-**Note:** No automated linting is enforced in CI.
+Panache uses arity and clang-format to format Quarto code blocks.
 
 ## CI/CD Pipeline
 
