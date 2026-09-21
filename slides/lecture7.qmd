@@ -898,43 +898,243 @@ pivoting. Solving the least-squares problem by QR avoids forming $X^T X$.
 
 Update a current best guess iteratively until it is "good enough".
 
-. . .
+```{r}
+#| label: order-information-setup
+#| include: false
 
-### Taxonomy by Order
+information_objective <- function(theta) {
+  theta^4 / 4 - theta^2 / 2 + theta / 4 + 1
+}
 
-Can be categorized by order, in terms of the information used
+information_queries <- tibble(theta = c(-1.25, 0, 1.25)) |>
+  mutate(
+    value = information_objective(theta),
+    slope = theta^3 - theta + 1 / 4,
+    curvature = 3 * theta^2 - 1
+  )
 
-- **0-order**: only use function value ($H(\theta)$)
-- **first-order**: also use first derivative ($H'(\theta)$)
-- **second-order**: also use second derivative ($H''(\theta)$)
+information_curve <- tibble(
+  theta = seq(-1.8, 1.8, length.out = 401)
+) |>
+  mutate(value = information_objective(theta))
 
-## Zero-Order Methods
+information_models <- crossing(
+  query = seq_len(nrow(information_queries)),
+  offset = seq(-0.45, 0.45, length.out = 101)
+) |>
+  mutate(
+    theta = information_queries$theta[query] + offset,
+    tangent = information_queries$value[query] +
+      information_queries$slope[query] * offset,
+    quadratic = tangent +
+      information_queries$curvature[query] * offset^2 / 2
+  )
 
-Use only the function value.
+information_plot <- function(order = -1L, reference = FALSE) {
+  p <- ggplot()
+  if (order < 0 || reference) {
+    p <- p +
+      geom_line(
+        data = information_curve,
+        aes(theta, value),
+        color = if (order < 0) "black" else "grey70"
+      )
+  }
+  if (order > 0) {
+    model <- if (order == 1) "tangent" else "quadratic"
+    p <- p +
+      geom_line(
+        data = information_models,
+        aes(theta, .data[[model]], group = query),
+        color = "darkorange"
+      )
+  }
+  p +
+    geom_point(
+      data = information_queries,
+      aes(theta, value),
+      color = "royalblue",
+      size = 2
+    ) +
+    scale_x_continuous(
+      breaks = information_queries$theta,
+      labels = expression(theta[1], theta[2], theta[3])
+    ) +
+    scale_y_continuous(breaks = 0:2) +
+    coord_cartesian(xlim = c(-1.8, 1.8), ylim = c(0, 2.5)) +
+    labs(x = expression(theta), y = expression(H(theta)))
+}
+```
 
-### Examples
+```{r}
+#| label: order-objective
+#| echo: false
+#| dependson: order-information-setup
+#| fig-width: 5
+#| fig-height: 2.35
 
-- Hill climbing
-- Golden-section search
-- Grid search (cross-validation)
+information_plot()
+```
 
-## First-Order Methods
+\pause
 
-Use the gradient of the function (**first** derivative).
+What information do we get at each queried point?
 
-### Examples
+\pdfpcnote{
+  - The full curve is shown for us; an optimizer queries individual points.\\
+  - Keep these same three points in mind on the next slide.\\
+}
 
-- **Gradient descent**
-- Conjugate gradient
+## Optimization Methods by Order
 
-## Second-Order Methods
+Each order adds information at the same three points.
 
-Use the Hessian of the function (**second** derivative).
+\medskip
 
-### Examples
+::: {.columns}
+::::: {.column width="31%"}
+### Zeroth order
 
-- **Newton's Method**
-- Trust-region methods
+```{r}
+#| label: order-values
+#| echo: false
+#| dependson: order-information-setup
+#| fig-width: 1.7
+#| fig-height: 2.1
+
+information_plot(0)
+```
+
+Value: $H(\theta_i)$
+
+\medskip
+
+Grid search
+:::::
+
+\pause
+
+::::: {.column width="31%"}
+### First order
+
+```{r}
+#| label: order-tangents
+#| echo: false
+#| dependson: order-information-setup
+#| fig-width: 1.7
+#| fig-height: 2.1
+
+information_plot(1)
+```
+
+Also slope: $H'(\theta_i)$
+
+\medskip
+
+Gradient descent
+:::::
+
+\pause
+
+::::: {.column width="31%"}
+### Second order
+
+```{r}
+#| label: order-quadratics
+#| echo: false
+#| dependson: order-information-setup
+#| fig-width: 1.7
+#| fig-height: 2.1
+
+information_plot(2)
+```
+
+Also curvature: $H''(\theta_i)$
+
+\medskip
+
+Newton's method
+:::::
+:::
+
+\pdfpcnote{
+  - Same points and axes: values, then slopes, then curvature.\\
+  - Lines and parabolas show local information, not prescribed update rules.\\
+  - Zeroth-order methods can estimate slopes using extra function evaluations.\\
+}
+
+## Comparing with the Objective
+
+Gray curves show the objective for reference.
+
+\medskip
+
+::: {.columns}
+::::: {.column width="31%"}
+### Zeroth order
+
+```{r}
+#| label: order-values-reference
+#| echo: false
+#| dependson: order-information-setup
+#| fig-width: 1.7
+#| fig-height: 2.1
+
+information_plot(0, reference = TRUE)
+```
+
+Value: $H(\theta_i)$
+
+\medskip
+
+Grid search
+:::::
+
+::::: {.column width="31%"}
+### First order
+
+```{r}
+#| label: order-tangents-reference
+#| echo: false
+#| dependson: order-information-setup
+#| fig-width: 1.7
+#| fig-height: 2.1
+
+information_plot(1, reference = TRUE)
+```
+
+Also slope: $H'(\theta_i)$
+
+\medskip
+
+Gradient descent
+:::::
+
+::::: {.column width="31%"}
+### Second order
+
+```{r}
+#| label: order-quadratics-reference
+#| echo: false
+#| dependson: order-information-setup
+#| fig-width: 1.7
+#| fig-height: 2.1
+
+information_plot(2, reference = TRUE)
+```
+
+Also curvature: $H''(\theta_i)$
+
+\medskip
+
+Newton's method
+:::::
+:::
+
+\pdfpcnote{
+  - Compare each local description with the same objective.\\
+  - Quadratics match curvature locally but can depart from the full curve.\\
+}
 
 ## Gradient Descent
 
@@ -1041,11 +1241,7 @@ gd_illustration <- function(f, f_prime, x0, gamma, n_steps) {
       data = tibble(x = 2, y = f(2)),
       color = "darkorange"
     ) +
-    labs(
-      title = bquote(gamma == .(gamma)),
-      y = expression(H(theta)),
-      x = expression(theta)
-    )
+    labs(y = expression(H(theta)), x = expression(theta))
 }
 
 gd_illustration(
@@ -1066,8 +1262,8 @@ gd_illustration(
 ```{r}
 #| label: gd-illustration-small-step
 #| echo: false
-#| fig-width: 5
-#| fig-height: 3.25
+#| fig-width: 2.6
+#| fig-height: 2.6
 #| fig-cap: The step size is too small!
 
 step_size_illustration(x, y, 0.0003)
@@ -1080,8 +1276,8 @@ step_size_illustration(x, y, 0.0003)
 ```{r}
 #| label: gd-illustration-large-step
 #| echo: false
-#| fig-width: 5
-#| fig-height: 3.25
+#| fig-width: 2.6
+#| fig-height: 2.6
 #| fig-cap: The step size is too large!
 
 step_size_illustration(x, y, 0.0115, maxit = 35)
@@ -1093,10 +1289,9 @@ step_size_illustration(x, y, 0.0115, maxit = 35)
 
 Take the second-order Taylor expansion of $H$ around $\theta$:
 $$
-  H(\vartheta)
-  \approx \hat{H}(\vartheta)
-  = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
-    + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\theta) (\vartheta - \theta).
+  H(\theta')
+  \approx \hat{H}(\theta') = H(\theta) + \nabla H(\theta)^T (\theta' - \theta)
+    + \frac{1}{2}(\theta' - \theta)^T \nabla^2 H(\theta) (\theta' - \theta).
 $$
 
 . . .
@@ -1104,7 +1299,7 @@ $$
 ::: {.columns}
 ::::: {.column width="47%"}
 Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize with respect
-to $\vartheta$ to get
+to $\theta'$ to get
 $$
   \theta_{n+1} = \theta_n - \gamma \nabla H(\theta_n).
 $$
@@ -1202,12 +1397,12 @@ gd_taylor_illustration(
 ### Taylor's Theorem
 
 Suppose $H$ is twice continuously differentiable on an open convex domain. For
-any $\theta, \vartheta$ in that domain, there is a $\zeta$ on the segment
-between them such that
+any $\theta, \theta'$ in that domain, there is a $\zeta$ on the segment between
+them such that
 $$
-  H(\vartheta)
-  = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
-    + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\zeta) (\vartheta - \theta).
+  H(\theta')
+  = H(\theta) + \nabla H(\theta)^T (\theta' - \theta)
+    + \frac{1}{2}(\theta' - \theta)^T \nabla^2 H(\zeta) (\theta' - \theta).
 $$
 
 . . .
@@ -1223,8 +1418,8 @@ $$
 
 Then
 $$
-  H(\vartheta) \leq H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
-                    + \frac{L}{2} \|\vartheta - \theta\|_2^2.
+  H(\theta') \leq H(\theta) + \nabla H(\theta)^T (\theta' - \theta)
+                  + \frac{L}{2} \|\theta' - \theta\|_2^2.
 $$
 
 ## Lipschitz Constant
@@ -1232,9 +1427,9 @@ $$
 ::: {.columns}
 ::::: {.column width="47%"}
 On a convex domain, $L > 0$ is a **Lipschitz constant** of $\nabla H$ if, for
-all $\theta, \vartheta$,
+all $\theta, \theta'$,
 $$
-  \|\nabla H(\theta) - \nabla H(\vartheta)\|_2 \leq L \|\theta - \vartheta\|_2.
+  \|\nabla H(\theta) - \nabla H(\theta')\|_2 \leq L \|\theta - \theta'\|_2.
 $$
 
 . . .
@@ -1336,8 +1531,8 @@ for (i in seq_along(smooth_anchors)) {
 
 ## The Connection to Gradient Descent
 
-If we apply the descent lemma with
-$\vartheta = \theta - \gamma \nabla H(\theta)$, we get
+If we apply the descent lemma with $\theta' = \theta - \gamma \nabla H(\theta)$,
+we get
 $$
   H(\theta - \gamma \nabla H(\theta))
   \leq H(\theta) - \gamma \|\nabla H(\theta)\|_2^2
@@ -1677,10 +1872,9 @@ step_size_illustration(x_ill, y_ill, plot_approx = TRUE)
 
 Recall the second-order expansion of $H$ around $\theta$:
 $$
-  H(\vartheta)
-  \approx \hat{H}(\vartheta)
-  = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
-    + \frac{1}{2}(\vartheta - \theta)^T \nabla^2 H(\theta) (\vartheta - \theta).
+  H(\theta')
+  \approx \hat{H}(\theta') = H(\theta) + \nabla H(\theta)^T (\theta' - \theta)
+    + \frac{1}{2}(\theta' - \theta)^T \nabla^2 H(\theta) (\theta' - \theta).
 $$
 
 . . .
@@ -1695,7 +1889,7 @@ Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize.
 
 ### Newton Update
 
-If $\nabla^2 H(\theta_n) \succ 0$, minimize $\hat{H}(\vartheta)$ directly:
+If $\nabla^2 H(\theta_n) \succ 0$, minimize $\hat{H}(\theta')$ directly:
 $$
   \theta_{n+1} = \theta_n
                  - \big(\nabla^2 H(\theta_n)\big)^{-1} \nabla H(\theta_n).
@@ -2124,7 +2318,7 @@ minimizer in advance.
 ```{r}
 #| label: naive-optimization-benchmark
 #| cache: false
-#| fig-width: 4
+#| fig-width: 5
 #| fig-height: 1.8
 
 naive_bench <- bench::mark(
