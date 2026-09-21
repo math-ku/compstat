@@ -112,9 +112,9 @@ where
 
 ### Solution
 
-We write the solution as
+Let $C$ be the feasible set. An optimal point satisfies
 $$
-  \theta^* = \argmin_\theta H(\theta)
+  \theta^* \in \argmin_{\theta \in C} H(\theta).
 $$
 
 ## Examples of Optimization Problems
@@ -175,9 +175,9 @@ $$
 
 ### Solution
 
-The solution is
+An optimal point satisfies
 $$
-  \beta^* = \argmin_{\beta \in \mathbb{R}^p} H(\beta).
+  \beta^* \in \argmin_{\beta \in \mathbb{R}^p} H(\beta).
 $$
 
 ## Types of Optimization Problems
@@ -243,18 +243,19 @@ where $H$ and $g_i$ are convex.
 
 ## Convex Functions
 
-A function $H$ is convex iff for all
-$\theta_1, \theta_2 \in \operatorname{dom} H$ and $\lambda \in [0, 1]$
+### Jensen's Inequality
+
+A function $H$ is convex iff its domain is convex and, for all
+$\theta_1, \theta_2 \in \operatorname{dom} H$ and $\lambda \in [0, 1]$,
 $$
   H(\lambda \theta_1 + (1 - \lambda) \theta_2) \leq \lambda H(\theta_1)
                                                     + (1 - \lambda) H(\theta_2).
 $$
 
-This is known as **Jensen's inequality**.
-
-\medskip\pause
+\pause
 
 ```{r}
+#| label: jensens-inequality
 #| echo: false
 #| fig-width: 4
 #| fig-height: 2
@@ -310,14 +311,16 @@ ggplot(df, aes(x, y)) +
 
 ## First-Order Condition for Convexity
 
-If $H$ is **differentiable**, then the condition is equivalent to
+On an open convex domain, a **differentiable** function $H$ is convex iff
 $$
-  H(\theta_1) \geq H(\theta_2) + \nabla H(\theta_2)^T(\theta_1 - \theta_2).
+  H(\theta_1) \geq H(\theta_2) + \nabla H(\theta_2)^T(\theta_1 - \theta_2)
 $$
+for all $\theta_1, \theta_2 \in \operatorname{dom} H$.
 
 . . .
 
 ```{r}
+#| label: first-order-condition
 #| echo: false
 #| fig-width: 4
 #| fig-height: 2
@@ -352,7 +355,8 @@ ggplot(df, aes(x, y)) +
     linetype = "dashed",
     color = "steelblue"
   ) +
-  geom_point(
+  geom_point(data = pts, aes(x, y)) +
+  geom_text(
     data = pts,
     aes(x, y),
     label = expression(theta[2]),
@@ -412,19 +416,20 @@ where $g_i$ are convex but $H$ is **quasiconvex**.
 
 ### Examples
 
-- Utility functions (economics) \pause
+- Minimizing negative quasiconcave utility (economics) \pause
 - The floor function $H(\theta) = \lfloor \theta \rfloor$
 
 . . .
 
 ### Algorithms
 
-Won't cover here, but for instance the **bisection** method.
+**Bisection** on objective values, solving a convex feasibility problem at each
+step (not covered here).
 
 ## Nonconvex Optimization Problems
 
 - Generally hard to solve.
-- No standard form (can be anything).
+- The objective or feasible set is nonconvex.
 - Local minima are not necessarily global.
 
 . . .
@@ -439,8 +444,12 @@ Won't cover here, but for instance the **bisection** method.
 
 ### Algorithms
 
-Won't cover here, but typically **stochastic algorithms** (next week) or
-**global optimization methods** (not in this course).
+Gradient descent and quasi-Newton methods seek local solutions.
+
+\medskip
+
+**Stochastic algorithms** (next week) and **global optimization methods** are
+also used.
 
 ##
 
@@ -448,10 +457,10 @@ Won't cover here, but typically **stochastic algorithms** (next week) or
 #| label: convexity-types
 #| echo: false
 #| warning: false
-#| fig-height: 3.4
+#| fig-height: 3.2
 #| fig-width: 5.4
-#| fig-cap: "$\\theta^2$ (convex), $\\sin(\\theta + \\pi)$ (non-convex),
-#|   and $\\sqrt{|\\theta|}$ (quasi-convex)."
+#| fig-cap: "$\\theta^2$ (convex), $\\sin(\\theta + \\pi)$ (nonconvex),
+#|   and $\\sqrt{|\\theta|}$ (quasiconvex; derivative undefined at $\\theta = 0$)."
 
 convex_function <- function(x) x^2
 non_convex_function <- function(x) sin(x + pi)
@@ -461,11 +470,11 @@ quasi_convex_function <- function(x) sqrt(abs(x))
 convex_gradient <- function(x) 2 * x
 non_convex_gradient <- function(x) cos(x + pi)
 quasi_convex_gradient <- function(x) {
-  sign(x) * 0.5 * abs(x)^(-0.5)
+  ifelse(x == 0, NA_real_, sign(x) / (2 * sqrt(abs(x))))
 }
 
 # Create a sequence of x values
-x_vals <- seq(-2, 2, length.out = 100)
+x_vals <- seq(-2, 2, length.out = 201)
 
 # Create data frames for plotting
 convex_df <- data.frame(
@@ -478,13 +487,13 @@ non_convex_df <- data.frame(
   x = x_vals,
   y = non_convex_function(x_vals),
   gradient = non_convex_gradient(x_vals),
-  type = "Non-Convex"
+  type = "Nonconvex"
 )
 quasi_convex_df <- data.frame(
   x = x_vals,
   y = quasi_convex_function(x_vals),
   gradient = quasi_convex_gradient(x_vals),
-  type = "Quasi-Convex"
+  type = "Quasiconvex"
 )
 
 # Combine data frames
@@ -535,9 +544,11 @@ p1 <- ggplot(df_with_jensens, aes(x = x)) +
   labs(y = expression(H(theta)), x = expression(theta)) +
   facet_wrap(~type, scales = "free_y")
 
-# Plot the gradients using facets
+# The quasiconvex example's derivative has separate branches at zero.
 p2 <- ggplot(df, aes(x = x, y = gradient)) +
-  geom_line() +
+  geom_line(aes(
+    group = ifelse(type == "Quasiconvex", sign(x), 0)
+  )) +
   labs(y = expression(nabla * H(theta)), x = expression(theta)) +
   facet_wrap(~type, scales = "free_y")
 
@@ -554,9 +565,9 @@ p1 / p2 +
 
 ## Types of Optimization Methods
 
-### Direct (Exact) Methods
+### Direct Methods
 
-Provides a solution up to machine precision.
+Solve in finitely many operations in exact arithmetic.
 
 \medskip\pause
 
@@ -566,8 +577,8 @@ Provides a solution up to machine precision.
 
 ### Iterative Optimization
 
-Incrementally update optimization variable until some convergence criterion is
-met.
+Incrementally update the optimization variable until some convergence criterion
+is met.
 
 \medskip\pause
 
@@ -576,6 +587,7 @@ met.
 ## Running Example: OLS
 
 ```{r}
+#| label: ols-example
 #| echo: false
 
 source(here::here("R", "gradient_descent.R"))
@@ -642,8 +654,8 @@ distribution:
 $$
   \symbf{x} \sim \normal(
     \symbf{\mu} = \begin{bmatrix}
-                    1 \\
-                    1
+                    0 \\
+                    0
                   \end{bmatrix},
     \symbf{\Sigma} = \begin{bmatrix}
                        1   & 0.8 \\
@@ -657,6 +669,7 @@ $$
 ::: {.columns}
 ::::: {.column width="47%"}
 ```{r}
+#| label: persp-ols
 #| fig-width: 4
 #| fig-height: 4
 #| echo: false
@@ -679,6 +692,7 @@ persp3D(
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: contour-ols
 #| fig-height: 2.8
 #| echo: false
 
@@ -859,7 +873,7 @@ step_size_illustration(x, y, plot_convergence = FALSE)
 
 ## Direct Methods
 
-Analytical solution, up to machine precision.
+Rounding error and conditioning affect numerical accuracy.
 
 ### Example: OLS
 
@@ -867,7 +881,7 @@ Solve
 $$
   X^TX \beta = X^Ty
 $$
-for $\beta \in \mathbb{R}^p$.
+for $\beta \in \mathbb{R}^p$, assuming $X$ has full column rank.
 
 \medskip\pause
 
@@ -877,8 +891,8 @@ In R you call
 solve(crossprod(X), crossprod(X, y))
 ```
 
-to solve for $\beta$, which uses matrix factorization (e.g., Cholesky
-decomposition) to solve the linear system.
+For ordinary numeric matrices, `solve()` uses **LU factorization** with partial
+pivoting. Solving the least-squares problem by QR avoids forming $X^T X$.
 
 ## Iterative Methods
 
@@ -901,8 +915,8 @@ Use only the function value.
 ### Examples
 
 - Hill climbing
-- Bisection
-- Grid search (cross validation)
+- Golden-section search
+- Grid search (cross-validation)
 
 ## First-Order Methods
 
@@ -940,8 +954,8 @@ The quintessential first-order method!
 
 \medskip
 
-Converges to a local minimum if $H$ is convex and differentiable and $\gamma$
-small enough.
+Converges to a **global minimum** if one exists, $H$ is convex on
+$\mathbb{R}^p$, plus some other technical conditions.
 
 ### Step Size {.alert}
 
@@ -950,17 +964,15 @@ But how do we choose $\gamma$?
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: gd-illustration
 #| echo: false
 
-# illustration of how gradient descent works,
-# with a simple one-dimensional function, showing the
-# tangent line at say, two steps
-gd_illustration <- function(f, f_prime, x0, t, n_steps) {
+gd_illustration <- function(f, f_prime, x0, gamma, n_steps) {
   x_vals <- numeric(n_steps + 1)
   x_vals[1] <- x0
 
   for (i in 1:n_steps) {
-    x_vals[i + 1] <- x_vals[i] - t * f_prime(x_vals[i])
+    x_vals[i + 1] <- x_vals[i] - gamma * f_prime(x_vals[i])
   }
 
   df <- data.frame(
@@ -990,10 +1002,38 @@ gd_illustration <- function(f, f_prime, x0, t, n_steps) {
       aes(
         x = x + 0.1 * f_prime(x),
         y = y + 0.1 * f_prime(x) * f_prime(x),
-        xend = x - t * f_prime(x),
-        yend = y - t * f_prime(x) * f_prime(x)
+        xend = x - gamma * f_prime(x),
+        yend = y - gamma * f_prime(x) * f_prime(x)
       ),
       arrow = arrow(length = unit(0.2, "cm")),
+      color = "steelblue"
+    ) + # Gamma scales the horizontal update, not the tangent arrow's length.
+    annotate(
+      "segment",
+      x = x_vals[1],
+      xend = x_vals[2],
+      y = f(x0),
+      yend = f(x0),
+      arrow = arrow(length = unit(0.15, "cm")),
+      color = "steelblue"
+    ) +
+    annotate(
+      "segment",
+      x = x_vals[2],
+      xend = x_vals[2],
+      y = f(x0),
+      yend = f(x_vals[2]),
+      linetype = "dotted",
+      color = "steelblue"
+    ) +
+    annotate(
+      "text",
+      x = mean(x_vals[1:2]),
+      y = f(x0),
+      label = "-gamma * nabla * H(theta[0])",
+      parse = TRUE,
+      vjust = -0.7,
+      size = 3,
       color = "steelblue"
     ) +
     geom_point(
@@ -1001,14 +1041,18 @@ gd_illustration <- function(f, f_prime, x0, t, n_steps) {
       data = tibble(x = 2, y = f(2)),
       color = "darkorange"
     ) +
-    labs(y = expression(H(theta)), x = expression(theta))
+    labs(
+      title = bquote(gamma == .(gamma)),
+      y = expression(H(theta)),
+      x = expression(theta)
+    )
 }
 
 gd_illustration(
   f = function(x) (x - 2)^2 + 1,
   f_prime = function(x) 2 * (x - 2),
   x0 = 0,
-  t = 0.2,
+  gamma = 0.2,
   n_steps = 3
 )
 ```
@@ -1018,6 +1062,7 @@ gd_illustration(
 ##
 
 ```{r}
+#| label: gd-illustration-small-step
 #| echo: false
 #| fig-width: 5
 #| fig-height: 3.25
@@ -1029,6 +1074,7 @@ step_size_illustration(x, y, 0.0003)
 ##
 
 ```{r}
+#| label: gd-illustration-large-step
 #| echo: false
 #| fig-width: 5
 #| fig-height: 3.25
@@ -1051,8 +1097,8 @@ $$
 
 ::: {.columns}
 ::::: {.column width="47%"}
-Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize w.r.t
-$\vartheta$ to get
+Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize with respect
+to $\vartheta$ to get
 $$
   \theta_{n+1} = \theta_n - \gamma \nabla H(\theta_n).
 $$
@@ -1064,6 +1110,7 @@ But we still need to choose $\gamma$!
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: gd-taylor-illustration
 #| echo: false
 
 # show a illustration of this taylor expansion, and the fact that the
@@ -1193,8 +1240,9 @@ for (iteration in 0:2) {
 
 ### Taylor's Theorem
 
-For any $\theta, \vartheta$ in the domain of $H$, there exists a $\zeta$ on the
-line segment between $\theta$ and $\vartheta$ such that
+Suppose $H$ is twice continuously differentiable on an open convex domain. For
+any $\theta, \vartheta$ in that domain, there is a $\zeta$ on the segment
+between them such that
 $$
   H(\vartheta)
   = H(\theta) + \nabla H(\theta)^T (\vartheta - \theta)
@@ -1222,12 +1270,8 @@ $$
 
 ::: {.columns}
 ::::: {.column width="47%"}
-The bound that we used in the descent lemma, $L$, is known as the **Lipschitz
-constant** of $\nabla H$.
-
-\medskip\pause
-
-It is defined as follows.
+On a convex domain, $L > 0$ is a **Lipschitz constant** of $\nabla H$ if, for
+all $\theta, \vartheta$,
 $$
   \|\nabla H(\theta) - \nabla H(\vartheta)\|_2 \leq L \|\theta - \vartheta\|_2.
 $$
@@ -1237,13 +1281,19 @@ $$
 It measures how fast the gradient of $H$ can change, relative to the change in
 $\theta$.
 
-### Twice-Differentiable Case
+\pause
 
-If $H$ is twice-differentiable, then the Lipschitz constant is the smallest $L$
-such that
+### Twice Differentiable Case
+
+If $H$ is twice continuously differentiable on an open convex domain, this is
+equivalent to
 $$
-  \nabla^2 H(\theta) \preceq L I \quad \text{for all } \theta.
+  \|\nabla^2 H(\theta)\|_2 \leq L \quad \text{for all } \theta.
 $$
+
+For convex $H$, this reduces to $\nabla^2 H(\theta) \preceq L I$.
+
+\pause
 :::::
 
 . . .
@@ -1335,7 +1385,7 @@ $$
 
 . . .
 
-This means that if $\gamma \leq 1/L$, then
+This means that if $0 < \gamma \leq 1/L$, then
 $$
   H(\theta - \gamma \nabla H(\theta))
   \leq H(\theta) - \frac{\gamma}{2} \|\nabla H(\theta)\|_2^2.
@@ -1343,11 +1393,12 @@ $$
 
 . . .
 
-In other words, the function value decreases at each step.
+Unless the gradient is zero, each step decreases the function value.
 
 ##
 
 ```{r}
+#| label: gd-illustration-right-step
 #| echo: false
 #| fig-width: 5
 #| fig-height: 3.25
@@ -1390,8 +1441,7 @@ search, like **backtracking line search**.
 
 \bigskip\pause
 
-Guarantees that the step size is not too large, and that the function value
-decreases sufficiently.
+The **Armijo condition** requires a sufficient decrease in the function value.
 
 \medskip\pause
 
@@ -1400,6 +1450,7 @@ Adapts to local curvature of the function.
 
 ::::: {.column width="41%"}
 ```{r}
+#| label: backtracking-illustration
 #| fig-height: 2.9
 #| fig-width: 2.6
 #| echo: false
@@ -1468,42 +1519,49 @@ backtracking_illustration()
 ##
 
 ```{r}
+#| label: gd-illustration-backtracking
 #| echo: false
 #| fig-width: 5
 #| fig-height: 3.25
-#| fig-cap: "Backtracking line search."
+#| fig-cap: "Backtracking line search, starting each search at $\\gamma_0 = 1$."
 
-step_size_illustration(x, y, line_search = TRUE)
+step_size_illustration(x, y, t = 1, line_search = TRUE)
 ```
 
 ## Conditioning
 
 ::: {.columns}
 ::::: {.column width="46%"}
-So, $L$ decides how large step size we can take.
+$L$ limits the safe step size.
 
 \medskip\pause
 
-But $L$ is based on the largest \alert{eigenvalue} of $\nabla^2 H(\theta)$,
-which means that it may be pessimistic in some directions.
+For convex $H$, $L$ bounds the largest Hessian \alert{eigenvalue} and may be
+pessimistic in other directions.
 
 . . .
 
 ### Condition Number
 
-The **condition number** of $H$ is defined as
+For a positive-definite Hessian, its **condition number** is
 $$
   \kappa = \frac{\lambda_{\max}}{\lambda_{\min}}.
 $$
 
 . . .
 
-If $\kappa$ is large, we say that $H$ is **ill-conditioned**. If $\kappa$ is
-small, we say that $H$ is **well-conditioned**.
+Large $\kappa$ means **ill-conditioned**; $\kappa$ near $1$ means
+**well-conditioned**.
+
+\medskip
+
+If $\mu I \preceq \nabla^2 H(\theta) \preceq L I$ everywhere, with $\mu > 0$,
+then $L/\mu$ bounds all local condition numbers.
 :::::
 
 ::::: {.column width="46%"}
 ```{r}
+#| label: gd-illustration-conditioning
 #| echo: false
 #| fig-height: 3.2
 
@@ -1576,6 +1634,7 @@ p1
 ::: {.columns}
 ::::: {.column width="47%"}
 ```{r}
+#| label: gd-illustration-well-conditioned
 #| fig-height: 2.5
 #| echo: false
 #| fig-cap: "Gradient descent on a well-conditioned problem."
@@ -1591,6 +1650,7 @@ step_size_illustration(x_well, y_well, plot_approx = TRUE)
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: gd-illustration-ill-conditioned
 #| fig-height: 2.5
 #| echo: false
 #| fig-cap: "Gradient descent on an ill-conditioned problem."
@@ -1605,7 +1665,7 @@ step_size_illustration(x_ill, y_ill, plot_approx = TRUE)
 
 ## Newton's Method
 
-Recall second-order expansion of $H$ around $\theta$:
+Recall the second-order expansion of $H$ around $\theta$:
 $$
   H(\vartheta)
   \approx \hat{H}(\vartheta)
@@ -1625,7 +1685,7 @@ Replace $\nabla^2 H(\theta)$ with $\frac{1}{\gamma} I$ and minimize.
 
 ### Newton Update
 
-Instead, minimize $\hat{H}(\vartheta)$ directly:
+If $\nabla^2 H(\theta_n) \succ 0$, minimize $\hat{H}(\vartheta)$ directly:
 $$
   \theta_{n+1} = \theta_n
                  - \big(\nabla^2 H(\theta_n)\big)^{-1} \nabla H(\theta_n).
@@ -1633,11 +1693,13 @@ $$
 
 \medskip\pause
 
-For OLS, the model is exact: one full Newton step reaches the minimum.
+For OLS with $X$ of full column rank, the model is exact: one full Newton step
+reaches the minimum.
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: newton-illustration
 #| echo: false
 #| fig-height: 2.4
 
@@ -1729,25 +1791,33 @@ sufficiently decreases $H$.
 
 ## Damped Newton
 
-For general objectives, a full Newton step can increase $H$. **Damped Newton**
-uses
+Assume $\nabla^2 H(\theta_n) \succ 0$. A full Newton step can still increase
+$H$. **Damped Newton** uses
 $$
-  \theta_{n+1} = \theta_n - \gamma \nabla^2 H(\theta_n)^{-1} \nabla H(\theta_n),
+  \theta_{n+1} = \theta_n - \gamma \nabla^2 H(\theta_n)^{-1} \nabla H(\theta_n).
 $$
-with $\gamma > 0$ chosen by backtracking line search.
+Backtrack from $\gamma = 1$ using an Armijo parameter $0 < c < 1/2$.
 
 . . .
 
 ### Phases
 
-- As long as $\gamma < 1$, we are in the **damped** phase. \pause
-- When $\gamma = 1$, we enter the **pure** phase and $\gamma$ will remain
-  $1$.\pause
-- In pure phase, we have quadratic convergence.
+- Far from the minimum, steps may be **damped** ($\gamma < 1$). \pause
+- One accepted full step does not guarantee that later steps are full. \pause
+- Near a minimizer with a positive-definite, locally Lipschitz Hessian, full
+  steps are accepted thereafter: the **pure phase** has quadratic convergence.
+
+\pdfpcnote{
+  - Positive definiteness makes the Newton direction a descent direction.\\
+  - Along $d$, Armijo checks $H(\theta + \gamma d) \leq H(\theta) + c\gamma\nabla H(\theta)^T d$.\\
+  - An indefinite Hessian may need modification; backtracking alone is not enough.\\
+  - The pure phase is a local result, not triggered by one accepted full step.\\
+}
 
 ##
 
 ```{r}
+#| label: gd-newton-comparison
 #| echo: false
 #| fig-width: 5.4
 #| fig-height: 2.8
@@ -1906,7 +1976,7 @@ Both panels show the same runs on one simulated logistic regression problem:
 #| fig-width: 2.6
 #| fig-height: 2.25
 #| out-width: "\\linewidth"
-#| fig-cap: "Newton converges a few iterations."
+#| fig-cap: "Newton converges in a few iterations."
 
 comparison_plots(comparison_basic)$iterations
 ```
@@ -2027,19 +2097,25 @@ Replace $\nabla^2 H(\theta)$ with an approximation $B_n$.
 
 ### BFGS
 
-Complexity: $O(p^2)$, still same memory cost.
+The update and direction calculation cost $O(p^2)$ per iteration, with $O(p^2)$
+storage.
 
 . . .
 
 ### L-BFGS
 
-Same complexity but lower memory cost.
+Store $m$ correction pairs: $O(mp)$ work per iteration and $O(mp)$ storage.
+
+\medskip
+
+These costs exclude objective evaluations, gradient evaluations, and line
+search.
 
 ## Stopping Criteria
 
 ::: {.columns}
 ::::: {.column width="47%"}
-### Common (ad-hoc) choices
+### Common (ad hoc) choices
 
 - Small gradient:
   $$
@@ -2062,12 +2138,12 @@ Same complexity but lower memory cost.
 ::::: {.column width="47%"}
 ### Duality Gap
 
-If $H$ is **strongly** convex and $\theta$ optimal, then the duality gap is zero
-at the optimum.
+When **strong duality** holds, the duality gap is zero at a primal-dual optimum.
 
 \medskip\pause
 
-Most principled stopping criterion, but not always available.
+For feasible primal and dual points, the gap bounds objective suboptimality, but
+a useful dual bound is not always available.
 
 \medskip\pause
 
@@ -2161,7 +2237,6 @@ benchmark_time <- function(timing) {
   \only<3->{
     \textbf{Decide what counts as solving the problem before timing.}
     \par\medskip
-    {\footnotesize Iteration counts were found in advance; calibration is excluded.}
   }
 \end{overlayarea}
 
@@ -2240,8 +2315,8 @@ We will cover how to \alert{systematically} test your code using **testthat**.
 
 ### Debugging
 
-We will cover how fix bugs in your code using debugging tools in R.
+We will cover how to fix bugs in your code using debugging tools in R.
 
 \medskip\pause
 
-This part will mostly be a hands-on sessions, so bring your laptop!
+This part will mostly be a hands-on session, so bring your laptop!

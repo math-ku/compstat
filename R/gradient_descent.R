@@ -15,7 +15,9 @@ gd <- function(
 
   if (!is.null(t)) {
     if (!is.null(gamma)) {
-      stop("Specify only one of `gamma` and the legacy `t` argument.")
+      stop(
+        "Specify only one of `gamma` and the legacy `t` argument."
+      )
     }
     gamma <- t
   }
@@ -55,7 +57,10 @@ gd <- function(
       new_loss <- 0.5 * norm(y - new_eta, "2")^2
       base_loss <- 0.5 * norm(y - X %*% base, "2")^2
 
-      if (new_loss <= base_loss + gamma / 2 * sum(gradient * direction)) {
+      if (
+        new_loss <=
+          base_loss + gamma / 2 * sum(gradient * direction)
+      ) {
         keep_going <- FALSE
       } else {
         gamma <- gamma / 2
@@ -70,7 +75,13 @@ gd <- function(
   list(coefficients = betas[, maxit], loss = loss, betas = betas)
 }
 
-newton <- function(X, y, maxit = 100, t = NULL, line_search = TRUE) {
+newton <- function(
+  X,
+  y,
+  maxit = 100,
+  t = NULL,
+  line_search = TRUE
+) {
   loss <- double(maxit)
   p <- ncol(X)
   betas <- matrix(0, nrow = p, ncol = maxit)
@@ -96,11 +107,10 @@ newton <- function(X, y, maxit = 100, t = NULL, line_search = TRUE) {
       new_eta <- X %*% (betas[, k - 1] + t * direction)
       new_loss <- 0.5 * norm(y - new_eta, "2")^2
 
+      # The exact quadratic expansion cannot reject oversized steps.
       if (
         new_loss <=
-          loss[k - 1] +
-            t * sum(gradient * direction) +
-            (t^2 / 2) * sum(direction * (H %*% direction))
+          loss[k - 1] + t / 4 * sum(gradient * direction)
       ) {
         keep_going <- FALSE
       } else {
