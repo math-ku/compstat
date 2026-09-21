@@ -906,7 +906,7 @@ information_objective <- function(theta) {
   theta^4 / 4 - theta^2 / 2 + theta / 4 + 1
 }
 
-information_queries <- tibble(theta = c(-1.25, 0, 1.25)) |>
+information_queries <- tibble(theta = c(1.25, 0, -1.25)) |>
   mutate(
     value = information_objective(theta),
     slope = theta^3 - theta + 1 / 4,
@@ -930,7 +930,11 @@ information_models <- crossing(
       information_queries$curvature[query] * offset^2 / 2
   )
 
-information_plot <- function(order = -1L, reference = FALSE) {
+information_plot <- function(
+  order = -1L,
+  reference = FALSE,
+  n_queries = nrow(information_queries)
+) {
   p <- ggplot()
   if (order < 0 || reference) {
     p <- p +
@@ -944,14 +948,14 @@ information_plot <- function(order = -1L, reference = FALSE) {
     model <- if (order == 1) "tangent" else "quadratic"
     p <- p +
       geom_line(
-        data = information_models,
+        data = filter(information_models, query <= n_queries),
         aes(theta, .data[[model]], group = query),
         color = "darkorange"
       )
   }
   p +
     geom_point(
-      data = information_queries,
+      data = head(information_queries, n_queries),
       aes(theta, value),
       color = "royalblue",
       size = 2
@@ -972,15 +976,17 @@ information_plot <- function(order = -1L, reference = FALSE) {
 #| dependson: order-information-setup
 #| fig-width: 5
 #| fig-height: 2.35
+#| fig-show: animate
 
-information_plot()
+for (iteration in seq_len(nrow(information_queries))) {
+  print(information_plot(n_queries = iteration))
+}
 ```
 
-\pause
-
-What information do we get at each queried point?
+\uncover<3->{What information do we get at each queried point?}
 
 \pdfpcnote{
+  - Reveal three improving queries, from right to left.\\
   - The full curve is shown for us; an optimizer queries individual points.\\
   - Keep these same three points in mind on the next slide.\\
 }
@@ -1448,8 +1454,6 @@ $$
 $$
 
 For convex $H$, this reduces to $\nabla^2 H(\theta) \preceq L I$.
-
-\pause
 :::::
 
 . . .
