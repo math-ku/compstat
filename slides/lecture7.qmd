@@ -1906,6 +1906,7 @@ Both panels show the same runs on one simulated logistic regression problem:
 #| fig-width: 2.6
 #| fig-height: 2.25
 #| out-width: "\\linewidth"
+#| fig-cap: "Newton converges a few iterations."
 
 comparison_plots(comparison_basic)$iterations
 ```
@@ -1920,6 +1921,7 @@ comparison_plots(comparison_basic)$iterations
 #| fig-width: 2.6
 #| fig-height: 2.25
 #| out-width: "\\linewidth"
+#| fig-cap: "But it takes more work per iteration."
 
 comparison_plots(comparison_basic)$work
 ```
@@ -1954,7 +1956,7 @@ times as much estimated work**.
 #| fig-width: 2.6
 #| fig-height: 2.25
 #| out-width: "\\linewidth"
-#| fig-cap: "a large Hessian makes Newton costly."
+#| fig-cap: "A large Hessian makes Newton costly."
 
 comparison_plots(comparison_gd)$work
 ```
@@ -2073,6 +2075,105 @@ Most principled stopping criterion, but not always available.
 :::::
 :::
 
+## Benchmarking: Which Method Is Faster?
+
+Return to our OLS example, using full Newton steps:
+
+```{r}
+#| label: naive-optimization-benchmark
+#| cache: false
+
+naive_bench <- bench::mark(
+  GD = gd(x, y, maxit = 20),
+  Newton = newton(x, y, maxit = 20, line_search = FALSE),
+  check = FALSE
+)
+```
+
+```{r}
+#| label: optimization-benchmark-accuracy
+#| include: false
+#| cache: false
+
+benchmark_target <- 1e-8
+benchmark_paths <- list(
+  GD = gd(x, y, maxit = 1000),
+  Newton = newton(x, y, maxit = 20, line_search = FALSE)
+)
+
+# The noiseless OLS example has minimum zero, so the relative gap is known.
+benchmark_gaps <- lapply(
+  benchmark_paths,
+  function(fit) fit$loss / fit$loss[1]
+)
+benchmark_maxit <- vapply(
+  benchmark_gaps,
+  function(gap) {
+    reached <- which(gap <= benchmark_target)
+    stopifnot(length(reached) > 0L)
+    reached[1]
+  },
+  integer(1)
+)
+stopifnot(benchmark_gaps$GD[20] > benchmark_target)
+
+# These implementations count the initial point in maxit.
+benchmark_updates <- benchmark_maxit - 1L
+accuracy_bench <- bench::mark(
+  GD = gd(x, y, maxit = benchmark_maxit["GD"]),
+  Newton = newton(
+    x,
+    y,
+    maxit = benchmark_maxit["Newton"],
+    line_search = FALSE
+  ),
+  check = FALSE
+)
+
+benchmark_time <- function(timing) {
+  sprintf("%.3f ms", as.numeric(timing) * 1000)
+}
+```
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lrr}
+  Comparison & GD & Newton \\
+  \hline
+  Median time, \texttt{maxit = 20}
+    & `r benchmark_time(naive_bench$median[1])`
+    & `r benchmark_time(naive_bench$median[2])` \\
+  \uncover<2->{Relative objective gap}
+    & \uncover<2->{`r format(benchmark_gaps$GD[20], scientific = TRUE, digits = 2)`}
+    & \uncover<2->{`r format(benchmark_gaps$Newton[20], scientific = TRUE, digits = 2)`} \\
+  \uncover<3->{Updates to reach a gap $\leq 10^{-8}$}
+    & \uncover<3->{`r benchmark_updates["GD"]`}
+    & \uncover<3->{`r benchmark_updates["Newton"]`} \\
+  \uncover<3->{Median time for those updates}
+    & \uncover<3->{`r benchmark_time(accuracy_bench$median[1])`}
+    & \uncover<3->{`r benchmark_time(accuracy_bench$median[2])`} \\
+\end{tabular}
+\end{center}
+
+\begin{overlayarea}{\textwidth}{1.2cm}
+  \only<1|handout:0>{\textbf{GD is faster?}}
+  \only<2|handout:0>{GD has not reached $10^{-8}$. Newton kept iterating after reaching it.}
+  \only<3->{
+    \textbf{Decide what counts as solving the problem before timing.}
+    \par\medskip
+    {\footnotesize Iteration counts were found in advance; calibration is excluded.}
+  }
+\end{overlayarea}
+
+\pdfpcnote{
+  - Show the timings first and ask which method students would choose.\\
+  - Reveal the gaps: maxit = 20 gives 19 updates, even after convergence.\\
+  - One full Newton step solves this OLS problem up to numerical precision.\\
+  - Reveal the common target: timing includes setup, but excludes calibration.\\
+  - In practice, use a common accuracy check to decide when to stop.\\
+  - check = FALSE skips output comparison; timings also depend on code and hardware.\\
+}
+
 ## Exercise
 
 We will attempt to minimize the following function:
@@ -2083,6 +2184,7 @@ $$
 . . .
 
 ```{r}
+#| label: nonquadratic-plot
 #| echo: false
 #| include: false
 
