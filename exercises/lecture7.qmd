@@ -1,0 +1,66 @@
+---
+title: "Optimization: Exercise Solution"
+format: html
+execute:
+  cache: false
+---
+
+Solution to the exercise in [Lecture 7](../slides/lecture7.pdf).
+
+## Derivatives
+
+For $H(\theta) = \log(1 + e^\theta) + \frac{1}{2}(\theta - 2)^2$,
+$$
+  H'(\theta) = \frac{e^\theta}{1 + e^\theta} + \theta - 2,
+  \qquad
+  H''(\theta) = \frac{e^\theta}{(1 + e^\theta)^2} + 1.
+$$
+
+```{r}
+#| label: derivatives
+
+H_prime <- function(theta) {
+  exp(theta) / (1 + exp(theta)) + theta - 2
+}
+H_double_prime <- function(theta) {
+  exp(theta) / (1 + exp(theta))^2 + 1
+}
+```
+
+## Gradient descent
+
+Fill in the gradient, stopping test, and update:
+
+```{r}
+#| label: gradient-descent
+#| fig-width: 5
+#| fig-height: 2.5
+
+theta <- -2
+path <- theta
+for (i in seq_len(100)) {
+  g <- H_prime(theta)
+  if (abs(g) <= 1e-8) {
+    break
+  }
+  theta <- theta - 0.8 * g
+  path <- c(path, theta)
+}
+plot(path, type = "b")
+```
+
+## Newton's method
+
+Restart from `theta <- -2` and replace the update with
+
+```{r}
+#| label: newton-update
+#| eval: false
+
+theta <- theta - g / H_double_prime(theta)
+```
+
+Gradient descent takes **7 updates**, whereas Newton takes **4**. Count updates
+with `length(path) - 1`, since the path includes the starting point. Both reach
+$\theta^* \approx 1.22675$; Newton uses the local curvature to converge faster
+near the minimum.

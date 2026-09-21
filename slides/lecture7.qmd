@@ -2251,41 +2251,49 @@ benchmark_time <- function(timing) {
 
 ## Exercise
 
-We will attempt to minimize the following function:
+Minimize
 $$
   H(\theta) = \log(1 + e^\theta) + \frac{1}{2}(\theta - 2)^2.
 $$
 
 . . .
 
+::: {.columns}
+::::: {.column width="47%"}
+### Steps
+
+1. Derive $H'(\theta)$ and $H''(\theta)$.
+2. Complete gradient descent with $g = H'(\theta)$ and $\gamma = 0.8$. Stop when
+   $|g| \leq 10^{-8}$.
+3. Replace the update with a Newton step. Which method needs fewer updates?
+:::::
+
+::::: {.column width="47%"}
 ```{r}
-#| label: nonquadratic-plot
-#| echo: false
-#| include: false
+#| label: optimization-exercise-skeleton
+#| eval: false
 
-H <- nonquadratic_objective
-
-curve(H, from = -2, to = 5)
-
-H_prime <- nonquadratic_gradient
+theta <- -2
+path <- theta
+for (i in seq_len(100)) {
+  g <- ...
+  if (...) {
+    break
+  }
+  theta <- ...
+  path <- c(path, theta)
+}
+plot(path, type = "b")
 ```
+:::::
+:::
 
-### Step 1
-
-Implement a gradient descent method for solving this problem. Plot convergence
-in terms of iterations and time. Implement a stopping criterion.
-
-. . .
-
-### Step 2
-
-Test and benchmark your implementation against R's built-in `optimize()`.
-
-. . .
-
-### Step 3
-
-Implement Newton's method for solving this problem and repeat the analysis.
+\pdfpcnote{
+  - Give students 15 minutes to derive the derivatives and complete the loop.\\
+  - The path includes the starting point, so count length(path) - 1 updates.\\
+  - Gradient descent needs seven updates; Newton needs four.\\
+  - Ask why Newton needs fewer updates and what extra work each step requires.\\
+}
 
 ## Summary
 
