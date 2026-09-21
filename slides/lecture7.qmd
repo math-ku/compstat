@@ -141,10 +141,12 @@ $$
 
 $$
   \begin{aligned}
-     & \operatorname*{minimize}_\lambda &  & \left( (\symbf{y} - \symbf{\Phi}\symbf{\beta})^T (\symbf{y} - \symbf{\Phi}\symbf{\beta}) + \lambda \symbf{\beta}^T \symbf{\Omega} \symbf{\beta} \right) \\
-     & \textrm{subject to}              &  & \lambda \geq 0.
+     & \operatorname*{minimize}_\lambda &  & \operatorname{CV}(\lambda) \\
+     & \textrm{subject to}              &  & \lambda \geq 0,
   \end{aligned}
 $$
+where $\operatorname{CV}(\lambda)$ is the mean squared prediction error from
+cross-validation.
 
 ## Examples of Optimization Problems
 
