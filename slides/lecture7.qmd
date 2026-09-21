@@ -444,7 +444,7 @@ step (not covered here).
 
 ### Algorithms
 
-Gradient descent and quasi-Newton methods seek local solutions.
+Gradient descent seek local solutions.
 
 \medskip
 
@@ -1059,8 +1059,10 @@ gd_illustration(
 :::::
 :::
 
-##
+--------------------------------------------------------------------------------
 
+::: {.columns}
+::::: {.column width="47%"}
 ```{r}
 #| label: gd-illustration-small-step
 #| echo: false
@@ -1070,9 +1072,11 @@ gd_illustration(
 
 step_size_illustration(x, y, 0.0003)
 ```
+:::::
 
-##
+\pause
 
+::::: {.column width="47%"}
 ```{r}
 #| label: gd-illustration-large-step
 #| echo: false
@@ -1082,6 +1086,8 @@ step_size_illustration(x, y, 0.0003)
 
 step_size_illustration(x, y, 0.0115, maxit = 35)
 ```
+:::::
+:::
 
 ## Derivation of Update
 
@@ -1191,51 +1197,6 @@ gd_taylor_illustration(
 :::::
 :::
 
-## Gradient Descent Step by Step
-
-::: {.columns align=center}
-::::: {.column width="47%"}
-The dashed blue contours show the quadratic model at the current iterate.
-
-\medskip
-
-Minimize the model to take a step, then build a new model.
-:::::
-
-::::: {.column width="47%"}
-```{r}
-#| label: gd-quadratic-steps
-#| echo: false
-#| fig-show: animate
-#| fig-height: 2.8
-#| out-width: "\\linewidth"
-#| fig-cap: "The gradient descent approximation."
-
-for (iteration in 0:2) {
-  for (show_next_step in c(FALSE, TRUE)) {
-    stage <- if (show_next_step) {
-      "Take the step"
-    } else {
-      "Build the model"
-    }
-    print(
-      step_size_illustration(
-        x,
-        y,
-        t = 0.001,
-        maxit = 4,
-        plot_approx = TRUE,
-        iteration = iteration,
-        show_next_step = show_next_step
-      ) +
-        labs(title = paste0("Step ", iteration + 1, ": ", stage))
-    )
-  }
-}
-```
-:::::
-:::
-
 ## The Descent Lemma (from Taylor's Theorem)
 
 ### Taylor's Theorem
@@ -1321,7 +1282,7 @@ lipschitz_illustration <- function(f_prime, L, x0, x_range) {
         ymin = f_prime(x0) - L * abs(x - x0),
         ymax = f_prime(x0) + L * abs(x - x0)
       ),
-      fill = "grey40",
+      fill = "grey50",
       alpha = 0.5
     ) +
     geom_line() +
@@ -1395,7 +1356,7 @@ $$
 
 Unless the gradient is zero, each step decreases the function value.
 
-##
+--------------------------------------------------------------------------------
 
 ```{r}
 #| label: gd-illustration-right-step
@@ -1406,6 +1367,51 @@ Unless the gradient is zero, each step decreases the function value.
 
 step_size_illustration(x, y)
 ```
+
+## Gradient Descent Step by Step
+
+::: {.columns align=center}
+::::: {.column width="47%"}
+The dashed blue contours show the quadratic model at the current iterate.
+
+\medskip
+
+Minimize the model to take a step, then build a new model.
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: gd-quadratic-steps
+#| echo: false
+#| fig-show: animate
+#| fig-height: 2.8
+#| out-width: "\\linewidth"
+#| fig-cap: "The gradient descent approximation."
+
+for (iteration in 0:2) {
+  for (show_next_step in c(FALSE, TRUE)) {
+    stage <- if (show_next_step) {
+      "Take the step"
+    } else {
+      "Build the model"
+    }
+    print(
+      step_size_illustration(
+        x,
+        y,
+        t = 0.001,
+        maxit = 4,
+        plot_approx = TRUE,
+        iteration = iteration,
+        show_next_step = show_next_step
+      ) +
+        labs(title = paste0("Step ", iteration + 1, ": ", stage))
+    )
+  }
+}
+```
+:::::
+:::
 
 ## Line Searching
 
@@ -1663,6 +1669,10 @@ step_size_illustration(x_ill, y_ill, plot_approx = TRUE)
 :::::
 :::
 
+\pdfpcnote{
+  - How can we improve convergence in the ill-conditioned case?\\
+}
+
 ## Newton's Method
 
 Recall the second-order expansion of $H$ around $\theta$:
@@ -1784,11 +1794,6 @@ ggplot(model_df, aes(theta, value)) +
   )
 ```
 
-. . .
-
-The full Newton step minimizes the local model. Line search checks whether it
-sufficiently decreases $H$.
-
 ## Damped Newton
 
 Assume $\nabla^2 H(\theta_n) \succ 0$. A full Newton step can still increase
@@ -1803,7 +1808,6 @@ Backtrack from $\gamma = 1$ using an Armijo parameter $0 < c < 1/2$.
 ### Phases
 
 - Far from the minimum, steps may be **damped** ($\gamma < 1$). \pause
-- One accepted full step does not guarantee that later steps are full. \pause
 - Near a minimizer with a positive-definite, locally Lipschitz Hessian, full
   steps are accepted thereafter: the **pure phase** has quadratic convergence.
 
@@ -1811,7 +1815,6 @@ Backtrack from $\gamma = 1$ using an Armijo parameter $0 < c < 1/2$.
   - Positive definiteness makes the Newton direction a descent direction.\\
   - Along $d$, Armijo checks $H(\theta + \gamma d) \leq H(\theta) + c\gamma\nabla H(\theta)^T d$.\\
   - An indefinite Hessian may need modification; backtracking alone is not enough.\\
-  - The pure phase is a local result, not triggered by one accepted full step.\\
 }
 
 ##
@@ -1820,7 +1823,7 @@ Backtrack from $\gamma = 1$ using an Armijo parameter $0 < c < 1/2$.
 #| label: gd-newton-comparison
 #| echo: false
 #| fig-width: 5.4
-#| fig-height: 2.8
+#| fig-height: 3
 #| fig-cap: "Gradient descent vs Newton's method on the ill-conditioned problem."
 
 pl_gd <- step_size_illustration(
@@ -1860,15 +1863,6 @@ Unlike OLS, the Hessian changes with $\beta$.
 \pause\medskip
 
 GD uses a fixed step size $1/L$. Newton uses backtracking line search.
-
-\medskip\pause
-
-Both start at $\beta_0 = 0$ and stop when
-$$
-  \frac{H(\beta_k) - H(\beta^*)}{H(\beta_0) - H(\beta^*)} \leq 10^{-8}.
-$$
-
-We estimate $H(\beta^*)$ using a separate, high-accuracy fit.
 
 ## Iterations and Numerical Work
 
@@ -2089,31 +2083,22 @@ Let $\theta^*$ be a minimizer and $e_n = \|\theta_n - \theta^*\|_2$.
 :::::
 :::
 
-## Quasi-Newton Methods
-
-Replace $\nabla^2 H(\theta)$ with an approximation $B_n$.
-
-. . .
-
-### BFGS
-
-The update and direction calculation cost $O(p^2)$ per iteration, with $O(p^2)$
-storage.
-
-. . .
-
-### L-BFGS
-
-Store $m$ correction pairs: $O(mp)$ work per iteration and $O(mp)$ storage.
-
-\medskip
-
-These costs exclude objective evaluations, gradient evaluations, and line
-search.
-
 ## Stopping Criteria
 
 ::: {.columns}
+::::: {.column width="47%"}
+### When to Stop?
+
+Knowing when to stop is **important** but **hard**.
+
+\medskip\pause
+
+We want to stop when we are "close enough" to a minimizer, but we don't know the
+minimizer in advance.
+:::::
+
+. . .
+
 ::::: {.column width="47%"}
 ### Common (ad hoc) choices
 
@@ -2132,39 +2117,25 @@ search.
   \frac{|H(\theta_{n+1}) - H(\theta_n)|}{\max\{1, |H(\theta_n)|\}} \leq \epsilon
   $$
 :::::
-
-. . .
-
-::::: {.column width="47%"}
-### Duality Gap
-
-When **strong duality** holds, the duality gap is zero at a primal-dual optimum.
-
-\medskip\pause
-
-For feasible primal and dual points, the gap bounds objective suboptimality, but
-a useful dual bound is not always available.
-
-\medskip\pause
-
-\alert{Out of scope for this course!}
-:::::
 :::
 
 ## Benchmarking: Which Method Is Faster?
 
-Return to our OLS example, using full Newton steps:
-
 ```{r}
 #| label: naive-optimization-benchmark
 #| cache: false
+#| fig-width: 4
+#| fig-height: 1.8
 
 naive_bench <- bench::mark(
   GD = gd(x, y, maxit = 20),
   Newton = newton(x, y, maxit = 20, line_search = FALSE),
   check = FALSE
 )
+plot(naive_bench)
 ```
+
+--------------------------------------------------------------------------------
 
 ```{r}
 #| label: optimization-benchmark-accuracy
@@ -2235,7 +2206,7 @@ benchmark_time <- function(timing) {
   \only<1|handout:0>{\textbf{GD is faster?}}
   \only<2|handout:0>{GD has not reached $10^{-8}$. Newton kept iterating after reaching it.}
   \only<3->{
-    \textbf{Decide what counts as solving the problem before timing.}
+    \textbf{Decide what counts as solving the problem before timing or plot the full trajectory.}
     \par\medskip
   }
 \end{overlayarea}
@@ -2297,21 +2268,22 @@ plot(path, type = "b")
 
 ## Summary
 
-### Today
+### Optimization
 
-- Optimization problems
-- Algorithms to solve optimization problems
-  - Gradient descent
-  - The Newton method
+We talked about what an optimization problem is and what a solution looks like.
 
 . . .
 
-### Things We Did Not Cover
+### Gradient Descent
 
-- Accelerated gradient methods
-- Conjugate gradient
-- Constrained optimization
-- Nonsmooth objectives
+The gradient descent method uses the gradient to take steps toward a minimizer.
+
+. . .
+
+### Newton's Method
+
+The Newton method uses the Hessian to rescale the gradient and take steps toward
+a minimizer.
 
 ## Next Time
 
@@ -2328,3 +2300,27 @@ We will cover how to fix bugs in your code using debugging tools in R.
 \medskip\pause
 
 This part will mostly be a hands-on session, so bring your laptop!
+
+\lectureappendix
+
+## Quasi-Newton Methods
+
+Replace $\nabla^2 H(\theta)$ with an approximation $B_n$.
+
+. . .
+
+### BFGS
+
+The update and direction calculation cost $O(p^2)$ per iteration, with $O(p^2)$
+storage.
+
+. . .
+
+### L-BFGS
+
+Store $m$ correction pairs: $O(mp)$ work per iteration and $O(mp)$ storage.
+
+\medskip
+
+These costs exclude objective evaluations, gradient evaluations, and line
+search.
