@@ -141,8 +141,7 @@ and `slides/tightlist.tex` customize the template.
 - Use LaTeX commands for mathematical symbols, such as `\sum` and `\int`, rather
   than Unicode symbols.
 - Use `\pdfpcnote{}` for speaker notes. Write notes as lists, with each item
-  beginning with `-` and ending with `\\`. Keep notes to about five or six lines
-  per slide.
+  beginning with `-` and ending with `\\`. No more than 3 short notes per slide.
 
 ### Plots
 
@@ -154,5 +153,5 @@ also fine.
 - Avoid modifying line width (`lwd`).
 - Do not add themes. `slides/_common.qmd` sets the theme globally.
 - Use `expression()` for mathematical notation in axis labels and titles.
-- A figure width of about 5 inches and height of 3 inches spans a slide well.
+- A figure width of about 5 inches and height of 3 inches spans the entire slide.
   The defaults are 2.8 by 2.1 inches, suitable for a plot in one column.
