@@ -300,6 +300,8 @@ Content goes here...
 - For algorithms, use the `algorithm2e` package with raw LaTeX code
 - **DO NOT** use unicode characters for mathematical symbols (e.g., ∑, ∫). Always
   use LaTeX syntax (e.g., `\sum`, `\int`).
+- Use `\pdfpcnote{}` for speaker notes. Write them as lists, beginning with `-` and
+  ending with `\\`. No more than say 5-6 lines per slide. Avoid long paragraphs.
 
 #### Plots
 
