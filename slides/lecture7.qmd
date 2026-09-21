@@ -4,16 +4,6 @@ title: "Optimization"
 
 {{< include _common.qmd >}}
 
-```{r}
-#| label: setup
-#| include: false
-
-library(patchwork)
-library(tidyverse)
-
-old_options <- options(digits = 4)
-```
-
 ## Recap: Monte Carlo Methods
 
 ### Standard Monte Carlo
@@ -383,8 +373,8 @@ ggplot(df, aes(x, y)) +
 
 ## Optimality for Convex Problems
 
-Suppose $H$ is differentiable and convex, and $C$ is a convex feasible set.
-Any local minimum is **global** (but not necessarily unique).
+Suppose $H$ is differentiable and convex, and $C$ is a convex feasible set. Any
+local minimum is **global** (but not necessarily unique).
 
 . . .
 
@@ -589,6 +579,7 @@ met.
 #| echo: false
 
 source(here::here("R", "gradient_descent.R"))
+source(here::here("R", "lecture7-models.R"))
 
 library(mvtnorm)
 library(plot3D)
@@ -610,20 +601,16 @@ beta2_grid <- seq(-1, 4, length.out = 51)
 beta1_grid_persp <- seq(-1, 4, length.out = 21)
 beta2_grid_persp <- seq(-1, 4, length.out = 21)
 
-f <- function(beta, x, y) {
-  norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
-}
-
 f_vals <- outer(
   beta1_grid,
   beta2_grid,
-  Vectorize(function(b1, b2) f(c(b1, b2), x, y))
+  Vectorize(function(b1, b2) ols_objective(c(b1, b2), x, y))
 )
 
 f_vals_persp <- outer(
   beta1_grid_persp,
   beta2_grid_persp,
-  Vectorize(function(b1, b2) f(c(b1, b2), x, y))
+  Vectorize(function(b1, b2) ols_objective(c(b1, b2), x, y))
 )
 
 colnames(f_vals) <- beta1_grid
@@ -725,7 +712,7 @@ step_size_illustration <- function(
     line_search = line_search
   )
 
-  L <- norm(t(x) %*% x, "2") / nrow(x)
+  L <- norm(crossprod(x), "2")
 
   if (is.null(t)) {
     if (method == "newton") {
@@ -738,37 +725,18 @@ step_size_illustration <- function(
   df <- t(res$betas)
   colnames(df) <- c("beta1", "beta2")
 
-  approx_point <- df[2, ]
+  approx_point <- df[1, ]
 
   beta1_grid <- seq(-1, 4, length.out = 51)
   beta2_grid <- seq(-1, 4, length.out = 51)
 
-  f <- function(beta, x, y) {
-    norm(y - x %*% beta, "2")^2 / (2 * nrow(x))
-  }
-
-  f_grad <- function(beta, x, y) {
-    -t(x) %*% (y - x %*% beta) / nrow(x)
-  }
-
-  taylor_approx <- function(beta, beta0, x, y, t) {
-    f(beta, x, y) +
-      t(f_grad(beta0, x, y)) %*% (beta - beta0) +
-      (1 / (2 * t)) * sum((beta - beta0)^2)
-  }
-
-  hessian_approx <- function(beta, beta0, x, y, t) {
-    H <- t(x) %*% x / (nrow(x))
-    f(beta, x, y) +
-      (1 / (2 * t)) * t(f_grad(beta0, x, y)) %*% (beta - beta0) +
-      t(beta - beta0) %*% H %*% (beta - beta0)
-  }
-
   f_vals <- outer(
     beta1_grid,
     beta2_grid,
-    Vectorize(function(b1, b2) f(c(b1, b2), x, y))
+    Vectorize(function(b1, b2) ols_objective(c(b1, b2), x, y))
   )
+
+  contour_breaks <- pretty(range(f_vals), n = 25)
 
   colnames(f_vals) <- beta1_grid
   rownames(f_vals) <- beta2_grid
@@ -797,21 +765,19 @@ step_size_illustration <- function(
     ) +
     geom_contour(
       aes(z = f, color = after_stat(level)),
-      bins = 25
+      breaks = contour_breaks
     )
 
   if (plot_approx) {
-    approx_fun <- if (method == "gd") {
-      taylor_approx
-    } else {
-      hessian_approx
-    }
-
     approx_vals <- outer(
       beta1_grid,
       beta2_grid,
       Vectorize(function(b1, b2) {
-        approx_fun(c(b1, b2), approx_point, x, y, t)
+        if (method == "gd") {
+          ols_gd_model(c(b1, b2), approx_point, x, y, t)
+        } else {
+          ols_newton_model(c(b1, b2), approx_point, x, y)
+        }
       })
     )
 
@@ -830,7 +796,7 @@ step_size_illustration <- function(
         aes(beta1, beta2, z = f),
         color = "steelblue",
         linetype = "dashed",
-        bins = 15
+        breaks = contour_breaks
       ) +
       geom_point(
         aes(x = approx_point[1], y = approx_point[2]),
@@ -1608,7 +1574,9 @@ $$
                  - \big(\nabla^2 H(\theta_n)\big)^{-1} \nabla H(\theta_n).
 $$
 
-\pause\bigskip
+\medskip\pause
+
+For OLS, the model is exact: one full Newton step reaches the minimum.
 :::::
 
 ::::: {.column width="47%"}
@@ -1622,15 +1590,89 @@ step_size_illustration(
   plot_convergence = TRUE,
   method = "newton",
   plot_approx = TRUE,
-  t = 0.8,
+  t = 1,
+  maxit = 2
 )
 ```
 :::::
 :::
 
+## Newton's Method Beyond Quadratics
+
+Consider the function we will use in the exercise:
+$$
+  H(\theta) = \log(1 + e^\theta) + \frac{1}{2}(\theta - 2)^2.
+$$
+
+. . .
+
+```{r}
+#| label: newton-nonquadratic
+#| echo: false
+#| fig-width: 5.3
+#| fig-height: 2.2
+
+theta0 <- -2
+theta_next <- theta0 -
+  nonquadratic_gradient(theta0) / nonquadratic_hessian(theta0)
+
+model_df <- tibble(
+  theta = seq(-3, 3, length.out = 401),
+  objective = nonquadratic_objective(theta),
+  model = nonquadratic_model(theta, theta0)
+) |>
+  pivot_longer(
+    cols = c(objective, model),
+    names_to = "type",
+    values_to = "value"
+  )
+
+step_df <- tibble(
+  theta = c(theta0, theta_next),
+  value = nonquadratic_model(theta, theta0),
+  label = c("theta[n]", "theta[n + 1]")
+)
+
+ggplot(model_df, aes(theta, value)) +
+  geom_line(aes(color = type, linetype = type)) +
+  geom_point(data = step_df, color = "steelblue") +
+  geom_text(
+    data = step_df,
+    aes(label = label),
+    parse = TRUE,
+    nudge_y = -0.7
+  ) +
+  scale_color_manual(
+    values = c(objective = "black", model = "steelblue"),
+    labels = c(
+      objective = expression(H(theta)),
+      model = expression(hat(H)(theta))
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(objective = "solid", model = "dashed"),
+    labels = c(
+      objective = expression(H(theta)),
+      model = expression(hat(H)(theta))
+    )
+  ) +
+  labs(
+    x = expression(theta),
+    y = expression(H(theta)),
+    color = NULL,
+    linetype = NULL
+  )
+```
+
+. . .
+
+The full Newton step minimizes the local model. Line search checks whether it
+sufficiently decreases $H$.
+
 ## Damped Newton
 
-This might actually not converge, so instead we use **damped** Newton:
+For general objectives, a full Newton step can increase $H$. **Damped Newton**
+uses
 $$
   \theta_{n+1} = \theta_n - \gamma \nabla^2 H(\theta_n)^{-1} \nabla H(\theta_n),
 $$
@@ -1786,13 +1828,11 @@ $$
 #| echo: false
 #| include: false
 
-H <- function(theta) log(1 + exp(theta)) + 0.5 * (theta - 2)^2
+H <- nonquadratic_objective
 
 curve(H, from = -2, to = 5)
 
-H_prime <- function(theta) {
-  exp(theta) / (1 + exp(theta)) + (theta - 2)
-}
+H_prime <- nonquadratic_gradient
 ```
 
 ### Step 1
