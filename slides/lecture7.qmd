@@ -1250,16 +1250,18 @@ $$
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: lipschitz-cones
 #| echo: false
+#| fig-show: animate
 #| fig-height: 3.2
+#| out-width: "\\linewidth"
 
-# For a Lipschitz continuous function, there exists a double cone (white) whose
-# origin can be moved along the graph so that the whole graph always stays
-# outside the double cone
-# Let's plot this for a one-dimensional function.
-
-lipschitz_illustration <- function(f, f_prime, L, x0) {
-  x_vals <- seq(x0 - 2, x0 + 2, length.out = 200)
+lipschitz_illustration <- function(f_prime, L, x0, x_range) {
+  # Include the anchor so the shaded cone meets the curve exactly there.
+  x_vals <- sort(unique(c(
+    seq(x_range[1], x_range[2], length.out = 401),
+    x0
+  )))
 
   df <- data.frame(x = x_vals, y = f_prime(x_vals))
 
@@ -1276,35 +1278,18 @@ lipschitz_illustration <- function(f, f_prime, L, x0) {
     geom_point(
       aes(x, y),
       data = tibble(x = x0, y = f_prime(x0)),
-      color = "darkorange"
-    ) +
+      color = "darkorange",
+      size = 2
+    ) + # Fixed axes make the cone's motion visible without moving the curve.
+    coord_cartesian(xlim = x_range, ylim = range(df$y)) +
     labs(y = expression(nabla * H(theta)), x = expression(theta))
 }
 
-f <- function(x) ifelse(x < 0, x^2 - x, -log(1 + x))
-
-f_prime <- function(x) ifelse(x < 0, 2 * x - 1, -1 / (1 + x))
-
-p1 <- lipschitz_illustration(
-  f = f,
-  f_prime = f_prime,
-  L = 2,
-  x0 = 0
-)
-
-f <- function(x) {
-  ifelse(
-    x < 1,
-    12.5 * x^2,
-    ifelse(
-      1 <= x & x < 2,
-      0.5 * x^2 + 24 * x - 12,
-      12.5 * x^2 - 24 * x + 36
-    )
-  )
+smooth_gradient <- function(x) {
+  ifelse(x < 0, 2 * x - 1, -1 / (1 + x))
 }
 
-f_prime <- function(x) {
+piecewise_gradient <- function(x) {
   ifelse(
     x < 1,
     25 * x,
@@ -1312,14 +1297,28 @@ f_prime <- function(x) {
   )
 }
 
-p2 <- lipschitz_illustration(
-  f = f,
-  f_prime = f_prime,
-  L = 25,
-  x0 = 0
-)
+smooth_anchors <- seq(-1.5, 1.5, length.out = 5)
+piecewise_anchors <- seq(0, 3, length.out = 5)
 
-p1 / p2 + plot_layout(axes = "collect")
+for (i in seq_along(smooth_anchors)) {
+  p1 <- lipschitz_illustration(
+    f_prime = smooth_gradient,
+    L = 2,
+    x0 = smooth_anchors[i],
+    x_range = c(-2, 2)
+  ) +
+    labs(title = expression(L == 2))
+
+  p2 <- lipschitz_illustration(
+    f_prime = piecewise_gradient,
+    L = 25,
+    x0 = piecewise_anchors[i],
+    x_range = c(-0.5, 3.5)
+  ) +
+    labs(title = expression(L == 25))
+
+  print(p1 / p2 + plot_layout(axis_titles = "collect"))
+}
 ```
 :::::
 :::
