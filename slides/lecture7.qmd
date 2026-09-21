@@ -698,7 +698,9 @@ step_size_illustration <- function(
   line_search = FALSE,
   plot_convergence = TRUE,
   plot_approx = FALSE,
-  method = c("gd", "newton")
+  method = c("gd", "newton"),
+  iteration = NULL,
+  show_next_step = FALSE
 ) {
   method <- match.arg(method)
 
@@ -725,7 +727,16 @@ step_size_illustration <- function(
   df <- t(res$betas)
   colnames(df) <- c("beta1", "beta2")
 
-  approx_point <- df[1, ]
+  approx_index <- if (is.null(iteration)) 1L else iteration + 1L
+  approx_point <- df[approx_index, ]
+
+  if (!is.null(iteration)) {
+    df <- df[
+      seq_len(approx_index + as.integer(show_next_step)),
+      ,
+      drop = FALSE
+    ]
+  }
 
   beta1_grid <- seq(-1, 4, length.out = 51)
   beta2_grid <- seq(-1, 4, length.out = 51)
@@ -796,19 +807,44 @@ step_size_illustration <- function(
         aes(beta1, beta2, z = f),
         color = "steelblue",
         linetype = "dashed",
-        breaks = contour_breaks
+        breaks = contour_breaks[seq(1, length(contour_breaks), by = 5)]
       ) +
-      geom_point(
-        aes(x = approx_point[1], y = approx_point[2]),
+      annotate(
+        "point",
+        x = approx_point[1],
+        y = approx_point[2],
         color = "steelblue",
         size = 2
       )
   }
 
   if (plot_convergence) {
-    res <- res +
-      geom_point(data = df, size = 0.5) +
-      geom_path(data = df)
+    res <- res + geom_point(data = df, size = 0.5)
+
+    if (nrow(df) > 1) {
+      res <- res + geom_path(data = df)
+    }
+
+    if (show_next_step && !is.null(iteration)) {
+      next_point <- df[nrow(df), ]
+      res <- res +
+        annotate(
+          "segment",
+          x = approx_point[1],
+          y = approx_point[2],
+          xend = next_point[1],
+          yend = next_point[2],
+          arrow = grid::arrow(
+            length = grid::unit(0.06, "inches")
+          )
+        ) +
+        annotate(
+          "point",
+          x = next_point[1],
+          y = next_point[2],
+          size = 2
+        )
+    }
   }
 
   res
@@ -1103,6 +1139,51 @@ gd_taylor_illustration(
   x0 = 0,
   t = 0.2
 )
+```
+:::::
+:::
+
+## Gradient Descent Step by Step
+
+::: {.columns align=center}
+::::: {.column width="47%"}
+The dashed blue contours show the quadratic model at the current iterate.
+
+\medskip
+
+Minimize the model to take a step, then build a new model.
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: gd-quadratic-steps
+#| echo: false
+#| fig-show: animate
+#| fig-height: 2.8
+#| out-width: "\\linewidth"
+#| fig-cap: "The gradient descent approximation."
+
+for (iteration in 0:2) {
+  for (show_next_step in c(FALSE, TRUE)) {
+    stage <- if (show_next_step) {
+      "Take the step"
+    } else {
+      "Build the model"
+    }
+    print(
+      step_size_illustration(
+        x,
+        y,
+        t = 0.001,
+        maxit = 4,
+        plot_approx = TRUE,
+        iteration = iteration,
+        show_next_step = show_next_step
+      ) +
+        labs(title = paste0("Step ", iteration + 1, ": ", stage))
+    )
+  }
+}
 ```
 :::::
 :::
@@ -1502,7 +1583,7 @@ p1
 x_well <- rmvnorm(100, sigma = diag(2))
 y_well <- x_well %*% beta
 
-step_size_illustration(x_well, y_well)
+step_size_illustration(x_well, y_well, plot_approx = TRUE)
 ```
 :::::
 
@@ -1517,31 +1598,7 @@ step_size_illustration(x_well, y_well)
 x_ill <- rmvnorm(100, sigma = matrix(c(1, 0.8, 0.8, 1), 2, 2))
 y_ill <- x_ill %*% beta
 
-step_size_illustration(x_ill, y_ill)
-```
-:::::
-:::
-
-## Gradient Descent and Conditioning
-
-::: {.columns align=center}
-::::: {.column width="47%"}
-The problem with gradient descent is that it is sensitive to this kind of
-conditioning.
-:::::
-
-::::: {.column width="47%"}
-```{r}
-#| echo: false
-#| fig-height: 2.8
-#| fig-cap: "The gradient descent approximation."
-
-step_size_illustration(
-  x_ill,
-  y_ill,
-  t = 0.001,
-  plot_approx = TRUE
-)
+step_size_illustration(x_ill, y_ill, plot_approx = TRUE)
 ```
 :::::
 :::
