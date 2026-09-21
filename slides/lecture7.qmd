@@ -871,15 +871,14 @@ for $\beta \in \mathbb{R}^p$.
 
 \medskip\pause
 
-How do you solve this in practice? In R you call
+In R you call
 
 ```r
 solve(crossprod(X), crossprod(X, y))
 ```
 
-. . .
-
-but what happens \alert{under the hood}?
+to solve for $\beta$, which uses matrix factorization (e.g., Cholesky
+decomposition) to solve the linear system.
 
 ## Iterative Methods
 
@@ -1668,8 +1667,9 @@ $$
 ```{r}
 #| label: newton-nonquadratic
 #| echo: false
-#| fig-width: 5.3
-#| fig-height: 2.2
+#| fig-width: 4
+#| fig-height: 2
+#| fig-cap: "Newton's method on a non-quadratic function."
 
 theta0 <- -2
 theta_next <- theta0 -
@@ -1784,11 +1784,15 @@ $$
 $$
 with a small ridge penalty, $\lambda = 10^{-3}$.
 
+\medskip
+
 Unlike OLS, the Hessian changes with $\beta$.
 
-. . .
+\pause\medskip
 
 GD uses a fixed step size $1/L$. Newton uses backtracking line search.
+
+\medskip\pause
 
 Both start at $\beta_0 = 0$ and stop when
 $$
@@ -1929,39 +1933,12 @@ Newton needs **`r comparison_basic$summary$iteration[2]` iterations** to GD's
 times as much estimated work**.
 
 \pdfpcnote{
-  These are actual optimization runs on simulated binary responses. All three
-  examples use the same ridge logistic objective and penalty. The stated
-  condition numbers describe the design Gram matrix, not the changing Hessian.
-  The signal strength is held fixed across the simulated problems.
-
-  In this first example, the design Gram matrix has condition number 5. The
-  two panels use identical objective values from the same optimization runs;
-  only the horizontal coordinate changes. Newton wins by iteration count,
-  while GD wins by total estimated work. Newton's five iterations cost about
-  408 GD iterations, compared with GD's 218 iterations.
-
-  A separate high-accuracy Newton fit supplies the reference minimum. Its
-  remaining objective gap is bounded by the squared gradient norm divided by
-  twice the ridge penalty, and is below 1e-16. Computing this reference and
-  generating the data are excluded from both methods' work. Each curve ends
-  at the first iterate reaching the target. Values below the target are
-  displayed at the target. The vertical axis is logarithmic. The horizontal
-  axes use log(1 + x), retaining the common starting point at zero iterations
-  and zero work. Points mark every Newton step and the final GD step.
-
-  GD receives the known global Lipschitz bound L = ||X|| squared / (4n) + lambda
-  from the design construction. It does not form a Hessian to choose a step
-  size. Newton rebuilds its Hessian at every iteration and uses a Cholesky
-  factorization and Armijo backtracking with constant 1/4 and halving.
-
-  Work is a leading-order dense arithmetic estimate, not measured time.
-  Accepted fitted probabilities are reused, so one GD iteration costs about
-  4np operations: one matrix-vector product for the gradient and one for the
-  next objective evaluation. Newton additionally weights X, forms a symmetric
-  Gram matrix, factors it, and solves two triangular systems. Every rejected
-  line-search evaluation is charged another 2np operations. Scalar operations,
-  data generation, and the common initial evaluation are excluded. Neither
-  optimizer exploits the special structure used to generate the design.
+  - Before revealing the work panel, ask: Which method looks faster?\\
+  - Point out the dotted line: both methods reach the same accuracy target.\\
+  - Reveal the work panel: same runs, only the horizontal axis changes.\\
+  - One work unit is one GD step's estimated arithmetic cost, not a timing.\\
+  - Newton takes fewer steps, but builds and factors a Hessian at each step.\\
+  - GD wins on total work here. Fewer iterations need not mean less work.\\
 }
 
 ## When Does Each Method Win?
@@ -1978,11 +1955,10 @@ times as much estimated work**.
 #| fig-width: 2.6
 #| fig-height: 2.25
 #| out-width: "\\linewidth"
+#| fig-cap: "a large Hessian makes Newton costly."
 
 comparison_plots(comparison_gd)$work
 ```
-
-A large Hessian makes Newton costly.
 :::::
 
 . . .
@@ -1998,22 +1974,20 @@ A large Hessian makes Newton costly.
 #| fig-width: 2.6
 #| fig-height: 2.25
 #| out-width: "\\linewidth"
+#| fig-cap: "Curvature information pays off."
 
 comparison_plots(comparison_newton)$work
 ```
-
-Curvature information pays off.
 :::::
 :::
 
 \pdfpcnote{
-  Each panel compares GD and Newton on the same logistic regression problem.
-  The problems differ between panels. Work is measured in GD-iteration
-  equivalents separately for each problem, so compare the methods within a
-  panel rather than comparing absolute computational costs across panels.
-
-  In the larger problem, GD uses 132 work units and Newton about 541. In the
-  smaller, ill-conditioned problem, GD uses 791 and Newton about 27.
+  - Ask: How should problem size and conditioning affect the winner?\\
+  - Compare methods within each panel; each has its own GD work unit.\\
+  - Left: good conditioning helps GD; a 400-by-400 Hessian makes Newton costly.\\
+  - Right: Newton corrects for curvature with only a 20-by-20 Hessian.\\
+  - The condition numbers describe the design Gram matrix; the Hessian varies.\\
+  - Emphasize the tradeoff: cheap steps versus fewer, more expensive steps.\\
 }
 
 ## Gradient Descent vs Newton's Method
