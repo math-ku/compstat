@@ -145,6 +145,8 @@ Inside the `test_that()` function, we use `expect_*()` functions to check that
 certain conditions hold.
 
 ```{r}
+#| label: sum-works
+
 library(testthat)
 
 test_that("sum works", {
@@ -162,6 +164,7 @@ the failure.
 
 ```{r}
 #| error: true
+#| label: sum-fails
 
 test_that("sum works", {
   expect_identical(sum(1, 2), 4) # This will fail
@@ -195,6 +198,8 @@ descriptive name for the tests in that file.
 . . .
 
 ```{r}
+#| label: run-tests
+
 testthat::test_dir(here::here("tests"))
 ```
 
@@ -277,6 +282,7 @@ precision.
 \medskip\pause
 
 ```{r}
+#| label: numerical-equality
 #| error: true
 
 test_that("numerical equality", {
@@ -289,6 +295,8 @@ test_that("numerical equality", {
 Use `expect_equal()` with a specified tolerance to handle this.
 
 ```{r}
+#| label: numerical-equality-tolerance
+
 test_that("numerical equality with tolerance", {
   expect_equal(sqrt(2)^2, 2, tolerance = 1e-8)
 })
@@ -315,6 +323,8 @@ Debugging is the process of finding and fixing bugs.
 Sometimes it is enough to simply look at the call stack.
 
 ```{r}
+#| label: traceback-example
+
 # debugging.R
 f <- function() g()
 g <- function() h()
@@ -324,6 +334,7 @@ h <- function() stop("We have a problem!")
 . . .
 
 ```{r}
+#| label: traceback-example-1
 #| error: true
 
 f()
@@ -332,6 +343,7 @@ f()
 
 ```{r}
 #| eval: false
+#| label: traceback-example-2
 
 traceback()
 ```
@@ -374,6 +386,8 @@ returns some extra output.
 \medskip\pause
 
 ```{r}
+#| label: return-diagnostics
+
 f <- function(x, y, debug = FALSE) {
   z <- g(x, y)
 
@@ -502,7 +516,8 @@ response.
 
 The problem is to find
 $$
-  \hat{\symbf{\beta}} = \argmin_{\symbf{\beta}} \left( \frac{1}{N} \sum_{i=1}^N \exp(\symbf{x}_i^T \symbf{\beta}) - y_i \symbf{x}_i^T \symbf{\beta} \right).
+  \hat{\symbf{\beta}}
+  = \argmin_{\symbf{\beta}} \left( \frac{1}{N} \sum_{i=1}^N \exp(\symbf{x}_i^T \symbf{\beta}) - y_i \symbf{x}_i^T \symbf{\beta} \right).
 $$
 
 . . .
@@ -580,6 +595,8 @@ res_glm <- glm(y ~ x, family = "poisson")
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: compare-results
+
 res_gd$par
 coef(res_glm)
 ```
