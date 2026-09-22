@@ -164,17 +164,9 @@ for you to solve independently at your own pace.
   25.4.5.2(AdvR) + Bonus Example
 - **Solutions**: [Exercise 4 Solutions](exercises/U4.qmd)
 
-#### Presentations of Assignment 2
-
-`r session_info("2026-09-24", afternoon = TRUE)`
-
-- **Instructions:** [Assignment 2](assignments/assignment2.html)
-
-### Week 5 `r week_info("2026-09-29")` [Testing and debugging]{.schedule-week-topic} {#week-5 .schedule-week}
-
 #### Lecture 8: Testing and Debugging
 
-`r session_info("2026-09-29")`
+`r session_info("2026-09-24")`
 
 A large part of this lecture will be a hands-on session. Please bring your
 laptop. We will work on debugging a piece of code together. You can find the
@@ -184,6 +176,14 @@ code here: [debugging.R](R/debugging.R).
   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture8.qmd))
 - **Reading:** [Chapter 22
   (AdvR)](https://adv-r.hadley.nz/debugging.html#debugging)
+
+#### Presentations of Assignment 2
+
+`r session_info("2026-09-24", afternoon = TRUE)`
+
+- **Instructions:** [Assignment 2](assignments/assignment2.html)
+
+### Week 5 `r week_info("2026-09-29")` [Testing and debugging]{.schedule-week-topic} {#week-5 .schedule-week}
 
 <!-- #### Exercise Session 5 -->
 <!---->
