@@ -2190,11 +2190,6 @@ comparison_plots(comparison_basic)$work
 :::::
 :::
 
-Newton needs **`r comparison_basic$summary$iteration[2]` iterations** to GD's
-**`r comparison_basic$summary$iteration[1]`**, but uses
-**`r round(comparison_basic$summary$work[2] / comparison_basic$summary$work[1], 1)`
-times as much estimated work**.
-
 \pdfpcnote{
   - Before revealing the work panel, ask: Which method looks faster?\\
   - Point out the dotted line: both methods reach the same accuracy target.\\
@@ -2218,7 +2213,7 @@ times as much estimated work**.
 #| fig-width: 2.6
 #| fig-height: 2.25
 #| out-width: "\\linewidth"
-#| fig-cap: "A large Hessian makes Newton costly."
+#| fig-cap: "Large Hessians are costly."
 
 comparison_plots(comparison_gd)$work
 ```
