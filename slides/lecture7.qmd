@@ -2259,7 +2259,6 @@ Let $\theta^*$ be a minimizer and $e_n = \|\theta_n - \theta^*\|_2$.
 - Cheap iterations: gradient evaluations
 - Sensitive to conditioning
 - **Sublinear** objective gap $O(1/n)$ for convex $H$
-- **Linear** objective gap $O(q^n)$, $0 < q < 1$, if $H$ is strongly convex
 - Assumes an $L$-Lipschitz gradient and $0 < \gamma \leq 1/L$
 :::::
 
@@ -2271,7 +2270,6 @@ Let $\theta^*$ be a minimizer and $e_n = \|\theta_n - \theta^*\|_2$.
 - Costly iterations: Hessian and linear solve
 - Uses curvature to rescale the step
 - **Locally quadratic** with full steps: $e_{n+1} \leq C e_n^2$
-- Reaches $e_n \leq \epsilon$ in $O(\log \log(1/\epsilon))$ local iterations
 - Assumes a locally Lipschitz Hessian that is positive definite at $\theta^*$
 :::::
 :::
