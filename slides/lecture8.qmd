@@ -290,7 +290,7 @@ test_that("numerical equality", {
 })
 ```
 
-\pause
+## `expect_equal()` with Tolerance
 
 Use `expect_equal()` with a specified tolerance to handle this.
 
@@ -308,11 +308,9 @@ test_that("numerical equality with tolerance", {
 
 Bugs are common, maybe inevitable.
 
-\medskip\pause
+![Down the rabbit hole.](../images/xkcd-debugging.png){width=80%}
 
 Debugging is the process of finding and fixing bugs.
-
-![Down the rabbit hole.](../images/xkcd-debugging.png){width=80%}
 
 --------------------------------------------------------------------------------
 
@@ -587,7 +585,7 @@ res_gd <- gradient_descent(
   y = y
 )
 
-res_glm <- glm(y ~ x, family = "poisson")
+res_glm <- glm(y ~ x, "poisson")
 ```
 :::::
 
