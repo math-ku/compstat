@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   ...
 }:
@@ -37,6 +38,19 @@ in
       ];
     })
   ];
+
+  scripts.positron = {
+    description = "Launch Positron with the course R environment.";
+    exec = ''
+      set -e
+      # Positron parses R's shell launcher and cannot discover Nix's binary wrapper.
+      # Its embedded R session also needs the package paths supplied by that wrapper.
+      R_LIBS_SITE="$(${config.languages.r.package}/bin/Rscript --vanilla -e 'cat(Sys.getenv("R_LIBS_SITE"))')"
+      export R_LIBS_SITE
+      export PATH="${config.languages.r.package}/lib/R/bin:$PATH"
+      exec ${pkgs.positron-bin}/bin/positron "$@"
+    '';
+  };
 
   # https://devenv.sh/languages/
   languages = {

@@ -3,11 +3,11 @@ nixpkgs:
   # The pinned RStudio release needs Electron 41; its native modules fail on 42.
   permitted_insecure_packages:
     - electron-41.10.6
+  permitted_unfree_packages:
+    - positron-bin
 inputs:
   git-hooks:
     url: github:cachix/git-hooks.nix
     inputs:
       nixpkgs:
         follows: nixpkgs
-  nixpkgs:
-    url: github:cachix/devenv-nixpkgs/rolling

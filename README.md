@@ -3,6 +3,17 @@
 This repository contains slides and other materials for the course
 *Computational Statistics* taught at the University of Copenhagen.
 
+To open the repository in Positron, quit any running Positron instance, then
+run:
+
+```sh
+devenv shell -- positron .
+```
+
+The launcher exposes R's original shell script so Positron can discover it and
+passes along the course's R package library. Restart Positron through this
+command after changing the R packages in `devenv.nix`.
+
 The homepage reads dates, times, and rooms from `data/timetable.csv`. To refresh
 the saved KU timetable locally, run:
 
@@ -19,15 +30,17 @@ uses the saved data and does not need access to KU's server.
 
 The update workflow calls the existing publish workflow with the new commit,
 since pushes made with `GITHUB_TOKEN` do not trigger another push workflow
-([GitHub documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow)).
+([GitHub
+documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow)).
 The daily timer becomes active when the workflow reaches the default branch.
 
 In `index.qmd`, `session_info("2026-09-03")` selects the morning lecture on that
-date. Use `"Theoretical Exercises"` as the second argument for exercise sessions,
-or `afternoon = TRUE` for assignment presentations, which KU labels as lectures.
-KU does not identify individual lecture topics, so this date-to-topic mapping is
-explicit. If a class moves to a different date, update its call in `index.qmd`.
-A missing entry displays a notice instead of assigning another class's details.
+date. Use `"Theoretical Exercises"` as the second argument for exercise
+sessions, or `afternoon = TRUE` for assignment presentations, which KU labels as
+lectures. KU does not identify individual lecture topics, so this date-to-topic
+mapping is explicit. If a class moves to a different date, update its call in
+`index.qmd`. A missing entry displays a notice instead of assigning another
+class's details.
 
 The source URL in `R/timetable.R` selects the 2026–2027 timetable for Hold 01.
 Update it and the session dates when preparing a new course year. The captured
