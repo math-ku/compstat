@@ -290,6 +290,29 @@ prior to the lecture.
 
 - **Instructions:** [Assignment 4](assignments/assignment4.html)
 
+### Week 8 `r week_info("2026-09-29")` [Examination Prep and Backup Sessions]{.schedule-week-topic} {#week-8 .schedule-week}
+
+#### Lecture 15: Examination Prep and Q&A
+
+`r session_info("2026-09-29")`
+
+- **Slides:** [Examination Prep, Q&A, and Wrap-Up](slides/lecture15.pdf)
+  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture15.qmd))
+
+#### Exercise Session 8 (Backup)
+
+`r session_info("2026-09-29")`
+
+Backup session in case we need to cancel a previous session. Otherwise, this
+session will not be held.
+
+#### Lecture 16: Backup Session
+
+`r session_info("2026-10-01", afternoon = TRUE)`
+
+Backup session in case we need to cancel a previous session. Otherwise, this
+session will not be held.
+
 ### Week 9 `r week_info("2026-11-04")` [Examinations]{.schedule-week-topic} {#week-9 .schedule-week}
 
 #### Examinations
