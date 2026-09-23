@@ -84,6 +84,25 @@ A test is a function that checks that some property holds.
 Typically, we have output from some function and want to check that it meets our
 expectations.
 
+## Choosing Tests
+
+Where should the expected result come from?
+
+\medskip\pause
+
+- **Known answers:** An optimizer should find the minimum of $f(x) = (x - 3)^2$
+  at $x = 3$. \pause
+- **Trusted implementations:** Compare Poisson regression estimates with `glm()`
+  on the same data. \pause
+- **Mathematical properties:** Compare an analytical gradient with finite
+  differences. \pause
+- **Boundary cases and invalid inputs:** Start at the minimum, try one
+  parameter, or supply incompatible dimensions.
+
+\medskip\pause
+
+Derive expected results independently of the code being tested.
+
 ## Automated Testing
 
 So far, we have been testing manually.
@@ -301,6 +320,33 @@ test_that("numerical equality with tolerance", {
   expect_equal(sqrt(2)^2, 2, tolerance = 1e-8)
 })
 ```
+
+## Testing Code with Randomness
+
+A fixed seed makes a run reproducible. Correctness needs separate checks.
+
+\medskip\pause
+
+Our estimates should agree closely with `glm()` on the same data. Differences
+from the generating parameters also reflect sampling uncertainty.
+
+\medskip\pause
+
+For $n$ independent standard normal draws,
+$$
+  \operatorname{SE}(\bar X) = \frac{1}{\sqrt{n}}.
+$$
+Check the sample mean against zero using a bound based on this standard error.
+
+\medskip\pause
+
+Choose tolerances that reflect numerical error, optimization error, or Monte
+Carlo variation.
+
+\pdfpcnote{
+- A mean check can fail by chance. Choose the bound to control this probability.\\
+- Checking the mean alone does not establish that the distribution is correct.\\
+}
 
 # Debugging
 
