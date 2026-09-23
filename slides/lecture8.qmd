@@ -207,7 +207,7 @@ testthat::test_dir(here::here("tests"))
 
 ::: {.columns}
 ::::: {.column width="46%"}
-**testthat** was designed to be used inside R packages.
+**testthat** works inside R packages.
 
 \medskip\pause
 
@@ -229,7 +229,7 @@ package.
 
 \bigskip\pause
 
-We will see more about package development later in the course.
+We will learn about package development later in the course.
 
 ## Test Coverage
 
@@ -440,22 +440,19 @@ No need to modify the code, but cannot be conditionally set.
 
 ## AI Debugging
 
-Debugging with AI (Copilot, Claude, Gemini etc.) is a quick and easy way to
-debug.
+Coding agents (Codex, Claude, Gemini, etc.) are getting better at debugging
+code.
 
 \medskip\pause
 
-Make sure to provide context, especially when working with statistical topics.
+Model Context Protocol (MCP) tools can now be used to let agents interactively
+debug code.
 
 \medskip\pause
 
-AIs are typically good at finding syntax errors, but not so good at finding
-algorithmic errors.
-
-\medskip\pause
-
-Will almost always try to be helpful, so may provide incorrect answers and find
-bugs that are not there.
+Your knowledge of the problem domain still matters. Explain the intended
+behavior, provide a reproducible example, and check that the proposed fix makes
+sense.
 
 ## Pair Debugging
 
