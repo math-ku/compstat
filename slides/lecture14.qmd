@@ -1,5 +1,5 @@
 ---
-title: "R Packages and Wrap-Up"
+title: "R Packages"
 ---
 
 {{< include _common.qmd >}}
@@ -9,18 +9,6 @@ title: "R Packages and Wrap-Up"
 ### Distributing and Organizing Code
 
 Workshop in creating an R package
-
-. . .
-
-### Course Summary
-
-What did we actually do?
-
-. . .
-
-### Oral Examination
-
-What to think of during examination
 
 # Why Write a Package?
 
@@ -283,7 +271,8 @@ as the **usethis** package.
 Let's build a simple package that solves the Rosenbrock optimization problem,
 i.e. find
 $$
-  \theta^* = \argmin_{\theta}\Big((a - \theta_1)^2 + b(\theta_2 - \theta_1^2)^2\Big).
+  \theta^*
+  = \argmin_{\theta}\Big((a - \theta_1)^2 + b(\theta_2 - \theta_1^2)^2\Big).
 $$
 
 . . .
@@ -371,7 +360,9 @@ Let's create a first file: `R/objective.R`.
 Call `usethis::use_r("objective")`{.r} and insert
 
 ```r
-objective <- function(x, a = 1, b = 100) (a - x[1])^2 + b * (x[2] - x[1]^2)^2
+objective <- function(x, a = 1, b = 100) {
+  (a - x[1])^2 + b * (x[2] - x[1]^2)^2
+}
 ```
 
 ## Workflow
@@ -775,7 +766,8 @@ it converts it into manual files that R understands.
 ```r
 #' Function Title
 #'
-#' Here you describe what the function does, possibly using several lines.
+#' Here you describe what the function does, possibly using
+#' several lines.
 #'
 #' @param x Explanation of argument x
 #'

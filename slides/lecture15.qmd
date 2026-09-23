@@ -1,0 +1,174 @@
+---
+title: "R Packages"
+---
+
+{{< include _common.qmd >}}
+
+## Today
+
+### Oral Examination
+
+What to think of during examination
+
+\medskip\pause
+
+Oral presentation tips
+
+. . .
+
+### Q&A
+
+Tell me what you want to know more about, and I will try to answer.
+
+. . .
+
+### Course Summary
+
+What did we actually do?
+
+# Oral Examination
+
+## Procedure
+
+::: {.incremental}
+1. After entering the room you will connect the computer and check that it works
+   with the projector.
+2. When all technical issues are settled, you will draw the assignment and find
+   the presentation on the computer.
+3. Time starts and you have 15 min for the presentation. The examiners may ask
+   questions if something needs to be clarified.
+4. After 15 min your presentation will be stopped, and the examiners will ask
+   questions related to the assignment as well as to the general content of the
+   course.
+5. After at most 25 min the exam ends, and after assessment you will be given a
+   grade.
+:::
+
+## Recommendations
+
+::: {.incremental}
+- You should prepare a presentation that covers the assignments.
+- You don't need to have covered *everything* in detail, but you should show
+  that you understand the main concepts.
+- For a good grade, you need to have studied at least part of the assignment in
+  detail.
+- We expect you to use slides. Aim for around 15-20 slides.
+- Use plenty of plots. Pick out important code snippets.
+- Practice your presentation.
+- Keep your code available in case we want to see something.
+:::
+
+## Giving Effective Presentations
+
+The following advice are heavily inspired by blog posts by Claus Wilke.
+
+## Tell a Story
+
+## Read Out All of the Text on Your Slides
+
+::: {.columns}
+::::: {.column width="47%"}
+### Synchronization
+
+Your audience can both read your slides and listen to you, but not if you are
+talking about something else than what is on the slide.
+
+\medskip\pause
+
+They will either read the slide or listen to you, but not both.
+
+### Too Much Text?
+
+If this makes you think
+
+> No way will I have time to read all of this aloud!
+
+Then very likely you have **too much text** on your slides.
+:::::
+
+::::: {.column width="47%"}
+:::::
+:::
+
+## Figures Also Contain Text
+
+## Practice Your Presentation
+
+Read aloud any text on your slides.
+
+## The Presentation Speed Run
+
+# Course Summary
+
+## Statistical Topics
+
+::: {.columns}
+::::: {.column width="47%"}
+### Smoothing
+
+- Kernel density estimation\pause
+- Smoothing splines
+
+. . .
+
+### Monte Carlo Methods
+
+- Inverse transform sampling\pause
+- Rejection sampling\pause
+- Importance sampling
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+### Optimization
+
+- Unconstrained optimization (gradient descent, Newton's method)\pause
+- Constrained optimization (interior point method)\pause
+- The EM algorithm\pause
+- Stochastic gradient descent (mini-batching, acceleration)
+:::::
+:::
+
+## Computational Topics
+
+::: {.columns}
+::::: {.column width="47%"}
+### Accuracy
+
+- Testing your code (ad-hoc, testthat)\pause
+- Debugging techniques (interactive debugging)
+
+. . .
+
+### Measuring Performance
+
+- Profiling (profvis)\pause
+- Benchmarking (bench)
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+### Improving Performance
+
+- Using R (vectorization, avoiding copies)\pause
+- Using Rcpp (C++)\pause
+- Parallelization (foreach)
+
+. . .
+
+### Organizing Code
+
+- Object-oriented programming (S3)\pause
+- R Packages
+:::::
+:::
+
+::: {.standout}
+##
+
+Thank you, and good luck!
+:::
+
+## References
