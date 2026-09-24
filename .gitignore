@@ -395,3 +395,4 @@ devenv.local.yaml
 .pre-commit-config.yaml
 
 **/*.quarto_ipynb
+.positai
