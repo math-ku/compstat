@@ -272,7 +272,7 @@ Enjoy your break!
   example.
 - **Solutions**: [Exercise 7](exercises/U7.qmd)
 
-#### Lecture 14: R Packages and Wrap-Up
+#### Lecture 14: R Packages
 
 `r session_info("2026-10-22")`
 
@@ -281,7 +281,7 @@ will work on creating an R package together. Please install the
 [devtools](https://cran.r-project.org/web/packages/devtools/index.html) package
 prior to the lecture.
 
-- **Slides:** [R Packages and Wrap-Up](slides/lecture14.pdf)
+- **Slides:** [R Packages](slides/lecture14.pdf)
   ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture14.qmd))
 
 #### Presentations of Assignment 4
