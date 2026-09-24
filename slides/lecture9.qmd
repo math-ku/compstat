@@ -83,7 +83,7 @@ moth_optim <- optim(c(0.3, 0.3), loglik)
 
 ### Testing
 
-Systematic approach to find errors in code.
+A systematic approach to finding errors in code.
 
 . . .
 
@@ -95,8 +95,8 @@ Finding and fixing bugs in code.
 
 ### Optimization for Multinomial Models
 
-We will look at optimization for multinomial models, using an example on
-Peppered Moths.
+We will look at optimization for multinomial models, using an example involving
+peppered moths.
 
 \medskip\pause
 
@@ -109,7 +109,7 @@ We will introduce two different optimization methods for constrained problems:
 
 ### The EM Algorithm
 
-We will introduce the EM algorithm. A useful method for likelihood optimization
+We will introduce the EM algorithm, a useful method for likelihood optimization
 in the presence of missing data or latent variables.
 
 # Multinomial Models
@@ -120,7 +120,7 @@ in the presence of missing data or latent variables.
 ::::: {.column width="47%"}
 ### Alleles
 
-C, Ci, T with frequencies $p_C$, $p_I$, $p_T$ and
+C, I, and T with frequencies $p_C$, $p_I$, and $p_T$, where
 $$
   p_C + p_I + p_T = 1.
 $$
@@ -148,16 +148,16 @@ Black, mottled, light-colored
 :::
 
 ::: {.notes}
-The Peppered Moth is called 'Birkemåler' in Danish. There is a nice collection
+The peppered moth is called 'Birkemåler' in Danish. There is a nice collection
 of these in different colors in the Zoological Museum. The alleles are ordered
-in terms of dominance as C > I > T. Moths with genotype including C are dark.
-Moths with genotype TT are light colored. Moths with genotypes II and IT are
+in terms of dominance as C > I > T. Moths with a genotype containing C are dark.
+Moths with genotype TT are light-colored. Moths with genotypes II and IT are
 mottled.
 
-The peppered moth provided an early demonstration of evolution in the 19th
-century England, where the light colored moth was outnumered by the dark colored
-variety. The dark color became advantageous due to the increased polution, where
-trees were darkened by soot.
+The peppered moth provided an early demonstration of evolution in
+nineteenth-century England, where the light-colored moth was outnumbered by the
+dark-colored variety. The dark color became advantageous as increased pollution
+darkened trees with soot.
 
 https://en.wikipedia.org/wiki/Peppered_moth_evolution
 :::
@@ -196,7 +196,7 @@ $n_T = 341.$
 
 ## Multinomial Cell Collapsing
 
-The Peppered Moth example is an example of *cell collapsing* in a multinomial
+The peppered moth example is an example of *cell collapsing* in a multinomial
 model.
 
 \medskip\pause
@@ -393,7 +393,7 @@ theta1 <- seq(-19, 19, length.out = n)
 theta2 <- seq(-15, 15, length.out = n)
 z <- matrix(NA, n, n)
 
-x <- c(40, 196, 50)
+x <- c(85, 196, 341)
 
 for (i in seq_len(n)) {
   for (j in seq_len(n)) {
@@ -412,7 +412,7 @@ contour(
   asp = 1,
   drawlabels = FALSE
 )
-x1 <- c(2.25, 8.9)
+x1 <- c(4.79, 7.59)
 x2 <- c(-5, 6)
 points(x1, x2, pch = 19)
 lines(x1, x2, lty = "dotted", lwd = 2)
@@ -422,17 +422,19 @@ lines(x1, x2, lty = "dotted", lwd = 2)
 
 ## Optimization
 
-So, we cannot use our existing toolbox. What to do?
+Gradient descent and Newton's method still apply after reparameterization, but
+the usual guarantees based on convexity no longer apply.
 
 \medskip\pause
 
-We will try two different options.
+We will try two methods that work with the original constrained problem.
 
 . . .
 
 ### General Optimization
 
-Define **extended-value extension**, and use general (zero-order) optimization.
+Define an **extended-value extension**, and use general (zero-order)
+optimization.
 
 . . .
 
@@ -519,7 +521,8 @@ Supports several optimization methods, including:
 
 \medskip\pause
 
-Can supply gradient, but also compute it numerically (default).
+You can supply a gradient or let the methods that use gradients approximate it
+numerically.
 
 ## `optim()` Example
 
@@ -753,16 +756,20 @@ plot_barrier(10)
 \begin{algorithm}[H]
   \caption{Barrier Method}
   \KwData{$t > 0$, $\theta$ strictly feasible, $\mu > 1$, $\varepsilon > 0$, and $m$ constraints}
-  \Repeat{$m/t < \varepsilon$ }{
+  \While{true}{
     $\theta \gets \argmin_{\vartheta} tH(\vartheta) + \phi(\vartheta)$\;
+    \If{$m/t < \varepsilon$}{
+      \Return{$\theta$}
+    }
     $t \gets \mu t$\;
   }
-  \Return{$\theta$}
 \end{algorithm}
 
 \medskip\pause
 
-Guarantees convergence to a $\varepsilon$-suboptimal solution.
+For a convex problem with strict feasibility and an attained finite optimum,
+this returns an $\varepsilon$-suboptimal solution, provided each barrier
+subproblem is solved exactly.
 
 ## `constrOptim()`
 
@@ -831,7 +838,7 @@ b <- c(0, -1, 0, -1, -1)
 constrOptim(x0, neg_loglik_pep, NULL, ui = A, ci = b, x = x)$par
 ```
 
-## Still Requires Feasible Initial Point
+## Still Requires a Strictly Feasible Initial Point
 
 ```{r, linewidth=80}
 #| label: const-error
@@ -855,7 +862,7 @@ The barrier method is the basis of the interior-point method.
 
 ### Phase I: Initialization
 
-Find a feasible point $\theta_0$ by solving the optimization problem
+Find a strictly feasible point $\theta_0$ by solving the optimization problem
 
 $$
   \begin{aligned}
@@ -866,7 +873,8 @@ $$
 
 . . .
 
-If $s^* \leq 0$, then $\theta_0$ is feasible.
+Stop once a feasible pair $(\theta_0, s)$ has $s < 0$. Then $\theta_0$ is
+strictly feasible for the original problem.
 
 \medskip\pause
 
@@ -880,8 +888,8 @@ Use a barrier method to solve the constrained problem, starting at $\theta_0$.
 
 ## Multinomial Conditional Distributions
 
-Distribution of $Y_{A_j} = (Y_i)_{i \in A_j}$ conditional on $X$ can be found
-too:
+The distribution of $Y_{A_j} = (Y_i)_{i \in A_j}$ conditional on $X$ can be
+found too:
 $$
   Y_{A_j} \mid X = x
           \sim \textrm{Mult}\left( x_j, \frac{p_{A_j}}{M(p)_j} \right).
@@ -951,7 +959,7 @@ which is often easier to handle.
 
 ### E-step
 
-Compute expected complete log-likelihood:
+Compute the expected complete-data log-likelihood:
 $$
   Q(\theta \mid \theta_n)
   = \E_{\theta_n}\left( \log p(X, Z \mid \theta) \mid X \right).
@@ -961,7 +969,7 @@ $$
 
 ### M-Step
 
-Maximize expected complete log-likelihood:
+Maximize the expected complete-data log-likelihood:
 $$
   \theta_{n+1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n).
 $$
@@ -990,7 +998,7 @@ $$
 
 \medskip\pause
 
-Then inequality is tight, since
+Then the inequality is tight, since
 $$
   \kl(q_n || p(Z \mid X, \theta_n)) = 0.
 $$
@@ -1046,9 +1054,9 @@ So EM maximizes the variational lower bound.
 
 ### Setup
 
-- Two coins, A and B, unknown biases $\theta_A$ and $\theta_B$.\pause
-- Each experiment: pick a coin at random (latent variable $Z_i$) and flip it 10
-  times.\pause
+- Two coins, A and B, with unknown biases $\theta_A$ and $\theta_B$.\pause
+- Each experiment: independently choose A or B with equal probability (latent
+  variable $Z_i$) and flip it 10 times.\pause
 - Observed data: $X_i$: number of heads in each experiment.\pause
 
 . . .
@@ -1065,12 +1073,13 @@ If we knew which coin was used in each experiment, the complete-data likelihood
 would be
 $$
   p(X,Z \mid \theta)
-  = \sum_i \left( \symbf{1}_{Z_i=A} \textrm{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i=B} \textrm{Bin}(X_i \mid 10, \theta_B) \right).
+  = \prod_i \frac{1}{2} \left( \symbf{1}_{Z_i=A} \textrm{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i=B} \textrm{Bin}(X_i \mid 10, \theta_B) \right).
 $$
 
 ## The E-Step: The Q-Function
 
-The log-likelihood of the complete data (for a single experiment) is
+For one experiment, omitting constants independent of $\theta$ here and below,
+the complete-data log-likelihood is
 $$
   \log p(X_i, Z_i \mid \theta)
   = \symbf{1}_{Z_i=A} \log \textrm{Bin}(X_i \mid 10, \theta_A)
@@ -1079,7 +1088,7 @@ $$
 
 \medskip\pause
 
-Take expection over $Z_i$ given $X_i$ and current parameters:
+Take the expectation over $Z_i$ given $X_i$ and the current parameters:
 $$
   Q(\theta \mid \theta_n)
   = \sum_i \gamma_{i,n} \log \textrm{Bin}(X_i \mid 10, \theta_A)
@@ -1098,17 +1107,21 @@ $$
 
 \medskip\pause
 
-This called the **responsibility** of coin $A$ for experiment $i$.
+This is called the **responsibility** of coin $A$ for experiment $i$.
 
-##
+## Example: The First E-Step
 
-  | Experiment | Heads | $\gamma$ |
-  | ---------- | ----- | -------- |
-  | 1          | 7     | 0.78     |
-  | 2          | 4     | 0.35     |
-  | 3          | 9     | 0.90     |
+Start with $\theta_{A,0} = 0.6$ and $\theta_{B,0} = 0.5$.
 
-  : Example After One Iteration
+\medskip
+
+  | Experiment | Heads | $\gamma_{i,0}$ |
+  | ---------- | ----- | -------------- |
+  | 1          | 7     | 0.65           |
+  | 2          | 4     | 0.35           |
+  | 3          | 9     | 0.80           |
+
+  : Responsibilities After the First E-Step
 
 ## M-Step: Update Coin Biases
 
@@ -1123,16 +1136,17 @@ $$
 
 ### Intuition
 
-Compute expected # of heads for each coin and divide by expected # of flips.
+Compute the expected number of heads for each coin and divide by the expected
+number of flips.
 
 \medskip\pause
 
   | Coin | Updated $\theta$ |
   | ---- | ---------------- |
-  | A    | 0.80             |
-  | B    | 0.42             |
+  | A    | 0.73             |
+  | B    | 0.57             |
 
-  : Example After One Iteration
+  : Biases After the First M-Step
 
 ##
 
@@ -1245,8 +1259,8 @@ between **expectation** (filling in latent variables) and **maximization**
 
 ### Likelihood Optimization
 
-Peppered moths example is simple and the log-likelihood for the observed data
-can easily be computed.
+The peppered moth example is simple, and the log-likelihood for the observed
+data can easily be computed.
 
 \medskip\pause
 
@@ -1261,7 +1275,7 @@ presence of missing data or latent variables.
 
 \medskip\pause
 
-Each iteration is guaranteed to increase the observed data log-likelihood.
+Each iteration is guaranteed not to decrease the observed-data log-likelihood.
 
 ## Exercise: Absolute-Value Constraints
 
