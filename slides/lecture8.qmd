@@ -663,3 +663,8 @@ We study a practical example of optimizing a multinomial likelihood.
 \medskip\pause
 
 We will introduce algorithms for solving constrained optimization problems.
+
+### The EM Algorithm
+
+We introduce the expectation-maximization (EM) algorithm, which is a general
+method for maximum likelihood estimation with latent variables.
