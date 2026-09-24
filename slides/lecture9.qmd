@@ -34,7 +34,12 @@ old_options <- options(digits = 4)
 
 M <- function(y, group) as.vector(tapply(y, group, sum))
 
-mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
+mult_likelihood <- function(
+  x,
+  group,
+  prob,
+  constraint = function(par) TRUE
+) {
   function(par) {
     pr <- prob(par)
     if (!constraint(par) || any(pr > 1) || any(pr < 0)) {
@@ -46,7 +51,14 @@ mult_likelihood <- function(x, group, prob, constraint = function(par) TRUE) {
 
 prob <- function(p) {
   p[3] <- 1 - p[1] - p[2]
-  c(p[1]^2, 2 * p[1] * p[2], 2 * p[1] * p[3], p[2]^2, 2 * p[2] * p[3], p[3]^2)
+  c(
+    p[1]^2,
+    2 * p[1] * p[2],
+    2 * p[1] * p[3],
+    p[2]^2,
+    2 * p[2] * p[3],
+    p[3]^2
+  )
 }
 
 constraint <- function(par) {
@@ -173,9 +185,8 @@ $$
 
 We only observe $(n_C, n_I, n_T)$, where
 $$
-  N = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{ = n_C}
-      + \underbrace{n_{IT} + n_{II}}_{ = n_I}
-      + \underbrace{n_{TT}}_{ = n_T}.
+  N = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{=n_C}
+      + \underbrace{n_{IT} + n_{II}}_{=n_I} + \underbrace{n_{TT}}_{=n_T}.
 $$
 
 . . .
@@ -249,11 +260,11 @@ This is an optimization problem of the following standard form:
 $$
   \begin{aligned}
      & \operatorname*{minimize}_{p_C,p_I} &  & H(p_C,p_I) = -\ell(p_C, p_I) \\
-     & \textrm{subject to}                  &  & p_C + p_I - 1 \leq 0         \\
-     &                                      &  & -p_C \leq 0                  \\
-     &                                      &  & -p_I \leq 0                  \\
-     &                                      &  & p_I - 1 \leq 0               \\
-     &                                      &  & p_C - 1 \leq 0.
+     & \textrm{subject to}                &  & p_C + p_I - 1 \leq 0         \\
+     &                                    &  & -p_C \leq 0                  \\
+     &                                    &  & -p_I \leq 0                  \\
+     &                                    &  & p_I - 1 \leq 0               \\
+     &                                    &  & p_C - 1 \leq 0.
   \end{aligned}
 $$
 
@@ -323,7 +334,15 @@ min_z <- min(z)
 
 levels <- exp(seq(log(min_z), log(3000), length.out = 25))
 
-contour(pC, pI, z, levels = levels, col = pal(30), asp = 1, drawlabels = FALSE)
+contour(
+  pC,
+  pI,
+  z,
+  levels = levels,
+  col = pal(30),
+  asp = 1,
+  drawlabels = FALSE
+)
 ```
 
 ## Change of Variables
@@ -332,7 +351,7 @@ contour(pC, pI, z, levels = levels, col = pal(30), asp = 1, drawlabels = FALSE)
 ::::: {.column width="47%"}
 Let
 $$
-  p_j = \frac{\exp{(\theta_j)}}{\sum_{i = 1}^K \exp(\theta_i)}.
+  p_j = \frac{\exp{(\theta_j)}}{\sum_{i=1}^K \exp(\theta_i)}.
 $$
 
 \medskip\pause
@@ -363,7 +382,9 @@ other_negloglik <- function(theta, x) {
   p_mottled <- pI * (pI + 2 * pT)
   p_light <- pT^2
 
-  -(x[1] * log(p_dark) + x[2] * log(p_mottled) + x[3] * log(p_light))
+  -(x[1] * log(p_dark) +
+    x[2] * log(p_mottled) +
+    x[3] * log(p_light))
 }
 
 n <- 100
@@ -383,7 +404,14 @@ pal <- function(n) hcl.colors(n, "viridis", rev = FALSE)
 
 min_z <- min(z)
 
-contour(theta1, theta2, z, col = pal(30), asp = 1, drawlabels = FALSE)
+contour(
+  theta1,
+  theta2,
+  z,
+  col = pal(30),
+  asp = 1,
+  drawlabels = FALSE
+)
 x1 <- c(2.25, 8.9)
 x2 <- c(-5, 6)
 points(x1, x2, pch = 19)
@@ -419,11 +447,10 @@ problem.
 ::::: {.column width="47%"}
 If $H$ is convex, its extended-value extension is
 $$
-    \widetilde{H}(\theta) =
-  \begin{cases}
-    H(\theta), & \theta \in \Theta, \\
-    +\infty,   & \text{otherwise}.
-  \end{cases}
+  \widetilde{H}(\theta) = \begin{cases}
+                            H(\theta), & \theta \in \Theta, \\
+                            +\infty,   & \text{otherwise}.
+                          \end{cases}
 $$
 
 . . .
@@ -439,11 +466,10 @@ $$
 
 Its extended-value extension is
 $$
-    \widetilde{H}(p) =
-  \begin{cases}
-    p (p - 1), & p \in [0, 1],     \\
-    +\infty,   & \text{otherwise}.
-  \end{cases}
+  \widetilde{H}(p) = \begin{cases}
+                       p (p - 1), & p \in [0, 1],     \\
+                       +\infty,   & \text{otherwise}.
+                     \end{cases}
 $$
 :::::
 
@@ -566,7 +592,7 @@ $$
 $$
 with the barrier function
 $$
-  \phi(\theta) = -\sum_{i = 1}^m \log(-g_i(\theta)).
+  \phi(\theta) = -\sum_{i=1}^m \log(-g_i(\theta)).
 $$
 
 \medskip\pause
@@ -602,7 +628,11 @@ z2 <- outer(x1_grid, x2_grid, log_barrier)
 plot_barrier <- function(t) {
   z <- t * z1 + z2
   min_z <- min(z, na.rm = TRUE)
-  levels <- exp(seq(log(min_z), log(20 + min_z), length.out = 25))
+  levels <- exp(seq(
+    log(min_z),
+    log(20 + min_z),
+    length.out = 25
+  ))
   cols <- hcl.colors(30, "viridis", rev = FALSE)
   argmin <- which(z == min_z, arr.ind = TRUE)
   contour(
@@ -753,23 +783,20 @@ or, in terms of arguments: `ui %*% theta >= ci`.
 ### Moths Example
 
 $$
-    A =
-  \begin{bmatrix}
-    1  & 0  \\
-    -1 & 0  \\
-    0  & 1  \\
-    0  & -1 \\
-    -1 & -1
-  \end{bmatrix}
-    , \quad b =
-  \begin{bmatrix}
-    0 \\
-    -1 \\
-    0 \\
-    -1 \\
-    -1
-  \end{bmatrix}
-    .
+  A = \begin{bmatrix}
+        1  & 0  \\
+        -1 & 0  \\
+        0  & 1  \\
+        0  & -1 \\
+        -1 & -1
+      \end{bmatrix},
+  \quad b = \begin{bmatrix}
+              0 \\
+              -1 \\
+              0 \\
+              -1 \\
+              -1
+            \end{bmatrix} .
 $$
 :::::
 
@@ -781,7 +808,7 @@ $$
 $$
   \begin{aligned}
      & \operatorname*{minimize}_{p} &  & H(p) = -\ell(p) \\
-     & \textrm{subject to}            &  & Ap \succeq b.
+     & \textrm{subject to}          &  & Ap \succeq b.
   \end{aligned}
 $$
 with $p = (p_C, p_I)$.
@@ -810,7 +837,14 @@ constrOptim(x0, neg_loglik_pep, NULL, ui = A, ci = b, x = x)$par
 #| label: const-error
 #| error: true
 
-constrOptim(c(0.0, 0.3), neg_loglik_pep, NULL, ui = A, ci = b, x = x)
+constrOptim(
+  c(0.0, 0.3),
+  neg_loglik_pep,
+  NULL,
+  ui = A,
+  ci = b,
+  x = x
+)
 ```
 
 ## Interior-Point Method
@@ -826,7 +860,7 @@ Find a feasible point $\theta_0$ by solving the optimization problem
 $$
   \begin{aligned}
      & \operatorname*{minimize}_{(\theta,s)} &  & s                   \\
-     & \textrm{subject to}                     &  & g_i(\theta) \leq s, & \quad i = 1, \dots, m.
+     & \textrm{subject to}                   &  & g_i(\theta) \leq s, & \quad i = 1, \dots, m.
   \end{aligned}
 $$
 
@@ -849,8 +883,7 @@ Use a barrier method to solve the constrained problem, starting at $\theta_0$.
 Distribution of $Y_{A_j} = (Y_i)_{i \in A_j}$ conditional on $X$ can be found
 too:
 $$
-  Y_{A_j} \mid X
-          = x
+  Y_{A_j} \mid X = x
           \sim \textrm{Mult}\left( x_j, \frac{p_{A_j}}{M(p)_j} \right).
 $$
 
@@ -920,7 +953,8 @@ which is often easier to handle.
 
 Compute expected complete log-likelihood:
 $$
-  Q(\theta \mid \theta_n) = \E_{\theta_n}\left( \log p(X, Z \mid \theta) \mid X \right).
+  Q(\theta \mid \theta_n)
+  = \E_{\theta_n}\left( \log p(X, Z \mid \theta) \mid X \right).
 $$
 
 \medskip\pause
@@ -929,7 +963,7 @@ $$
 
 Maximize expected complete log-likelihood:
 $$
-  \theta_{n + 1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n).
+  \theta_{n+1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n).
 $$
 
 ### Repeat
@@ -941,8 +975,8 @@ Until convergence.
 ### Key Inequality
 
 $$
-  \ell(\theta) = \log p(X \mid \theta)
-               \geq \E_{q(Z)}[\log p(X,Z \mid \theta)] - \E_{q(Z)}[\log q(Z)].
+  \ell(\theta) = \log p(X \mid \theta) \geq \E_{q(Z)}[\log p(X,Z \mid \theta)]
+                    - \E_{q(Z)}[\log q(Z)].
 $$
 
 . . .
@@ -968,7 +1002,7 @@ $$
 Update $\theta$ by maximizing the bound. This guarantees non-decreasing
 log-likelihood:
 $$
-  \ell(\theta_{n + 1}) \geq \ell(\theta_n).
+  \ell(\theta_{n+1}) \geq \ell(\theta_n).
 $$
 
 ## From the Lower Bound to $Q$
@@ -997,7 +1031,7 @@ where $\mathcal{H}(q_n)$ is entropy, independent of $\theta$.
 
 M-step:
 $$
-  \theta_{n + 1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n).
+  \theta_{n+1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n).
 $$
 
 . . .
@@ -1030,31 +1064,34 @@ Estimate $\theta_A$ and $\theta_B$ (MLE) using EM.
 If we knew which coin was used in each experiment, the complete-data likelihood
 would be
 $$
-  p(X,Z \mid \theta) = \sum_i \left( \symbf{1}_{Z_i = A} \textrm{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i = B} \textrm{Bin}(X_i \mid 10, \theta_B) \right).
+  p(X,Z \mid \theta)
+  = \sum_i \left( \symbf{1}_{Z_i=A} \textrm{Bin}(X_i \mid 10, \theta_A) + \symbf{1}_{Z_i=B} \textrm{Bin}(X_i \mid 10, \theta_B) \right).
 $$
 
 ## The E-Step: The Q-Function
 
 The log-likelihood of the complete data (for a single experiment) is
 $$
-  \log p(X_i, Z_i \mid \theta) = \symbf{1}_{Z_i = A} \log \textrm{Bin}(X_i \mid 10, \theta_A)
-                                 + \symbf{1}_{Z_i = B} \log \textrm{Bin}(X_i \mid 10, \theta_B).
+  \log p(X_i, Z_i \mid \theta)
+  = \symbf{1}_{Z_i=A} \log \textrm{Bin}(X_i \mid 10, \theta_A)
+    + \symbf{1}_{Z_i=B} \log \textrm{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
 
 Take expection over $Z_i$ given $X_i$ and current parameters:
 $$
-  Q(\theta \mid \theta_n) = \sum_i \gamma_{i,n} \log \textrm{Bin}(X_i \mid 10, \theta_A)
-                            + \sum_i (1 - \gamma_{i,n}) \log \textrm{Bin}(X_i \mid 10, \theta_B).
+  Q(\theta \mid \theta_n)
+  = \sum_i \gamma_{i,n} \log \textrm{Bin}(X_i \mid 10, \theta_A)
+    + \sum_i (1 - \gamma_{i,n}) \log \textrm{Bin}(X_i \mid 10, \theta_B).
 $$
 
 \medskip\pause
 
 $$
   \begin{aligned}
-    \gamma_{i,n} & = \E_{\theta_n}\left(\symbf{1}_{Z_i = A} \mid X_i\right)                                                                                      \\
-                 & = \Pr_{\theta_n}(Z_i = A \mid X_i)                                                                                                            \\
+    \gamma_{i,n} & = \E_{\theta_n}\left( \symbf{1}_{Z_i=A} \mid X_i \right)                                                                             \\
+                 & = \Pr_{\theta_n}(Z_i = A \mid X_i)                                                                                                   \\
                  & = \frac{\textrm{Bin}(X_i \mid 10, \theta_{A,n})}{\textrm{Bin}(X_i \mid 10, \theta_{A,n}) + \textrm{Bin}(X_i \mid 10, \theta_{B,n})}.
   \end{aligned}
 $$
@@ -1077,8 +1114,9 @@ This called the **responsibility** of coin $A$ for experiment $i$.
 
 Maximizing $Q$ with respect to $\theta_A$ and $\theta_B$ gives
 $$
-  \theta_{A,n + 1} = \frac{\sum_i \gamma_{i,n} X_i}{\sum_i 10 \gamma_{i,n}}, \quad \theta_{B,n + 1}
-                   = \frac{\sum_i (1 - \gamma_{i,n}) X_i}{\sum_i 10 (1 - \gamma_{i,n})}.
+  \theta_{A,n+1} = \frac{\sum_i \gamma_{i,n} X_i}{\sum_i 10 \gamma_{i,n}},
+  \quad \theta_{B,n+1}
+  = \frac{\sum_i (1 - \gamma_{i,n}) X_i}{\sum_i 10 (1 - \gamma_{i,n})}.
 $$
 
 . . .
@@ -1145,7 +1183,10 @@ matplot(
 abline(h = c(0.8, 0.4), col = c("blue", "red"), lty = 2)
 legend(
   "bottomright",
-  legend = c(expression(theta[A * "," * n]), expression(theta[B * "," * n])),
+  legend = c(
+    expression(theta[A * "," * n]),
+    expression(theta[B * "," * n])
+  ),
   col = c("blue", "red"),
   lty = c(1, 1),
   pch = c(19, 19)
@@ -1182,8 +1223,9 @@ $$
 
 In the coin-flip example:
 $$
-  Q(\theta \mid \theta_n) = \sum_i \gamma_{i,n} \log \textrm{Bin}(X_i \mid 10, \theta_A)
-                            + \sum_i (1 - \gamma_{i,n}) \log \textrm{Bin}(X_i \mid 10, \theta_B)
+  Q(\theta \mid \theta_n)
+  = \sum_i \gamma_{i,n} \log \textrm{Bin}(X_i \mid 10, \theta_A)
+    + \sum_i (1 - \gamma_{i,n}) \log \textrm{Bin}(X_i \mid 10, \theta_B)
 $$
 
 . . .
@@ -1227,7 +1269,7 @@ Solve the following optimization problem:\
 $$
   \begin{aligned}
      & \operatorname*{minimize}_{\theta \in \mathbb{R}} &  & H(\theta) = \frac{1}{2}(\theta - 2)^2 \\
-     & \textrm{subject to}                                &  & |\theta| \leq 1.
+     & \textrm{subject to}                              &  & |\theta| \leq 1.
   \end{aligned}
 $$
 
