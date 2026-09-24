@@ -91,8 +91,8 @@ values and $x$ takes positive real values.
 The purpose of this assignment is to sample from the probability distribution on
 $[0, \infty)$ with density
 $$
-  f(y) \propto \prod_{i=1}^{100} \exp\left( yz_ix_i - e^{yx_i} \right), \quad y
-       \geq 0.
+  f(y) \propto \prod_{i=1}^{100} \exp\left( yz_ix_i - e^{yx_i} \right),
+  \quad y \geq 0.
 $$
 
 Find a Gaussian envelope of $f$ and implement rejection sampling from the
@@ -119,7 +119,7 @@ Think of $X_k$ as the capital that a company or a gambler earns or loses at time
 $n$. Starting with a total capital of 30, $S_n$ is the total capital at time
 $n$. We are interested in computing the *ruin probabilities* before time $n$:
 $$
-  p(n) = \P(\exists k \leq n: S_k \leq 0).
+  p(n) = \Pr(\exists k \leq n: S_k \leq 0).
 $$
 
 Implement Monte Carlo integration to compute $p(100)$.
