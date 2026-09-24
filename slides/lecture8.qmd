@@ -98,6 +98,7 @@ Where should the expected result come from?
   differences. \pause
 - **Boundary cases and invalid inputs:** Start at the minimum, try one
   parameter, or supply incompatible dimensions.
+- **Regression tests:** Check that a bug that was fixed does not reappear.
 
 \medskip\pause
 
