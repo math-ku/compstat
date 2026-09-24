@@ -322,33 +322,6 @@ test_that("numerical equality with tolerance", {
 })
 ```
 
-## Testing Code with Randomness
-
-A fixed seed makes a run reproducible. Correctness needs separate checks.
-
-\medskip\pause
-
-Our estimates should agree closely with `glm()` on the same data. Differences
-from the generating parameters also reflect sampling uncertainty.
-
-\medskip\pause
-
-For $n$ independent standard normal draws,
-$$
-  \operatorname{SE}(\bar X) = \frac{1}{\sqrt{n}}.
-$$
-Check the sample mean against zero using a bound based on this standard error.
-
-\medskip\pause
-
-Choose tolerances that reflect numerical error, optimization error, or Monte
-Carlo variation.
-
-\pdfpcnote{
-- A mean check can fail by chance. Choose the bound to control this probability.\\
-- Checking the mean alone does not establish that the distribution is correct.\\
-}
-
 # Debugging
 
 ## Debugging
