@@ -443,10 +443,10 @@ When execution reaches `browser()`, it stops and enters debug mode.
 . . .
 
 ::::: {.column width="47%"}
-### RStudio Breakpoints
+### RStudio/Positron Breakpoints
 
-Visual breakpoints can be set in RStudio by clicking in the margin next to a
-line number.
+Visual breakpoints can be set in RStudio and Positron by clicking in the margin
+next to a line number.
 
 \medskip\pause
 
@@ -457,6 +457,10 @@ When execution reaches a breakpoint, it stops and enters debug mode.
 No need to modify the code, but cannot be conditionally set.
 :::::
 :::
+
+\pdfpcnote{
+  - Show this interatively!\\
+}
 
 ## AI Debugging
 
