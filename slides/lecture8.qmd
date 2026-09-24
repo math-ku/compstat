@@ -393,8 +393,8 @@ f <- function(x, y) {
 
 . . .
 
-Okay in the simplest of cases and easy to get going with, but will cost you more
-time in the long run.
+Okay in the simplest of cases and easy to get going with, requires cleanup and
+iterative sourcing and re-running of code.
 
 ## Returning Diagnostics
 
