@@ -143,7 +143,8 @@ The `testthat` package makes it easy to write and run tests in R.
 
 \medskip\pause
 
-It provides a simple syntax for writing tests and integrates well with RStudio.
+It provides a simple syntax for writing tests and integrates well with
+RStudio/Positron.
 
 \medskip\pause
 
@@ -445,7 +446,7 @@ When execution reaches `browser()`, it stops and enters debug mode.
 ::::: {.column width="47%"}
 ### RStudio/Positron Breakpoints
 
-Visual breakpoints can be set in RStudio and Positron by clicking in the margin
+Visual breakpoints can be set in RStudio or Positron by clicking in the margin
 next to a line number.
 
 \medskip\pause
@@ -640,7 +641,8 @@ Then, we can run the Newton method implementation: `newton_method()`.
 
 ## Exercise: Debugging `newton_method()`
 
-1. Download and open [`debugging.R`](R/debugging.R) in RStudio. \pause
+1. Download and open [`debugging.R`](R/debugging.R) in RStudio or Positron.
+   \pause
 2. Create another script, and place some code for generating data there.\pause
 3. Source `debugging.R` and test that `gradient_descent()` works. Now try
    `newton_method()`. What happens?\pause
@@ -648,8 +650,8 @@ Then, we can run the Newton method implementation: `newton_method()`.
    that fails.\pause
 5. Start debugging by setting some breakpoints in `newton_method()`.\pause
 6. Run `newton_method()` again. Execution should stop at the first breakpoint.
-   Use the RStudio interface to step through the code and inspect variables.
-   What do you see?\pause
+   Use the RStudio/Positron interface to step through the code and inspect
+   variables. What do you see?\pause
 7. There are two bugs in `newton_method()`. Can you find and fix them?
 
 ## Next Time
