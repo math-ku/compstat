@@ -835,7 +835,6 @@ The barrier method is the basis of the interior-point method.
 ### Phase I: Initialization
 
 Find a strictly feasible point $\theta_0$ by solving the optimization problem
-
 $$
   \begin{aligned}
      & \operatorname*{minimize}_{(\theta,s)} &  & s                   \\
