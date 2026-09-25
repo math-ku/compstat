@@ -1016,9 +1016,122 @@ $$
 
 So EM maximizes the variational lower bound.
 
-##
+## EM Iterations
 
-![Four iterations of the EM algorithm.](../images/em-iterations.png){width=87%}
+```{r}
+#| label: em-lower-bound
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5.5
+#| fig-height: 3
+#| fig-cap: "Four EM iterations, alternating between the E-step and the M-step."
+
+library(ggplot2)
+
+# A Gaussian latent-variable model gives exact bounds for this illustration:
+# Z ~ N(theta, 1), X | Z ~ N(Z, 1), and the observed value is X = 2.
+# All curves omit the same additive constant.
+em_loglik <- function(theta) -(theta - 2)^2 / 4
+em_bound <- function(theta, current) {
+  em_loglik(theta) - (theta - current)^2 / 4
+}
+
+em_theta <- numeric(5)
+em_theta[1] <- -1
+for (i in seq_len(4)) {
+  em_theta[i + 1] <- (em_theta[i] + 2) / 2
+}
+
+em_curve <- data.frame(theta = seq(-1.4, 4.5, length.out = 401))
+em_curve$loglik <- em_loglik(em_curve$theta)
+
+for (i in seq_len(4)) {
+  current <- em_theta[i]
+  next_theta <- em_theta[i + 1]
+  em_curve$bound <- em_bound(em_curve$theta, current)
+  history <- data.frame(
+    theta = em_theta[seq_len(i)],
+    value = em_loglik(em_theta[seq_len(i)])
+  )
+
+  p <- ggplot(em_curve, aes(x = theta)) +
+    geom_line(aes(y = loglik, color = "likelihood")) +
+    geom_line(aes(y = bound, color = "bound")) +
+    geom_point(
+      data = history,
+      aes(y = value),
+      color = "grey60"
+    ) +
+    geom_vline(
+      xintercept = current,
+      color = "grey60",
+      linetype = "dashed"
+    ) +
+    scale_color_manual(
+      name = NULL,
+      values = c(likelihood = "royalblue", bound = "darkorange"),
+      breaks = c("likelihood", "bound"),
+      labels = expression(
+        italic(l) * (theta),
+        italic("F") * (q[n] * "," ~ theta)
+      )
+    ) +
+    coord_cartesian(xlim = c(-1.4, 4.5), ylim = c(-3, 0.25)) +
+    labs(x = expression(theta), y = "Value")
+
+  print(
+    p +
+      annotate(
+        "point",
+        x = current,
+        y = em_loglik(current),
+        color = "royalblue",
+        size = 2.5
+      ) +
+      labs(
+        title = sprintf("Iteration %d: E-step", i),
+        subtitle = "Make the bound tight at the current parameter"
+      )
+  )
+
+  print(
+    p +
+      geom_vline(
+        xintercept = next_theta,
+        color = "grey60",
+        linetype = "dashed"
+      ) +
+      annotate(
+        "segment",
+        x = next_theta,
+        xend = next_theta,
+        y = em_bound(next_theta, current),
+        yend = em_loglik(next_theta),
+        color = "royalblue"
+      ) +
+      annotate(
+        "point",
+        x = next_theta,
+        y = em_bound(next_theta, current),
+        color = "darkorange",
+        fill = "white",
+        shape = 21,
+        size = 2.5
+      ) +
+      annotate(
+        "point",
+        x = next_theta,
+        y = em_loglik(next_theta),
+        color = "royalblue",
+        size = 2.5
+      ) +
+      labs(
+        title = sprintf("Iteration %d: M-step", i),
+        subtitle = "Move to the maximum of the bound"
+      )
+  )
+}
+```
 
 ## EM Example: Two Hidden Coins
 
