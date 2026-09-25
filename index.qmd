@@ -191,7 +191,8 @@ code here: [debugging.R](R/debugging.R).
 
 - **Slides:** [Likelihood Optimization and the EM
   Algorithm](slides/lecture9.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture9.qmd))
+  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture9.qmd),
+  [exercise solution](exercises/lecture9.qmd))
 - **Reading:** [Chapter 10 (CSwR)](https://cswr.nrhstat.org/em)
 
 #### Exercise Session 5

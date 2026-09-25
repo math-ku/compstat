@@ -542,7 +542,11 @@ obj <- function(x) (x[1] - 1)^2 + (x[2] - 2.5)^2
 
 ::: {.columns}
 ::::: {.column width="47%"}
+```{r}
+#| label: optim-ex-run
+
 optim(c(0, 0), obj, method = "BFGS")
+```
 :::::
 
 . . .
@@ -1342,31 +1346,9 @@ Intuition: $Q$ is the expected complete-data log-likelihood; EM alternates
 between **expectation** (filling in latent variables) and **maximization**
 (updating parameters).
 
-## Summary
-
-### Likelihood Optimization
-
-The peppered moth example is simple, and the log-likelihood for the observed
-data can easily be computed.
-
-\medskip\pause
-
-Constrained optimization can be solved using the barrier method.
-
-. . .
-
-### The EM Algorithm
-
-The EM algorithm is a general approach to likelihood optimization in the
-presence of missing data or latent variables.
-
-\medskip\pause
-
-Each iteration is guaranteed not to decrease the observed-data log-likelihood.
-
 ## Exercise: Absolute-Value Constraints
 
-Solve the following optimization problem:\
+Solve the following optimization problem:
 $$
   \begin{aligned}
      & \operatorname*{minimize}_{\theta \in \mathbb{R}} &  & H(\theta) = \frac{1}{2}(\theta - 2)^2 \\
@@ -1396,6 +1378,28 @@ b <- c(-1, -1)
 
 constrOptim(c(0.5), f, g, ui = A, ci = b, a = a)
 ```
+
+## Summary
+
+### Likelihood Optimization
+
+The peppered moth example is simple, and the log-likelihood for the observed
+data can easily be computed.
+
+\medskip\pause
+
+Constrained optimization can be solved using the barrier method.
+
+. . .
+
+### The EM Algorithm
+
+The EM algorithm is a general approach to likelihood optimization in the
+presence of missing data or latent variables.
+
+\medskip\pause
+
+Each iteration is guaranteed not to decrease the observed-data log-likelihood.
 
 ## Next Time
 

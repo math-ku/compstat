@@ -1,0 +1,89 @@
+---
+title: "Absolute-Value Constraints: Exercise Solution"
+format: html
+execute:
+  cache: false
+---
+
+Solution to the exercise in [Lecture 9](../slides/lecture9.pdf).
+
+We want to solve
+$$
+  \begin{aligned}
+     & \operatorname*{minimize}_{\theta \in \mathbb{R}}
+     &                                                  & H(\theta) = \frac{1}{2}(\theta - 2)^2 \\
+     & \text{subject to}                                &                                       & |\theta| \leq 1.
+  \end{aligned}
+$$
+
+## Standard form
+
+The constraint $|\theta| \leq 1$ is equivalent to $-1 \leq \theta \leq 1$. In
+standard form, we write both inequalities as $g_i(\theta) \leq 0$:
+$$
+  \begin{aligned}
+     & \operatorname*{minimize}_{\theta \in \mathbb{R}}
+     &                                                  & \frac{1}{2}(\theta - 2)^2 \\
+     & \text{subject to}                                &                           & g_1(\theta) = \theta - 1 \leq 0,  \\
+     &                                                  &                           & g_2(\theta) = -\theta - 1 \leq 0.
+  \end{aligned}
+$$
+
+## Constraints for `constrOptim()`
+
+`constrOptim()` expects constraints of the form `ui %*% theta >= ci`. Writing
+our constraints as $\theta \geq -1$ and $-\theta \geq -1$ gives
+$$
+  \underbrace{\begin{bmatrix} 1 \\ -1 \end{bmatrix}}_{\texttt{ui}} \theta
+  \succeq
+  \underbrace{\begin{bmatrix} -1 \\ -1 \end{bmatrix}}_{\texttt{ci}},
+$$
+where $\succeq$ means that each component on the left is at least the
+corresponding component on the right. Each row of `ui` represents one
+constraint, and its single column corresponds to our one parameter.
+
+```{r}
+#| label: constraints
+
+ui <- rbind(1, -1)
+ci <- c(-1, -1)
+```
+
+## Numerical solution
+
+The derivative is $H'(\theta) = \theta - 2$. We supply both the objective and
+its gradient, and start at $\theta_0 = 0.5$. The starting point must be strictly
+feasible: `ui %*% theta0 > ci`, or $-1 < \theta_0 < 1$.
+
+```{r}
+#| label: constrained-optimization
+
+H <- function(theta) 0.5 * (theta - 2)^2
+gradient <- function(theta) theta - 2
+
+theta0 <- 0.5
+fit <- constrOptim(
+  theta = theta0,
+  f = H,
+  grad = gradient,
+  ui = ui,
+  ci = ci
+)
+
+fit[c("par", "value", "convergence")]
+```
+
+The estimated parameter is close to $1$, and the objective value is close to
+$1/2$. A convergence code of zero indicates successful convergence. The barrier
+method approaches the boundary from inside the feasible interval, so the
+numerical estimate need not equal $1$ exactly.
+
+## Checking the solution
+
+The unconstrained minimum is at $\theta = 2$, which is outside $[-1, 1]$.
+Throughout the feasible interval, $H'(\theta) = \theta - 2 < 0$, so the
+objective decreases as $\theta$ increases. The constrained minimum is therefore
+at the right endpoint:
+$$
+  \theta^* = 1, \qquad H(\theta^*) = \frac{1}{2}.
+$$
