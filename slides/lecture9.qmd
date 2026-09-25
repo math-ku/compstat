@@ -373,6 +373,7 @@ Seems like a good idea! Constraints are automatically satisfied.
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: surface2
 #| echo: false
 #| warning: false
 #| fig-height: 3
@@ -483,6 +484,7 @@ $$
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: extended-value
 #| echo: false
 #| fig-height: 3.4
 #| fig-cap: Extended-value extension of a simple function.
@@ -1234,6 +1236,7 @@ number of flips.
 ##
 
 ```{r}
+#| label: em-coin
 #| echo: false
 #| fig-width: 5
 #| fig-height: 3.9
@@ -1293,6 +1296,7 @@ legend(
 ##
 
 ```{r}
+#| label: em-coin-loglik
 #| echo: false
 #| fig-width: 4
 #| fig-height: 3.5
