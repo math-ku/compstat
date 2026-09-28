@@ -1616,6 +1616,105 @@ Intuition: $Q$ is the expected complete-data log-likelihood; EM alternates
 between **expectation** (filling in latent variables) and **maximization**
 (updating parameters).
 
+## EM Can Stall
+
+Return to the three experiments with 7, 4, and 9 heads out of 10 flips. Start
+with $\theta_{A,0} = \theta_{B,0} = 2/3$.
+
+\medskip\pause
+
+::: {.columns}
+::::: {.column width="47%"}
+### E-Step
+
+Both coins assign the same probability to each observation, so
+$$
+  \gamma_{i,n} = \frac{1}{2} \quad\text{for every }i.
+$$
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+### M-Step
+
+Both coins receive the same weighted counts, so
+$$
+  \theta_{A,n+1} = \theta_{B,n+1} = \frac{7 + 4 + 9}{30} = \frac{2}{3}.
+$$
+:::::
+:::
+
+\bigskip\pause
+
+Every iteration returns the same parameters. In the lower-bound picture, the
+bound is tight at the current point and maximized there: **EM does not move.**
+
+## A Flat Trace Does Not Establish a Maximum
+
+Same observations, two starting points:
+
+```{r}
+#| label: em-coin-stalling
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 2.1
+#| fig-alt: >-
+#|   EM log-likelihood traces for 7, 4, and 9 heads out of 10 flips. Starting
+#|   both biases at two-thirds gives a constant log-likelihood of -6.658.
+#|   Starting at 0.6 and 0.5 improves the log-likelihood from -7.326 to -6.046.
+
+coin_stall_fits <- list(
+  equal = em_coins(
+    c(7, 4, 9),
+    theta = c(2 / 3, 2 / 3),
+    maxit = 40
+  ),
+  unequal = em_coins(c(7, 4, 9), theta = c(0.6, 0.5), maxit = 40)
+)
+coin_stall_trace <- bind_rows(
+  lapply(
+    coin_stall_fits,
+    function(fit) {
+      data.frame(
+        iteration = seq_along(fit$loglik) - 1L,
+        loglik = fit$loglik
+      )
+    }
+  ),
+  .id = "start"
+)
+
+ggplot(coin_stall_trace, aes(iteration, loglik, color = start)) +
+  geom_line() +
+  geom_point(size = 1) +
+  scale_color_manual(
+    name = "Starting biases",
+    values = c(equal = "royalblue", unequal = "darkorange"),
+    breaks = c("equal", "unequal"),
+    labels = c("(2/3, 2/3)", "(0.6, 0.5)")
+  ) +
+  labs(
+    x = expression("Iteration" ~ n),
+    y = expression(italic(l)(theta[n]))
+  )
+```
+
+\medskip\pause
+
+The flat trace shows convergence to a **suboptimal fixed point**. An unequal
+start reaches a higher likelihood.
+
+\medskip\pause
+
+Try several asymmetric starts and compare their final likelihoods.
+
+\pdfpcnote{
+  - This is convergence to a suboptimal fixed point, not parameter divergence.\\
+  - The trace is flat; the likelihood surface itself need not be flat.\\
+  - Multiple starts can help, but do not guarantee a global maximum.\\
+}
+
 ## Exercise: Absolute-Value Constraints
 
 Solve the following optimization problem:
