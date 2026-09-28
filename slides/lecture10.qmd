@@ -1,5 +1,5 @@
 ---
-title: "A Deeper Look into the EM Algorithm"
+title: "A Deeper Look at the EM Algorithm"
 execute:
   cache: false
 ---

@@ -201,7 +201,7 @@ code here: [debugging.R](R/debugging.R).
 
 - **Main topic**: None -- work on your assignments with TA assistance
 
-#### Lecture 10: More on the EM Algorithm
+#### Lecture 10: A Deeper Look at the EM Algorithm
 
 `r session_info("2026-10-01")`
 
