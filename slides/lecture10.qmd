@@ -239,6 +239,29 @@ $$
                 \end{bmatrix}
 $$
 
+## Multinomial Conditional Distributions
+
+Given phenotype counts $X$ and current allele frequencies $\theta'$, the
+genotype counts $Y_{A_j} = (Y_k)_{k \in A_j}$ within phenotype $j$ satisfy
+$$
+  Y_{A_j} \mid X, \theta'
+  \sim \textrm{Mult}\left( X_j, \left( \frac{\pi_k(\theta')}{M(\pi(\theta'))_j} \right)_{k \in A_j} \right).
+$$
+
+\medskip\pause
+
+### Expected Genotype Counts
+
+Hence for $k \in A_j$,
+$$
+  \E_{Y \mid X, \theta'}(Y_k) = \frac{X_j \pi_k(\theta')}{M(\pi(\theta'))_j}.
+$$
+
+\medskip
+
+The expected counts divide each phenotype's observed count among its compatible
+genotypes in proportion to their current probabilities.
+
 ## The Q Function
 
 EM $Q$-function:
@@ -255,17 +278,11 @@ $$
 
 . . .
 
-Note that
-$$
-  \E_{Y \mid X, \theta'}(Y_k)
-  = \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}}
-$$
-since
-$Y \mid X, \theta' \sim \textrm{Mult}\left( X_{j(k)}, \left( \frac{\pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \right)_{k \in A_{j(k)}} \right)$.
+The expected counts are computed at $\theta'$ and held fixed while we maximize
+over $\theta$.
 
 \pdfpcnote{
-Intuition: If we know the phenotype counts X and the allele frequencies
-theta', we can compute the expected genotype counts Y.
+  - The E-step computes expected genotype counts using the current allele frequencies.\\
 }
 
 ## E-step for Multinomial Model

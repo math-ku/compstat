@@ -24,59 +24,10 @@ knitr::knit_hooks$set(
 )
 
 library(patchwork)
+library(testthat)
+source(here::here("R", "em-coins.R"), keep.source = TRUE)
 
-old_options <- options(digits = 4)
-```
-
-```{r}
-#| label: moth_likelihood2
-#| echo: false
-
-M <- function(y, group) as.vector(tapply(y, group, sum))
-
-mult_likelihood <- function(
-  x,
-  group,
-  prob,
-  constraint = function(par) TRUE
-) {
-  function(par) {
-    pr <- prob(par)
-    if (!constraint(par) || any(pr > 1) || any(pr < 0)) {
-      return(Inf)
-    }
-    -sum(x * log(M(pr, group)))
-  }
-}
-
-prob <- function(p) {
-  p[3] <- 1 - p[1] - p[2]
-  c(
-    p[1]^2,
-    2 * p[1] * p[2],
-    2 * p[1] * p[3],
-    p[2]^2,
-    2 * p[2] * p[3],
-    p[3]^2
-  )
-}
-
-constraint <- function(par) {
-  par[1] <= 1 &&
-    par[1] >= 0 &&
-    par[2] <= 1 &&
-    par[2] >= 0 &&
-    1 - par[1] - par[2] >= 0
-}
-
-loglik <- mult_likelihood(
-  x = c(85, 196, 341),
-  group = c(1, 1, 1, 2, 2, 3),
-  prob = prob,
-  constraint = constraint
-)
-
-moth_optim <- optim(c(0.3, 0.3), loglik)
+options(digits = 4)
 ```
 
 ## Last Time
@@ -1020,52 +971,13 @@ Use a barrier method to solve the constrained problem, starting at $\theta_0$.
 
 ## If We Knew the Genotypes
 
-If we knew all six genotype counts, the complete-data log-likelihood would be,
-up to an additive constant,
-$$
-  \begin{aligned}
-    \ell_{\mathrm{c}}(p_C, p_I)
-     & = 2n_{CC} \log(p_C) + n_{CI} \log(2p_Cp_I)        \\
-     & \quad + n_{CT} \log(2p_Cp_T) + 2n_{II} \log(p_I)  \\
-     & \quad + n_{IT} \log(2p_Ip_T) + 2n_{TT} \log(p_T),
-  \end{aligned}
-$$
-where $p_T = 1 - p_C - p_I$.
+If we observed the genotypes, estimating allele frequencies would be
+straightforward: count each allele and divide by the total number of alleles.
 
 \medskip\pause
 
-We only observe phenotype counts. EM replaces the missing genotype counts with
-their conditional expectations under the current allele frequencies.
-
-## Multinomial Conditional Distributions
-
-The distribution of $Y_{A_j} = (Y_i)_{i \in A_j}$ conditional on $X$ can be
-found too:
-$$
-  Y_{A_j} \mid X = x
-          \sim \textrm{Mult}\left( x_j, \frac{p_{A_j}}{M(p)_j} \right).
-$$
-
-. . .
-
-### Expected Genotype Frequencies
-
-Hence for $k \in A_j$,
-$$
-  \E(Y_k \mid X = x) = \frac{x_j p_k}{M(p)_j}.
-$$
-
-. . .
-
-```{r, echo=2:4}
-#| label: moth_cond_exp
-
-old_options <- options(digits = 3)
-group <- c(1, 1, 1, 2, 2, 3)
-p <- prob(moth_optim$par)
-x[group] * p / M(p, group)[group]
-options(digits = old_options$digits)
-```
+We only observe phenotypes. EM alternates between computing expected genotype
+counts under the current allele frequencies and updating those frequencies.
 
 ## The Expectation-Maximization (EM) Algorithm
 
@@ -1153,7 +1065,7 @@ $$
 
 Then the inequality is tight, since
 $$
-  \kl(q_n || p(Z \mid X, \theta_n)) = 0.
+  \kl(q_n ||\; p(Z \mid X, \theta_n)) = 0.
 $$
 
 . . .
@@ -1428,25 +1340,9 @@ heads <- {
   rbinom(N, 10, ifelse(ind, 0.8, 0.4))
 }
 maxit <- 20
-theta <- c(0.6, 0.5) # start
-theta_hist <- matrix(NA, nrow = maxit, ncol = 2)
-colnames(theta_hist) <- c("thetaA", "thetaB")
-loglik <- numeric(maxit)
-
-for (t in 1:maxit) {
-  # record before update
-  theta_hist[t, ] <- theta
-  pA <- dbinom(heads, 10, theta[1])
-  pB <- dbinom(heads, 10, theta[2])
-  mix <- 0.5 * pA + 0.5 * pB
-  loglik[t] <- sum(log(mix))
-  if (t == maxit) {
-    break
-  }
-  gamma <- pA / (pA + pB) # responsibilities
-  theta[1] <- sum(gamma * heads) / (10 * sum(gamma))
-  theta[2] <- sum((1 - gamma) * heads) / (10 * sum(1 - gamma))
-}
+coin_fit <- em_coins(heads, maxit = maxit)
+theta_hist <- coin_fit$theta
+loglik <- coin_fit$loglik
 
 matplot(
   1:maxit,
@@ -1491,6 +1387,205 @@ plot(
   log = "y"
 )
 ```
+
+## Testing the EM Implementation
+
+The function `em_coins()` returns the parameter and log-likelihood histories.
+Turn the mathematical guarantees into tests:
+
+```{r}
+#| label: em-coin-tests
+#| results: hide
+
+test_that("EM preserves its guarantees", {
+  theta <- coin_fit$theta
+  ell <- coin_fit$loglik
+  expect_true(all(is.finite(theta)))
+  expect_true(all(theta >= 0 & theta <= 1))
+  expect_true(all(is.finite(ell)))
+  expect_true(all(diff(ell) >= -1e-8))
+})
+```
+
+\medskip\pause
+
+Allow for rounding error. An increasing likelihood does **not** establish that
+we found its maximum.
+
+## Profiling the EM Implementation
+
+::: {.columns}
+::::: {.column width="47%"}
+Use more observations and repeat the fit to collect enough profiling samples.
+
+```{r}
+#| label: em-coin-profile-code
+#| eval: false
+
+heads_large <- rep(heads, 100)
+profvis::profvis({
+  for (i in seq_len(10)) {
+    em_coins(heads_large)
+  }
+})
+```
+
+\medskip\pause
+
+Each iteration calls `dbinom()` twice on the entire data vector. Which
+calculations are repeated?
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: em-coin-profile
+#| echo: false
+#| cache: false
+#| fig-width: 2.8
+#| fig-height: 2.3
+#| fig-cap: "Self time sampled with Rprof(): ten fits of 100,000 experiments."
+
+coin_profile <- local({
+  heads_large <- rep(heads, 100)
+  invisible(em_coins(heads_large))
+  profile_file <- tempfile()
+  on.exit({
+    Rprof(NULL)
+    unlink(profile_file)
+  })
+  Rprof(profile_file, interval = 0.01)
+  for (i in seq_len(10)) {
+    invisible(em_coins(heads_large))
+  }
+  Rprof(NULL)
+  summaryRprof(profile_file)$by.self
+})
+coin_profile$function_name <- gsub(
+  '"',
+  "",
+  rownames(coin_profile),
+  fixed = TRUE
+)
+
+ggplot(
+  coin_profile,
+  aes(self.pct, reorder(function_name, self.pct))
+) +
+  geom_col(fill = "royalblue") +
+  scale_x_continuous(limits = c(0, 100)) +
+  labs(x = "Sampled self time (%)", y = NULL)
+```
+:::::
+:::
+
+## Grouping Identical Observations
+
+Each experiment has only 11 possible head counts: $0, \ldots, 10$. Our second
+implementation, `em_coins_counts()`, counts their frequencies once:
+
+```{r}
+#| label: em-coin-counts
+
+counts <- tabulate(heads + 1L, nbins = 11L)
+```
+
+\medskip\pause
+
+Experiments with the same head count $k$ have the same responsibility
+$\gamma_k$. With $c_k$ experiments having $k$ heads, the M-step becomes
+$$
+  \theta_A^{\mathrm{new}}
+  = \frac{\sum_{k=0}^{10} c_k \gamma_k k}{10\sum_{k=0}^{10} c_k \gamma_k},
+  \qquad
+  \theta_B^{\mathrm{new}}
+  = \frac{\sum_{k=0}^{10} c_k (1 - \gamma_k) k}{10\sum_{k=0}^{10} c_k (1 - \gamma_k)}.
+$$
+
+\medskip\pause
+
+For $T$ updates, the work drops from $O(NT)$ to $O(N + 11T)$. Unlike binning in
+density estimation, grouping identical outcomes introduces **no approximation**.
+
+## Benchmarking the Two Implementations
+
+::: {.columns}
+::::: {.column width="47%"}
+First compare the **entire histories**, allowing for rounding error:
+
+```{r}
+#| label: em-coin-counts-check
+#| results: hide
+
+expect_equal(
+  em_coins_counts(heads),
+  em_coins(heads),
+  tolerance = 1e-10
+)
+```
+
+```{r}
+#| label: em-coin-bench-code
+#| eval: false
+
+bench::mark(
+  individual = em_coins(heads),
+  counts = em_coins_counts(heads),
+  check = TRUE
+)
+```
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: em-coin-bench
+#| echo: false
+#| cache: false
+#| message: false
+#| fig-width: 2.8
+#| fig-height: 2.4
+
+coin_bench <- bench::press(N = c(1000L, 10000L, 100000L), {
+  benchmark_heads <- rep_len(heads, N)
+  bench::mark(
+    individual = em_coins(benchmark_heads),
+    counts = em_coins_counts(benchmark_heads),
+    iterations = 10,
+    filter_gc = FALSE,
+    check = TRUE
+  )
+})
+coin_bench$method <- as.character(coin_bench$expression)
+
+ggplot(
+  coin_bench,
+  aes(N, as.numeric(median) * 1000, color = method)
+) +
+  geom_line() +
+  geom_point() +
+  scale_x_log10(
+    breaks = c(1000, 10000, 100000),
+    labels = expression(10^3, 10^4, 10^5)
+  ) +
+  scale_y_log10() +
+  scale_color_manual(
+    name = NULL,
+    values = c(individual = "royalblue", counts = "darkorange")
+  ) +
+  labs(x = "Number of experiments", y = "Median time (ms)")
+```
+:::::
+:::
+
+\medskip\pause
+
+Same start and 19 updates; counting is included. We compare implementation cost
+at a fixed number of updates, not time to convergence.
+
+\pdfpcnote{
+  - Repeating the original data preserves the observed outcome proportions.\\
+  - Both implementations record the starting point and 19 updates.\\
+  - Each timing is the median of ten runs, including garbage collection.\\
+}
 
 ## Connection to $Q$-Function
 
