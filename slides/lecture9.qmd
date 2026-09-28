@@ -118,6 +118,37 @@ in the presence of missing data or latent variables.
 
 ::: {.columns}
 ::::: {.column width="47%"}
+The peppered moth (*Biston betularia*) is a species of moth that is well-known
+for its color variation and its role in the study of natural selection and
+evolution.
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+![](../images/peppered-moth.jpg){width=100%}
+:::::
+:::
+
+::: {.notes}
+The peppered moth is called 'Birkemåler' in Danish. There is a nice collection
+of these in different colors in the Zoological Museum. The alleles are ordered
+in terms of dominance as C > I > T. Moths with a genotype containing C are dark.
+Moths with genotype TT are light-colored. Moths with genotypes II and IT are
+mottled.
+
+The peppered moth provided an early demonstration of evolution in
+nineteenth-century England, where the light-colored moth was outnumbered by the
+dark-colored variety. The dark color became advantageous as increased pollution
+darkened trees with soot.
+
+https://en.wikipedia.org/wiki/Peppered_moth_evolution
+:::
+
+## Allele Frequencies
+
+::: {.columns}
+::::: {.column width="47%"}
 ### Alleles
 
 C, I, and T with frequencies $p_C$, $p_I$, and $p_T$, where
@@ -141,15 +172,54 @@ Black, mottled, light-colored
 . . .
 
 ::::: {.column width="47%"}
-![](../images/peppered-moth.jpg){width=100%}
+```{r}
+#| label: moth-genotype-phenotype
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 1.6
 
-  |       | **C** | **I**   | **T**         |
-  | ----- | ----- | ------- | ------------- |
-  | **C** | Black | Black   | Black         |
-  | **I** | Black | Mottled | Mottled       |
-  | **T** | Black | Mottled | Light-colored |
+alleles <- c("C", "I", "T")
+moth_genotypes <- tidyr::expand_grid(
+  row = alleles,
+  column = alleles
+) |>
+  dplyr::mutate(
+    genotype = paste0(pmin(row, column), pmax(row, column)),
+    phenotype = case_when(
+      row == "C" | column == "C" ~ "Black",
+      row == "I" | column == "I" ~ "Mottled",
+      .default = "Light-colored"
+    )
+  )
 
-  : Genotype to Phenotype Map
+ggplot(moth_genotypes, aes(column, row, fill = phenotype)) +
+  geom_tile(color = "white") +
+  geom_text(
+    aes(
+      label = genotype,
+      color = if_else(phenotype == "Black", "white", "black")
+    ),
+    size = 3
+  ) +
+  scale_x_discrete(
+    limits = alleles,
+    position = "top",
+    expand = c(0, 0)
+  ) +
+  scale_y_discrete(limits = rev(alleles), expand = c(0, 0)) +
+  scale_fill_manual(
+    name = "Phenotype",
+    values = c(
+      "Black" = "grey20",
+      "Mottled" = "darkorange",
+      "Light-colored" = "grey90"
+    ),
+    breaks = c("Black", "Mottled", "Light-colored")
+  ) +
+  scale_color_identity() +
+  coord_fixed() +
+  labs(x = NULL, y = NULL)
+```
 :::::
 :::
 
@@ -179,16 +249,6 @@ $$
 
 . . .
 
-The complete multinomial log-likelihood is
-$$
-  \begin{aligned}
-     & 2n_{CC} \log(p_C) + n_{CI} \log (2 p_C p_I) + n_{CT} \log(2 p_C p_T) \\
-     & +2 n_{II} \log(p_I) + n_{IT} \log(2p_I p_T) + 2 n_{TT} \log(p_T),
-  \end{aligned}
-$$
-
-. . .
-
 We only observe $(n_C, n_I, n_T)$, where
 $$
   N = \underbrace{n_{CC} + n_{CI} + n_{CT}}_{=n_C}
@@ -200,65 +260,164 @@ $$
 As a specific data example we have the observation $n_C = 85$, $n_I = 196$, and
 $n_T = 341.$
 
-## Multinomial Cell Collapsing
+## What Do We Observe?
 
-The peppered moth example is an example of *cell collapsing* in a multinomial
-model.
+```{r}
+#| label: moth-cell-collapsing
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 2.8
+#| fig-alt: >-
+#|   Six genotypes merge into three observed phenotypes. CC, CI, and CT merge
+#|   into black (85 observed); II and IT merge into mottled (196 observed); TT
+#|   gives light-colored (341 observed). Each phenotype probability is the sum
+#|   of its genotype probabilities. The individual genotype counts are
+#|   unobserved.
+
+local({
+  old_par <- par(mar = rep(0, 4))
+  on.exit(par(old_par))
+
+  genotype_y <- 6:1
+  phenotype_y <- c(5, 2.5, 1)
+  group <- c(1, 1, 1, 2, 2, 3)
+  fills <- c("grey20", "darkorange", "grey90")
+  text_colors <- c("white", "black", "black")
+
+  plot.new()
+  plot.window(
+    xlim = c(0, 10),
+    ylim = c(0.2, 7.6),
+    xaxs = "i",
+    yaxs = "i"
+  )
+  text(c(1.5, 7.6), 7.25, c("Genotypes", "Phenotypes"), font = 2)
+  text(
+    c(1.5, 7.6),
+    6.8,
+    c("Counts unobserved", "Counts observed"),
+    cex = 0.85
+  )
+
+  segments(
+    3,
+    genotype_y,
+    4.6,
+    phenotype_y[group],
+    col = "grey45"
+  )
+  arrows(
+    4.6,
+    phenotype_y,
+    5.2,
+    phenotype_y,
+    length = 0.07,
+    col = "grey45"
+  )
+  rect(
+    0.1,
+    genotype_y - 0.35,
+    3,
+    genotype_y + 0.35,
+    col = fills[group],
+    border = NA
+  )
+  text(
+    0.7,
+    genotype_y,
+    c("CC", "CI", "CT", "II", "IT", "TT"),
+    col = text_colors[group],
+    font = 2
+  )
+  text(
+    2,
+    genotype_y,
+    expression(
+      p["C"]^2,
+      2 * p["C"] * p["I"],
+      2 * p["C"] * p["T"],
+      p["I"]^2,
+      2 * p["I"] * p["T"],
+      p["T"]^2
+    ),
+    col = text_colors[group]
+  )
+
+  rect(
+    5.2,
+    phenotype_y - 0.65,
+    9.9,
+    phenotype_y + 0.65,
+    col = fills,
+    border = NA
+  )
+  text(
+    7.55,
+    phenotype_y + 0.4,
+    c("Black", "Mottled", "Light-colored"),
+    col = text_colors,
+    font = 2
+  )
+  text(
+    7.55,
+    phenotype_y,
+    expression(
+      q["C"] ==
+        p["C"]^2 + 2 * p["C"] * p["I"] + 2 * p["C"] * p["T"],
+      q["I"] == p["I"]^2 + 2 * p["I"] * p["T"],
+      q["T"] == p["T"]^2
+    ),
+    col = text_colors
+  )
+  text(
+    7.55,
+    phenotype_y - 0.4,
+    expression(n["C"] == 85, n["I"] == 196, n["T"] == 341),
+    col = text_colors
+  )
+})
+```
+
+\medskip
+
+Each phenotype probability is the **sum** of its genotype probabilities.
+
+## Cell Collapsing
+
+The map $M$ **sums within each group**:
+$$
+  M(v)_j = \sum_{i \in A_j} v_i,
+$$
+where $A_1, \ldots, A_{K_0}$ partition the $K$ categories.
 
 \medskip\pause
 
-In general, let $A_1 \cup \ldots \cup A_{K_0} = \{1, \ldots, K\}$ be a partition
-and let
-$$
-  M : \mathbb{N}_0^K \to \mathbb{N}_0^{K_0}
-$$
-be the map given by
-$$
-  M((n_1, \ldots, n_K))_j = \sum_{i \in A_j} n_i.
-$$
-
-## Multinomial Distribution
-
-If $Y \sim \textrm{Mult}(N, p)$ with $p = (p_1, \ldots, p_K)$ then
+If $Y \sim \textrm{Mult}(N, p)$, the grouped counts satisfy
 $$
   X = M(Y) \sim \textrm{Mult}(N, M(p)).
 $$
 
-. . .
+The same map adds counts and probabilities.
 
-For the peppered moths, $K = 6$ corresponding to the six genotypes, $K_0 = 3$
-and the partition corresponding to the phenotypes is
-$$
-  \{1, 2, 3\} \cup \{4, 5\} \cup \{6\} = \{1, \ldots, 6\},
-$$
-and
-$$
-  M(n_1, \ldots, n_6) = (n_1 + n_2 + n_3, n_4 + n_5, n_6).
-$$
+## The Observed Likelihood
 
-## Cell Collapsing
-
-In terms of the $(p_C, p_I)$ parametrization, $p_T = 1 - p_C - p_I$ and
-$$
-  p = (p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2, 2p_Ip_T, p_T^2).
-$$
-
-. . .
-
-Hence
-$$
-  M(p) = (p_C^2 + 2p_Cp_I + 2p_Cp_T, p_I^2 + 2p_Ip_T, p_T^2).
-$$
-
-. . .
-
-The log-likelihood is
+Summing the genotype probabilities gives the phenotype probabilities:
 $$
   \begin{aligned}
-    \ell(p_C, p_I) & = n_C \log(p_C^2 + 2p_Cp_I + 2p_Cp_T)                          \\
-                   & \phantom{ = {}} + n_I \log(p_I^2 + 2p_Ip_T) + n_T \log (p_T^2)
+    q_C & = p_C^2 + 2p_Cp_I + 2p_Cp_T &  & \text{(black)},         \\
+    q_I & = p_I^2 + 2p_Ip_T           &  & \text{(mottled)},       \\
+    q_T & = p_T^2                     &  & \text{(light-colored)},
   \end{aligned}
 $$
+where $p_T = 1 - p_C - p_I$.
+
+\medskip\pause
+
+With the observed counts, the log-likelihood is
+$$
+  \ell(p_C, p_I) = 85\log q_C + 196\log q_I + 341\log q_T.
+$$
+We omit an additive constant independent of $(p_C, p_I)$.
 
 ## Standard Form
 
@@ -541,7 +700,7 @@ obj <- function(x) (x[1] - 1)^2 + (x[2] - 2.5)^2
 ```
 
 ::: {.columns}
-::::: {.column width="47%"}
+::::: {.column width="53%"}
 ```{r}
 #| label: optim-ex-run
 
@@ -551,7 +710,7 @@ optim(c(0, 0), obj, method = "BFGS")
 
 . . .
 
-::::: {.column width="47%"}
+::::: {.column width="42%"}
 ### Alternatives
 
 - `nlm()` for unconstrained optimization\pause
@@ -857,6 +1016,27 @@ Easy in the peppered moths case! But this is not always the case.
 
 Use a barrier method to solve the constrained problem, starting at $\theta_0$.
 
+# The EM Algorithm
+
+## If We Knew the Genotypes
+
+If we knew all six genotype counts, the complete-data log-likelihood would be,
+up to an additive constant,
+$$
+  \begin{aligned}
+    \ell_{\mathrm{c}}(p_C, p_I)
+     & = 2n_{CC} \log(p_C) + n_{CI} \log(2p_Cp_I)        \\
+     & \quad + n_{CT} \log(2p_Cp_T) + 2n_{II} \log(p_I)  \\
+     & \quad + n_{IT} \log(2p_Ip_T) + 2n_{TT} \log(p_T),
+  \end{aligned}
+$$
+where $p_T = 1 - p_C - p_I$.
+
+\medskip\pause
+
+We only observe phenotype counts. EM replaces the missing genotype counts with
+their conditional expectations under the current allele frequencies.
+
 ## Multinomial Conditional Distributions
 
 The distribution of $Y_{A_j} = (Y_i)_{i \in A_j}$ conditional on $X$ can be
@@ -886,8 +1066,6 @@ p <- prob(moth_optim$par)
 x[group] * p / M(p, group)[group]
 options(digits = old_options$digits)
 ```
-
-# The EM Algorithm
 
 ## The Expectation-Maximization (EM) Algorithm
 
@@ -1146,8 +1324,6 @@ for (i in seq_len(4)) {
 - Each experiment: independently choose A or B with equal probability (latent
   variable $Z_i$) and flip it 10 times.\pause
 - Observed data: $X_i$: number of heads in each experiment.\pause
-
-. . .
 
 ### Goal
 
