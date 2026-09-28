@@ -72,9 +72,12 @@ in the presence of missing data or latent variables.
 The peppered moth (*Biston betularia*) is a species of moth that is well-known
 for its color variation and its role in the study of natural selection and
 evolution.
-:::::
 
-. . .
+\medskip
+
+A good example for the multinomial model, where we have three phenotypes (black,
+mottled, and light-colored) that are determined by three alleles (C, I, and T).
+:::::
 
 ::::: {.column width="47%"}
 ![](../images/peppered-moth.jpg){width=100%}
@@ -333,22 +336,26 @@ local({
 
 Each phenotype probability is the **sum** of its genotype probabilities.
 
-## Cell Collapsing
+## The Observed Counts Are Multinomial
 
-The map $M$ **sums within each group**:
+For the moths, $K = 6$ genotypes form $K_0 = 3$ phenotype groups:
 $$
-  M(v)_j = \sum_{i \in A_j} v_i,
+  A_C = \{CC, CI, CT\}, \quad A_I = \{II, IT\}, \quad A_T = \{TT\}.
 $$
-where $A_1, \ldots, A_{K_0}$ partition the $K$ categories.
+The map $M(v)_j = \sum_{i \in A_j} v_i$ **sums within each group**.
 
 \medskip\pause
 
-If $Y \sim \textrm{Mult}(N, p)$, the grouped counts satisfy
+Let $Y$ contain the six genotype counts, with probabilities
 $$
-  X = M(Y) \sim \textrm{Mult}(N, M(p)).
+  \pi = (p_C^2, 2p_Cp_I, 2p_Cp_T, p_I^2, 2p_Ip_T, p_T^2).
 $$
-
-The same map adds counts and probabilities.
+Then
+$$
+  Y \sim \textrm{Mult}(N, \pi) \quad
+    \Longrightarrow \quad X = M(Y) \sim \textrm{Mult}(N, q),
+$$
+where $X = (n_C, n_I, n_T)$ and $q = M(\pi)$.
 
 ## The Observed Likelihood
 
@@ -738,19 +745,17 @@ f <- function(x1, x2) ((x1 - 2)^2 + (x2 - 1)^2)
 
 g <- function(x1, x2) x1 - 1
 
-log_barrier <- function(x1, x2) {
-  out <- -(log(-g(x1, x2)))
-  out[!is.finite(out)] <- Inf
-  out[is.nan(out)] <- Inf
-  out
-}
+log_barrier <- function(x1, x2) -log(pmax(-g(x1, x2), 0))
 
-x1_grid <- seq(-1.5, 1.2, length.out = 101)
-x2_grid <- seq(-0.5, 2.5, length.out = 101)
+x1_grid <- seq(-1.5, 2.6, length.out = 301)
+x2_grid <- seq(-0.5, 2.5, length.out = 201)
 z1 <- outer(x1_grid, x2_grid, f)
 z2 <- outer(x1_grid, x2_grid, log_barrier)
 
 plot_barrier <- function(t) {
+  old_par <- par(mar = c(3, 3, 2, 0.5), mgp = c(1.8, 0.6, 0))
+  on.exit(par(old_par))
+
   z <- t * z1 + z2
   min_z <- min(z, na.rm = TRUE)
   levels <- exp(seq(
@@ -759,7 +764,7 @@ plot_barrier <- function(t) {
     length.out = 25
   ))
   cols <- hcl.colors(30, "viridis", rev = FALSE)
-  argmin <- which(z == min_z, arr.ind = TRUE)
+  barrier_optimum <- c((3 - sqrt(1 + 2 / t)) / 2, 1)
   contour(
     x1_grid,
     x2_grid,
@@ -768,23 +773,30 @@ plot_barrier <- function(t) {
     drawlabels = FALSE,
     col = cols,
     asp = 1,
+    main = bquote(t == .(t)),
     xlab = expression(theta[1]),
     ylab = expression(theta[2])
   )
-  abline(v = 1, lty = "dashed", col = "black", lwd = 2)
+  abline(v = 1, lty = "dashed", col = "black")
   points(
-    x1_grid[argmin[1, 1]],
-    x2_grid[argmin[1, 2]],
+    barrier_optimum[1],
+    barrier_optimum[2],
     pch = 4,
     col = "darkorange",
     cex = 1.5
   )
+  points(2, 1, pch = 4, col = "royalblue", cex = 1.5)
   legend(
-    "topleft",
-    legend = c("Constraint", "Optimum", paste0("t = ", t)),
-    col = c("black", "darkorange", NA),
+    "topright",
+    legend = c(
+      "Constraint",
+      "Barrier optimum",
+      "Unconstrained optimum"
+    ),
+    col = c("black", "darkorange", "royalblue"),
     lty = c("dashed", NA, NA),
-    pch = c(NA, 4, NA),
+    pch = c(NA, 4, 4),
+    cex = 0.8,
     bg = "white"
   )
 }
@@ -794,44 +806,114 @@ plot_barrier <- function(t) {
 
 ::: {.columns align="center"}
 ::::: {.column width="47%"}
-Let's assume we are solving
+We want to minimize
 $$
-\begin{aligned}
-  &\operatorname*{minimize}_{\theta \in \mathbb{R}^2} && H(\theta) = (\theta_1 - 2)^2 + (\theta_2 - 1)^2 \\
-  &\textrm{subject to} && \theta_1 - 1 \leq 0.
-\end{aligned}
+  H(\theta) = (\theta_1 - 2)^2 + (\theta_2 - 1)^2
 $$
-\bigskip
+subject to $\theta_1 \leq 1$.
+
+\medskip
 
 The \alert{unconstrained} optimum would be at $(2, 1)$, but this is not
 feasible.
 
 \medskip
 
-Using the barrier method, we solve a sequence of unconstrained problems
+The barrier function is
 $$
-  \begin{aligned}
-     & \operatorname*{minimize}_{\theta \in \mathbb{R}^2} &  & tH(\theta) - \log(1 - \theta_1)
-  \end{aligned}
+  \phi(\theta) = -\log(1 - \theta_1), \quad \theta_1 < 1.
 $$
+It tends to $+\infty$ as $\theta_1$ approaches $1$ from below.
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: barrier-objective
+#| echo: false
+#| fig-height: 1.65
+#| fig-width: 2.8
+#| fig-alt: >-
+#|   Contours of the original objective, with its unconstrained optimum at (2,
+#|   1) to the right of the constraint boundary theta_1 = 1.
+
+local({
+  old_par <- par(
+    mar = c(2.5, 2.7, 1.8, 0.5),
+    mgp = c(1.5, 0.5, 0),
+    cex = 0.85
+  )
+  on.exit(par(old_par))
+
+  contour(
+    x1_grid,
+    x2_grid,
+    z1,
+    levels = c(0.25, 1, 2, 4, 8, 12),
+    drawlabels = FALSE,
+    col = "royalblue",
+    main = expression("Objective " * H(theta)),
+    xlab = expression(theta[1]),
+    ylab = expression(theta[2])
+  )
+  abline(v = 1, lty = "dashed")
+  points(2, 1, pch = 4, col = "royalblue", cex = 1.3)
+})
+```
+
+```{r}
+#| label: barrier-function
+#| echo: false
+#| fig-height: 1.65
+#| fig-width: 2.8
+#| fig-alt: >-
+#|   Vertical contours of the logarithmic barrier become closer together as
+#|   theta_1 approaches 1 from below. The barrier does not depend on theta_2.
+
+local({
+  old_par <- par(
+    mar = c(2.5, 2.7, 1.8, 0.5),
+    mgp = c(1.5, 0.5, 0),
+    cex = 0.85
+  )
+  on.exit(par(old_par))
+
+  contour(
+    x1_grid,
+    x2_grid,
+    z2,
+    levels = seq(-0.5, 3.5, by = 0.5),
+    drawlabels = FALSE,
+    col = "darkorange",
+    main = expression("Barrier " * phi(theta)),
+    xlab = expression(theta[1]),
+    ylab = expression(theta[2])
+  )
+  abline(v = 1, lty = "dashed")
+})
+```
+:::::
+:::
+
+## Following the Barrier Optimum
+
+For increasing $t$, minimize $tH(\theta) - \log(1 - \theta_1)$. The minimizer
+approaches the constrained optimum $(1, 1)$.
+
+```{r}
 #| label: barrier-example
 #| echo: false
 #| fig-show: animate
-#| fig-cap: "Contour plots of the barrier-penalized objective."
-#| fig-height: 3.6
-#| fig-width: 3.2
-#| out-width: "\\linewidth"
+#| fig-height: 2.7
+#| fig-width: 4.5
+#| fig-alt: >-
+#|   Animated contours of the barrier objective as t increases. The orange
+#|   minimizer approaches (1, 1) from the feasible side of the boundary. The
+#|   blue unconstrained optimum stays at (2, 1), outside the feasible set.
 
 for (t in c(0.085, 0.1, 0.2, 0.5, 10)) {
   plot_barrier(t)
 }
 ```
-:::::
-:::
 
 ## Barrier Method Algorithm
 
