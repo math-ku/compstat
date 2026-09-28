@@ -1186,8 +1186,8 @@ $$
 
 . . .
 
-We have also just shown that the EM algorithm converges to a fixed point of the
-EM mapping:
+Parameter convergence requires additional assumptions. If the iterates converge
+and the EM mapping $\Phi$ is continuous at their limit, then
 $$
   \theta_{n+1} = \Phi(\theta_n), \quad \hat{\theta} = \Phi(\hat{\theta}).
 $$
@@ -1298,7 +1298,8 @@ $$
 
 \medskip\pause
 
-Still converges to a **stationary point** of the likelihood.
+Convergence to a **stationary point** requires additional regularity and
+progress conditions; a nondecreasing likelihood alone is not enough.
 
 . . .
 
