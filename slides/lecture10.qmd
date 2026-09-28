@@ -13,8 +13,6 @@ execute:
 set.seed(1618)
 library(patchwork)
 library(testthat)
-
-old_options <- options(digits = 4)
 ```
 
 ```{r}
