@@ -752,7 +752,7 @@ x2_grid <- seq(-0.5, 2.5, length.out = 201)
 z1 <- outer(x1_grid, x2_grid, f)
 z2 <- outer(x1_grid, x2_grid, log_barrier)
 
-plot_barrier <- function(t) {
+plot_barrier <- function(t, previous_optimum = NULL) {
   old_par <- par(mar = c(3, 3, 2, 0.5), mgp = c(1.8, 0.6, 0))
   on.exit(par(old_par))
 
@@ -778,6 +778,24 @@ plot_barrier <- function(t) {
     ylab = expression(theta[2])
   )
   abline(v = 1, lty = "dashed", col = "black")
+  if (!is.null(previous_optimum)) {
+    arrows(
+      previous_optimum[1],
+      previous_optimum[2],
+      barrier_optimum[1],
+      barrier_optimum[2],
+      length = 0.07,
+      col = "darkorange"
+    )
+    points(
+      previous_optimum[1],
+      previous_optimum[2],
+      pch = 21,
+      col = "grey40",
+      bg = "white",
+      cex = 1.2
+    )
+  }
   points(
     barrier_optimum[1],
     barrier_optimum[2],
@@ -790,15 +808,18 @@ plot_barrier <- function(t) {
     "topright",
     legend = c(
       "Constraint",
+      "Previous optimum",
       "Barrier optimum",
       "Unconstrained optimum"
     ),
-    col = c("black", "darkorange", "royalblue"),
-    lty = c("dashed", NA, NA),
-    pch = c(NA, 4, 4),
+    col = c("black", "grey40", "darkorange", "royalblue"),
+    lty = c("dashed", NA, NA, NA),
+    pch = c(NA, 21, 4, 4),
+    pt.bg = "white",
     cex = 0.8,
     bg = "white"
   )
+  invisible(barrier_optimum)
 }
 ```
 
@@ -906,12 +927,15 @@ approaches the constrained optimum $(1, 1)$.
 #| fig-height: 2.7
 #| fig-width: 4.5
 #| fig-alt: >-
-#|   Animated contours of the barrier objective as t increases. The orange
-#|   minimizer approaches (1, 1) from the feasible side of the boundary. The
-#|   blue unconstrained optimum stays at (2, 1), outside the feasible set.
+#|   Animated contours of the barrier objective as t increases. A hollow gray
+#|   circle marks the previous minimizer, with an orange arrow to the new
+#|   minimizer. The orange minimizer approaches (1, 1) from the feasible side of
+#|   the boundary. The blue unconstrained optimum stays at (2, 1), outside the
+#|   feasible set.
 
-for (t in c(0.085, 0.1, 0.2, 0.5, 10)) {
-  plot_barrier(t)
+previous_optimum <- NULL
+for (t in c(0.085, 0.1, 0.2, 0.5, 2, 10)) {
+  previous_optimum <- plot_barrier(t, previous_optimum)
 }
 ```
 
@@ -921,7 +945,7 @@ for (t in c(0.085, 0.1, 0.2, 0.5, 10)) {
   \caption{Barrier Method}
   \KwData{$t > 0$, $\theta$ strictly feasible, $\mu > 1$, $\varepsilon > 0$, and $m$ constraints}
   \While{true}{
-    $\theta \gets \argmin_{\vartheta} tH(\vartheta) + \phi(\vartheta)$\;
+    $\theta \gets \argmin_{\theta} tH(\theta) + \phi(\theta)$\;
     \If{$m/t < \varepsilon$}{
       \Return{$\theta$}
     }
