@@ -1497,26 +1497,23 @@ plot(
 ## Testing the EM Implementation
 
 The function `em_coins()` returns the parameter and log-likelihood histories.
-Turn the mathematical guarantees into tests:
+Let's turn the mathematical guarantees into tests:
 
 ```{r}
 #| label: em-coin-tests
 #| results: hide
 
+library(testthat)
+
 test_that("EM preserves its guarantees", {
   theta <- coin_fit$theta
   ell <- coin_fit$loglik
-  expect_true(all(is.finite(theta)))
-  expect_true(all(theta >= 0 & theta <= 1))
-  expect_true(all(is.finite(ell)))
-  expect_true(all(diff(ell) >= -1e-8))
+  expect_all_true(is.finite(theta))
+  expect_all_true(is.finite(ell))
+  expect_all_true(theta >= 0 & theta <= 1)
+  expect_all_true(diff(ell) >= -1e-8)
 })
 ```
-
-\medskip\pause
-
-Allow for rounding error. An increasing likelihood does **not** establish that
-we found its maximum.
 
 ## Profiling the EM Implementation
 
@@ -1592,7 +1589,7 @@ implementation, `em_coins_counts()`, counts their frequencies once:
 ```{r}
 #| label: em-coin-counts
 
-counts <- tabulate(heads + 1L, nbins = 11L)
+counts <- tabulate(heads + 1, nbins = 11)
 ```
 
 \medskip\pause
@@ -1609,13 +1606,13 @@ $$
 
 \medskip\pause
 
-For $T$ updates, the work drops from $O(NT)$ to $O(N + 11T)$. Unlike binning in
+For $T$ updates, the work drops from $O(NT)$ to $O(N + T)$. Unlike binning in
 density estimation, grouping identical outcomes introduces **no approximation**.
 
 ## Benchmarking the Two Implementations
 
 ::: {.columns}
-::::: {.column width="47%"}
+::::: {.column width="50%"}
 First compare the **entire histories**, allowing for rounding error:
 
 ```{r}
@@ -1641,7 +1638,7 @@ bench::mark(
 ```
 :::::
 
-::::: {.column width="47%"}
+::::: {.column width="44%"}
 ```{r}
 #| label: em-coin-bench
 #| echo: false
@@ -1759,6 +1756,8 @@ bound is tight at the current point and maximized there: **EM does not move.**
 ## A Flat Trace Does Not Establish a Maximum
 
 Same observations, two starting points:
+
+\medskip
 
 ```{r}
 #| label: em-coin-stalling
