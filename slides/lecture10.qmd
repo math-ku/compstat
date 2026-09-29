@@ -56,33 +56,33 @@ constraint <- function(par) {
     1 - par[1] - par[2] >= 0
 }
 
-neg_noglik_obs <- mult_likelihood(
+neg_loglik_obs <- mult_likelihood(
   x = c(85, 196, 341),
   group = c(1, 1, 1, 2, 2, 3),
   pi_map = pi_map,
   constraint = constraint
 )
 
-moth_optim <- optim(c(0.3, 0.3), neg_noglik_obs)
+moth_optim <- optim(c(0.3, 0.3), neg_loglik_obs)
 ```
 
 ## Last Time
 
 ### Likelihood Optimization
 
-We introduced the Peppered Moths problem and solved the full likelihood using
-general-purpose and constrained optimization.
+We introduced the peppered moths problem and maximized the observed-data
+likelihood using general-purpose and constrained optimization.
 
 \medskip\pause
 
-We talked about the barrier methods for constrained optimization.
+We talked about barrier methods for constrained optimization.
 
 . . .
 
 ### The EM Algorithm
 
-We introduced the EM algorithm as a general algorithm for likelihood
-optimization when the likelihood is complicated.
+We introduced the EM algorithm for likelihood optimization in models with
+missing data or latent variables.
 
 ## Recap: The EM Algorithm
 
@@ -98,27 +98,27 @@ $$
 
 \medskip\pause
 
-The algorithm monotonically increases the observed data log-likelihood at each
-step.
+Each iteration is guaranteed not to decrease the observed-data log-likelihood.
 
 ## Today
 
 ### More on the EM Algorithm
 
-We tackle the Peppered Moths example with the EM algorithm.
+We tackle the peppered moths example with the EM algorithm.
 
 . . .
 
 ### Fisher Information
 
-After we have optimized the likelihood, we often want to estimate variance of
-estimates. For this we need the Fisher information.
+After we have optimized the likelihood, we often want to estimate the variance
+of our estimators. Fisher information helps us do this.
 
 . . .
 
-### Gaussian Mixture
+### Convergence and Generalized EM
 
-We tackle an example of a mixture of Gaussians---the prototypical EM example.
+We connect the EM convergence rate to missing information and introduce the
+generalized EM algorithm.
 
 ## Recap: The Peppered Moths
 
@@ -126,7 +126,7 @@ We tackle an example of a mixture of Gaussians---the prototypical EM example.
 ::::: {.column width="47%"}
 ### Alleles
 
-C, I, T with frequencies $p_C$, $p_I$, $p_T$ and
+C, I, and T with frequencies $p_C$, $p_I$, and $p_T$, where
 $$
   p_C + p_I + p_T = 1.
 $$
@@ -173,8 +173,8 @@ $$
 
 ### Genotype Counts
 
-The genotype counts $Y_k$ are the sufficient statistics for the complete data,
-and also latent, with
+The genotype counts $Y_k$ are sufficient statistics for the complete data. They
+are also latent, with
 $$
   Y_k = \sum_{i=1}^N \mathbf{1}(Z_i = k),
   \quad Y = (Y_1,\ldots,Y_6), \quad \sum_k Y_k = N.
@@ -184,17 +184,17 @@ $$
 
 What we actually observe are the **phenotype** counts
 $$
-  X_j = \sum_{k \in A_j} Y_k,\quad X = M(Y).
+  X_j = \sum_{k \in A_j} Y_k,\quad X = M(Y),
 $$
-with partitions
+where the genotype categories are partitioned into
 $$
   A_1 = \{1,2,3\}\ (\text{Black}),\quad A_2 = \{4,5\}\ (\text{Mottled}),
-  \quad A_3 = \{6\}\ (\text{Light}),
+  \quad A_3 = \{6\}\ (\text{Light}).
 $$
 
 . . .
 
-Here, $M : \mathbb{N}_0^6 \to \mathbb{N}_0^3$ is the cell-collapsing map
+Here, $M : \mathbb{R}^6 \to \mathbb{R}^3$ is the cell-collapsing map
 $$
   M(y) = (y_1 + y_2 + y_3,\ y_4 + y_5,\ y_6).
 $$
@@ -203,16 +203,16 @@ $$
 
 ### Multinomial Distribution
 
-If $Y \sim \textrm{Mult}(N, p)$ with $p = (p_1, \ldots, p_K)$ then
+If $Y \sim \textrm{Mult}(N, p)$ with $p = (p_1, \ldots, p_6)$, then
 $$
   X = M(Y) \sim \textrm{Mult}(N, M(p)).
 $$
 
 ## Complete-Data Log-Likelihood
 
-Using the genotype counts $Y$, the complete-data log-likelihood is
+The complete-data log-likelihood, with $c(Y)$ independent of $p$, is
 $$
-  \ell(p \mid Y) = \sum_{k=1}^6 Y_k \log p_k.
+  \ell(p \mid Y) = \sum_{k=1}^6 Y_k \log p_k + c(Y).
 $$
 
 . . .
@@ -226,8 +226,7 @@ $$
 
 \medskip\pause
 
-Let's define the function $\pi$, that maps $\theta$ to the genotype
-probabilities
+Let's define the function $\pi$ that maps $\theta$ to the genotype probabilities
 $$
   \pi(\theta) = \begin{bmatrix}
                   p_C^2 \\
@@ -268,24 +267,25 @@ EM $Q$-function:
 $$
   \begin{aligned}
     Q(\theta \mid \theta')
-     & = \E_{Y \mid X, \theta'} \log p (Y \mid \theta)                                                                              \\
+     & = \E_{Y \mid X, \theta'} \log p (Y \mid \theta)                                                        \\
     \pause
-     & = \sum_{k=1}^6 \E_{Y \mid X, \theta'}(Y_k) \log \pi_k(\theta)                                                                \\
+     & = \sum_{k=1}^6 \E_{Y \mid X, \theta'}(Y_k) \log \pi_k(\theta) + c(\theta')                             \\
     \pause
-     & = \sum_{k=1}^6 \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \log \pi_k(\theta) \quad \text{where } k \in A_{j(k)}.
+     & = \sum_{k=1}^6 \frac{X_{j(k)} \pi_k(\theta')}{M(\pi(\theta'))_{j(k)}} \log \pi_k(\theta) + c(\theta').
   \end{aligned}
 $$
 
 . . .
 
-The expected counts are computed at $\theta'$ and held fixed while we maximize
-over $\theta$.
+Here, $k \in A_{j(k)}$. The expected counts are computed at $\theta'$ and held
+fixed while we maximize over $\theta$. The term
+$c(\theta') = \E_{Y \mid X,\theta'}c(Y)$ does not affect this maximization.
 
 \pdfpcnote{
   - The E-step computes expected genotype counts using the current allele frequencies.\\
 }
 
-## E-step for Multinomial Model
+## E-Step for the Multinomial Model
 
 ```{r}
 e_step_mult <- function(theta, x, group) {
@@ -338,6 +338,8 @@ $$
 $$
 where $N = \symbf{1}^T y$ is the total number of observations.
 
+In the M-step, replace $y$ by its conditional expectation from the E-step.
+
 \medskip\pause
 
 Here's an implementation of this.
@@ -388,7 +390,7 @@ em <- function(par, em_step, eps = 1e-6, maxit = 20, cb = NULL) {
     par <- em_step(par)
 
     if (!is.null(cb)) {
-      cb() # Callback function for tracing, to be explained
+      cb() # Record the current state for later inspection.
     }
 
     if (sum((par - par0)^2) <= eps * (sum(par^2) + eps)) {
@@ -448,7 +450,7 @@ em_tracer <- tracer("par", Delta = 0)
 
 . . .
 
-Each call to `tracer()` returns a S3 object of class tracer. The object has a
+Each call to `tracer()` returns an S3 object of class `tracer`. The object has a
 field `tracer`, which is a function that will record the current value of given
 parameters each time it is called.
 
@@ -491,11 +493,11 @@ em_trace <- summary(em_tracer)
 #| warning: false
 #| fig-width: 5
 #| fig-height: 3
-#| fig-cap: "EM algorithm iterations for the Peppered Moths example. The orange cross marks
-#|   the MLE. The surfaces are the current negative observed log-likelihoods, with the
-#|   black dot indicating the EM step."
+#| fig-cap: "EM iterations for the peppered moths example. The orange cross marks
+#|   the MLE. The contours show the negative Q function at each iteration, up to an
+#|   additive constant. The black dot marks its minimum, the next EM iterate."
 
-nll_pep <- Vectorize(function(p1, p2) neg_noglik_obs(c(p1, p2)))
+nll_pep <- Vectorize(function(p1, p2) neg_loglik_obs(c(p1, p2)))
 
 em_trace <- transform(
   em_trace,
@@ -613,7 +615,7 @@ ggplot(df_all, aes(pC, pI)) +
 #| echo: false
 #| fig-height: 2.7
 #| fig-width: 3.5
-#| fig-cap: "Parameter convergence of the EM algorithm applied to the Peppered
+#| fig-cap: "Parameter convergence of the EM algorithm applied to the peppered
 #|   moths problem."
 
 ggplot(em_trace, aes(n, par_norm_diff)) +
@@ -631,13 +633,18 @@ ggplot(em_trace, aes(n, par_norm_diff)) +
 #| label: loglikelihood-convergence
 #| warning: false
 #| echo: false
-#| fig-cap: "Log-likelihood convergence"
+#| fig-cap: "Negative log-likelihood gap relative to the best recorded iterate.
+#|   An offset of 1e-14 keeps zero gaps visible on the logarithmic scale."
 #| fig-width: 4
 #| fig-height: 2.5
 
 mutate(em_trace, diff_nll = 1e-14 + nll - min(nll)) |>
   ggplot(aes(n, diff_nll)) +
-  labs(y = expression(l[theta] - min(l))) +
+  labs(
+    y = expression(
+      max[k] * italic(l)(theta[k]) - italic(l)(theta[n])
+    )
+  ) +
   geom_point() +
   geom_line() +
   scale_y_log10()
@@ -649,8 +656,9 @@ A common problem in likelihood optimization is local maxima.
 
 \medskip\pause
 
-We can solve this using a grid of starting values.^[`neg_loglik_obs()`computes
-the negative observed log-likelihood.]
+Trying a grid of starting values can help, but does not guarantee a global
+maximum.^[The function `neg_loglik_obs()` computes the negative observed
+log-likelihood.]
 
 ```{r}
 theta_grid <- expand.grid(
@@ -659,7 +667,7 @@ theta_grid <- expand.grid(
 )
 
 res <- apply(theta_grid, 1, em, em_step = em_mult_step)
-neg_logliks <- apply(res, 2, neg_noglik_obs)
+neg_logliks <- apply(res, 2, neg_loglik_obs)
 
 which.min(neg_logliks)
 ```
@@ -681,7 +689,7 @@ where $\ell(\theta) = \log p(X \mid \theta)$.
 
 . . .
 
-This is the expected curvature of the log-likelihood.
+This is the expected negative Hessian of the log-likelihood.
 
 ### Complete, Observed, and Missing Information
 
@@ -737,20 +745,19 @@ $\mathcal{I}_X(\theta)$.
 
 \medskip\pause
 
-In the EM context, we typically do not have access to the individual
-log-likelihood contributions $\ell_i(\theta)$, but we can solve this through
-other means.
+In the EM context, the observed-data log-likelihood may be difficult to
+differentiate directly. We can instead use quantities from the EM algorithm.
 
 . . .
 
 ### Three Ways of Computing the Observed Fisher Information
 
-1. The **gradient identity**: For the score function from the Q function, then
-   differentiate.\pause
+1. The **gradient identity**: Obtain the score function from the Q function,
+   then differentiate.\pause
 2. The **information identity**: Estimate complete and missing information, then
    subtract.\pause
-3. The **EM-mapping**: Differentiate the EM-mapping, which is a fixed point at
-   the MLE.
+3. The **EM mapping**: Differentiate the EM mapping at an MLE that is a fixed
+   point.
 
 ## First Way: Via the Gradient Identity
 
@@ -761,8 +768,7 @@ $$
 
 \medskip\pause
 
-At convergence, $\theta' = \hat{\theta}$ (the MLE of the observed data
-log-likelihood).
+The gradient identity holds for any interior $\theta$, not just at an MLE.
 
 \medskip\pause
 
@@ -774,7 +780,8 @@ $$
 
 \medskip\pause
 
-Setting $\theta' = \theta$ gives Fisher's (score) identity
+Setting $\theta' = \theta$ after differentiating the first argument gives
+Fisher's (score) identity:
 $$
   \nabla_\theta Q(\theta \mid \theta)
   = \E_{Y \mid X,\theta}\nabla_{\theta} \log p(X, Y \mid \theta)
@@ -786,7 +793,8 @@ $$
 For the multinomial model, the Q function is
 $$
   Q(\theta \mid \theta')
-  = \sum_{i} \frac{x_{j(i)} \pi_i(\theta')}{M(\pi(\theta'))_{j(i)}} \log \pi_i(\theta),
+  = \sum_{i} \frac{x_{j(i)} \pi_i(\theta')}{M(\pi(\theta'))_{j(i)}} \log \pi_i(\theta)
+    + c(\theta'),
 $$
 where $j(i)$ is defined by $i \in A_{j(i)}$.
 
@@ -800,7 +808,7 @@ $$
 
 \medskip\pause
 
-When evaluated in $\theta$ it is
+Setting $\theta' = \theta$ gives
 $$
   \nabla_{\theta} Q(\theta \mid \theta)
   = \sum_{i} \frac{x_{j(i)}}{M(\pi(\theta))_{j(i)}} \nabla \pi_i(\theta).
@@ -834,7 +842,7 @@ score(theta_hat)
 :::::
 :::
 
-## Numerical Fisher information
+## Numerical Fisher Information
 
 We could differentiate analytically, but a simpler way is to use numerical
 differentiation.
@@ -846,7 +854,11 @@ differentiation.
 ### `stats::optimHess()`
 
 ```{r}
--optimHess(theta_hat, neg_noglik_obs, score)
+optimHess(
+  theta_hat,
+  neg_loglik_obs,
+  function(theta) -score(theta)
+)
 ```
 :::::
 
@@ -865,14 +877,8 @@ ihat
 
 ## Second Way: The Information Identity
 
-Recall that with $\theta' = \theta$,
-$$
-  \nabla_\theta Q(\theta \mid \theta) = \nabla_\theta \log p(X \mid \theta).
-$$
-
-\pause
-
-Differentiating again (w.r.t to $\theta$) gives
+Holding $\theta'$ fixed, differentiating $Q$ twice with respect to its first
+argument gives
 $$
   -D_\theta^2 Q(\theta \mid \theta')
   = -\E_{Y \mid X, \theta'} D_\theta^2 \log p(X, Y \mid \theta).
@@ -880,7 +886,7 @@ $$
 
 . . .
 
-At $\theta' = \theta$, using
+Then setting $\theta' = \theta$ and using
 $\log p(X, Y \mid \theta) = \log p(X \mid \theta) + \log p(Y \mid X, \theta)$,
 we have
 $$
@@ -907,6 +913,14 @@ $$
 
 ## The Information Identity
 
+Define the conditional cross-entropy
+$$
+  H(\theta \mid \theta') = -\E_{Y \mid X,\theta'}\log p(Y \mid X,\theta).
+$$
+Then $\ell(\theta) = Q(\theta \mid \theta') + H(\theta \mid \theta')$.
+
+\medskip\pause
+
 At the MLE $\hat{\theta}$,
 $$
   \hat{i}_X
@@ -917,19 +931,25 @@ $$
 
 \medskip\pause
 
-Thus we have the **information identity** (Louis identity):
+Thus we have the **information identity**:
 $$
   \hat{i}_X = \hat{i}_Y - \hat{i}_{Y \mid X}.
 $$
 
-. . .
+## Complete-Data and Missing Information
 
-### Interpretation
-
-- $\hat{i}_Y$ is the Fisher information for complete $Y$.
+- $\hat{i}_Y$ is the conditional expectation of the complete-data observed
+  information, given $X$ at $\hat{\theta}$.
 - $\hat{i}_{Y \mid X}$ is the information "lost" from not observing $Y$.
 
-## The Complete-Data Information
+\medskip\pause
+
+Under the usual regularity conditions, **Louis's identity** expresses the
+missing information as a conditional covariance:
+$$
+  \hat{i}_{Y \mid X}
+  = \cov_{Y \mid X,\hat{\theta}} \left( \left. \nabla_\theta\log p(X,Y \mid \theta) \right|_{\theta=\hat{\theta}} \right).
+$$
 
 ## Complete and Missing Data
 
@@ -961,9 +981,10 @@ $$
   \hat{i}_{Y \mid X} = D_{\theta'}D_{\theta} Q(\hat{\theta} \mid \hat{\theta}).
 $$
 
-## Implementations of $Q$
+## Implementation of $Q$
 
-First we implement the map $Q$ as an R function.
+First we implement $Q$ as an R function, omitting $c(\theta')$ because it does
+not affect derivatives with respect to the first argument.
 
 ```{r}
 #| label: q-def
@@ -979,9 +1000,9 @@ Q <- function(theta, theta0, x = c(85, 196, 341)) {
 }
 ```
 
-## Implementation of Gradient of $Q$
+## Implementation of the Gradient of $Q$
 
-Next, we implement the gradient for Q:
+Next, we implement the gradient of $Q$:
 
 ```{r}
 #| label: gradq-def
@@ -998,7 +1019,7 @@ Q_grad <- function(theta, theta0, x = c(85, 196, 341)) {
 
 . . .
 
-`pi_grad()` is the gradient of the genotype probabilities w.r.t. allele
+`pi_grad()` is the Jacobian of the genotype probabilities w.r.t. allele
 frequencies (defined in source code).
 
 ## Numerical Differentiation of $Q$
@@ -1022,7 +1043,7 @@ iYX <- jacobian(
 iX <- iY - iYX
 ```
 
-## Third Way: The EM-Mapping
+## Third Way: The EM Mapping
 
 Define $\Phi : \Theta \to \Theta$ by
 $$
@@ -1031,13 +1052,13 @@ $$
 
 \medskip\pause
 
-A global maximum of the likelihood is a fixed point of $\Phi$,
-$\Phi(\hat{\theta}) = \hat{\theta}.$
+With a unique M-step maximizer, a global likelihood maximum is a fixed point of
+$\Phi$: $\Phi(\hat{\theta}) = \hat{\theta}.$
 
 \medskip\pause
 
-Since the limit of the EM algorithm, $\hat{\theta}$, is a fixed point and other
-identities above, it can be shown that
+At an interior fixed point, assuming $\Phi$ is differentiable and $\hat{i}_Y$ is
+nonsingular, differentiating the M-step's first-order condition gives
 $$
   D_{\theta} \Phi(\hat{\theta})^T
   = \hat{i}_{Y \mid X} \left( \hat{i}_Y \right)^{-1}.
@@ -1048,7 +1069,7 @@ $$
 Hence
 $$
   \begin{aligned}
-    \hat{i}_X & = \left( I - \hat{i}_{Y \mid X} \left( \hat{i}_Y \right)^{-1} \right) \hat{i}_Y = \left( I - D_{\theta} \Phi(\hat{\theta})^T \right) \hat{i}_Y.
+    \hat{i}_X & = \left( I - D_{\theta} \Phi(\hat{\theta})^T \right) \hat{i}_Y.
   \end{aligned}
 $$
 
@@ -1061,7 +1082,7 @@ theta_hat
 
 . . .
 
-Let's check if this is fixed point.
+Let's check that this is a fixed point.
 
 ```{r}
 test_that("Fixed point", {
@@ -1097,9 +1118,9 @@ test_that("Methods 1, 2, and 3 are equivalent", {
 #| echo: false
 #| fig-width: 5
 #| fig-height: 3
-#| fig-cap: "95% Fisher information ellipses for the observed data (solid) and
-#|   complete data (dashed) for the Peppered moths example. The MLE is
-#|   indicated by the cross."
+#| fig-cap: "Approximate 95% confidence ellipse using observed information (solid),
+#|   with a complete-data information ellipse (dashed) for comparison.
+#|   The cross marks the MLE for the peppered moths example."
 
 # Requires: theta_hat, iY, iX already computed above
 theta_hat <- em(c(0.3, 0.3), em_mult_step, eps = 1e-12)
@@ -1131,11 +1152,11 @@ clip_simplex <- function(df) {
 }
 
 df_obs <- clip_simplex(transform(
-  ellipse_points(iX, theta_hat, 1 - alpha / 2),
+  ellipse_points(iX, theta_hat, 1 - alpha),
   Type = "Observed (i_X)"
 ))
 df_comp <- clip_simplex(transform(
-  ellipse_points(iY, theta_hat, 1 - alpha / 2),
+  ellipse_points(iY, theta_hat, 1 - alpha),
   Type = "Complete (i_Y)"
 ))
 
@@ -1167,6 +1188,7 @@ ggplot() +
       "Observed (i_X)" = "#1b6ca8",
       "Complete (i_Y)" = "#d95f02"
     ),
+    breaks = c("Observed (i_X)", "Complete (i_Y)"),
     labels = c(expression(hat(i)[X]), expression(hat(i)[Y]))
   ) +
   labs(
@@ -1231,13 +1253,14 @@ quickly, and if it is close to 1, the EM algorithm converges slowly.
 
 ### Relation to Missing Information
 
-If there is little missing information, i.e., $\hat{i}_{Y \mid X}$ is small,
-then $\rho(D\Phi(\hat{\theta}))$ is small and the EM algorithm converges
-quickly.\
+If the missing information is small **relative to the complete-data
+information**, then $\rho(D\Phi(\hat{\theta}))$ is small and EM converges
+quickly.
 
 ## Convergence Estimation
 
-The EM algorithm converges linearly near the optimum:\
+Near a regular optimum, EM typically converges linearly. If the dominant error
+component is present, then asymptotically
 $$
   \|\theta_{n+1} - \hat{\theta}\| \approx \rho \|\theta_n - \hat{\theta}\|,
   \qquad
@@ -1246,13 +1269,10 @@ $$
 
 \medskip\pause
 
-Rate can be estimated by fitting a linear model to the log of the parameter
-differences:
+The rate can be estimated from successive parameter differences, which typically
+decay at the same asymptotic rate:
 $$
-  \log \|\theta_{n+1}
-  - \hat{\theta}\| \approx \log \rho + \log \| \theta_n - \hat{\theta}\|
-                   \implies \log \| \theta_n - \hat{\theta}\|
-                   \approx n \log \rho + \text{constant}.
+  \log \|\theta_n - \theta_{n-1}\| \approx n \log \rho + \text{constant}.
 $$
 
 . . .
@@ -1283,7 +1303,7 @@ $$
 . . .
 
 Full maximization may be **hard or computationally expensive**. GEM allows
-**simpler updates** (e.g., gradient step, coordinate-wise update).
+**simpler updates** (e.g., a gradient step or a coordinate-wise update).
 
 . . .
 :::::
@@ -1291,7 +1311,7 @@ Full maximization may be **hard or computationally expensive**. GEM allows
 ::::: {.column width="47%"}
 ### Properties
 
-E-step is unchanged and the **log-likelihood is still non-decreasing**:
+The E-step is unchanged, and the **log-likelihood is still nondecreasing**:
 $$
   \ell(\theta_{n+1}) \ge \ell(\theta_n).
 $$
@@ -1305,7 +1325,7 @@ progress conditions; a nondecreasing likelihood alone is not enough.
 
 ### Trade-Off
 
-We trade slower convergence for faster iterations.
+Cheaper iterations may require more iterations to converge.
 :::::
 :::
 
@@ -1317,8 +1337,9 @@ Implement the EM algorithm for a missing data problem:
 x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
 ```
 
-Assume that $X_i \sim \text{Bernoulli}(\theta)$ i.i.d. and that the data are
-missing at random. The complete data log-likelihood is
+Assume that $X_i \sim \text{Bernoulli}(\theta)$ i.i.d. and that missingness is
+ignorable (missing at random, with separate parameters for the missingness
+mechanism). The complete-data log-likelihood is
 $$
   \ell_C(\theta)
   = \sum_{i=1}^N \left( X_i \log(\theta) + (1 - X_i) \log(1 - \theta) \right).
@@ -1380,7 +1401,7 @@ res1$loglik_diff # ≥ 0 (monotone)
 res2$path
 
 # Closed-form fixed point: solves p = (sum(obs 1s) + 2 p)/9 -> p = 4/7
-# Fisher information:
+# Plug-in expected Fisher information for each sample size.
 p_hat <- res1$p_final
 n_obs <- sum(!is.na(x))
 i_obs <- n_obs / (p_hat * (1 - p_hat)) # observed-data info
@@ -1390,13 +1411,13 @@ c(p_hat = p_hat, i_obs = i_obs, i_complete = i_complete)
 
 ## Summary
 
-We introduced the EM algorithm, using the Peppered Moths example throughout
-
-\medskip\pause 
-
-We showed three ways to compute the Fisher information
+We applied the EM algorithm to the peppered moths example.
 
 \medskip\pause
 
-We covered Gaussian mixtures and how to optimize over their parameters using the
-EM algorithm.
+We showed three ways to compute the observed Fisher information.
+
+\medskip\pause
+
+We connected the convergence rate to missing information and introduced the
+generalized EM algorithm.
