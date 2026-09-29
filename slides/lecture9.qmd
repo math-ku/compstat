@@ -638,7 +638,7 @@ R provides a general-purpose optimization function `optim()`.
 
 Supports several optimization methods, including:
 
-- Nelder-Mead (default)
+- Nelder--Mead (default)
 - BFGS (quasi-Newton)
 - CG (conjugate gradient)
 - L-BFGS-B (box-constrained quasi-Newton)
@@ -679,7 +679,7 @@ optimization](https://cran.r-project.org/web/views/Optimization.html)
 :::::
 :::
 
-## Zero-Order Nelder-Mead
+## Zero-Order Nelder--Mead
 
 ```{r}
 #| label: moth-optim-NM
@@ -1072,6 +1072,138 @@ Easy in the peppered moths case! But this is not always the case.
 ### Phase II: Barrier Method
 
 Use a barrier method to solve the constrained problem, starting at $\theta_0$.
+
+## Convergence versus Time
+
+```{r}
+#| label: moth-optimization-convergence
+#| echo: false
+#| cache: false
+#| fig-width: 5.5
+#| fig-height: 2.8
+#| fig-alt: >-
+#|   Best negative log-likelihood gap versus elapsed time for optim with
+#|   Nelder--Mead and `constrOptim` with BFGS, from the same starting point.
+
+grad_neg_loglik_pep <- function(par, x) {
+  pC <- par[1]
+  pI <- par[2]
+  pT <- 1 - pC - pI
+  qC <- pC * (2 - pC)
+  qI <- pI * (2 - 2 * pC - pI)
+
+  c(
+    -2 * x[1] * (1 - pC) / qC +
+      2 * x[2] * pI / qI +
+      2 * x[3] / pT,
+    -2 * x[2] * pT / qI + 2 * x[3] / pT
+  )
+}
+
+# The fitted phenotype probabilities equal the observed proportions.
+moth_minimum <- -sum(x * log(x / sum(x)))
+
+trace_moth_optim <- function(method) {
+  times <- numeric(1000)
+  values <- numeric(1000)
+  n_eval <- 0L
+  clock <- bench::hires_time
+  objective <- function(par, x) {
+    value <- neg_loglik_pep(par, x)
+    n_eval <<- n_eval + 1L
+    times[n_eval] <<- clock() - start
+    values[n_eval] <<- value
+    value
+  }
+
+  start <- clock()
+  if (method == "Nelder-Mead") {
+    fit <- optim(
+      x0,
+      objective,
+      x = x,
+      method = "Nelder-Mead",
+      control = list(maxit = 1000, reltol = 1e-12)
+    )
+  } else {
+    fit <- constrOptim(
+      x0,
+      objective,
+      grad_neg_loglik_pep,
+      ui = A,
+      ci = b,
+      x = x,
+      method = "BFGS",
+      control = list(maxit = 1000, reltol = 1e-12)
+    )
+  }
+  elapsed <- clock() - start
+
+  data.frame(
+    time = c(0, times[seq_len(n_eval)], elapsed),
+    gap = pmax(
+      cummin(c(
+        neg_loglik_pep(x0, x),
+        values[seq_len(n_eval)],
+        fit$value
+      )) -
+        moth_minimum,
+      1e-10
+    )
+  )
+}
+
+moth_methods <- c("Nelder-Mead", "BFGS")
+# Warm up both methods before collecting their elapsed times.
+invisible(lapply(moth_methods, trace_moth_optim))
+moth_runs <- lapply(seq_len(30), function(i) {
+  # Alternate the order to reduce systematic timing differences.
+  methods <- if (i %% 2 == 1) moth_methods else rev(moth_methods)
+  setNames(lapply(methods, trace_moth_optim), methods)
+})
+moth_convergence <- bind_rows(lapply(
+  moth_methods,
+  function(method) {
+    runs <- lapply(moth_runs, function(run) run[[method]])
+    curve <- runs[[1]]
+    curve$time <- apply(
+      vapply(runs, function(run) run$time, numeric(nrow(curve))),
+      1,
+      median
+    )
+    curve$method <- method
+    curve
+  }
+))
+
+ggplot(moth_convergence, aes(time * 1000, gap, color = method)) +
+  geom_line() +
+  geom_point() +
+  scale_y_log10() +
+  scale_color_manual(
+    name = NULL,
+    values = c(
+      "Nelder-Mead" = "royalblue",
+      "BFGS" = "darkorange"
+    ),
+    breaks = moth_methods,
+    labels = c("optim(): Nelder-Mead", "constrOptim(): BFGS")
+  ) +
+  labs(
+    x = "Median elapsed time (ms)",
+    y = expression("Best objective gap: " * H - H^"*")
+  )
+```
+
+\medskip
+
+Same start $(p_C, p_I) = (1/3, 1/3)$. BFGS uses an analytic gradient.
+
+\pdfpcnote{
+  - The curve records the best feasible objective evaluated, including trial points.\\
+  - BFGS timings include gradient evaluations and all outer barrier iterations.\\
+  - Each curve follows a complete run; increasing maxit would change the barrier restarts.\\
+}
 
 # The EM Algorithm
 
