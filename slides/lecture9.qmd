@@ -1883,7 +1883,8 @@ $$
 \bigskip\pause
 
 Every iteration returns the same parameters. In the lower-bound picture, the
-bound is tight at the current point and maximized there: **EM does not move.**
+bound is tight at the current point and maximized there: The EM algorithm
+**stalls**.
 
 ## A Flat Trace Does Not Establish a Maximum
 
