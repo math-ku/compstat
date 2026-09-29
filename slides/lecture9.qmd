@@ -1508,9 +1508,9 @@ library(testthat)
 test_that("EM preserves its guarantees", {
   theta <- coin_fit$theta
   ell <- coin_fit$loglik
-  expect_all_true(is.finite(theta))
+  expect_true(all(is.finite(theta)))
   expect_all_true(is.finite(ell))
-  expect_all_true(theta >= 0 & theta <= 1)
+  expect_true(all(theta >= 0 & theta <= 1))
   expect_all_true(diff(ell) >= -1e-8)
 })
 ```
