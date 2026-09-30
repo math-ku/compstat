@@ -288,7 +288,7 @@ $$
   \sim \textrm{Mult}\left( X_j, \left( \frac{\pi_k(\theta')}{M(\pi(\theta'))_j} \right)_{k \in A_j} \right).
 $$
 
-\medskip\pause
+\pause
 
 ### Expected Genotype Counts
 
@@ -300,7 +300,8 @@ $$
 \medskip
 
 The expected counts divide each phenotype's observed count among its compatible
-genotypes in proportion to their current probabilities.
+genotypes in proportion to their current probabilities---the oberved count
+$\times$ the **responsibility**.
 
 ## The Q Function
 
@@ -319,8 +320,12 @@ $$
 . . .
 
 Here, $k \in A_{j(k)}$. The expected counts are computed at $\theta'$ and held
-fixed while we maximize over $\theta$. The term
-$c(\theta') = \E_{Y \mid X,\theta'}c(Y)$ does not affect this maximization.
+fixed while we maximize over $\theta$.
+
+\medskip
+
+The term $c(\theta') = \E_{Y \mid X,\theta'}c(Y)$ does not affect this
+maximization.
 
 \pdfpcnote{
   - The E-step computes expected genotype counts using the current allele frequencies.\\
@@ -342,6 +347,13 @@ $$
 $$
 where $N = \symbf{1}^T y$ is the total number of observations.
 
+\medskip\pause
+
+This is basically just **counting alleles**: the number of C alleles divided by
+the total number of alleles.
+
+\medskip
+
 In the M-step, replace $y$ by its conditional expectation from the E-step.
 
 ## EM Algorithm Implementation
@@ -349,18 +361,23 @@ In the M-step, replace $y$ by its conditional expectation from the E-step.
 ```{r}
 #| label: em-mult
 #| code-style:
-#|   line-width: 72
+#|   line-width: 60
 
-em_mult <- function(par, x, group, eps = 1e-12, maxit = 20, cb = NULL) {
+em_mult <- function(
+  par,
+  x,
+  group,
+  eps = 1e-12,
+  maxit = 20,
+  cb = NULL
+) {
   for (i in seq_len(maxit)) {
     par0 <- par
     y <- e_step_mult(par, x, group)
     par <- m_step_mult(y)
-
     if (!is.null(cb)) {
       cb() # Record the current state for later inspection.
     }
-
     if (sum((par - par0)^2) <= eps * (sum(par^2) + eps)) {
       break
     }
@@ -789,11 +806,10 @@ estimates.
 
 The Fisher information is a key quantity for this. It is defined as
 $$
-  \mathcal{I}(\theta) = -\E_\theta\left( D_\theta^2 \ell(\theta) \right),
+  \mathcal{I}(\theta) = -\E_\theta\left( D_\theta^2 \ell(\theta) \right).
 $$
-where $\ell(\theta) = \log p(X \mid \theta)$.
 
-. . .
+\medskip\pause
 
 This is the expected negative Hessian of the log-likelihood.
 
