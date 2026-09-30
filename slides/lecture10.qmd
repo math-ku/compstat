@@ -1584,7 +1584,7 @@ em_gauss_illustration <- function(i, em_trace) {
 #| fig-show: animate
 #| fig-cap: "Iterations of the EM algorithm"
 
-for (i in c(1, 2, 3, 5, 10, 18, 19, 20)) {
+for (i in c(1, 2, 3, 5, 10, 15, 18, 19, 20)) {
   print(em_gauss_illustration(i, em_trace))
 }
 ```
