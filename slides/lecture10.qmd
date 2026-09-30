@@ -389,8 +389,14 @@ Then we can run the EM algorithm.
 
 ```{r}
 #| label: fit-moth-em
+#| code-style:
+#|   line-width: 30
 
-em_mult(c(0.3, 0.3), moth_x, moth_group)
+em_mult(
+  c(0.3, 0.3),
+  moth_x,
+  moth_group
+)
 ```
 :::::
 
@@ -498,10 +504,7 @@ mle_point <- data.frame(
   pC = moth_optim$par[1],
   pI = moth_optim$par[2]
 )
-em_path <- data.frame(
-  pC = rep(NA_real_, 5),
-  pI = rep(NA_real_, 5)
-)
+em_path <- data.frame(pC = rep(NA_real_, 5), pI = rep(NA_real_, 5))
 em_path[1, ] <- c(0.3, 0.3)
 
 for (i in seq_len(4)) {
@@ -545,23 +548,14 @@ for (i in seq_len(4)) {
 
   if (i > 1) {
     plot <- plot +
-      geom_path(
-        data = em_path[seq_len(i), ],
-        color = "royalblue"
-      ) +
+      geom_path(data = em_path[seq_len(i), ], color = "royalblue") +
       geom_point(
         data = em_path[seq_len(i - 1), ],
         color = "royalblue"
       )
   }
 
-  print(
-    plot +
-      labs(
-        title = paste("Iteration", i, ": E-step"),
-        subtitle = "Update Q while the parameter stays fixed"
-      )
-  )
+  print(plot + labs(title = paste("Iteration", i, ": E-step")))
 
   print(
     plot +
@@ -576,10 +570,7 @@ for (i in seq_len(4)) {
         color = "royalblue",
         size = 2.5
       ) +
-      labs(
-        title = paste("Iteration", i, ": M-step"),
-        subtitle = "Maximize Q and move to the new parameter"
-      )
+      labs(title = paste("Iteration", i, ": M-step"))
   )
 }
 ```
@@ -587,7 +578,7 @@ for (i in seq_len(4)) {
 ```{=latex}
 \begin{figure}
 \centering
-\multiinclude[<+>][format=pdf,start=1,end=8,graphics={width=0.8\linewidth}]{lecture10_files/figure-beamer/plot-curves}
+\multiinclude[<+>][format=pdf,start=1,end=8]{lecture10_files/figure-beamer/plot-curves}
 \caption{Gray contours show $-Q$; dashed orange contours show $-\ell$. The cross marks the MLE.}
 \end{figure}
 ```
@@ -619,8 +610,7 @@ ggplot(em_trace, aes(n, par_norm_diff)) +
 #| label: loglikelihood-convergence
 #| warning: false
 #| echo: false
-#| fig-cap: "Negative log-likelihood gap relative to the best recorded iterate.
-#|   An offset of 1e-14 keeps zero gaps visible on the logarithmic scale."
+#| fig-cap: "Negative log-likelihood gap relative to the best recorded iterate."
 
 mutate(em_trace, diff_nll = 1e-14 + nll - min(nll)) |>
   ggplot(aes(n, diff_nll)) +
@@ -1578,7 +1568,7 @@ em_gauss_illustration <- function(i, em_trace) {
 #| fig-show: animate
 #| fig-cap: "Iterations of the EM algorithm"
 
-for (i in seq_len(20)) {
+for (i in c(1, 2, 3, 5, 10, 18, 19, 20)) {
   print(em_gauss_illustration(i, em_trace))
 }
 ```
@@ -1754,13 +1744,13 @@ algorithm then recomputes them and repeats.
 ```{r}
 #| label: varying-mixture-full-step
 
-gate_m_step <- function(coef, maxit = 100) {
+gate_m_step <- function(coef, reltol = 1e-12) {
   tau <- gate_responsibility(coef)
   optim(
     coef,
     function(candidate) -gate_q(candidate, tau),
     method = "BFGS",
-    control = list(maxit = maxit, reltol = 1e-12)
+    control = list(maxit = 100, reltol = reltol)
   )$par
 }
 ```
@@ -1775,9 +1765,7 @@ We are not showing `gate_responsibility()` and `gate_q()` here.
 
 gate_loglik <- function(coef) {
   p <- plogis(coef[1] + coef[2] * w_gem)
-  sum(log(
-    p * dnorm(x_gem, -0.5, 1) + (1 - p) * dnorm(x_gem, 4, 1)
-  ))
+  sum(log(p * dnorm(x_gem, -0.5, 1) + (1 - p) * dnorm(x_gem, 4, 1)))
 }
 
 fit_gate <- function(
@@ -1787,12 +1775,19 @@ fit_gate <- function(
   maxit = 1000
 ) {
   coef <- start
+  start_time <- Sys.time()
   loglik <- gate_loglik(coef)
   path <- loglik
+  elapsed_ms <- 0
   for (iteration in seq_len(maxit)) {
     coef <- step(coef)
     next_loglik <- gate_loglik(coef)
     path <- c(path, next_loglik)
+    elapsed_ms <- c(
+      elapsed_ms,
+      as.numeric(difftime(Sys.time(), start_time, units = "secs")) *
+        1000
+    )
     if (next_loglik < loglik - 1e-8) {
       stop("Observed-data log-likelihood decreased")
     }
@@ -1805,7 +1800,8 @@ fit_gate <- function(
     coef = coef,
     loglik = next_loglik,
     iterations = iteration,
-    path = path
+    path = path,
+    elapsed_ms = elapsed_ms
   )
 }
 ```
@@ -1849,8 +1845,7 @@ require more outer iterations.
 #| fig-show: animate
 #| fig-width: 5.5
 #| fig-height: 3
-#| fig-cap: "Four generalized EM iterations. Each M-step increases the bound
-#|   without reaching its maximum."
+#| fig-cap: Four generalized EM iterations.
 
 # Use the same Gaussian latent-variable model as the EM illustration in
 # lecture 9, so the difference lies entirely in the M-step.
@@ -1909,10 +1904,7 @@ for (i in seq_len(4)) {
         color = "royalblue",
         size = 2.5
       ) +
-      labs(
-        title = sprintf("Iteration %d: E-step", i),
-        subtitle = "Make the bound tight at the current parameter"
-      )
+      labs(title = sprintf("Iteration %d: E-step", i))
   )
 
   print(
@@ -1954,32 +1946,34 @@ for (i in seq_len(4)) {
         color = "royalblue",
         size = 2.5
       ) +
-      labs(
-        title = sprintf("Iteration %d: GEM M-step", i),
-        subtitle = "Increase the bound without reaching its maximum"
-      )
+      labs(title = sprintf("Iteration %d: GEM M-step", i))
   )
 }
 ```
 
-## Limit the Inner Optimization
+## Tune the Inner Tolerance
 
-The M-step already passes `maxit` to `optim()`. We can change its iteration
-limit while keeping the E-step and outer stopping rule fixed.
+The M-step passes `reltol` to `optim()`. We can change its relative convergence
+tolerance while keeping the E-step and outer stopping rule fixed.
 
 \medskip\pause
 
-For example, `maxit = 1` allows one BFGS iteration per M-step. Increasing
-`maxit` lets the inner optimizer do more work before the next E-step.
+Larger values stop the inner BFGS fit sooner. Smaller values make each M-step
+more accurate, but may spend time solving a problem whose responsibilities will
+change at the next E-step.
 
 . . .
 
-### One BFGS Iteration per M-Step
+### Three M-Step Tolerances
 
 ```{r}
 #| label: varying-mixture-gem-step
 
-short_gate_step <- function(coef) gate_m_step(coef, maxit = 1)
+loose_gate_step <- function(coef) gate_m_step(coef, reltol = 1e-2)
+moderate_gate_step <- function(coef) {
+  gate_m_step(coef, reltol = 1e-9)
+}
+tight_gate_step <- function(coef) gate_m_step(coef, reltol = 1e-14)
 ```
 
 Each outer iteration still recomputes the responsibilities before calling
@@ -1994,82 +1988,78 @@ observed-data log-likelihood gain.
 #| label: varying-mixture-compare-fits
 #| echo: false
 
-short_fit <- fit_gate(short_gate_step)
-medium_fit <- fit_gate(function(coef) {
-  gate_m_step(coef, maxit = 3)
-})
-gate_fits <- list("1" = short_fit, "3" = medium_fit, "100" = full_fit)
+loose_fit <- fit_gate(loose_gate_step)
+moderate_fit <- fit_gate(moderate_gate_step)
+tight_fit <- fit_gate(tight_gate_step)
+gate_fits <- list(
+  "1e-2" = loose_fit,
+  "1e-9" = moderate_fit,
+  "1e-14" = tight_fit
+)
 data.frame(
-  maxit = as.integer(names(gate_fits)),
+  reltol = names(gate_fits),
   iterations = vapply(gate_fits, `[[`, integer(1), "iterations"),
   loglik = vapply(gate_fits, `[[`, numeric(1), "loglik"),
   row.names = NULL
 )
 ```
 
-## Convergence by Outer Iteration
+## Convergence over Time
 
 ```{r}
 #| label: plot-varying-mixture-convergence
 #| echo: false
 #| fig-width: 4.5
 #| fig-height: 2.5
-#| fig-cap: "Observed-data log-likelihood gap by outer iteration."
+#| fig-cap: "Observed-data log-likelihood gap against median elapsed time over
+#|   30 complete fits."
 
 best_loglik <- max(vapply(gate_fits, `[[`, numeric(1), "loglik"))
+gate_steps <- list(
+  loose_gate_step,
+  moderate_gate_step,
+  tight_gate_step
+)
 gate_trace <- do.call(
   rbind,
   Map(
-    function(fit, maxit) {
+    function(fit, step, reltol) {
+      elapsed_runs <- replicate(30, fit_gate(step)$elapsed_ms)
       data.frame(
-        iteration = seq_along(fit$path) - 1,
+        elapsed_ms = apply(elapsed_runs, 1, median),
         gap = best_loglik - fit$path,
-        maxit = maxit
+        reltol = reltol
       )
     },
     gate_fits,
-    as.integer(names(gate_fits))
+    gate_steps,
+    names(gate_fits)
   )
 )
-gate_trace$maxit <- factor(
-  gate_trace$maxit,
-  levels = sort(unique(gate_trace$maxit))
+gate_trace$reltol <- factor(
+  gate_trace$reltol,
+  levels = names(gate_fits)
 )
 
-ggplot(gate_trace, aes(iteration, pmax(gap, 1e-10), color = maxit)) +
+ggplot(
+  gate_trace,
+  aes(elapsed_ms, pmax(gap, 1e-10), color = reltol)
+) +
   geom_line() +
   scale_color_manual(
     values = c(
-      "1" = "darkorange",
-      "3" = "forestgreen",
-      "100" = "royalblue"
+      "1e-2" = "darkorange",
+      "1e-9" = "forestgreen",
+      "1e-14" = "royalblue"
     )
   ) +
   scale_y_log10() +
-  labs(x = "Outer iteration", y = "Log-likelihood gap", color = "maxit")
+  labs(
+    x = "Elapsed time (ms)",
+    y = "Log-likelihood gap",
+    color = "reltol"
+  )
 ```
-
-## Benchmark the Complete Fits
-
-```{r}
-#| label: benchmark-varying-mixture
-#| echo: false
-
-gate_benchmark <- bench::mark(
-  full = fit_gate(gate_m_step),
-  maxit_1 = fit_gate(short_gate_step),
-  maxit_3 = fit_gate(function(coef) {
-    gate_m_step(coef, maxit = 3)
-  }),
-  check = FALSE
-)
-gate_benchmark[, c("expression", "median")]
-```
-
-\medskip\pause
-
-Compare total time alongside the final log-likelihoods above. Fewer inner
-iterations need not give the faster complete fit.
 
 ## Exercise
 
@@ -2167,3 +2157,10 @@ information.
 
 We connected the convergence rate to missing information and introduced the
 generalized EM algorithm.
+
+## Next Time
+
+### Stochastic Gradient Descent (SGD)
+
+A version of gradient descent that uses a single observation (or a small batch)
+to compute the gradient at each iteration. This is useful for large datasets.
