@@ -1701,67 +1701,16 @@ em_gauss_illustration <- function(i, em_trace) {
 ```
 
 ```{r}
+#| label: em-gauss-iterations
 #| fig-width: 4.2
 #| fig-height: 2.8
 #| echo: false
+#| fig-show: animate
 #| fig-cap: "Iterations of the EM algorithm"
 
-em_gauss_illustration(1, em_trace)
-```
-
-##
-
-```{r}
-#| fig-width: 4.2
-#| fig-height: 2.8
-#| echo: false
-#| fig-cap: "Iterations of the EM algorithm"
-
-em_gauss_illustration(4, em_trace)
-```
-
-##
-
-```{r}
-#| fig-width: 4.2
-#| fig-height: 2.8
-#| echo: false
-#| fig-cap: "Iterations of the EM algorithm"
-
-em_gauss_illustration(8, em_trace)
-```
-
-##
-
-```{r}
-#| fig-width: 4.2
-#| fig-height: 2.8
-#| echo: false
-#| fig-cap: "Iterations of the EM algorithm"
-
-em_gauss_illustration(12, em_trace)
-```
-
-##
-
-```{r}
-#| fig-width: 4.2
-#| fig-height: 2.8
-#| echo: false
-#| fig-cap: "Iterations of the EM algorithm"
-
-em_gauss_illustration(16, em_trace)
-```
-
-##
-
-```{r}
-#| fig-width: 4.2
-#| fig-height: 2.8
-#| echo: false
-#| fig-cap: "Iterations of the EM algorithm"
-
-em_gauss_illustration(20, em_trace)
+for (i in seq_len(20)) {
+  print(em_gauss_illustration(i, em_trace))
+}
 ```
 
 ## Benchmarking
