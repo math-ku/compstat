@@ -824,10 +824,7 @@ conv_data <- tibble(
   loss = c(loss1 - loss_optim, loss2 - loss_optim),
   iteration = c(seq_len(n1), seq_len(n2))
 )
-epochs_plot <- ggplot(
-  conv_data,
-  aes(epoch, loss, col = method)
-) +
+epochs_plot <- ggplot(conv_data, aes(epoch, loss, col = method)) +
   geom_line() +
   scale_y_log10() +
   labs(y = "Suboptimality", color = NULL)
@@ -903,13 +900,7 @@ plot_iteration <- function(i, x_gd, x_sgd) {
 
   plot_curves("GD")
   lines(x_gd_i, f(x_gd_i), col = "royalblue", lwd = 1)
-  points(
-    x_gd_i,
-    f(x_gd_i),
-    col = "royalblue",
-    pch = 19,
-    cex = 0.8
-  )
+  points(x_gd_i, f(x_gd_i), col = "royalblue", pch = 19, cex = 0.8)
 
   plot_curves("SGD")
   lines(x_sgd_i, f(x_sgd_i), col = "darkorange", lwd = 1)
@@ -1015,10 +1006,7 @@ grid_par <- expand.grid(
   gamma0 = 1
 )
 
-grid_par <- dplyr::mutate(
-  grid_par,
-  rate = gamma0 * K / (K + n^a)
-)
+grid_par <- dplyr::mutate(grid_par, rate = gamma0 * K / (K + n^a))
 
 ggplot(
   grid_par,
@@ -1248,7 +1236,7 @@ matter.
 
 In practice, most implementations use mini-batches.
 
-## Next Two Lectures
+## Next TIme
 
 ### Rcpp
 
@@ -1258,13 +1246,3 @@ We will look at how to use Rcpp to speed up R code.
 
 Because SGD typically involves nested loops, these algorithms benefit greatly
 from relying on C++.
-
-. . .
-
-### Variations on SGD
-
-We will look at some variations on SGD that improve convergence in practice.
-
-\medskip\pause
-
-These include momentum and Nesterov acceleration.
