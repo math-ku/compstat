@@ -347,11 +347,6 @@ In the M-step, replace $y$ by its conditional expectation from the E-step.
 
 ## EM Algorithm Implementation
 
-For each iteration, estimate the genotype counts from the current allele
-frequencies, then update those frequencies from the expected counts.
-
-. . .
-
 ```{r}
 #| label: em-mult
 
@@ -382,8 +377,7 @@ em_mult <- function(
 
 ## Peppered Moths EM Algorithm
 
-The observed phenotype counts are 85 black, 196 mottled, and 341 light-colored
-moths.
+The observed counts are 85 black, 196 mottled, and 341 light-colored moths.
 
 ```{r}
 #| label: moth-em-data
