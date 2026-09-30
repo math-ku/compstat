@@ -1201,7 +1201,7 @@ Cheaper iterations may require more iterations to converge.
 ::::: {.column width="47%"}
 ### Goal
 
-Fit a two-component Gaussian mixture model to data.
+First fit a two-component Gaussian mixture model by ordinary EM.
 
 . . .
 
@@ -1899,6 +1899,178 @@ em(c(0.8, -3, -0.5), em_gauss_step_alt)
 . . .
 
 In this example, we generated data with $p = 0.8$ and $\sigma_1 = \sigma_2$.
+
+## A Mixture with Covariate-Dependent Weights
+
+We now observe a covariate $w_i$ alongside each $x_i$. Let the probability of
+component 1 depend on it:
+$$
+  \pi_i = \Pr(Z_i = 1 \mid w_i) = \frac{1}{1 + e^{-(a+b w_i)}}.
+$$
+
+\medskip\pause
+
+The component distributions are still Gaussian. To focus on the mixing weights,
+we treat $\mu_1 = -0.5$, $\mu_2 = 4$, and $\sigma_1 = \sigma_2 = 1$ as known.
+
+\medskip\pause
+
+With a constant mixing weight, we had a closed-form M-step. Here, estimating
+$(a,b)$ requires a logistic regression fit.
+
+## E-Step with Varying Mixture Weights
+
+Let $\phi_k(x)$ denote the density of the known Gaussian component $k$. At the
+current parameters $(a_n,b_n)$, compute
+$$
+  \pi_i^{(n)} = \frac{1}{1 + e^{-(a_n+b_n w_i)}}
+$$
+and the responsibility
+$$
+  \tau_i
+  = \Pr(Z_i = 1 \mid x_i,w_i,a_n,b_n)
+  = \frac{\pi_i^{(n)} \phi_1(x_i)} {\pi_i^{(n)} \phi_1(x_i) + (1 - \pi_i^{(n)})\phi_2(x_i)}.
+$$
+
+\medskip\pause
+
+As before, the E-step assigns each observation a fractional component label.
+
+## A Generalized M-Step
+
+Hold the responsibilities $\tau_i$ fixed. With $\eta_i = a + b w_i$, the part of
+$Q$ that depends on $(a,b)$ is
+$$
+  Q(a,b \mid a_n,b_n)
+  = \sum_{i=1}^N \left[ \tau_i \eta_i - \log(1 + e^{\eta_i}) \right]
+    + \text{const}.
+$$
+
+\medskip\pause
+
+There is no closed-form maximizer. Instead, take one gradient-ascent step:
+$$
+  \begin{pmatrix}a_{n+1}\\b_{n+1}\end{pmatrix}
+  = \begin{pmatrix}a_n\\b_n\end{pmatrix}
+  + t \sum_{i=1}^N (\tau_i-\pi_i^{(n)})
+    \begin{pmatrix}1\\w_i\end{pmatrix}.
+$$
+
+\medskip\pause
+
+Halve $t$ until $Q$ does not decrease. This is a GEM step, so the observed-data
+log-likelihood does not decrease.
+
+## Example: A Mixture with Varying Weights
+
+We simulate a covariate and use it to choose the component for each observation.
+
+```{r}
+#| label: simulate-varying-mixture
+
+w_gem <- runif(500, -2, 2)
+z_gem <- rbinom(500, 1, plogis(-0.5 + 1.5 * w_gem))
+x_gem <- rnorm(500, ifelse(z_gem == 1, -0.5, 4), 1)
+```
+
+. . .
+
+```{r}
+#| label: plot-varying-mixture
+#| echo: false
+#| fig-width: 4.5
+#| fig-height: 2.5
+#| fig-cap: "The fraction of observations near each Gaussian component changes
+#|   with the covariate."
+
+ggplot(data.frame(w = w_gem, x = x_gem), aes(w, x)) +
+  geom_point(alpha = 0.45, color = "royalblue") +
+  labs(x = expression(w), y = expression(x))
+```
+
+## E-Step and $Q$ in R
+
+```{r}
+#| label: varying-mixture-responsibilities
+
+gate_responsibility <- function(coef) {
+  p <- plogis(coef[1] + coef[2] * w_gem)
+  f1 <- dnorm(x_gem, -0.5, 1)
+  f2 <- dnorm(x_gem, 4, 1)
+  p * f1 / (p * f1 + (1 - p) * f2)
+}
+
+gate_q <- function(coef, tau) {
+  eta <- coef[1] + coef[2] * w_gem
+  sum(tau * eta - pmax(eta, 0) - log1p(exp(-abs(eta))))
+}
+```
+
+\medskip
+
+The last line evaluates $\log(1 + e^\eta)$ without overflow.
+
+## One GEM Step in R
+
+```{r}
+#| label: varying-mixture-gem-step
+
+gem_gate_step <- function(coef) {
+  tau <- gate_responsibility(coef)
+  p <- plogis(coef[1] + coef[2] * w_gem)
+  gradient <- c(sum(tau - p), sum(w_gem * (tau - p)))
+  step <- 1 / length(x_gem)
+  q_old <- gate_q(coef, tau)
+  while (gate_q(coef + step * gradient, tau) < q_old) {
+    step <- step / 2
+  }
+  coef + step * gradient
+}
+```
+
+## GEM Increases the Observed Likelihood
+
+Starting from $(a_0,b_0) = (0,0)$, we repeat the GEM step 40 times.
+
+```{r}
+#| label: varying-mixture-gem-trace
+#| echo: false
+
+gate_loglik <- function(coef) {
+  p <- plogis(coef[1] + coef[2] * w_gem)
+  sum(log(
+    p * dnorm(x_gem, -0.5, 1) + (1 - p) * dnorm(x_gem, 4, 1)
+  ))
+}
+
+gem_path <- matrix(NA_real_, nrow = 41, ncol = 2)
+gem_path[1, ] <- c(0, 0)
+for (j in seq_len(40)) {
+  gem_path[j + 1, ] <- gem_gate_step(gem_path[j, ])
+}
+gem_loglik <- apply(gem_path, 1, gate_loglik)
+```
+
+. . .
+
+```{r}
+#| label: plot-varying-mixture-gem-trace
+#| echo: false
+#| fig-width: 4.5
+#| fig-height: 2.5
+#| fig-cap: "Observed-data log-likelihood gain over GEM iterations."
+
+ggplot(
+  data.frame(
+    iteration = 0:40,
+    gain = gem_loglik - gem_loglik[1]
+  ),
+  aes(iteration, gain)
+) +
+  geom_line(color = "darkorange") +
+  geom_point(color = "darkorange") +
+  labs(x = "Iteration", y = "Log-likelihood gain")
+```
 
 ## Exercise
 
