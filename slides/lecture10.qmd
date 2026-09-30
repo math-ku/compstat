@@ -770,17 +770,12 @@ pi_grad <- function(p) {
     byrow = TRUE
   )
 }
-
-score <- function(theta, x = c(85, 196, 341)) {
-  theta <- c(theta, 1 - sum(theta))
-  group <- c(1, 1, 1, 2, 2, 3)
-  (x[group] / M(pi_map(theta), group)[group]) %*% pi_grad(theta)
-}
 ```
 
 ## Observed Fisher Information
 
-The observed Fisher information is defined as
+The observed information is the negative Hessian of the observed-data
+log-likelihood:
 $$
   \hat{i}_X(\theta) = -D_\theta^2 \ell(\theta).
 $$
@@ -790,175 +785,32 @@ $\mathcal{I}_X(\theta)$.
 
 \medskip\pause
 
-In the EM context, the observed-data log-likelihood may be difficult to
-differentiate directly. We can instead use quantities from the EM algorithm.
+For the moth data, we already have the observed likelihood. We can differentiate
+it directly, or recover the same information from the EM $Q$ function.
 
-. . .
+## Directly from the Observed Likelihood
 
-### Three Ways of Computing the Observed Fisher Information
-
-1. The **gradient identity**: Obtain the score function from the Q function,
-   then differentiate.\pause
-2. The **information identity**: Estimate complete and missing information, then
-   subtract.\pause
-3. The **EM mapping**: Differentiate the EM mapping at an MLE that is a fixed
-   point.
-
-## First Way: Via the Gradient Identity
-
-Recall that the Q function is
-$$
-  Q(\theta \mid \theta') = \E_{Y \mid X, \theta'} \log p(X, Y \mid \theta).
-$$
-
-\medskip\pause
-
-The gradient identity holds for any interior $\theta$, not just at an MLE.
-
-\medskip\pause
-
-If we differentiate once, we have
-$$
-  \nabla_\theta Q(\theta \mid \theta')
-  = \E_{Y \mid X, \theta'} \nabla_\theta \log p(X, Y \mid \theta).
-$$
-
-\medskip\pause
-
-Setting $\theta' = \theta$ after differentiating the first argument gives
-Fisher's (score) identity:
-$$
-  \nabla_\theta Q(\theta \mid \theta)
-  = \E_{Y \mid X,\theta}\nabla_{\theta} \log p(X, Y \mid \theta)
-  = \nabla_\theta \log p(X \mid \theta).
-$$
-
-## Gradient of $Q$ for the Multinomial Model
-
-For the multinomial model, the Q function is
-$$
-  Q(\theta \mid \theta')
-  = \sum_{i} \frac{x_{j(i)} \pi_i(\theta')}{M(\pi(\theta'))_{j(i)}} \log \pi_i(\theta)
-    + c(\theta'),
-$$
-where $j(i)$ is defined by $i \in A_{j(i)}$.
-
-\medskip\pause
-
-The gradient is
-$$
-  \nabla_{\theta} Q(\theta \mid \theta')
-  = \sum_{i} \frac{x_{j(i)}\pi_i(\theta')}{M(\pi(\theta'))_{j(i)}\pi_i(\theta)} \nabla \pi_i(\theta).
-$$
-
-\medskip\pause
-
-Setting $\theta' = \theta$ gives
-$$
-  \nabla_{\theta} Q(\theta \mid \theta)
-  = \sum_{i} \frac{x_{j(i)}}{M(\pi(\theta))_{j(i)}} \nabla \pi_i(\theta).
-$$
-
-## Numerical Validation of the Gradient Identity
+Since `neg_loglik_obs` is the negative observed-data log-likelihood, its Hessian
+at the MLE is the observed information.
 
 ```{r}
-#| label: p-hat-call
+#| label: observed-information-direct
+
+library(numDeriv)
 
 theta_hat <- em(c(0.3, 0.3), em_mult_step, eps = 1e-20)
+iX_direct <- hessian(neg_loglik_obs, theta_hat)
+iX_direct
 ```
 
-::: {.columns}
-::::: {.column width="47%"}
-```{r}
-#| label: p-hat
+\medskip\pause
 
-theta_hat
-```
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-```{r}
-#| label: grad-q
-
-score(theta_hat)
-```
-:::::
-:::
-
-## Numerical Fisher Information
-
-We could differentiate analytically, but a simpler way is to use numerical
-differentiation.
-
-. . .
-
-::: {.columns}
-::::: {.column width="47%"}
-### `stats::optimHess()`
-
-```{r}
-optimHess(
-  theta_hat,
-  neg_loglik_obs,
-  function(theta) -score(theta)
-)
-```
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-### `numDeriv::jacobian()`
-
-```{r}
-library(numDeriv)
-ihat <- -jacobian(score, theta_hat)
-ihat
-```
-:::::
-:::
-
-## Second Way: The Information Identity
-
-Holding $\theta'$ fixed, differentiating $Q$ twice with respect to its first
-argument gives
-$$
-  -D_\theta^2 Q(\theta \mid \theta')
-  = -\E_{Y \mid X, \theta'} D_\theta^2 \log p(X, Y \mid \theta).
-$$
-
-. . .
-
-Then setting $\theta' = \theta$ and using
-$\log p(X, Y \mid \theta) = \log p(X \mid \theta) + \log p(Y \mid X, \theta)$,
-we have
-$$
-  -D_\theta^2 Q(\theta \mid \theta)
-  = -D_\theta^2 \log p(X \mid \theta)
-    - \E_{Y \mid X,\theta}D_\theta^2 \log p(Y \mid X,\theta).
-$$
-
-. . .
-
-Taking expectation also over $X$ recovers the decomposition
-$$
-  \mathcal{I}_Y(\theta) = \mathcal{I}_X(\theta)
-                          + \mathcal{I}_{Y \mid X}(\theta),
-$$
-with
-$$
-  \begin{aligned}
-    \mathcal{I}_Y(\theta)          & = -\E_{X,Y \mid \theta}D_\theta^2 \log p(X,Y \mid \theta),                   \\
-    \mathcal{I}_X(\theta)          & = -\E_{X \mid \theta}D_\theta^2 \log p(X \mid \theta),                       \\
-    \mathcal{I}_{Y \mid X}(\theta) & = -\E_{X \mid \theta}\E_{Y \mid X,\theta}D_\theta^2 \log p(Y \mid X,\theta).
-  \end{aligned}
-$$
+The inverse of this matrix estimates the covariance matrix of $\hat{\theta}$.
 
 ## The Information Identity
 
-Define the conditional cross-entropy
+Recall that $Q(\theta \mid \theta')$ averages the complete-data log-likelihood
+over the missing genotypes. Define
 $$
   H(\theta \mid \theta') = -\E_{Y \mid X,\theta'}\log p(Y \mid X,\theta).
 $$
@@ -966,65 +818,38 @@ Then $\ell(\theta) = Q(\theta \mid \theta') + H(\theta \mid \theta')$.
 
 \medskip\pause
 
-At the MLE $\hat{\theta}$,
+At the MLE, this yields
 $$
   \hat{i}_X
-  = -D^2_{\theta} \ell(\hat{\theta})
-  = \underbrace{-D^2_{\theta} Q(\hat{\theta} \mid \hat\theta)}_{\hat{i}_Y}
-    - \underbrace{D^2_{\theta} H(\hat{\theta} \mid \hat\theta)}_{\hat{i}_{Y \mid X}}.
+  = \underbrace{-D_\theta^2 Q(\hat{\theta} \mid \hat{\theta})}_{\hat{i}_Y}
+    - \underbrace{D_\theta^2 H(\hat{\theta} \mid \hat{\theta})}_{\hat{i}_{Y \mid X}}.
 $$
 
 \medskip\pause
 
-Thus we have the **information identity**:
+The missing-information term measures how much information we lose because the
+genotypes are unobserved.
+
+## Missing Information from $Q$
+
+We can compute the missing-information term by differentiating $Q$ with respect
+to both arguments:
 $$
-  \hat{i}_X = \hat{i}_Y - \hat{i}_{Y \mid X}.
-$$
-
-## Complete-Data and Missing Information
-
-- $\hat{i}_Y$ is the conditional expectation of the complete-data observed
-  information, given $X$ at $\hat{\theta}$.
-- $\hat{i}_{Y \mid X}$ is the information "lost" from not observing $Y$.
-
-\medskip\pause
-
-Under the usual regularity conditions, **Louis's identity** expresses the
-missing information as a conditional covariance:
-$$
-  \hat{i}_{Y \mid X}
-  = \cov_{Y \mid X,\hat{\theta}} \left( \left. \nabla_\theta\log p(X,Y \mid \theta) \right|_{\theta=\hat{\theta}} \right).
-$$
-
-## Complete and Missing Data
-
-We can compute the complete-data information directly from the $Q$ function, but
-how do we compute the missing information?
-
-\medskip\pause
-
-The second **Bartlett identity** can be used to show that
-$$
-  D_{\theta}^2 H(\hat{\theta} \mid \hat{\theta})
-  = -D_{\theta'}D_{\theta} H(\hat{\theta} \mid \hat{\theta}).
+  \hat{i}_{Y \mid X} = D_{\theta'}D_\theta Q(\hat{\theta} \mid \hat{\theta}).
 $$
 
 \medskip\pause
 
-And since we also have $Q = \ell - H$ and because $\ell(\theta)$ does not depend
-on $\theta'$, we get
+The information identity therefore gives a second calculation:
 $$
-  D_{\theta'}D_{\theta} Q(\hat{\theta} \mid \hat{\theta})
-  = -D_{\theta'}D_{\theta} H(\hat{\theta} \mid \hat{\theta})
-  = D^2_{\theta} H(\hat{\theta} \mid \hat{\theta}).
+  \hat{i}_X = -D_\theta^2 Q(\hat{\theta} \mid \hat{\theta})
+              - D_{\theta'}D_\theta Q(\hat{\theta} \mid \hat{\theta}).
 $$
 
 \medskip\pause
 
-Thus
-$$
-  \hat{i}_{Y \mid X} = D_{\theta'}D_{\theta} Q(\hat{\theta} \mid \hat{\theta}).
-$$
+The first derivative treats the current parameter $\theta'$ as fixed; the mixed
+derivative also accounts for how the E-step changes with $\theta'$.
 
 ## Implementation of $Q$
 
@@ -1045,9 +870,10 @@ Q <- function(theta, theta0, x = c(85, 196, 341)) {
 }
 ```
 
-## Implementation of the Gradient of $Q$
+## Gradient of $Q$
 
-Next, we implement the gradient of $Q$:
+The mixed derivative requires the gradient of $Q$ with respect to its first
+argument:
 
 ```{r}
 #| label: gradq-def
@@ -1085,74 +911,51 @@ iYX <- jacobian(
   function(theta) Q_grad(theta_hat, theta),
   theta_hat
 )
-iX <- iY - iYX
+iX_em <- iY - iYX
+iX_em
 ```
 
-## Third Way: The EM Mapping
-
-Define $\Phi : \Theta \to \Theta$ by
-$$
-  \Phi(\theta') = \argmax_{\theta \in \Theta} Q(\theta \mid \theta').
-$$
-
-\medskip\pause
-
-With a unique M-step maximizer, a global likelihood maximum is a fixed point of
-$\Phi$: $\Phi(\hat{\theta}) = \hat{\theta}.$
-
-\medskip\pause
-
-At an interior fixed point, assuming $\Phi$ is differentiable and $\hat{i}_Y$ is
-nonsingular, differentiating the M-step's first-order condition gives
-$$
-  D_{\theta} \Phi(\hat{\theta})^T
-  = \hat{i}_{Y \mid X} \left( \hat{i}_Y \right)^{-1}.
-$$
-
-\medskip\pause
-
-Hence
-$$
-  \begin{aligned}
-    \hat{i}_X & = \left( I - D_{\theta} \Phi(\hat{\theta})^T \right) \hat{i}_Y.
-  \end{aligned}
-$$
-
-## EM Step Fixed Point
-
 ```{r}
-Phi <- create_em_mult_step(c(85, 196, 341), c(1, 1, 1, 2, 2, 3))
-theta_hat
-```
+#| label: check-observed-information
+#| include: false
 
-. . .
-
-Let's check that this is a fixed point.
-
-```{r}
-test_that("Fixed point", {
-  expect_equal(Phi(theta_hat), theta_hat, tol = 1e-8)
+test_that("Observed-information calculations agree", {
+  expect_equal(iX_em, iX_direct, tolerance = 1e-5)
 })
 ```
 
-## Differentiating the EM Map
+## Computational Cost
+
+The direct route needs a numerical Hessian of the observed likelihood. The EM
+route needs a numerical Hessian of $Q$ and a mixed derivative.
+
+\medskip\pause
 
 ```{r}
-DPhi <- jacobian(Phi, theta_hat)
-iX <- (diag(2) - t(DPhi)) %*% iY
-iX
+#| label: benchmark-observed-information
+#| echo: false
+
+information_benchmark <- bench::mark(
+  direct = hessian(neg_loglik_obs, theta_hat),
+  via_em = {
+    complete <- -hessian(Q, theta_hat, theta0 = theta_hat)
+    missing <- jacobian(
+      function(theta) Q_grad(theta_hat, theta),
+      theta_hat
+    )
+    complete - missing
+  },
+  check = FALSE,
+  iterations = 100
+)
+information_benchmark[, c("expression", "median")]
 ```
 
-. . .
+\medskip\pause
 
-Let's check that all of our methods agree.
-
-```{r}
-test_that("Methods 1, 2, and 3 are equivalent", {
-  expect_equal(iX, ihat, tol = 1e-6)
-  expect_equal(iX, iY - iYX, tol = 1e-6)
-})
-```
+With $d$ parameters, both numerical Hessians require on the order of $d^2$
+function evaluations. The EM route also differentiates the gradient of $Q$.
+Their relative cost depends on how expensive those evaluations are.
 
 ##
 
@@ -1166,15 +969,6 @@ test_that("Methods 1, 2, and 3 are equivalent", {
 #| fig-cap: "Approximate 95% confidence ellipse using observed information (solid),
 #|   with a complete-data information ellipse (dashed) for comparison.
 #|   The cross marks the MLE for the peppered moths example."
-
-# Requires: theta_hat, iY, iX already computed above
-theta_hat <- em(c(0.3, 0.3), em_mult_step, eps = 1e-12)
-iY <- -hessian(Q, theta_hat, theta0 = theta_hat)
-iYX <- jacobian(
-  function(theta) Q_grad(theta_hat, theta),
-  theta_hat
-)
-iX <- iY - iYX
 
 alpha <- 0.05
 
@@ -1197,7 +991,7 @@ clip_simplex <- function(df) {
 }
 
 df_obs <- clip_simplex(transform(
-  ellipse_points(iX, theta_hat, 1 - alpha),
+  ellipse_points(iX_direct, theta_hat, 1 - alpha),
   Type = "Observed (i_X)"
 ))
 df_comp <- clip_simplex(transform(
@@ -1242,6 +1036,11 @@ ggplot() +
     color = "Ellipse"
   )
 ```
+
+## Further Reading
+
+The course book covers two additional routes: Fisher's score identity and
+differentiation of the EM mapping.
 
 ## Convergence of the EM Algorithm
 
@@ -2130,7 +1929,8 @@ We applied the EM algorithm to the peppered moths example.
 
 \medskip\pause
 
-We showed three ways to compute the observed Fisher information.
+We computed the observed Fisher information directly and through the information
+identity.
 
 \medskip\pause
 
