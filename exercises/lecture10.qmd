@@ -1,0 +1,79 @@
+---
+title: "Bernoulli Missing Data: Exercise Solution"
+format: html
+execute:
+  cache: false
+---
+
+Solution to the exercise in [Lecture 10](../slides/lecture10.pdf).
+
+We observe four ones, three zeros, and two missing values. Let $\theta_n$ be the
+current estimate of the Bernoulli success probability.
+
+## E-step
+
+Conditional on the observed values, each missing $X_i$ still has expectation
+$\theta_n$. The expected complete-data log-likelihood is therefore
+$$
+  Q(\theta \mid \theta_n) = (4 + 2\theta_n)\log(\theta)
+                            + \bigl(3 + 2(1 - \theta_n)\bigr)\log(1 - \theta).
+$$
+
+## M-step
+
+Maximizing $Q$ gives the expected fraction of ones among all nine entries:
+$$
+  \theta_{n+1} = \frac{4 + 2\theta_n}{9}.
+$$
+
+The fixed point solves $9\hat{\theta} = 4 + 2\hat{\theta}$, so
+$\hat{\theta} = 4/7$. This is also the observed-data MLE: only the seven
+observed values contribute to the likelihood, and four of them are ones.
+
+## Implementation
+
+```{r}
+#| label: bernoulli-em-solution
+
+x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
+
+fit_bernoulli_em <- function(x, start, iterations = 6) {
+  observed <- x[!is.na(x)]
+  n_missing <- sum(is.na(x))
+  loglik <- function(theta) {
+    sum(observed * log(theta) + (1 - observed) * log1p(-theta))
+  }
+
+  path <- numeric(iterations + 1)
+  path[1] <- start
+  for (iteration in seq_len(iterations)) {
+    path[iteration + 1] <- (sum(observed) +
+      n_missing * path[iteration]) /
+      length(x)
+  }
+
+  data.frame(
+    iteration = 0:iterations,
+    theta = path,
+    loglik = vapply(path, loglik, numeric(1))
+  )
+}
+
+from_half <- fit_bernoulli_em(x, start = 0.5)
+from_tenth <- fit_bernoulli_em(x, start = 0.1)
+
+data.frame(
+  iteration = from_half$iteration,
+  theta_from_0.5 = round(from_half$theta, 6),
+  loglik_from_0.5 = round(from_half$loglik, 6),
+  theta_from_0.1 = round(from_tenth$theta, 6),
+  loglik_from_0.1 = round(from_tenth$loglik, 6)
+)
+```
+
+Both paths approach $4/7$, and the observed-data log-likelihood increases at
+each step. The update also shows the exact error contraction:
+$$
+  \theta_{n+1} - \hat{\theta} = \frac{2}{9}(\theta_n - \hat{\theta}).
+$$
+The factor $2/9$ is the fraction of missing observations in this example.
