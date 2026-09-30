@@ -408,6 +408,8 @@ performs one EM step for the multinomial model.
 . . .
 
 ```{r}
+#| label: create-em-mult-step
+
 create_em_mult_step <- function(x, group) {
   force(x)
   force(group)
@@ -451,6 +453,7 @@ em <- function(par, em_step, eps = 1e-6, maxit = 20, cb = NULL) {
 First, we create the EM step function.
 
 ```{r}
+#| label: create-moth-em-step
 #| results: "hold"
 
 em_mult_step <- create_em_mult_step(
@@ -466,6 +469,8 @@ em_mult_step <- create_em_mult_step(
 Then we can run the EM algorithm.
 
 ```{r}
+#| label: fit-moth-em
+
 em(c(0.3, 0.3), em_mult_step)
 ```
 :::::
@@ -476,6 +481,8 @@ em(c(0.3, 0.3), em_mult_step)
 This corresponds to the MLE found via `optim()`.
 
 ```{r}
+#| label: moth-optim-estimate
+
 moth_optim$par
 ```
 :::::
@@ -489,6 +496,8 @@ iterations of an algorithm.^[Use `Delta` to control verbosity. `0`: no output.]
 . . .
 
 ```{r}
+#| label: initialize-moth-tracer
+
 library(CSwR)
 em_tracer <- tracer("par", Delta = 0)
 ```
@@ -502,6 +511,8 @@ parameters each time it is called.
 . . .
 
 ```{r}
+#| label: run-moth-tracer
+
 em(c(0.3, 0.3), em_mult_step, cb = em_tracer$tracer)
 ```
 
@@ -510,6 +521,8 @@ em(c(0.3, 0.3), em_mult_step, cb = em_tracer$tracer)
 You can then summarize the collected values using `summary()`.
 
 ```{r}
+#| label: summarize-moth-tracer
+
 summary(em_tracer)
 ```
 
@@ -706,6 +719,8 @@ maximum.^[The function `neg_loglik_obs()` computes the negative observed
 log-likelihood.]
 
 ```{r}
+#| label: moth-em-multistart
+
 theta_grid <- expand.grid(
   pC = seq(0.01, 0.49, length.out = 5),
   pI = seq(0.01, 0.49, length.out = 5)
@@ -747,6 +762,7 @@ information:
   $\mathcal{I}_{Y \mid X}(\theta) = \mathcal{I}_Y(\theta) - \mathcal{I}_X(\theta)$
 
 ```{r}
+#| label: moth-probability-gradient
 #| echo: false
 
 pi_grad <- function(p) {
@@ -1191,6 +1207,7 @@ with probability $\pi_k$, $k = 1, 2$.
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: gaussian-mixture-density
 #| echo: false
 #| fig-cap: "A mixture of two Gaussian distributions."
 
@@ -1433,6 +1450,8 @@ p <- 0.5
 Then we simulate data.
 
 ```{r}
+#| label: simulate-gaussian-mixture
+
 N <- 5000
 z <- sample(
   c(TRUE, FALSE),
@@ -1449,6 +1468,7 @@ x[!z] <- rnorm(N - N1, mu2, sigma2)
 ##
 
 ```{r}
+#| label: gaussian-mixture-histogram
 #| echo: false
 #| fig-cap: "Histogram of simulated data from a two-component Gaussian mixture model."
 #| fig-width: 4
@@ -1638,6 +1658,8 @@ em_tracer <- tracer(
 . . .
 
 ```{r}
+#| label: fit-gaussian-mixture-trace
+
 par_hat <- em(c(0.2, 2, 2), em_gauss_step, cb = em_tracer$tracer)
 
 em_trace <- summary(em_tracer)
@@ -1732,6 +1754,7 @@ gauss_bm <- bench::mark(
 ##
 
 ```{r}
+#| label: plot-gaussian-mixture-benchmark
 #| fig-cap: "Benchmarking results for EM vs. optim() for Gaussian mixture model."
 #| fig-width: 4.5
 
@@ -1779,12 +1802,16 @@ em_gauss_step_alt <- create_em_gauss_step(x, sigma1)
 . . .
 
 ```{r}
+#| label: fit-label-switched-mixture-first
+
 em(c(0.2, 3, -0.5), em_gauss_step_alt)
 ```
 
 . . .
 
 ```{r}
+#| label: fit-label-switched-mixture-second
+
 em(c(0.8, -3, -0.5), em_gauss_step_alt)
 ```
 
@@ -1797,6 +1824,8 @@ In this example, we generated data with $p = 0.8$ and $\sigma_1 = \sigma_2$.
 Implement the EM algorithm for a missing data problem:
 
 ```{r}
+#| label: bernoulli-missing-data
+
 x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
 ```
 
@@ -1824,6 +1853,7 @@ Implement the EM algorithm and run it from two different starting points. Record
 the path of $\theta_n$ and the log-likelihood values $\ell(\theta_n)$.
 
 ```{r}
+#| label: em-bernoulli-missing-data
 #| include: false
 
 x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
