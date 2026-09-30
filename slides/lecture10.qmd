@@ -1304,6 +1304,8 @@ each observation.
 
 We start by setting the parameters.
 
+::: {.columns}
+::::: {.column width="47%"}
 ```{r}
 #| label: mixture-gaus-sim
 
@@ -1313,9 +1315,11 @@ mu1 <- -0.5
 mu2 <- 4
 p <- 0.5
 ```
+:::::
 
 . . .
 
+::::: {.column width="47%"}
 Then we simulate data.
 
 ```{r}
@@ -1333,6 +1337,8 @@ N1 <- sum(z)
 x[z] <- rnorm(N1, mu1, sigma1)
 x[!z] <- rnorm(N - N1, mu2, sigma2)
 ```
+:::::
+:::
 
 ##
 
@@ -1412,7 +1418,7 @@ em <- function(
 ) {
   for (i in seq_len(maxit)) {
     par0 <- par
-    par <- em_step(par)
+    par <- em_step(par) # not shown here
 
     if (!is.null(cb)) {
       cb() # Callback function (tracer)
@@ -1425,11 +1431,6 @@ em <- function(
   par
 }
 ```
-
-## Implementation
-
-Next, we implement the E and M steps. Implementations are not shown here, but
-can be found in the [source code](./slides/lecture11.qmd)
 
 ```{r}
 #| label: source-em-mix
@@ -1499,9 +1500,9 @@ em_par <- em(c(0.5, -0.5, 4), em_gauss_step)
 ```{r}
 #| label: gaus-mix-example2
 
-# testthat::test_that("EM and optim give similar results", {
-#   testthat::expect_equal(em_par, optim_par$par, tolerance = 1e-3)
-# })
+testthat::test_that("EM and optim give similar results", {
+  testthat::expect_equal(em_par, optim_par$par, tolerance = 1e-3)
+})
 ```
 
 . . .
@@ -1551,8 +1552,13 @@ em_trace <- summary(em_tracer)
 ```{r}
 #| label: gaussmix-convergence-plot
 #| eval: false
+#| code-style:
+#|   line-width: 35
 
-autoplot(em_trace, y = nll - min(nll))
+autoplot(
+  em_trace,
+  y = nll - min(nll)
+)
 ```
 :::::
 
