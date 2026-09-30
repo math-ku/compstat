@@ -663,6 +663,158 @@ neg_logliks <- apply(res, 2, neg_loglik_obs)
 which.min(neg_logliks)
 ```
 
+## Benchmarking
+
+How does EM compare with the two methods we used for the peppered moths in the
+previous lecture?
+
+```{r}
+#| label: benchmark-moth-setup
+#| include: false
+
+moth_start <- c(1 / 3, 1 / 3)
+moth_A <- rbind(c(1, 0), c(-1, 0), c(0, 1), c(0, -1), c(-1, -1))
+moth_b <- c(0, -1, 0, -1, -1)
+
+moth_grad <- function(par) {
+  pC <- par[1]
+  pI <- par[2]
+  pT <- 1 - pC - pI
+  qC <- pC * (2 - pC)
+  qI <- pI * (2 - 2 * pC - pI)
+
+  c(
+    -2 * moth_x[1] * (1 - pC) / qC +
+      2 * moth_x[2] * pI / qI +
+      2 * moth_x[3] / pT,
+    -2 * moth_x[2] * pT / qI + 2 * moth_x[3] / pT
+  )
+}
+```
+
+\medskip\pause
+
+```{r}
+#| label: benchmark-moth-methods
+
+moth_bm <- bench::mark(
+  em = em_mult(moth_start, moth_x, moth_group, maxit = 100),
+  nelder_mead = optim(moth_start, neg_loglik_obs),
+  bfgs_barrier = constrOptim(
+    moth_start,
+    neg_loglik_obs,
+    moth_grad,
+    ui = moth_A,
+    ci = moth_b,
+    method = "BFGS"
+  ),
+  check = FALSE
+)
+```
+
+##
+
+```{r}
+#| label: plot-moth-methods-benchmark
+#| fig-cap: "Benchmarking EM, Nelder--Mead, and the BFGS barrier method for the
+#|   peppered moths."
+#| fig-width: 4.5
+
+plot(moth_bm)
+```
+
+. . .
+
+But there is something fundamentally wrong about this comparison. What?
+
+## Convergence of the Three Methods
+
+```{r}
+#| label: trace-moth-methods-benchmark
+#| include: false
+
+start_nll <- neg_loglik_obs(moth_start)
+moth_minimum <- -sum(moth_x * log(moth_x / sum(moth_x)))
+
+em_benchmark_tracer <- tracer(
+  "nll",
+  Delta = 0,
+  expr = quote(nll <- neg_loglik_obs(par))
+)
+em_mult(
+  moth_start,
+  moth_x,
+  moth_group,
+  maxit = 100,
+  cb = em_benchmark_tracer$tracer
+)
+
+optim_benchmark_tracer <- tracer("nll", Delta = 0)
+traced_optim_nll <- function(par) {
+  nll <- neg_loglik_obs(par)
+  optim_benchmark_tracer$tracer()
+  nll
+}
+optim(moth_start, traced_optim_nll, method = "Nelder-Mead")
+
+barrier_benchmark_tracer <- tracer("nll", Delta = 0)
+traced_barrier_nll <- function(par) {
+  nll <- neg_loglik_obs(par)
+  barrier_benchmark_tracer$tracer()
+  nll
+}
+constrOptim(
+  moth_start,
+  traced_barrier_nll,
+  moth_grad,
+  ui = moth_A,
+  ci = moth_b,
+  method = "BFGS"
+)
+
+trace_path <- function(tracer, method) {
+  trace <- tracer$get(simplify = TRUE)
+  data.frame(
+    elapsed_ms = c(0, cumsum(trace[, ".time"])) * 1000,
+    nll = cummin(c(start_nll, trace[, "nll"])),
+    method = method
+  )
+}
+
+convergence <- rbind(
+  trace_path(em_benchmark_tracer, "EM"),
+  trace_path(optim_benchmark_tracer, "Nelder-Mead"),
+  trace_path(barrier_benchmark_tracer, "BFGS barrier")
+)
+```
+
+```{r}
+#| label: plot-moth-methods-convergence
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-cap: "Best negative log-likelihood gap against elapsed time. The EM trace
+#|   records iterations; the other traces record objective evaluations."
+
+convergence$gap <- pmax(convergence$nll - moth_minimum, 1e-10)
+
+ggplot(convergence, aes(elapsed_ms, gap, color = method)) +
+  geom_line() +
+  scale_color_manual(
+    values = c(
+      EM = "darkorange",
+      "Nelder-Mead" = "royalblue",
+      "BFGS barrier" = "forestgreen"
+    )
+  ) +
+  scale_y_log10() +
+  labs(
+    x = "Elapsed time (ms)",
+    y = "Best negative log-likelihood gap",
+    color = NULL
+  )
+```
+
 # Fisher Information
 
 ## The Fisher Information
@@ -1456,105 +1608,6 @@ em_gauss_illustration <- function(i, em_trace) {
 for (i in seq_len(20)) {
   print(em_gauss_illustration(i, em_trace))
 }
-```
-
-## Benchmarking
-
-You might be inclined to wonder which method is faster: EM or `optim()` with
-BFGS?
-
-\medskip\pause
-
-```{r}
-#| label: benchmark-em-gauss-mix
-
-gauss_bm <- bench::mark(
-  em = em(c(0.5, -0.5, 4), em_gauss_step, maxit = 100),
-  bfgs = optim(
-    c(0.5, -0.5, 4),
-    neg_loglik,
-    x = x,
-    method = "BFGS"
-  ),
-  check = FALSE
-)
-```
-
-##
-
-```{r}
-#| label: plot-gaussian-mixture-benchmark
-#| fig-cap: "Benchmarking EM against BFGS for the Gaussian mixture model."
-#| fig-width: 4.5
-
-plot(gauss_bm)
-```
-
-## Convergence of EM and BFGS
-
-```{r}
-#| label: trace-gaussian-mixture-benchmark
-#| include: false
-
-start <- c(0.5, -0.5, 4)
-start_nll <- neg_loglik(start, x)
-
-em_benchmark_tracer <- tracer(
-  "nll",
-  Delta = 0,
-  expr = quote(nll <- neg_loglik(par, x))
-)
-em(
-  start,
-  em_gauss_step,
-  maxit = 100,
-  cb = em_benchmark_tracer$tracer
-)
-
-optim_benchmark_tracer <- tracer("nll", Delta = 0)
-traced_neg_loglik <- function(par, x) {
-  nll <- neg_loglik(par, x)
-  optim_benchmark_tracer$tracer()
-  nll
-}
-optim(start, traced_neg_loglik, x = x, method = "BFGS")
-
-trace_path <- function(tracer, method) {
-  trace <- tracer$get(simplify = TRUE)
-  data.frame(
-    elapsed_ms = c(0, cumsum(trace[, ".time"])) * 1000,
-    nll = cummin(c(start_nll, trace[, "nll"])),
-    method = method
-  )
-}
-
-convergence <- rbind(
-  trace_path(em_benchmark_tracer, "EM"),
-  trace_path(optim_benchmark_tracer, "BFGS")
-)
-```
-
-```{r}
-#| label: plot-gaussian-mixture-convergence
-#| echo: false
-#| fig-width: 5
-#| fig-height: 3
-#| fig-cap: "Best negative log-likelihood gap against elapsed time. The EM trace
-#|   records iterations; the BFGS trace records objective evaluations."
-
-convergence$gap <- convergence$nll - min(convergence$nll) + 1e-6
-
-ggplot(convergence, aes(elapsed_ms, gap, color = method)) +
-  geom_line() +
-  scale_color_manual(
-    values = c(EM = "darkorange", BFGS = "royalblue")
-  ) +
-  scale_y_log10() +
-  labs(
-    x = "Elapsed time (ms)",
-    y = "Best negative log-likelihood gap",
-    color = NULL
-  )
 ```
 
 ## Label Switching
