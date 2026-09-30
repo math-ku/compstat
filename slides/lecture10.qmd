@@ -12,7 +12,6 @@ execute:
 
 set.seed(1618)
 library(patchwork)
-library(testthat)
 ```
 
 ```{r}
@@ -693,32 +692,8 @@ information:
 - **Missing information**
   $\mathcal{I}_{Y \mid X}(\theta) = \mathcal{I}_Y(\theta) - \mathcal{I}_X(\theta)$
 
-```{r}
-#| label: moth-probability-gradient
-#| echo: false
-
-pi_grad <- function(p) {
-  matrix(
-    c(
-      2 * p[1],
-      0,
-      2 * p[2],
-      2 * p[1],
-      2 * p[3] - 2 * p[1],
-      -2 * p[1],
-      0,
-      2 * p[2],
-      -2 * p[2],
-      2 * p[3] - 2 * p[2],
-      -2 * p[3],
-      -2 * p[3]
-    ),
-    ncol = 2,
-    nrow = 6,
-    byrow = TRUE
-  )
-}
-```
+The unobserved genotypes reduce the information available about the allele
+frequencies. We can see the effect on uncertainty in the moth example.
 
 ## Observed Fisher Information
 
@@ -733,8 +708,8 @@ $\mathcal{I}_X(\theta)$.
 
 \medskip\pause
 
-For the moth data, we already have the observed likelihood. We can differentiate
-it directly, or recover the same information from the EM $Q$ function.
+For the moth data, we already have the observed likelihood, so we can
+differentiate it directly.
 
 ## Directly from the Observed Likelihood
 
@@ -744,171 +719,19 @@ at the MLE is the observed information.
 ```{r}
 #| label: observed-information-direct
 
-library(numDeriv)
-
 theta_hat <- em_mult(
   c(0.3, 0.3),
   moth_x,
   moth_group,
   eps = 1e-20
 )
-iX_direct <- hessian(neg_loglik_obs, theta_hat)
+iX_direct <- numDeriv::hessian(neg_loglik_obs, theta_hat)
 iX_direct
 ```
 
 \medskip\pause
 
 The inverse of this matrix estimates the covariance matrix of $\hat{\theta}$.
-
-## The Information Identity
-
-Recall that $Q(\theta \mid \theta')$ averages the complete-data log-likelihood
-over the missing genotypes. Define
-$$
-  H(\theta \mid \theta') = -\E_{Y \mid X,\theta'}\log p(Y \mid X,\theta).
-$$
-Then $\ell(\theta) = Q(\theta \mid \theta') + H(\theta \mid \theta')$.
-
-\medskip\pause
-
-At the MLE, this yields
-$$
-  \hat{i}_X
-  = \underbrace{-D_\theta^2 Q(\hat{\theta} \mid \hat{\theta})}_{\hat{i}_Y}
-    - \underbrace{D_\theta^2 H(\hat{\theta} \mid \hat{\theta})}_{\hat{i}_{Y \mid X}}.
-$$
-
-\medskip\pause
-
-The missing-information term measures how much information we lose because the
-genotypes are unobserved.
-
-## Missing Information from $Q$
-
-We can compute the missing-information term by differentiating $Q$ with respect
-to both arguments:
-$$
-  \hat{i}_{Y \mid X} = D_{\theta'}D_\theta Q(\hat{\theta} \mid \hat{\theta}).
-$$
-
-\medskip\pause
-
-The information identity therefore gives a second calculation:
-$$
-  \hat{i}_X = -D_\theta^2 Q(\hat{\theta} \mid \hat{\theta})
-              - D_{\theta'}D_\theta Q(\hat{\theta} \mid \hat{\theta}).
-$$
-
-\medskip\pause
-
-The first derivative treats the current parameter $\theta'$ as fixed; the mixed
-derivative also accounts for how the E-step changes with $\theta'$.
-
-## Implementation of $Q$
-
-First we implement $Q$ as an R function, omitting $c(\theta')$ because it does
-not affect derivatives with respect to the first argument.
-
-```{r}
-#| label: q-def
-
-Q <- function(theta, theta0, x = c(85, 196, 341)) {
-  theta[3] <- 1 - theta[1] - theta[2]
-  theta0[3] <- 1 - theta0[1] - theta0[2]
-  group <- c(1, 1, 1, 2, 2, 3)
-  (x[group] *
-    pi_map(theta0) /
-    M(pi_map(theta0), group)[group]) %*%
-    log(pi_map(theta))
-}
-```
-
-## Gradient of $Q$
-
-The mixed derivative requires the gradient of $Q$ with respect to its first
-argument:
-
-```{r}
-#| label: gradq-def
-
-Q_grad <- function(theta, theta0, x = c(85, 196, 341)) {
-  theta[3] <- 1 - theta[1] - theta[2]
-  group <- c(1, 1, 1, 2, 2, 3)
-  (x[group] *
-    pi_map(theta0) /
-    (M(pi_map(theta0), group)[group] * pi_map(theta))) %*%
-    pi_grad(theta)
-}
-```
-
-. . .
-
-`pi_grad()` is the Jacobian of the genotype probabilities w.r.t. allele
-frequencies (defined in source code).
-
-## Numerical Differentiation of $Q$
-
-```{r}
-#| label: q-hess
-
-iY <- -hessian(Q, theta_hat, theta0 = theta_hat)
-iY
-```
-
-. . .
-
-```{r}
-#| label: iyx-jacobian
-
-iYX <- jacobian(
-  function(theta) Q_grad(theta_hat, theta),
-  theta_hat
-)
-iX_em <- iY - iYX
-iX_em
-```
-
-```{r}
-#| label: check-observed-information
-#| include: false
-
-test_that("Observed-information calculations agree", {
-  expect_equal(iX_em, iX_direct, tolerance = 1e-5)
-})
-```
-
-## Computational Cost
-
-The direct route needs a numerical Hessian of the observed likelihood. The EM
-route needs a numerical Hessian of $Q$ and a mixed derivative.
-
-\medskip\pause
-
-```{r}
-#| label: benchmark-observed-information
-#| echo: false
-
-information_benchmark <- bench::mark(
-  direct = hessian(neg_loglik_obs, theta_hat),
-  via_em = {
-    complete <- -hessian(Q, theta_hat, theta0 = theta_hat)
-    missing <- jacobian(
-      function(theta) Q_grad(theta_hat, theta),
-      theta_hat
-    )
-    complete - missing
-  },
-  check = FALSE,
-  iterations = 100
-)
-information_benchmark[, c("expression", "median")]
-```
-
-\medskip\pause
-
-With $d$ parameters, both numerical Hessians require on the order of $d^2$
-function evaluations. The EM route also differentiates the gradient of $Q$.
-Their relative cost depends on how expensive those evaluations are.
 
 ##
 
@@ -919,9 +742,10 @@ Their relative cost depends on how expensive those evaluations are.
 #| echo: false
 #| fig-width: 5
 #| fig-height: 3
-#| fig-cap: "Approximate 95% confidence ellipse using observed information (solid),
-#|   with a complete-data information ellipse (dashed) for comparison.
-#|   The cross marks the MLE for the peppered moths example."
+#| fig-cap: "Approximate 95% confidence ellipses at the observed-data MLE:
+#|   observed phenotypes (solid blue) versus hypothetical complete genotypes
+#|   (dashed orange). Their near overlap shows that little information is lost
+#|   by observing only phenotype. The cross marks the MLE."
 
 alpha <- 0.05
 
@@ -943,27 +767,36 @@ clip_simplex <- function(df) {
   subset(df, pC >= 0 & pI >= 0 & pC + pI <= 1)
 }
 
-df_obs <- clip_simplex(transform(
-  ellipse_points(iX_direct, theta_hat, 1 - alpha),
-  Type = "Observed (i_X)"
-))
-df_comp <- clip_simplex(transform(
-  ellipse_points(iY, theta_hat, 1 - alpha),
-  Type = "Complete (i_Y)"
+df_obs <- clip_simplex(ellipse_points(
+  iX_direct,
+  theta_hat,
+  1 - alpha
 ))
 
-simplex_boundary <- data.frame(
-  pC = c(0, 1, 0, 0),
-  pI = c(0, 0, 1, 0)
-)
+# Complete genotypes reveal two independent allele draws per moth.
+pC <- theta_hat[1]
+pI <- theta_hat[2]
+pT <- 1 - pC - pI
+i_complete <- 2 *
+  sum(moth_x) *
+  matrix(
+    c(1 / pC + 1 / pT, 1 / pT, 1 / pT, 1 / pI + 1 / pT),
+    nrow = 2
+  )
+df_complete <- clip_simplex(ellipse_points(
+  i_complete,
+  theta_hat,
+  1 - alpha
+))
 
 theta_df <- data.frame(pC = theta_hat[1], pI = theta_hat[2])
 
 ggplot() +
-  geom_path(data = df_obs, aes(pC, pI, color = Type)) +
+  geom_path(data = df_obs, aes(pC, pI), color = "royalblue") +
   geom_path(
-    data = df_comp,
-    aes(pC, pI, color = Type),
+    data = df_complete,
+    aes(pC, pI),
+    color = "darkorange",
     linetype = 2
   ) +
   geom_point(
@@ -975,25 +808,8 @@ ggplot() +
   ) +
   coord_equal() +
   lims(x = c(0, 0.15), y = c(0.1, 0.25)) +
-  scale_color_manual(
-    values = c(
-      "Observed (i_X)" = "#1b6ca8",
-      "Complete (i_Y)" = "#d95f02"
-    ),
-    breaks = c("Observed (i_X)", "Complete (i_Y)"),
-    labels = c(expression(hat(i)[X]), expression(hat(i)[Y]))
-  ) +
-  labs(
-    x = expression(p[C]),
-    y = expression(p[I]),
-    color = "Ellipse"
-  )
+  labs(x = expression(p[C]), y = expression(p[I]))
 ```
-
-## Further Reading
-
-The course book covers two additional routes: Fisher's score identity and
-differentiation of the EM mapping.
 
 ## Convergence of the EM Algorithm
 
@@ -1035,11 +851,15 @@ value of its eigenvalues.
 
 \medskip\pause
 
-This means that the convergence rate of the EM algorithm is governed by
+At a regular optimum, a standard local result gives the convergence rate in
+terms of complete and missing information. We state it without proof:
 $$
   \rho(D\Phi(\hat{\theta}))
   = \rho\left( \hat{i}_{Y \mid X} \left( \hat{i}_Y \right)^{-1} \right).
 $$
+
+Here $\hat{i}_Y$ and $\hat{i}_{Y \mid X}$ denote complete and missing
+information at the fitted parameter value.
 
 \medskip\pause
 
@@ -1083,7 +903,8 @@ exp(coefficients(log_lm)["n"])
 
 \medskip\pause
 
-It is small in this case, implying fast convergence.
+It is small in this case, implying fast convergence. This agrees with the near
+overlap of the observed- and complete-information ellipses.
 
 ## The Generalized EM Algorithm
 
@@ -2092,8 +1913,8 @@ We applied the EM algorithm to the peppered moths example.
 
 \medskip\pause
 
-We computed the observed Fisher information directly and through the information
-identity.
+We estimated the covariance of the allele frequencies from the observed Fisher
+information.
 
 \medskip\pause
 
