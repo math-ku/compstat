@@ -348,15 +348,10 @@ In the M-step, replace $y$ by its conditional expectation from the E-step.
 
 ```{r}
 #| label: em-mult
+#| code-style:
+#|   line-width: 72
 
-em_mult <- function(
-  par,
-  x,
-  group,
-  eps = 1e-12,
-  maxit = 20,
-  cb = NULL
-) {
+em_mult <- function(par, x, group, eps = 1e-12, maxit = 20, cb = NULL) {
   for (i in seq_len(maxit)) {
     par0 <- par
     y <- e_step_mult(par, x, group)
@@ -476,9 +471,7 @@ em_trace <- summary(em_tracer)
 #| warning: false
 #| fig-width: 5
 #| fig-height: 3
-#| fig-cap: "EM iterations for the peppered moths example. The orange cross marks
-#|   the MLE. The contours show the negative Q function at each iteration, up to an
-#|   additive constant. The black dot marks its minimum, the next EM iterate."
+#| fig-show: hide
 
 nll_pep <- Vectorize(function(p1, p2) neg_loglik_obs(c(p1, p2)))
 
@@ -489,106 +482,114 @@ em_trace <- transform(
   nll = nll_pep(par.1, par.2)
 )
 
-group <- c(1, 1, 1, 2, 2, 3)
+grid <- expand.grid(
+  pC = seq(0.02, 0.34, length.out = 100),
+  pI = seq(0.15, 0.34, length.out = 80)
+)
+grid$loglik_gap <- vapply(
+  seq_len(nrow(grid)),
+  function(j) {
+    neg_loglik_obs(unlist(grid[j, c("pC", "pI")])) -
+      moth_optim$value
+  },
+  numeric(1)
+)
+mle_point <- data.frame(
+  pC = moth_optim$par[1],
+  pI = moth_optim$par[2]
+)
+em_path <- data.frame(
+  pC = rep(NA_real_, 5),
+  pI = rep(NA_real_, 5)
+)
+em_path[1, ] <- c(0.3, 0.3)
 
-EStep <- function(theta) e_step_mult(theta, x, group)
-MStep <- function(y) m_step_mult(y)
+for (i in seq_len(4)) {
+  current <- em_path[i, , drop = FALSE]
+  y <- e_step_mult(unlist(current), moth_x, moth_group)
+  next_par <- m_step_mult(y)
+  next_point <- data.frame(pC = next_par[1], pI = next_par[2])
+  em_path[i + 1, ] <- next_par
 
-eps <- 1e-6
-maxit <- 5
+  neg_q <- function(par) -sum(y * log(pi_map(par)))
+  grid$gap <- vapply(
+    seq_len(nrow(grid)),
+    function(j) {
+      neg_q(unlist(grid[j, c("pC", "pI")])) - neg_q(next_par)
+    },
+    numeric(1)
+  )
 
-exp_vals <- matrix(NA, nrow = maxit, ncol = length(group))
+  plot <- ggplot(grid, aes(pC, pI)) +
+    geom_contour(
+      aes(z = gap),
+      breaks = c(1, 5, 10, 20, 50, 100, 200),
+      color = "grey65"
+    ) +
+    geom_contour(
+      aes(z = loglik_gap),
+      breaks = c(5, 50, 150),
+      color = "darkorange",
+      linetype = "dashed",
+      alpha = 0.7
+    ) +
+    geom_point(
+      data = mle_point,
+      color = "darkorange",
+      size = 3,
+      shape = 4
+    ) +
+    geom_point(data = current, color = "black", size = 2.5) +
+    coord_equal(xlim = c(0.02, 0.34), ylim = c(0.15, 0.34)) +
+    labs(x = expression(p[C]), y = expression(p[I]))
 
-par <- c(0.3, 0.3)
-
-level_curves <- vector("list", length = maxit)
-
-ll <- double(maxit)
-x <- c(85, 196, 341)
-
-n_mat <- 100
-pC <- seq(0, 1, length.out = n_mat)
-pI <- seq(0, 1, length.out = n_mat)
-
-pars <- vector("list", length = maxit)
-
-for (i in seq_len(maxit)) {
-  par0 <- par
-  y <- EStep(par)
-
-  x_new <- M(y, group)
-  z <- matrix(NA, n_mat, n_mat)
-
-  x <- c(85, 196, 341)
-
-  for (k in seq_len(n_mat)) {
-    for (j in seq_len(n_mat)) {
-      val <- -sum(y * log(pi_map(c(pC[k], pI[j]))))
-      if (is.finite(val)) {
-        z[k, j] <- val
-      } else {
-        z[k, j] <- -Inf
-      }
-    }
+  if (i > 1) {
+    plot <- plot +
+      geom_path(
+        data = em_path[seq_len(i), ],
+        color = "royalblue"
+      ) +
+      geom_point(
+        data = em_path[seq_len(i - 1), ],
+        color = "royalblue"
+      )
   }
 
-  level_curves[[i]] <- z
-
-  ll[i] <- -sum(y * log(pi_map(par)))
-
-  exp_vals[i, ] <- y
-  par <- MStep(y)
-  pars[[i]] <- par
-}
-
-par_optim <- c(0.07084, 0.18874)
-
-# Build long data frame for first 4 iterations
-build_df <- function(z_mat, iter) {
-  out <- data.frame(
-    pC = rep(pC, times = length(pI)),
-    pI = rep(pI, each = length(pC)),
-    z = as.vector(z_mat),
-    iter = iter
+  print(
+    plot +
+      labs(
+        title = paste("Iteration", i, ": E-step"),
+        subtitle = "Update Q while the parameter stays fixed"
+      )
   )
-  out
+
+  print(
+    plot +
+      geom_segment(
+        data = data.frame(current, next_point),
+        aes(x = pC, y = pI, xend = pC.1, yend = pI.1),
+        arrow = grid::arrow(length = grid::unit(0.08, "inches")),
+        color = "royalblue"
+      ) +
+      geom_point(
+        data = next_point,
+        color = "royalblue",
+        size = 2.5
+      ) +
+      labs(
+        title = paste("Iteration", i, ": M-step"),
+        subtitle = "Maximize Q and move to the new parameter"
+      )
+  )
 }
+```
 
-plot_iters <- 1:4
-df_all <- do.call(
-  rbind,
-  lapply(plot_iters, function(i) build_df(level_curves[[i]], i))
-)
-
-# Points (current parameter in each iteration)
-iter_points <- data.frame(
-  pC = sapply(pars[plot_iters], `[[`, 1),
-  pI = sapply(pars[plot_iters], `[[`, 2),
-  iter = plot_iters
-)
-
-mle_point <- data.frame(pC = par_optim[1], pI = par_optim[2])
-
-ggplot(df_all, aes(pC, pI)) +
-  geom_contour(
-    aes(z = z, color = after_stat(level)),
-    breaks = seq(800, 3000, by = 200)
-  ) +
-  geom_point(
-    data = mle_point,
-    colour = "darkorange",
-    size = 3,
-    pch = 4
-  ) +
-  geom_point(data = iter_points, colour = "black", size = 2) +
-  facet_wrap(
-    ~iter,
-    labeller = labeller(iter = function(i) paste0("k = ", i))
-  ) +
-  coord_equal() +
-  guides(color = "none") +
-  labs(x = expression(p[C]), y = expression(p[I])) +
-  theme(panel.spacing = unit(0.8, "lines"))
+```{=latex}
+\begin{figure}
+\centering
+\multiinclude[<+>][format=pdf,start=1,end=8,graphics={width=0.8\linewidth}]{lecture10_files/figure-beamer/plot-curves}
+\caption{Gray contours show $-Q$; dashed orange contours show $-\ell$. The cross marks the MLE.}
+\end{figure}
 ```
 
 ##
@@ -1690,23 +1691,34 @@ $(a,b)$ requires a logistic regression fit.
 
 ## Example: A Mixture with Varying Weights
 
+::: {.columns}
+::::: {.column width="47%"}
 We simulate a covariate and use it to choose the component for each observation.
 
 ```{r}
 #| label: simulate-varying-mixture
+#| code-style:
+#|   line-width: 35
 
 w_gem <- runif(500, -2, 2)
-z_gem <- rbinom(500, 1, plogis(-0.5 + 1.5 * w_gem))
-x_gem <- rnorm(500, ifelse(z_gem == 1, -0.5, 4), 1)
+z_gem <- rbinom(
+  500,
+  1,
+  plogis(-0.5 + 1.5 * w_gem)
+)
+x_gem <- rnorm(
+  500,
+  ifelse(z_gem == 1, -0.5, 4),
+  1
+)
 ```
+:::::
 
-. . .
-
+::::: {.column width="47%"}
 ```{r}
 #| label: plot-varying-mixture
 #| echo: false
-#| fig-width: 4.5
-#| fig-height: 2.5
+#| fig-height: 3
 #| fig-cap: "The fraction of observations near each Gaussian component changes
 #|   with the covariate."
 
@@ -1714,6 +1726,10 @@ ggplot(data.frame(w = w_gem, x = x_gem), aes(w, x)) +
   geom_point(alpha = 0.45, color = "royalblue") +
   labs(x = expression(w), y = expression(x))
 ```
+:::::
+:::
+
+. . .
 
 ## E-Step with Varying Mixture Weights
 
@@ -1779,13 +1795,13 @@ algorithm then recomputes them and repeats.
 ```{r}
 #| label: varying-mixture-full-step
 
-full_gate_step <- function(coef) {
+gate_m_step <- function(coef, maxit = 100) {
   tau <- gate_responsibility(coef)
   optim(
     coef,
     function(candidate) -gate_q(candidate, tau),
     method = "BFGS",
-    control = list(reltol = 1e-12)
+    control = list(maxit = maxit, reltol = 1e-12)
   )$par
 }
 ```
@@ -1839,14 +1855,14 @@ until the observed-data log-likelihood gain falls below $10^{-8}$.
 ```{r}
 #| label: varying-mixture-em-fit
 
-full_fit <- fit_gate(full_gate_step)
+full_fit <- fit_gate(gate_m_step)
 unlist(full_fit[c("coef", "loglik", "iterations")])
 ```
 
 ## What If We Stop the M-Step Early?
 
 The weighted logistic regression is solved afresh at **every** EM iteration.
-What if we take only one or a few optimization steps before recomputing the
+What if we limit the inner `optim()` call before recomputing the
 responsibilities?
 
 \medskip\pause
@@ -1858,59 +1874,54 @@ $$
 
 \medskip\pause
 
-The E-step is unchanged, and the observed-data log-likelihood remains
-nondecreasing. Cheaper iterations may require more iterations.
+The E-step is unchanged. If the truncated M-step increases $Q$, the
+observed-data log-likelihood remains nondecreasing. Cheaper iterations may
+require more outer iterations.
 
-## One Gradient Step Instead
+## Limit the Inner Optimization
 
-For fixed responsibilities, the gradient of $Q$ at $(a_n,b_n)$ is
-$$
-  \nabla Q(a_n,b_n) = \sum_{i=1}^N (\tau_i - \pi_i^{(n)}) \begin{pmatrix}
-                                                            1 \\
-                                                            w_i
-                                                          \end{pmatrix}.
-$$
+The M-step already passes `maxit` to `optim()`. We can change its iteration
+limit while keeping the E-step and outer stopping rule fixed.
 
 \medskip\pause
 
-Take a step along this gradient. Halve its size until $Q$ increases; then
-recompute the responsibilities for the next outer iteration.
+For example, `maxit = 1` allows one BFGS iteration per M-step. Increasing
+`maxit` lets the inner optimizer do more work before the next E-step.
 
-## One GEM Step in R
+## One BFGS Iteration per M-Step
 
 ```{r}
 #| label: varying-mixture-gem-step
 
-gem_gate_step <- function(coef) {
-  tau <- gate_responsibility(coef)
-  p <- plogis(coef[1] + coef[2] * w_gem)
-  gradient <- c(sum(tau - p), sum(w_gem * (tau - p)))
-  step <- 1 / length(x_gem)
-  q_old <- gate_q(coef, tau)
-  while (gate_q(coef + step * gradient, tau) < q_old) {
-    step <- step / 2
-  }
-  coef + step * gradient
-}
+short_gate_step <- function(coef) gate_m_step(coef, maxit = 1)
 ```
 
-The backtracking check makes each update a GEM step. A nondecreasing likelihood
-alone does not guarantee convergence to a stationary point; that needs further
-regularity and progress conditions.
+Each outer iteration still recomputes the responsibilities before calling
+`optim()` again.
 
 ## Compare the Fits
 
-Both methods start at $(a_0,b_0) = (0,0)$ and use the same stopping rule for the
+All fits start at $(a_0,b_0) = (0,0)$ and use the same stopping rule for the
 observed-data log-likelihood gain.
 
 ```{r}
 #| label: varying-mixture-compare-fits
+#| echo: false
 
-gem_fit <- fit_gate(gem_gate_step)
+short_fit <- fit_gate(short_gate_step)
+medium_fit <- fit_gate(function(coef) {
+  gate_m_step(coef, maxit = 3)
+})
+gate_fits <- list(
+  "maxit = 100" = full_fit,
+  "maxit = 1" = short_fit,
+  "maxit = 3" = medium_fit
+)
 data.frame(
-  method = c("Full M-step", "One GEM step"),
-  iterations = c(full_fit$iterations, gem_fit$iterations),
-  loglik = c(full_fit$loglik, gem_fit$loglik)
+  method = names(gate_fits),
+  iterations = vapply(gate_fits, `[[`, integer(1), "iterations"),
+  loglik = vapply(gate_fits, `[[`, numeric(1), "loglik"),
+  row.names = NULL
 )
 ```
 
@@ -1923,17 +1934,19 @@ data.frame(
 #| fig-height: 2.5
 #| fig-cap: "Observed-data log-likelihood gap by outer iteration."
 
-best_loglik <- max(full_fit$loglik, gem_fit$loglik)
-gate_trace <- rbind(
-  data.frame(
-    iteration = seq_along(full_fit$path) - 1,
-    gap = best_loglik - full_fit$path,
-    method = "Full M-step"
-  ),
-  data.frame(
-    iteration = seq_along(gem_fit$path) - 1,
-    gap = best_loglik - gem_fit$path,
-    method = "One GEM step"
+best_loglik <- max(vapply(gate_fits, `[[`, numeric(1), "loglik"))
+gate_trace <- do.call(
+  rbind,
+  Map(
+    function(fit, method) {
+      data.frame(
+        iteration = seq_along(fit$path) - 1,
+        gap = best_loglik - fit$path,
+        method = method
+      )
+    },
+    gate_fits,
+    names(gate_fits)
   )
 )
 
@@ -1944,8 +1957,9 @@ ggplot(
   geom_line() +
   scale_color_manual(
     values = c(
-      "Full M-step" = "royalblue",
-      "One GEM step" = "darkorange"
+      "maxit = 100" = "royalblue",
+      "maxit = 1" = "darkorange",
+      "maxit = 3" = "forestgreen"
     )
   ) +
   scale_y_log10() +
@@ -1960,10 +1974,14 @@ ggplot(
 
 ```{r}
 #| label: benchmark-varying-mixture
+#| echo: false
 
 gate_benchmark <- bench::mark(
-  full = fit_gate(full_gate_step),
-  gem = fit_gate(gem_gate_step),
+  full = fit_gate(gate_m_step),
+  maxit_1 = fit_gate(short_gate_step),
+  maxit_3 = fit_gate(function(coef) {
+    gate_m_step(coef, maxit = 3)
+  }),
   check = FALSE
 )
 gate_benchmark[, c("expression", "median")]
@@ -1971,8 +1989,8 @@ gate_benchmark[, c("expression", "median")]
 
 \medskip\pause
 
-Compare total time alongside the final log-likelihoods above. The faster single
-step need not give the faster complete fit.
+Compare total time alongside the final log-likelihoods above. Fewer inner
+iterations need not give the faster complete fit.
 
 ## Exercise
 
