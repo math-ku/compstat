@@ -906,47 +906,6 @@ exp(coefficients(log_lm)["n"])
 It is small in this case, implying fast convergence. This agrees with the near
 overlap of the observed- and complete-information ellipses.
 
-## The Generalized EM Algorithm
-
-::: {.columns}
-::::: {.column width="47%"}
-### Key Idea
-
-Relax the M-step: instead of fully maximizing $Q(\theta \mid \theta_n)$, we just
-require an **increase**:
-$$
-  Q(\theta_{n+1} \mid \theta_n) \ge Q(\theta_n \mid \theta_n).
-$$
-
-. . .
-
-Full maximization may be **hard or computationally expensive**. GEM allows
-**simpler updates** (e.g., a gradient step or a coordinate-wise update).
-
-. . .
-:::::
-
-::::: {.column width="47%"}
-### Properties
-
-The E-step is unchanged, and the **log-likelihood is still nondecreasing**:
-$$
-  \ell(\theta_{n+1}) \ge \ell(\theta_n).
-$$
-
-\medskip\pause
-
-Convergence to a **stationary point** requires additional regularity and
-progress conditions; a nondecreasing likelihood alone is not enough.
-
-. . .
-
-### Trade-Off
-
-Cheaper iterations may require more iterations to converge.
-:::::
-:::
-
 ## A Mixture of Two Gaussians
 
 ::: {.columns align="center"}
@@ -1670,49 +1629,6 @@ we treat $\mu_1 = -0.5$, $\mu_2 = 4$, and $\sigma_1 = \sigma_2 = 1$ as known.
 With a constant mixing weight, we had a closed-form M-step. Here, estimating
 $(a,b)$ requires a logistic regression fit.
 
-## E-Step with Varying Mixture Weights
-
-Let $\phi_k(x)$ denote the density of the known Gaussian component $k$. At the
-current parameters $(a_n,b_n)$, compute
-$$
-  \pi_i^{(n)} = \frac{1}{1 + e^{-(a_n+b_n w_i)}}
-$$
-and the responsibility
-$$
-  \tau_i
-  = \Pr(Z_i = 1 \mid x_i,w_i,a_n,b_n)
-  = \frac{\pi_i^{(n)} \phi_1(x_i)} {\pi_i^{(n)} \phi_1(x_i) + (1 - \pi_i^{(n)})\phi_2(x_i)}.
-$$
-
-\medskip\pause
-
-As before, the E-step assigns each observation a fractional component label.
-
-## A Generalized M-Step
-
-Hold the responsibilities $\tau_i$ fixed. With $\eta_i = a + b w_i$, the part of
-$Q$ that depends on $(a,b)$ is
-$$
-  Q(a,b \mid a_n,b_n)
-  = \sum_{i=1}^N \left[ \tau_i \eta_i - \log(1 + e^{\eta_i}) \right]
-    + \text{const}.
-$$
-
-\medskip\pause
-
-There is no closed-form maximizer. Instead, take one gradient-ascent step:
-$$
-  \begin{pmatrix}a_{n+1}\\b_{n+1}\end{pmatrix}
-  = \begin{pmatrix}a_n\\b_n\end{pmatrix}
-  + t \sum_{i=1}^N (\tau_i-\pi_i^{(n)})
-    \begin{pmatrix}1\\w_i\end{pmatrix}.
-$$
-
-\medskip\pause
-
-Halve $t$ until $Q$ does not decrease. This is a GEM step, so the observed-data
-log-likelihood does not decrease.
-
 ## Example: A Mixture with Varying Weights
 
 We simulate a covariate and use it to choose the component for each observation.
@@ -1740,6 +1656,40 @@ ggplot(data.frame(w = w_gem, x = x_gem), aes(w, x)) +
   labs(x = expression(w), y = expression(x))
 ```
 
+## E-Step with Varying Mixture Weights
+
+Let $\phi_k(x)$ denote the density of the known Gaussian component $k$. At the
+current parameters $(a_n,b_n)$, compute
+$$
+  \pi_i^{(n)} = \frac{1}{1 + e^{-(a_n+b_n w_i)}}
+$$
+and the responsibility
+$$
+  \tau_i
+  = \Pr(Z_i = 1 \mid x_i,w_i,a_n,b_n)
+  = \frac{\pi_i^{(n)} \phi_1(x_i)} {\pi_i^{(n)} \phi_1(x_i) + (1 - \pi_i^{(n)})\phi_2(x_i)}.
+$$
+
+\medskip\pause
+
+As before, the E-step assigns each observation a fractional component label.
+
+## The M-Step with Varying Mixture Weights
+
+Hold the responsibilities $\tau_i$ fixed. With $\eta_i = a + b w_i$, the part of
+$Q$ that depends on $(a,b)$ is
+$$
+  Q(a,b \mid a_n,b_n)
+  = \sum_{i=1}^N \left[ \tau_i \eta_i - \log(1 + e^{\eta_i}) \right]
+    + \text{const}.
+$$
+
+\medskip\pause
+
+There is no closed-form maximizer. We can fit the weighted logistic regression
+to convergence while holding $\tau_i$ fixed, then recompute the
+responsibilities.
+
 ## E-Step and $Q$ in R
 
 ```{r}
@@ -1762,6 +1712,111 @@ gate_q <- function(coef, tau) {
 
 The last line evaluates $\log(1 + e^\eta)$ without overflow.
 
+## Fit the M-Step to Convergence
+
+For each E-step, maximize $Q$ with the responsibilities held fixed. The outer EM
+algorithm then recomputes them and repeats.
+
+```{r}
+#| label: varying-mixture-full-step
+
+full_gate_step <- function(coef) {
+  tau <- gate_responsibility(coef)
+  optim(
+    coef,
+    function(candidate) -gate_q(candidate, tau),
+    method = "BFGS",
+    control = list(reltol = 1e-12)
+  )$par
+}
+```
+
+```{r}
+#| label: varying-mixture-fit-helper
+#| include: false
+
+gate_loglik <- function(coef) {
+  p <- plogis(coef[1] + coef[2] * w_gem)
+  sum(log(
+    p * dnorm(x_gem, -0.5, 1) + (1 - p) * dnorm(x_gem, 4, 1)
+  ))
+}
+
+fit_gate <- function(
+  step,
+  start = c(0, 0),
+  tol = 1e-8,
+  maxit = 1000
+) {
+  coef <- start
+  loglik <- gate_loglik(coef)
+  path <- loglik
+  for (iteration in seq_len(maxit)) {
+    coef <- step(coef)
+    next_loglik <- gate_loglik(coef)
+    path <- c(path, next_loglik)
+    if (next_loglik < loglik - 1e-8) {
+      stop("Observed-data log-likelihood decreased")
+    }
+    if (next_loglik - loglik < tol) {
+      break
+    }
+    loglik <- next_loglik
+  }
+  list(
+    coef = coef,
+    loglik = next_loglik,
+    iterations = iteration,
+    path = path
+  )
+}
+```
+
+## Run Ordinary EM
+
+The same outer loop repeatedly applies the E-step and the fully optimized M-step
+until the observed-data log-likelihood gain falls below $10^{-8}$.
+
+```{r}
+#| label: varying-mixture-em-fit
+
+full_fit <- fit_gate(full_gate_step)
+unlist(full_fit[c("coef", "loglik", "iterations")])
+```
+
+## What If We Stop the M-Step Early?
+
+The weighted logistic regression is solved afresh at **every** EM iteration.
+What if we take only one or a few optimization steps before recomputing the
+responsibilities?
+
+\medskip\pause
+
+The **generalized EM algorithm** (GEM) only requires the M-step to increase $Q$:
+$$
+  Q(\theta_{n+1} \mid \theta_n) \ge Q(\theta_n \mid \theta_n).
+$$
+
+\medskip\pause
+
+The E-step is unchanged, and the observed-data log-likelihood remains
+nondecreasing. Cheaper iterations may require more iterations.
+
+## One Gradient Step Instead
+
+For fixed responsibilities, the gradient of $Q$ at $(a_n,b_n)$ is
+$$
+  \nabla Q(a_n,b_n) = \sum_{i=1}^N (\tau_i - \pi_i^{(n)}) \begin{pmatrix}
+                                                            1 \\
+                                                            w_i
+                                                          \end{pmatrix}.
+$$
+
+\medskip\pause
+
+Take a step along this gradient. Halve its size until $Q$ increases; then
+recompute the responsibilities for the next outer iteration.
+
 ## One GEM Step in R
 
 ```{r}
@@ -1780,49 +1835,85 @@ gem_gate_step <- function(coef) {
 }
 ```
 
-## GEM Increases the Observed Likelihood
+The backtracking check makes each update a GEM step. A nondecreasing likelihood
+alone does not guarantee convergence to a stationary point; that needs further
+regularity and progress conditions.
 
-Starting from $(a_0,b_0) = (0,0)$, we repeat the GEM step 40 times.
+## Compare the Fits
+
+Both methods start at $(a_0,b_0) = (0,0)$ and use the same stopping rule for the
+observed-data log-likelihood gain.
 
 ```{r}
-#| label: varying-mixture-gem-trace
-#| echo: false
+#| label: varying-mixture-compare-fits
 
-gate_loglik <- function(coef) {
-  p <- plogis(coef[1] + coef[2] * w_gem)
-  sum(log(
-    p * dnorm(x_gem, -0.5, 1) + (1 - p) * dnorm(x_gem, 4, 1)
-  ))
-}
-
-gem_path <- matrix(NA_real_, nrow = 41, ncol = 2)
-gem_path[1, ] <- c(0, 0)
-for (j in seq_len(40)) {
-  gem_path[j + 1, ] <- gem_gate_step(gem_path[j, ])
-}
-gem_loglik <- apply(gem_path, 1, gate_loglik)
+gem_fit <- fit_gate(gem_gate_step)
+data.frame(
+  method = c("Full M-step", "One GEM step"),
+  iterations = c(full_fit$iterations, gem_fit$iterations),
+  loglik = c(full_fit$loglik, gem_fit$loglik)
+)
 ```
 
-. . .
+## Convergence by Outer Iteration
 
 ```{r}
-#| label: plot-varying-mixture-gem-trace
+#| label: plot-varying-mixture-convergence
 #| echo: false
 #| fig-width: 4.5
 #| fig-height: 2.5
-#| fig-cap: "Observed-data log-likelihood gain over GEM iterations."
+#| fig-cap: "Observed-data log-likelihood gap by outer iteration."
+
+best_loglik <- max(full_fit$loglik, gem_fit$loglik)
+gate_trace <- rbind(
+  data.frame(
+    iteration = seq_along(full_fit$path) - 1,
+    gap = best_loglik - full_fit$path,
+    method = "Full M-step"
+  ),
+  data.frame(
+    iteration = seq_along(gem_fit$path) - 1,
+    gap = best_loglik - gem_fit$path,
+    method = "One GEM step"
+  )
+)
 
 ggplot(
-  data.frame(
-    iteration = 0:40,
-    gain = gem_loglik - gem_loglik[1]
-  ),
-  aes(iteration, gain)
+  gate_trace,
+  aes(iteration, pmax(gap, 1e-10), color = method)
 ) +
-  geom_line(color = "darkorange") +
-  geom_point(color = "darkorange") +
-  labs(x = "Iteration", y = "Log-likelihood gain")
+  geom_line() +
+  scale_color_manual(
+    values = c(
+      "Full M-step" = "royalblue",
+      "One GEM step" = "darkorange"
+    )
+  ) +
+  scale_y_log10() +
+  labs(
+    x = "Outer iteration",
+    y = "Log-likelihood gap",
+    color = NULL
+  )
 ```
+
+## Benchmark the Complete Fits
+
+```{r}
+#| label: benchmark-varying-mixture
+
+gate_benchmark <- bench::mark(
+  full = fit_gate(full_gate_step),
+  gem = fit_gate(gem_gate_step),
+  check = FALSE
+)
+gate_benchmark[, c("expression", "median")]
+```
+
+\medskip\pause
+
+Compare total time alongside the final log-likelihoods above. The faster single
+step need not give the faster complete fit.
 
 ## Exercise
 
