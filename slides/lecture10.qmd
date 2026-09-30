@@ -469,8 +469,8 @@ em_trace <- summary(em_tracer)
 #| label: plot-curves
 #| echo: false
 #| warning: false
-#| fig-width: 5
-#| fig-height: 3
+#| fig-width: 4.7
+#| fig-height: 2.8
 #| fig-show: hide
 
 nll_pep <- Vectorize(function(p1, p2) neg_loglik_obs(c(p1, p2)))
@@ -594,11 +594,11 @@ for (i in seq_len(4)) {
 
 ##
 
+::: {.columns}
+::::: {.column width="47%"}
 ```{r}
 #| label: tracer-plot1
 #| echo: false
-#| fig-height: 2.7
-#| fig-width: 3.5
 #| fig-cap: "Parameter convergence of the EM algorithm applied to the peppered
 #|   moths problem."
 
@@ -610,17 +610,17 @@ ggplot(em_trace, aes(n, par_norm_diff)) +
   ) +
   scale_y_log10()
 ```
+:::::
 
-##
+. . .
 
+::::: {.column width="47%"}
 ```{r}
 #| label: loglikelihood-convergence
 #| warning: false
 #| echo: false
 #| fig-cap: "Negative log-likelihood gap relative to the best recorded iterate.
 #|   An offset of 1e-14 keeps zero gaps visible on the logarithmic scale."
-#| fig-width: 4
-#| fig-height: 2.5
 
 mutate(em_trace, diff_nll = 1e-14 + nll - min(nll)) |>
   ggplot(aes(n, diff_nll)) +
@@ -633,36 +633,8 @@ mutate(em_trace, diff_nll = 1e-14 + nll - min(nll)) |>
   geom_line() +
   scale_y_log10()
 ```
-
-## Multi-Start
-
-A common problem in likelihood optimization is local maxima.
-
-\medskip\pause
-
-Trying a grid of starting values can help, but does not guarantee a global
-maximum.^[The function `neg_loglik_obs()` computes the negative observed
-log-likelihood.]
-
-```{r}
-#| label: moth-em-multistart
-
-theta_grid <- expand.grid(
-  pC = seq(0.01, 0.49, length.out = 5),
-  pI = seq(0.01, 0.49, length.out = 5)
-)
-
-res <- apply(
-  theta_grid,
-  1,
-  em_mult,
-  x = moth_x,
-  group = moth_group
-)
-neg_logliks <- apply(res, 2, neg_loglik_obs)
-
-which.min(neg_logliks)
-```
+:::::
+:::
 
 ## Benchmarking
 
@@ -792,8 +764,8 @@ convergence <- rbind(
 ```{r}
 #| label: plot-moth-methods-convergence
 #| echo: false
-#| fig-width: 5
-#| fig-height: 3
+#| fig-width: 4
+#| fig-height: 2.8
 #| fig-cap: "Best negative log-likelihood gap against elapsed time. The EM trace
 #|   records iterations; the other traces record objective evaluations."
 
@@ -1303,10 +1275,10 @@ each observation.
 
 ## Example: Simulation
 
-We start by setting the parameters.
+We start by setting the parameters. Then we simulate data.
 
 ::: {.columns}
-::::: {.column width="47%"}
+::::: {.column width="42%"}
 ```{r}
 #| label: mixture-gaus-sim
 
@@ -1320,9 +1292,7 @@ p <- 0.5
 
 . . .
 
-::::: {.column width="47%"}
-Then we simulate data.
-
+::::: {.column width="51%"}
 ```{r}
 #| label: simulate-gaussian-mixture
 
@@ -1409,14 +1379,10 @@ optim(c(0.9, 3, 1), neg_loglik, x = x)[1:2]
 
 ```{r}
 #| label: em-alg
+#| code-style:
+#|   line-width: 72
 
-em <- function(
-  par,
-  em_step,
-  eps = 1e-12,
-  maxit = 20,
-  cb = NULL
-) {
+em <- function(par, em_step, eps = 1e-12, maxit = 20, cb = NULL) {
   for (i in seq_len(maxit)) {
     par0 <- par
     par <- em_step(par) # not shown here
@@ -1718,7 +1684,7 @@ x_gem <- rnorm(
 ```{r}
 #| label: plot-varying-mixture
 #| echo: false
-#| fig-height: 3
+#| fig-height: 2.6
 #| fig-cap: "The fraction of observations near each Gaussian component changes
 #|   with the covariate."
 
@@ -1728,8 +1694,6 @@ ggplot(data.frame(w = w_gem, x = x_gem), aes(w, x)) +
 ```
 :::::
 :::
-
-. . .
 
 ## E-Step with Varying Mixture Weights
 
@@ -1765,10 +1729,9 @@ There is no closed-form maximizer. We can fit the weighted logistic regression
 to convergence while holding $\tau_i$ fixed, then recompute the
 responsibilities.
 
-## E-Step and $Q$ in R
-
 ```{r}
 #| label: varying-mixture-responsibilities
+#| echo: false
 
 gate_responsibility <- function(coef) {
   p <- plogis(coef[1] + coef[2] * w_gem)
@@ -1782,10 +1745,6 @@ gate_q <- function(coef, tau) {
   sum(tau * eta - pmax(eta, 0) - log1p(exp(-abs(eta))))
 }
 ```
-
-\medskip
-
-The last line evaluates $\log(1 + e^\eta)$ without overflow.
 
 ## Fit the M-Step to Convergence
 
@@ -1805,6 +1764,10 @@ gate_m_step <- function(coef, maxit = 100) {
   )$par
 }
 ```
+
+. . .
+
+We are not showing `gate_responsibility()` and `gate_q()` here.
 
 ```{r}
 #| label: varying-mixture-fit-helper
@@ -1878,6 +1841,127 @@ The E-step is unchanged. If the truncated M-step increases $Q$, the
 observed-data log-likelihood remains nondecreasing. Cheaper iterations may
 require more outer iterations.
 
+## Generalized EM Iterations
+
+```{r}
+#| label: gem-lower-bound
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5.5
+#| fig-height: 3
+#| fig-cap: "Four generalized EM iterations. Each M-step increases the bound
+#|   without reaching its maximum."
+
+# Use the same Gaussian latent-variable model as the EM illustration in
+# lecture 9, so the difference lies entirely in the M-step.
+gem_loglik <- function(theta) -(theta - 2)^2 / 4
+gem_bound <- function(theta, current) {
+  gem_loglik(theta) - (theta - current)^2 / 4
+}
+
+gem_theta <- numeric(5)
+gem_theta[1] <- -1
+for (i in seq_len(4)) {
+  bound_maximizer <- (gem_theta[i] + 2) / 2
+  gem_theta[i + 1] <- (gem_theta[i] + bound_maximizer) / 2
+}
+
+gem_curve <- data.frame(theta = seq(-1.4, 4.5, length.out = 401))
+gem_curve$loglik <- gem_loglik(gem_curve$theta)
+
+for (i in seq_len(4)) {
+  current <- gem_theta[i]
+  next_theta <- gem_theta[i + 1]
+  bound_maximizer <- (current + 2) / 2
+  gem_curve$bound <- gem_bound(gem_curve$theta, current)
+  history <- data.frame(
+    theta = gem_theta[seq_len(i)],
+    value = gem_loglik(gem_theta[seq_len(i)])
+  )
+
+  p <- ggplot(gem_curve, aes(x = theta)) +
+    geom_line(aes(y = loglik, color = "likelihood")) +
+    geom_line(aes(y = bound, color = "bound")) +
+    geom_point(data = history, aes(y = value), color = "grey60") +
+    geom_vline(
+      xintercept = current,
+      color = "grey60",
+      linetype = "dashed"
+    ) +
+    scale_color_manual(
+      name = NULL,
+      values = c(likelihood = "royalblue", bound = "darkorange"),
+      breaks = c("likelihood", "bound"),
+      labels = expression(
+        italic(l) * (theta),
+        italic("F") * (q[n] * "," ~ theta)
+      )
+    ) +
+    coord_cartesian(xlim = c(-1.4, 4.5), ylim = c(-3, 0.25)) +
+    labs(x = expression(theta), y = "Value")
+
+  print(
+    p +
+      annotate(
+        "point",
+        x = current,
+        y = gem_loglik(current),
+        color = "royalblue",
+        size = 2.5
+      ) +
+      labs(
+        title = sprintf("Iteration %d: E-step", i),
+        subtitle = "Make the bound tight at the current parameter"
+      )
+  )
+
+  print(
+    p +
+      geom_vline(
+        xintercept = next_theta,
+        color = "grey60",
+        linetype = "dashed"
+      ) +
+      annotate(
+        "point",
+        x = bound_maximizer,
+        y = gem_bound(bound_maximizer, current),
+        color = "grey60",
+        shape = 4,
+        size = 2.5
+      ) +
+      annotate(
+        "segment",
+        x = next_theta,
+        xend = next_theta,
+        y = gem_bound(next_theta, current),
+        yend = gem_loglik(next_theta),
+        color = "royalblue"
+      ) +
+      annotate(
+        "point",
+        x = next_theta,
+        y = gem_bound(next_theta, current),
+        color = "darkorange",
+        fill = "white",
+        shape = 21,
+        size = 2.5
+      ) +
+      annotate(
+        "point",
+        x = next_theta,
+        y = gem_loglik(next_theta),
+        color = "royalblue",
+        size = 2.5
+      ) +
+      labs(
+        title = sprintf("Iteration %d: GEM M-step", i),
+        subtitle = "Increase the bound without reaching its maximum"
+      )
+  )
+}
+```
+
 ## Limit the Inner Optimization
 
 The M-step already passes `maxit` to `optim()`. We can change its iteration
@@ -1888,7 +1972,9 @@ limit while keeping the E-step and outer stopping rule fixed.
 For example, `maxit = 1` allows one BFGS iteration per M-step. Increasing
 `maxit` lets the inner optimizer do more work before the next E-step.
 
-## One BFGS Iteration per M-Step
+. . .
+
+### One BFGS Iteration per M-Step
 
 ```{r}
 #| label: varying-mixture-gem-step
@@ -1912,13 +1998,9 @@ short_fit <- fit_gate(short_gate_step)
 medium_fit <- fit_gate(function(coef) {
   gate_m_step(coef, maxit = 3)
 })
-gate_fits <- list(
-  "maxit = 100" = full_fit,
-  "maxit = 1" = short_fit,
-  "maxit = 3" = medium_fit
-)
+gate_fits <- list("1" = short_fit, "3" = medium_fit, "100" = full_fit)
 data.frame(
-  method = names(gate_fits),
+  maxit = as.integer(names(gate_fits)),
   iterations = vapply(gate_fits, `[[`, integer(1), "iterations"),
   loglik = vapply(gate_fits, `[[`, numeric(1), "loglik"),
   row.names = NULL
@@ -1938,36 +2020,33 @@ best_loglik <- max(vapply(gate_fits, `[[`, numeric(1), "loglik"))
 gate_trace <- do.call(
   rbind,
   Map(
-    function(fit, method) {
+    function(fit, maxit) {
       data.frame(
         iteration = seq_along(fit$path) - 1,
         gap = best_loglik - fit$path,
-        method = method
+        maxit = maxit
       )
     },
     gate_fits,
-    names(gate_fits)
+    as.integer(names(gate_fits))
   )
 )
+gate_trace$maxit <- factor(
+  gate_trace$maxit,
+  levels = sort(unique(gate_trace$maxit))
+)
 
-ggplot(
-  gate_trace,
-  aes(iteration, pmax(gap, 1e-10), color = method)
-) +
+ggplot(gate_trace, aes(iteration, pmax(gap, 1e-10), color = maxit)) +
   geom_line() +
   scale_color_manual(
     values = c(
-      "maxit = 100" = "royalblue",
-      "maxit = 1" = "darkorange",
-      "maxit = 3" = "forestgreen"
+      "1" = "darkorange",
+      "3" = "forestgreen",
+      "100" = "royalblue"
     )
   ) +
   scale_y_log10() +
-  labs(
-    x = "Outer iteration",
-    y = "Log-likelihood gap",
-    color = NULL
-  )
+  labs(x = "Outer iteration", y = "Log-likelihood gap", color = "maxit")
 ```
 
 ## Benchmark the Complete Fits
