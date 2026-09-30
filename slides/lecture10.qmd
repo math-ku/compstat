@@ -431,7 +431,13 @@ is called, not when the returned function is called.
 ```{r}
 #| label: EM-factory
 
-em <- function(par, em_step, eps = 1e-6, maxit = 20, cb = NULL) {
+em <- function(
+  par,
+  em_step,
+  eps = 1e-12,
+  maxit = 20,
+  cb = NULL
+) {
   for (i in seq_len(maxit)) {
     par0 <- par
     par <- em_step(par)
@@ -1534,7 +1540,13 @@ optim(c(0.9, 3, 1), neg_loglik, x = x)[1:2]
 ```{r}
 #| label: em-alg
 
-em <- function(par, em_step, eps = 1e-6, maxit = 20, cb = NULL) {
+em <- function(
+  par,
+  em_step,
+  eps = 1e-12,
+  maxit = 20,
+  cb = NULL
+) {
   for (i in seq_len(maxit)) {
     par0 <- par
     par <- em_step(par)
@@ -1737,7 +1749,8 @@ for (i in seq_len(20)) {
 
 ## Benchmarking
 
-You might be inclined to wonder which method is faster: EM or `optim()`?
+You might be inclined to wonder which method is faster: EM or `optim()` with
+BFGS?
 
 \medskip\pause
 
@@ -1745,8 +1758,13 @@ You might be inclined to wonder which method is faster: EM or `optim()`?
 #| label: benchmark-em-gauss-mix
 
 gauss_bm <- bench::mark(
-  em = em(c(0.5, -0.5, 4), em_gauss_step),
-  optim = optim(c(0.5, -0.5, 4), neg_loglik, x = x),
+  em = em(c(0.5, -0.5, 4), em_gauss_step, maxit = 100),
+  bfgs = optim(
+    c(0.5, -0.5, 4),
+    neg_loglik,
+    x = x,
+    method = "BFGS"
+  ),
   check = FALSE
 )
 ```
@@ -1755,15 +1773,78 @@ gauss_bm <- bench::mark(
 
 ```{r}
 #| label: plot-gaussian-mixture-benchmark
-#| fig-cap: "Benchmarking results for EM vs. optim() for Gaussian mixture model."
+#| fig-cap: "Benchmarking EM against BFGS for the Gaussian mixture model."
 #| fig-width: 4.5
 
 plot(gauss_bm)
 ```
 
-\medskip\pause
+## Convergence of EM and BFGS
 
-But this comparison is flawed: **why?**
+```{r}
+#| label: trace-gaussian-mixture-benchmark
+#| include: false
+
+start <- c(0.5, -0.5, 4)
+start_nll <- neg_loglik(start, x)
+
+em_benchmark_tracer <- tracer(
+  "nll",
+  Delta = 0,
+  expr = quote(nll <- neg_loglik(par, x))
+)
+em(
+  start,
+  em_gauss_step,
+  maxit = 100,
+  cb = em_benchmark_tracer$tracer
+)
+
+optim_benchmark_tracer <- tracer("nll", Delta = 0)
+traced_neg_loglik <- function(par, x) {
+  nll <- neg_loglik(par, x)
+  optim_benchmark_tracer$tracer()
+  nll
+}
+optim(start, traced_neg_loglik, x = x, method = "BFGS")
+
+trace_path <- function(tracer, method) {
+  trace <- tracer$get(simplify = TRUE)
+  data.frame(
+    elapsed_ms = c(0, cumsum(trace[, ".time"])) * 1000,
+    nll = cummin(c(start_nll, trace[, "nll"])),
+    method = method
+  )
+}
+
+convergence <- rbind(
+  trace_path(em_benchmark_tracer, "EM"),
+  trace_path(optim_benchmark_tracer, "BFGS")
+)
+```
+
+```{r}
+#| label: plot-gaussian-mixture-convergence
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-cap: "Best negative log-likelihood gap against elapsed time. The EM trace
+#|   records iterations; the BFGS trace records objective evaluations."
+
+convergence$gap <- convergence$nll - min(convergence$nll) + 1e-6
+
+ggplot(convergence, aes(elapsed_ms, gap, color = method)) +
+  geom_line() +
+  scale_color_manual(
+    values = c(EM = "darkorange", BFGS = "royalblue")
+  ) +
+  scale_y_log10() +
+  labs(
+    x = "Elapsed time (ms)",
+    y = "Best negative log-likelihood gap",
+    color = NULL
+  )
+```
 
 ## Label Switching
 
