@@ -48,6 +48,18 @@ pi_map <- function(p) {
   )
 }
 
+e_step_mult <- function(theta, x, group) {
+  p <- pi_map(theta)
+  x[group] * p / M(p, group)[group]
+}
+
+m_step_mult <- function(y) {
+  N <- sum(y)
+  pC <- (y[1] + (y[2] + y[3]) / 2) / N
+  pI <- (y[4] + (y[2] + y[5]) / 2) / N
+  c(pC, pI)
+}
+
 constraint <- function(par) {
   par[1] <= 1 &&
     par[1] >= 0 &&
@@ -265,17 +277,8 @@ $$
 
 \medskip\pause
 
-Let's define the function $\pi$ that maps $\theta$ to the genotype probabilities
-$$
-  \pi(\theta) = \begin{bmatrix}
-                  p_C^2 \\
-                  2 p_C p_I \\
-                  2 p_C (1 - p_C - p_I) \\
-                  p_I^2 \\
-                  2 p_I (1 - p_C - p_I) \\
-                  (1 - p_C - p_I)^2
-                \end{bmatrix}
-$$
+Write $\pi(\theta)$ for the genotype probabilities given above, with
+$p_T = 1 - p_C - p_I$.
 
 ## Multinomial Conditional Distributions
 
@@ -324,49 +327,6 @@ $c(\theta') = \E_{Y \mid X,\theta'}c(Y)$ does not affect this maximization.
   - The E-step computes expected genotype counts using the current allele frequencies.\\
 }
 
-## E-Step for the Multinomial Model
-
-```{r}
-#| label: e-step-mult
-
-e_step_mult <- function(theta, x, group) {
-  p <- pi_map(theta)
-  x[group] * p / M(p, group)[group]
-}
-```
-
-. . .
-
-::: {.columns}
-::::: {.column width="47%"}
-```{r}
-#| label: pi-map
-
-pi_map <- function(p) {
-  p[3] <- 1 - p[1] - p[2]
-  c(
-    p[1]^2,
-    2 * p[1] * p[2],
-    2 * p[1] * p[3],
-    p[2]^2,
-    2 * p[2] * p[3],
-    p[3]^2
-  )
-}
-```
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-```{r}
-#| label: M-def
-
-M <- function(y, group) as.vector(tapply(y, group, sum))
-```
-:::::
-:::
-
 ## M-Step for the Multinomial Model
 
 We need to maximize $Q(\theta \mid \theta')$ w.r.t. $\theta$.
@@ -385,62 +345,28 @@ where $N = \symbf{1}^T y$ is the total number of observations.
 
 In the M-step, replace $y$ by its conditional expectation from the E-step.
 
-\medskip\pause
-
-Here's an implementation of this.
-
-```{r}
-#| label: mstep-mult
-
-m_step_mult <- function(y) {
-  N <- sum(y)
-  pC <- (y[1] + (y[2] + y[3]) / 2) / N
-  pI <- (y[4] + (y[2] + y[5]) / 2) / N
-  c(pC, pI)
-}
-```
-
-## EM Step Function Factory
-
-A **function factory** returns a function. Here, we create a function that
-performs one EM step for the multinomial model.
-
-. . .
-
-```{r}
-#| label: create-em-mult-step
-
-create_em_mult_step <- function(x, group) {
-  force(x)
-  force(group)
-
-  e_step <- function(theta) e_step_mult(theta, x, group)
-  m_step <- function(y) m_step_mult(y)
-
-  function(par) m_step(e_step(par))
-}
-```
-
-. . .
-
-We use `force()` to ensure that `x` and `group` are evaluated when the factory
-is called, not when the returned function is called.
-
 ## EM Algorithm Implementation
 
-```{r}
-#| label: EM-factory
+For each iteration, estimate the genotype counts from the current allele
+frequencies, then update those frequencies from the expected counts.
 
-em <- function(
+. . .
+
+```{r}
+#| label: em-mult
+
+em_mult <- function(
   par,
-  em_step,
+  x,
+  group,
   eps = 1e-12,
   maxit = 20,
   cb = NULL
 ) {
   for (i in seq_len(maxit)) {
     par0 <- par
-    par <- em_step(par)
+    y <- e_step_mult(par, x, group)
+    par <- m_step_mult(y)
 
     if (!is.null(cb)) {
       cb() # Record the current state for later inspection.
@@ -456,16 +382,15 @@ em <- function(
 
 ## Peppered Moths EM Algorithm
 
-First, we create the EM step function.
+The observed phenotype counts are 85 black, 196 mottled, and 341 light-colored
+moths.
 
 ```{r}
-#| label: create-moth-em-step
+#| label: moth-em-data
 #| results: "hold"
 
-em_mult_step <- create_em_mult_step(
-  x = c(85, 196, 341),
-  group = c(1, 1, 1, 2, 2, 3)
-)
+moth_x <- c(85, 196, 341)
+moth_group <- c(1, 1, 1, 2, 2, 3)
 ```
 
 . . .
@@ -477,7 +402,7 @@ Then we can run the EM algorithm.
 ```{r}
 #| label: fit-moth-em
 
-em(c(0.3, 0.3), em_mult_step)
+em_mult(c(0.3, 0.3), moth_x, moth_group)
 ```
 :::::
 
@@ -519,7 +444,7 @@ parameters each time it is called.
 ```{r}
 #| label: run-moth-tracer
 
-em(c(0.3, 0.3), em_mult_step, cb = em_tracer$tracer)
+em_mult(c(0.3, 0.3), moth_x, moth_group, cb = em_tracer$tracer)
 ```
 
 ##
@@ -538,9 +463,10 @@ summary(em_tracer)
 #| label: em-tracer
 
 em_tracer <- tracer(c("par0", "par"), Delta = 0)
-p_hat <- em(
+p_hat <- em_mult(
   c(0.3, 0.3),
-  em_mult_step,
+  moth_x,
+  moth_group,
   eps = 0,
   cb = em_tracer$tracer
 )
@@ -732,7 +658,13 @@ theta_grid <- expand.grid(
   pI = seq(0.01, 0.49, length.out = 5)
 )
 
-res <- apply(theta_grid, 1, em, em_step = em_mult_step)
+res <- apply(
+  theta_grid,
+  1,
+  em_mult,
+  x = moth_x,
+  group = moth_group
+)
 neg_logliks <- apply(res, 2, neg_loglik_obs)
 
 which.min(neg_logliks)
@@ -820,7 +752,12 @@ at the MLE is the observed information.
 
 library(numDeriv)
 
-theta_hat <- em(c(0.3, 0.3), em_mult_step, eps = 1e-20)
+theta_hat <- em_mult(
+  c(0.3, 0.3),
+  moth_x,
+  moth_group,
+  eps = 1e-20
+)
 iX_direct <- hessian(neg_loglik_obs, theta_hat)
 iX_direct
 ```
