@@ -34,11 +34,12 @@ algorithm.
 
 ### Stochastic Gradient Descent
 
-Useful stochastic method for optimization
+How can we optimize a loss when each full gradient is expensive?
 
 \medskip\pause
 
-Can be used in a **mini-batch** version.
+We will see why a noisy gradient can be useful, when its noise matters, and how
+the learning rate controls it.
 
 # Stochastic Gradient Descent
 
@@ -51,28 +52,54 @@ $$
 
 . . .
 
-::: {.columns}
-::::: {.column width="47%"}
-### Gradient Descent
-
-Gradient descent uses the full gradient:
+Gradient descent uses the mean of all $N$ observation-level gradients:
 $$
-  \theta_{n+1} = \theta_n - \gamma_n \nabla H_N(\theta_n).
+  \nabla H_N(\theta) = \frac{1}{N}\sum_{i=1}^N \nabla_\theta L(y_i,x_i,\theta),
+  \qquad
+  \theta_{n+1} = \theta_n - \gamma_n\nabla H_N(\theta_n).
 $$
-:::::
 
-. . .
+## The Cost of a Full Gradient
 
-::::: {.column width="47%"}
-### Stochastic Gradient Descent
+For least squares with $p$ predictors, one observation contributes a gradient in
+$O(p)$ operations.
 
-Sample $J_n$ uniformly from $\{1,\ldots,N\}$, compute
+\medskip\pause
+
+A full gradient therefore costs $O(Np)$ operations. Gradient descent pays that
+cost at **every** update.
+
+\bigskip\pause
+
+If $N$ is large, can we estimate this mean without computing every term?
+
+## Estimate a Mean by Sampling
+
+Write $g_i(\theta) = \nabla_\theta L(y_i,x_i,\theta)$. The full gradient is
 $$
-  \rho_n = \nabla_\theta L(y_{J_n},x_{J_n},\theta_n),
+  \nabla H_N(\theta) = \frac{1}{N}\sum_{i=1}^N g_i(\theta).
 $$
-and update $\theta_{n+1} = \theta_n - \gamma_n\rho_n$.
-:::::
-:::
+
+\medskip\pause
+
+Draw one index $J_n$ uniformly from $\{1,\ldots,N\}$ and use $g_{J_n}(\theta_n)$
+as the estimate.
+
+\medskip\pause
+
+What does this save, and what do we lose?
+
+## The Stochastic Gradient Descent Update
+
+Set $\rho_n = \nabla_\theta L(y_{J_n},x_{J_n},\theta_n)$, then update
+$$
+  \theta_{n+1} = \theta_n - \gamma_n\rho_n.
+$$
+
+\medskip\pause
+
+One update costs $O(p)$ rather than $O(Np)$, but its direction depends on the
+sampled observation.
 
 ## Example: Ordinary Least Squares
 
@@ -98,12 +125,9 @@ $$
 sgd_basic <- function(
   par,
   grad,
-  N,
-  # number of data points
-  gamma,
-  # learning rate
-  sampler = sample,
-  # function that samples indices
+  N,                                      # number of data points
+  gamma,                                  # learning rate
+  sampler = function(n) sample.int(n, 1), # sample one index
   maxit = 100,
   ...
 ) {
@@ -119,26 +143,33 @@ sgd_basic <- function(
 
 ## Unbiasedness
 
-If $J_n$ is drawn uniformly from $\{1, \ldots, N\}$, then
+Conditioning on the current iterate $\theta_n$ gives
 $$
-  \E(\rho_n \mid \theta_n) = \nabla H_N(\theta_n).
+  \begin{aligned}
+    \E(\rho_n \mid \theta_n)
+     & = \sum_{i=1}^N \Pr(J_n = i)\,g_i(\theta_n) \\
+     & = \frac{1}{N}\sum_{i=1}^N g_i(\theta_n)    \\
+     & = \nabla H_N(\theta_n).
+  \end{aligned}
 $$
 
-So SGD gradients are **unbiased** estimates of the full gradient.
+Thus each stochastic gradient is **unbiased**, even though a single one can
+point far from the full gradient.
 
 . . .
 
-### Iteration Cost
+An **epoch** measures $N$ observations processed. With independent sampling,
+some observations can appear more than once during an epoch.
 
-The main benefit of this is that the cost of each iteration is much lower:
-$O(p)$ vs. $O(Np)$ (for full gradient descent with $p$ variables).
+## Before We Look at the Path
 
-. . .
+Suppose GD and SGD both start at the same point on a logistic-regression loss
+surface.
 
-### Epoch
+\medskip\pause
 
-When discussing SGD, we often refer to an **epoch** as $N$ iterations of SGD: a
-full pass over the data.
+Which path will be smoother? Which method will reach a useful loss first if we
+count observations processed rather than updates?
 
 ## Example: Logistic Regression
 
@@ -156,14 +187,15 @@ $$
 
 . . .
 
-SGD typically converges quickly at the start but slows down as it approaches the
-minimum.
+The next figure shows GD first, then reveals one SGD run on the same loss
+surface.
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
 #| label: logistic-regression-paths
 #| echo: false
+#| fig-show: animate
 #| fig-height: 3.6
 #| fig-width: 3.2
 
@@ -234,70 +266,159 @@ n3 <- length(loss3)
 
 pal <- palette.colors(palette = "Okabe-Ito")
 
-contour(
-  beta1,
-  beta2,
-  z,
-  col = "dark grey",
-  drawlabels = FALSE,
-  asp = 1
-)
+for (show_sgd in c(FALSE, TRUE)) {
+  contour(
+    beta1,
+    beta2,
+    z,
+    col = "dark grey",
+    drawlabels = FALSE,
+    asp = 1
+  )
 
-lines(
-  res_sgd$beta_history[1, ],
-  res_sgd$beta_history[2, ],
-  col = pal[3]
-)
-points(
-  res_sgd$beta_history[1, ],
-  res_sgd$beta_history[2, ],
-  col = pal[3],
-  pch = 19,
-  cex = 0.5
-)
+  lines(
+    res_gd$beta_history[1, ],
+    res_gd$beta_history[2, ],
+    col = pal[1]
+  )
+  points(
+    res_gd$beta_history[1, ],
+    res_gd$beta_history[2, ],
+    col = pal[1],
+    pch = 19,
+    cex = 0.5
+  )
 
-lines(
-  res_gd$beta_history[1, ],
-  res_gd$beta_history[2, ],
-  col = pal[1]
-)
-points(
-  res_gd$beta_history[1, ],
-  res_gd$beta_history[2, ],
-  col = pal[1],
-  pch = 19,
-  cex = 0.5
-)
+  if (show_sgd) {
+    lines(
+      res_sgd$beta_history[1, ],
+      res_sgd$beta_history[2, ],
+      col = pal[3]
+    )
+    points(
+      res_sgd$beta_history[1, ],
+      res_sgd$beta_history[2, ],
+      col = pal[3],
+      pch = 19,
+      cex = 0.5
+    )
+  }
 
-points(
-  res_glm$coefficients[1],
-  res_glm$coefficients[2],
-  col = pal[2],
-  pch = 19,
-  cex = 1
-)
+  points(
+    res_glm$coefficients[1],
+    res_glm$coefficients[2],
+    col = pal[2],
+    pch = 19,
+    cex = 1
+  )
 
-legend(
-  "bottomright",
-  legend = c("SGD", "GD"),
-  col = pal[c(3, 1)],
-  pch = 19,
-  cex = 0.8
-)
+  legend(
+    "bottomright",
+    legend = if (show_sgd) c("SGD", "GD") else "GD",
+    col = if (show_sgd) pal[c(3, 1)] else pal[1],
+    pch = 19,
+    cex = 0.8
+  )
+}
 ```
 :::::
 :::
+
+## The Same Runs, Counted by Updates
+
+Over the first 100 updates, GD reduces the loss much faster. But each GD update
+processes all $N$ observations.
+
+```{r}
+#| label: convergence-by-updates
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2.8
+#| fig-cap: "The first 100 updates of the same GD and SGD runs."
+
+conv_data <- tibble(
+  method = rep(c("GD", "SGD"), times = c(n1, n2)),
+  iteration = c(seq_len(n1) - 1L, seq_len(n2) - 1L),
+  observations = c((seq_len(n1) - 1L) * N, seq_len(n2) - 1L),
+  loss = c(loss1 - loss_optim, loss2 - loss_optim)
+)
+
+ggplot(
+  dplyr::filter(conv_data, iteration <= 100),
+  aes(iteration, loss, color = method)
+) +
+  geom_line() +
+  scale_y_log10() +
+  labs(x = "Updates", y = "Suboptimality", color = NULL)
+```
+
+## The Same Runs, Counted by Data Processed
+
+One GD update and $N$ single-observation SGD updates each process $N$
+observations. This is one **epoch of work** for either method.
+
+```{r}
+#| label: convergence-by-epochs
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2.8
+#| fig-cap: "The same GD and SGD runs, measured in epochs of work."
+
+ggplot(
+  dplyr::mutate(conv_data, epoch = observations / N),
+  aes(epoch, loss, color = method)
+) +
+  geom_line() +
+  scale_y_log10() +
+  labs(x = "Epochs of work", y = "Suboptimality", color = NULL)
+```
+
+SGD can reach a useful loss sooner when we compare equal amounts of data
+processed. The result depends on the problem and learning rates.
+
+## If SGD Reaches the Minimizer
+
+Suppose $\theta_n = \theta^*$, so the **full** gradient is zero.
+
+\bigskip\pause
+
+Will the next SGD update stay at $\theta^*$?
+
+\medskip\pause
+
+Individual observation gradients usually do not vanish there. Their mean is
+zero, but the sampled gradient can still move the iterate.
+
+## Unbiased Does Not Mean Noiseless
+
+At $\theta^*$, let
+$\sigma_*^2 = \E(\|\rho_n\|_2^2 \mid \theta_n = \theta^*) > 0$. For a fixed
+learning rate $\gamma > 0$,
+$$
+  \theta_{n+1} - \theta^* = -\gamma\rho_n.
+$$
+
+\medskip\pause
+
+Consequently,
+$$
+  \E(\|\theta_{n+1} - \theta^*\|_2^2 \mid \theta_n = \theta^*)
+  = \gamma^2\sigma_*^2 > 0.
+$$
+
+Even a step taken **from** the minimizer moves away from it on average in
+squared distance.
 
 ## Learning Rate
 
 ::: {.columns align = "center"}
 ::::: {.column width="47%"}
-For gradient descent, we can use a fixed step length and still guarantee
-convergence.
+With a suitable fixed step length, GD can converge to the minimizer.
 
 \medskip\pause
 
-But this is **not** the case for SGD.
+When observation gradients remain noisy at the minimizer, fixed-rate SGD keeps
+fluctuating around it.
 :::::
 
 ::::: {.column width="47%"}
@@ -306,27 +427,49 @@ But this is **not** the case for SGD.
 #| fig-cap: "Convergence of SGD for logistic regression with a fixed learning rate."
 #| echo: false
 
-res_sgd <- logreg_sgd(
-  X,
-  y,
-  max_epochs = 200,
-  batch_size = 1,
-  t0 = 5
-)
-pal <- palette.colors(palette = "Okabe-Ito")
+L <- 0.25 * norm(crossprod(X), "2") / N
+gamma_fixed <- 0.05 / L
+fixed_updates <- 30L * N
+record_every <- 100L
+fixed_beta <- numeric(p)
+fixed_loss <- numeric(fixed_updates / record_every + 1L)
+fixed_loss[1] <- loss_2d(fixed_beta[1], fixed_beta[2], X, y)
 
-loss <- loss_2d_vectorized(
-  res_sgd$beta_history[1, ],
-  res_sgd$beta_history[2, ]
+set.seed(481)
+for (k in seq_len(fixed_updates)) {
+  ind <- sample.int(N, 1L)
+  x_ind <- X[ind, ]
+  gradient <- x_ind * (plogis(sum(x_ind * fixed_beta)) - y[ind])
+  fixed_beta <- fixed_beta - gamma_fixed * gradient
+
+  if (k %% record_every == 0L) {
+    fixed_loss[k / record_every + 1L] <- loss_2d(
+      fixed_beta[1],
+      fixed_beta[2],
+      X,
+      y
+    )
+  }
+}
+
+fixed_data <- dplyr::bind_rows(
+  tibble(
+    method = "Fixed-rate SGD",
+    epoch = seq(0, fixed_updates, by = record_every) / N,
+    loss = pmax(fixed_loss - loss_optim, 1e-12)
+  ),
+  tibble(
+    method = "GD",
+    epoch = seq_len(n1) - 1L,
+    loss = pmax(loss1 - loss_optim, 1e-12)
+  )
 )
 
-ggplot(
-  tibble(iteration = seq_along(loss), loss = loss - loss_optim),
-  aes(iteration, loss)
-) +
+ggplot(fixed_data, aes(epoch, loss, color = method)) +
   geom_line() +
   scale_y_log10() +
-  labs(y = "Suboptimality")
+  coord_cartesian(xlim = c(0, 30)) +
+  labs(x = "Epochs of work", y = "Suboptimality", color = NULL)
 ```
 :::::
 :::
@@ -334,7 +477,7 @@ ggplot(
 \medskip\pause
 
 Can we find conditions on the learning rates $\gamma_n$ that ensure convergence
-of SGD? **Yes!**
+of SGD? **Yes, under suitable assumptions.**
 
 \medskip
 
@@ -547,6 +690,222 @@ The theorem applies to learning rates satisfying
 $$
   \gamma_n \propto \frac{1}{n}.
 $$
+
+## What Do the Two Sums Mean?
+
+The Robbins--Monro conditions ask the learning rates to do two jobs:
+$$
+  \sum_n \gamma_n = \infty \quad\text{and}\quad \sum_n \gamma_n^2 < \infty.
+$$
+
+\medskip\pause
+
+The first sum keeps the algorithm moving far enough to reach the minimum. The
+second makes the accumulated gradient noise finite.
+
+\medskip\pause
+
+For $\gamma_n \propto n^{-a}$, both hold when $1/2 < a \leq 1$. That still
+leaves a wide range of finite-run behavior.
+
+## Learning Rate
+
+The learning rate $\gamma_n$ is crucial for SGD, but hard to set.
+
+\medskip\pause
+
+Convergence theorem only gives a few hints.
+
+. . .
+
+### A Class of Decay Schedules
+
+$$
+  \gamma_n = \frac{\gamma_0 K}{K + n^a} = \frac{\gamma_0}{1 + K^{-1} n^a}
+$$
+with initial learning rate $\gamma_0 > 0$ and constants $K, a > 0$.
+
+\medskip\pause
+
+Convergence is ensured by Robbins--Monro if $a \in (0.5, 1]$.
+
+\medskip\pause
+
+Fixing the exponent $a$ and picking a target rate, $\gamma_1$, to be reached
+after $n_1$ steps, we can solve for $K$ and get
+$$
+  K = \frac{n_1^a \gamma_1}{\gamma_0 - \gamma_1}.
+$$
+
+##
+
+```{r}
+#| label: decay
+#| cache: true
+
+decay_scheduler <- function(
+  gamma0 = 1,
+  a = 1,
+  K = 1,
+  gamma1 = NULL,
+  n1 = NULL,
+  t0 = gamma0
+) {
+  force(a)
+  # Keep the existing logreg_sgd() interface while using gamma in the slides.
+  gamma0 <- t0
+
+  if (!is.null(gamma1) && !is.null(n1)) {
+    K <- n1^a * gamma1 / (gamma0 - gamma1)
+  }
+
+  b <- gamma0 * K
+
+  function(n) b / (K + n^a)
+}
+```
+
+##
+
+```{r, dependson="decay"}
+#| label: decay-fig
+#| echo: false
+#| fig-height: 3
+#| fig-width: 4
+#| fig-cap: "Examples of learning rate schedules,
+#|   using $\\gamma_n = \\frac{\\gamma_0}{1 + K^{-1} n^{a}}$."
+
+grid_par <- expand.grid(
+  n = seq(0, 1000, 2),
+  K = c(25, 50, 100),
+  a = c(0.6, 1),
+  gamma0 = 1
+)
+
+grid_par <- dplyr::mutate(
+  grid_par,
+  rate = gamma0 * K / (K + n^a)
+)
+
+ggplot(
+  grid_par,
+  aes(n, rate, color = factor(K), linetype = factor(a))
+) +
+  geom_line() +
+  scale_color_discrete("K") +
+  scale_linetype_discrete("a") +
+  guides(
+    color = guide_legend(order = 1),
+    linetype = guide_legend(order = 2)
+  )
+```
+
+## So, Is The Problem of Setting Learning Rate Solved?
+
+No, not really, because it's still hard to pick $\gamma_0$, $K$, and $a$.
+
+```{r}
+#| label: step-size-illustration
+#| echo: false
+
+set.seed(123)
+
+N <- 1000
+p <- 2
+Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
+mu <- c(0, 0)
+
+X <- rmvnorm(N, mean = mu, sigma = Sigma)
+beta <- c(1, 2)
+y <- rbinom(N, 1, plogis(X %*% beta))
+
+res_glm <- glm.fit(X, y, family = binomial())
+
+loss_2d <- function(beta1, beta2, X, y) {
+  beta <- c(beta1, beta2)
+  z <- X %*% beta
+  p_hat <- 1 / (1 + exp(-z))
+  -mean(y * log(p_hat) + (1 - y) * log(1 - p_hat))
+}
+
+beta1 <- seq(-1, 3, length = 100)
+beta2 <- seq(-1, 3, length = 100)
+
+loss_2d_vectorized <- Vectorize(function(b1, b2) {
+  loss_2d(b1, b2, X, y)
+})
+
+z <- outer(beta1, beta2, loss_2d_vectorized)
+
+step_size_illustration <- function(a) {
+  res_sgd <- logreg_sgd(
+    X,
+    y,
+    max_epochs = 100,
+    batch_size = 1,
+    a = a,
+    t0 = 0.5
+  )
+
+  pal <- palette.colors(palette = "Okabe-Ito")
+
+  contour(
+    beta1,
+    beta2,
+    z,
+    col = "dark grey",
+    drawlabels = FALSE,
+    asp = 1
+  )
+
+  lines(
+    res_sgd$beta_history[1, ],
+    res_sgd$beta_history[2, ],
+    col = pal[3]
+  )
+  points(
+    res_sgd$beta_history[1, ],
+    res_sgd$beta_history[2, ],
+    col = pal[3],
+    pch = 19,
+    cex = 0.5
+  )
+
+  points(
+    res_glm$coefficients[1],
+    res_glm$coefficients[2],
+    col = pal[2],
+    pch = 19,
+    cex = 1
+  )
+}
+```
+
+::: {.columns}
+::::: {.column width="47%"}
+```{r}
+#| label: step-size-illustration-06
+#| echo: false
+#| fig-height: 3
+#| fig-cap: SGD on the logistic regression example with $a = 0.6$ (slow decay).
+
+step_size_illustration(0.6)
+```
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+```{r}
+#| label: step-size-illustration-09
+#| echo: false
+#| fig-height: 3
+#| fig-cap: SGD on the logistic regression example with $a = 0.9$ (fast decay).
+
+step_size_illustration(0.9)
+```
+:::::
+:::
 
 ## Diminishing Learning Rates
 
@@ -773,53 +1132,6 @@ So why even care about SGD?
   high accuracy. \pause
 - Sometimes, the stochasticity in SGD helps it escape local minima.
 
-## Convergence in Epochs and Iterations
-
-In terms of iterations, gradient descent converges much more quickly than SGD.
-But in terms of epochs, SGD can be faster.
-
-\medskip\pause
-
-```{r}
-#| label: convergence-epochs-iterations
-#| fig-width: 5
-#| fig-height: 2.3
-#| fig-cap: "Convergence of gradient descent (GD) and stochastic gradient descent
-#|   (SGD) for logistic regression in terms of iterations and epochs."
-#| echo: false
-
-conv_data <- tibble(
-  method = rep(
-    c("GD", "SGD"),
-    times = c(length(loss1), length(loss2))
-  ),
-  epoch = c(seq_len(n1), seq_len(n2) / N),
-  loss = c(loss1 - loss_optim, loss2 - loss_optim),
-  iteration = c(seq_len(n1), seq_len(n2))
-)
-epochs_plot <- ggplot(
-  conv_data,
-  aes(epoch, loss, col = method)
-) +
-  geom_line() +
-  scale_y_log10() +
-  labs(y = "Suboptimality", color = NULL)
-
-iteration_plot <- ggplot(
-  conv_data,
-  aes(iteration, loss, col = method)
-) +
-  geom_line() +
-  scale_y_log10() +
-  labs(y = "Suboptimality", color = NULL)
-
-ggpl <- epochs_plot +
-  iteration_plot +
-  plot_layout(axes = "collect_y", guides = "collect")
-
-ggpl
-```
-
 ##
 
 ```{r}
@@ -915,205 +1227,6 @@ for (i in c(1, 2, 3, 5, 10, 15, 20, steps)) {
 }
 ```
 
-## Learning Rate
-
-The learning rate $\gamma_n$ is crucial for SGD, but hard to set.
-
-\medskip\pause
-
-Convergence theorem only gives a few hints.
-
-. . .
-
-### A Class of Decay Schedules
-
-$$
-  \gamma_n = \frac{\gamma_0 K}{K + n^a} = \frac{\gamma_0}{1 + K^{-1} n^a}
-$$
-with initial learning rate $\gamma_0 > 0$ and constants $K, a > 0$.
-
-\medskip\pause
-
-Convergence is ensured by Robbins--Monro if $a \in (0.5, 1]$.
-
-\medskip\pause
-
-Fixing the exponent $a$ and picking a target rate, $\gamma_1$, to be reached
-after $n_1$ steps, we can solve for $K$ and get
-$$
-  K = \frac{n_1^a \gamma_1}{\gamma_0 - \gamma_1}.
-$$
-
-##
-
-```{r}
-#| label: decay
-#| cache: true
-
-decay_scheduler <- function(
-  gamma0 = 1,
-  a = 1,
-  K = 1,
-  gamma1 = NULL,
-  n1 = NULL,
-  t0 = gamma0
-) {
-  force(a)
-  # Keep the existing logreg_sgd() interface while using gamma in the slides.
-  gamma0 <- t0
-
-  if (!is.null(gamma1) && !is.null(n1)) {
-    K <- n1^a * gamma1 / (gamma0 - gamma1)
-  }
-
-  b <- gamma0 * K
-
-  function(n) b / (K + n^a)
-}
-```
-
-##
-
-```{r, dependson="decay"}
-#| label: decay-fig
-#| echo: false
-#| fig-height: 3
-#| fig-width: 4
-#| fig-cap: "Examples of learning rate schedules,
-#|   using $\\gamma_n = \\frac{\\gamma_0}{1 + K^{-1} n^{a}}$."
-
-grid_par <- expand.grid(
-  n = seq(0, 1000, 2),
-  K = c(25, 50, 100),
-  a = c(0.6, 1),
-  gamma0 = 1
-)
-
-grid_par <- dplyr::mutate(
-  grid_par,
-  rate = gamma0 * K / (K + n^a)
-)
-
-ggplot(
-  grid_par,
-  aes(n, rate, color = factor(K), linetype = factor(a))
-) +
-  geom_line() +
-  scale_color_discrete("K") +
-  scale_linetype_discrete("a") +
-  guides(
-    color = guide_legend(order = 1),
-    linetype = guide_legend(order = 2)
-  )
-```
-
-## So, Is The Problem of Setting Learning Rate Solved?
-
-No, not really, because it's still hard to pick $\gamma_0$, $K$, and $a$.
-
-```{r}
-#| label: step-size-illustration
-#| echo: false
-
-set.seed(123)
-
-N <- 1000
-p <- 2
-Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
-mu <- c(0, 0)
-
-X <- rmvnorm(N, mean = mu, sigma = Sigma)
-beta <- c(1, 2)
-y <- rbinom(N, 1, plogis(X %*% beta))
-
-res_glm <- glm.fit(X, y, family = binomial())
-
-loss_2d <- function(beta1, beta2, X, y) {
-  beta <- c(beta1, beta2)
-  z <- X %*% beta
-  p_hat <- 1 / (1 + exp(-z))
-  -mean(y * log(p_hat) + (1 - y) * log(1 - p_hat))
-}
-
-beta1 <- seq(-1, 3, length = 100)
-beta2 <- seq(-1, 3, length = 100)
-
-loss_2d_vectorized <- Vectorize(function(b1, b2) {
-  loss_2d(b1, b2, X, y)
-})
-
-z <- outer(beta1, beta2, loss_2d_vectorized)
-
-step_size_illustration <- function(a) {
-  res_sgd <- logreg_sgd(
-    X,
-    y,
-    max_epochs = 100,
-    batch_size = 1,
-    a = a,
-    t0 = 0.5
-  )
-
-  pal <- palette.colors(palette = "Okabe-Ito")
-
-  contour(
-    beta1,
-    beta2,
-    z,
-    col = "dark grey",
-    drawlabels = FALSE,
-    asp = 1
-  )
-
-  lines(
-    res_sgd$beta_history[1, ],
-    res_sgd$beta_history[2, ],
-    col = pal[3]
-  )
-  points(
-    res_sgd$beta_history[1, ],
-    res_sgd$beta_history[2, ],
-    col = pal[3],
-    pch = 19,
-    cex = 0.5
-  )
-
-  points(
-    res_glm$coefficients[1],
-    res_glm$coefficients[2],
-    col = pal[2],
-    pch = 19,
-    cex = 1
-  )
-}
-```
-
-::: {.columns}
-::::: {.column width="47%"}
-```{r}
-#| label: step-size-illustration-06
-#| echo: false
-#| fig-height: 3
-#| fig-cap: SGD on the logistic regression example with $a = 0.6$ (slow decay).
-
-step_size_illustration(0.6)
-```
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-```{r}
-#| label: step-size-illustration-09
-#| echo: false
-#| fig-height: 3
-#| fig-cap: SGD on the logistic regression example with $a = 0.9$ (fast decay).
-
-step_size_illustration(0.9)
-```
-:::::
-:::
-
 ##
 
 \begin{algorithm}[H]
@@ -1153,6 +1266,72 @@ SGD algorithms typically subset rows, or blocks of rows.
 
 In a column-major order matrix, this is not optimal. Transposing the matrix
 first can help.
+
+## Warm-Up: Estimate a Mean with SGD
+
+For observations $y_1,\ldots,y_N$, minimize
+$$
+  H_N(\theta) = \frac{1}{N}\sum_{i=1}^N \frac{1}{2}(\theta - y_i)^2.
+$$
+
+\medskip\pause
+
+Find the minimizer $\theta^*$ and the sampled gradient. Then complete the update
+$\theta_{n+1} = \theta_n - \gamma_n\rho_n$.
+
+\medskip\pause
+
+How would the path change if $\gamma_n = 0.1$ were replaced by $\gamma_n = 1/n$?
+
+## Mean Estimation: One Possible Run
+
+Here $\theta^* = \bar y$ and $\rho_n = \theta_n - y_{J_n}$.
+
+```{r}
+#| label: sgd-mean-example
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2.8
+
+set.seed(1)
+y_mean <- rnorm(100, mean = 2)
+mean_steps <- 500L
+sampled_indices <- sample.int(
+  length(y_mean),
+  mean_steps,
+  replace = TRUE
+)
+mean_paths <- matrix(0, nrow = mean_steps + 1L, ncol = 2L)
+
+for (k in seq_len(mean_steps)) {
+  grad_fixed <- mean_paths[k, 1] - y_mean[sampled_indices[k]]
+  grad_decay <- mean_paths[k, 2] - y_mean[sampled_indices[k]]
+  mean_paths[k + 1L, 1] <- mean_paths[k, 1] - 0.1 * grad_fixed
+  mean_paths[k + 1L, 2] <- mean_paths[k, 2] - grad_decay / k
+}
+
+matplot(
+  0:mean_steps,
+  mean_paths,
+  type = "l",
+  lty = 1,
+  col = c("darkorange", "royalblue"),
+  xlab = "Updates",
+  ylab = expression(theta[n])
+)
+abline(h = mean(y_mean), lty = 2)
+legend(
+  "bottomright",
+  legend = c(
+    "Fixed rate",
+    expression(gamma[n] == 1 / n),
+    "Sample mean"
+  ),
+  col = c("darkorange", "royalblue", "black"),
+  lty = c(1, 1, 2),
+  bty = "n"
+)
+```
 
 ## Exercise: Single-Variable Ridge Regression
 
