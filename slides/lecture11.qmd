@@ -19,49 +19,16 @@ source(here::here("R", "sgd.R"))
 
 ## Last Time
 
-### The Expectation-Maximization (EM) Algorithm
+### A Deeper Look Into the EM Algorithm
 
-A general approach to maximum likelihood estimation with latent variables.
+We looked at convergence properties and the generalized EM algorithm.
 
 . . .
 
 ### Fisher Information
 
-We saw three different ways to define the Fisher information and how they relate
-to the EM algorithm.
-
-## Recap: The EM Algorithm
-
-The EM algorithm iteratively optimizes
-$$
-  \theta_{n+1} = \argmax_{\theta \in \Theta} Q(\theta \mid \theta_n),
-$$
-with
-$$
-  Q(\theta \mid \theta_n)
-  = \E_{\theta_n}\big(\log p(X, Z \mid \theta) \mid X\big).
-$$
-
-\medskip\pause
-
-Convergence is **linear** near a local maximum.
-
-## Recap: Fisher Information
-
-The Fisher information is defined as
-$$
-  \mathcal{I}(\theta) = -\E_\theta\left( D_\theta^2 \ell(\theta) \right),
-$$
-where $\ell(\theta) = \log p(X \mid \theta)$.
-
-\medskip\pause
-
-We mentioned three ways to compute the observed Fisher information:
-
-1. Differentiate the score function (defined through $Q$).\pause
-2. Compute complete and missing information and using the information identity.
-   \pause
-3. Differentiate the EM mapping.
+We talked about computing the Fisher information and how it relates to the EM
+algorithm.
 
 ## Today
 
@@ -126,6 +93,8 @@ $$
 ## Basic Implementation of SGD
 
 ```{r}
+#| label: sgd-basic
+
 sgd_basic <- function(
   par,
   grad,
@@ -193,6 +162,7 @@ minimum.
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: logistic-regression-paths
 #| echo: false
 #| fig-height: 3.6
 #| fig-width: 3.2
@@ -332,6 +302,7 @@ But this is **not** the case for SGD.
 
 ::::: {.column width="47%"}
 ```{r}
+#| label: fixed-learning-rate
 #| fig-cap: "Convergence of SGD for logistic regression with a fixed learning rate."
 #| echo: false
 
@@ -722,6 +693,7 @@ Connect to law of large numbers: averaging reduces variance.
 ##
 
 ```{r}
+#| label: batch-size-convergence
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2.8
@@ -809,6 +781,7 @@ But in terms of epochs, SGD can be faster.
 \medskip\pause
 
 ```{r}
+#| label: convergence-epochs-iterations
 #| fig-width: 5
 #| fig-height: 2.3
 #| fig-cap: "Convergence of gradient descent (GD) and stochastic gradient descent
@@ -824,7 +797,10 @@ conv_data <- tibble(
   loss = c(loss1 - loss_optim, loss2 - loss_optim),
   iteration = c(seq_len(n1), seq_len(n2))
 )
-epochs_plot <- ggplot(conv_data, aes(epoch, loss, col = method)) +
+epochs_plot <- ggplot(
+  conv_data,
+  aes(epoch, loss, col = method)
+) +
   geom_line() +
   scale_y_log10() +
   labs(y = "Suboptimality", color = NULL)
@@ -847,6 +823,7 @@ ggpl
 ##
 
 ```{r}
+#| label: escape-minima-setup
 #| echo: false
 
 set.seed(1)
@@ -900,7 +877,13 @@ plot_iteration <- function(i, x_gd, x_sgd) {
 
   plot_curves("GD")
   lines(x_gd_i, f(x_gd_i), col = "royalblue", lwd = 1)
-  points(x_gd_i, f(x_gd_i), col = "royalblue", pch = 19, cex = 0.8)
+  points(
+    x_gd_i,
+    f(x_gd_i),
+    col = "royalblue",
+    pch = 19,
+    cex = 0.8
+  )
 
   plot_curves("SGD")
   lines(x_sgd_i, f(x_sgd_i), col = "darkorange", lwd = 1)
@@ -1006,7 +989,10 @@ grid_par <- expand.grid(
   gamma0 = 1
 )
 
-grid_par <- dplyr::mutate(grid_par, rate = gamma0 * K / (K + n^a))
+grid_par <- dplyr::mutate(
+  grid_par,
+  rate = gamma0 * K / (K + n^a)
+)
 
 ggplot(
   grid_par,
