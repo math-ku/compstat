@@ -2189,9 +2189,8 @@ Implement the EM algorithm for a missing data problem:
 x <- c(1, 0, 1, NA, 0, NA, 1, 1, 0)
 ```
 
-Assume that $X_i \sim \text{Bernoulli}(\theta)$ i.i.d. and that missingness is
-ignorable (missing at random, with separate parameters for the missingness
-mechanism). The complete-data log-likelihood is
+Assume that $X_i \sim \text{Bernoulli}(\theta)$ i.i.d. The complete-data
+log-likelihood is
 $$
   \ell_C(\theta)
   = \sum_{i=1}^N \left( X_i \log(\theta) + (1 - X_i) \log(1 - \theta) \right).
