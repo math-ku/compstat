@@ -521,7 +521,10 @@ mle_point <- data.frame(
   pC = moth_optim$par[1],
   pI = moth_optim$par[2]
 )
-em_path <- data.frame(pC = rep(NA_real_, 5), pI = rep(NA_real_, 5))
+em_path <- data.frame(
+  pC = rep(NA_real_, 5),
+  pI = rep(NA_real_, 5)
+)
 em_path[1, ] <- c(0.3, 0.3)
 
 for (i in seq_len(4)) {
@@ -565,7 +568,10 @@ for (i in seq_len(4)) {
 
   if (i > 1) {
     plot <- plot +
-      geom_path(data = em_path[seq_len(i), ], color = "royalblue") +
+      geom_path(
+        data = em_path[seq_len(i), ],
+        color = "royalblue"
+      ) +
       geom_point(
         data = em_path[seq_len(i - 1), ],
         color = "royalblue"
@@ -1589,6 +1595,88 @@ for (i in c(1, 2, 3, 5, 10, 15, 18, 19, 20)) {
 }
 ```
 
+## When EM Fails
+
+::: {.columns}
+::::: {.column width="47%"}
+Suppose two Gaussian components have known variance $1$ and equal mixing
+weights.
+
+\medskip\pause
+
+We fit the two means from the same starting values. Components centered at
+$(-0.2, 0.2)$ overlap strongly; those centered at $(-2, 2)$ are well separated.
+
+\medskip\pause
+
+EM still increases the likelihood, but the uncertain labels make progress small.
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: overlapping-gaussian-em
+#| echo: false
+#| fig-cap: "Distance to the fitted means. Overlap makes the latent labels
+#|   uncertain and slows EM."
+
+set.seed(1618)
+component <- sample(c(-1, 1), 5000, replace = TRUE)
+noise <- rnorm(length(component))
+
+mean_trace <- function(separation, iterations = 150) {
+  x_overlap <- noise + component * separation / 2
+  means <- c(-1, 1)
+  trace <- matrix(NA_real_, nrow = iterations + 1, ncol = 2)
+  trace[1, ] <- means
+
+  for (i in seq_len(iterations)) {
+    responsibility <- dnorm(x_overlap, means[1]) /
+      (dnorm(x_overlap, means[1]) + dnorm(x_overlap, means[2]))
+    means <- c(
+      weighted.mean(x_overlap, responsibility),
+      weighted.mean(x_overlap, 1 - responsibility)
+    )
+    trace[i + 1, ] <- means
+  }
+
+  data.frame(
+    iteration = 0:iterations,
+    gap = sqrt(rowSums(
+      (trace -
+        matrix(
+          trace[iterations + 1, ],
+          nrow = iterations + 1,
+          ncol = 2,
+          byrow = TRUE
+        ))^2
+    ))
+  )
+}
+
+overlap_trace <- dplyr::bind_rows(
+  `Strong overlap` = mean_trace(0.4),
+  `Well separated` = mean_trace(4),
+  .id = "components"
+)
+
+ggplot(
+  subset(overlap_trace, iteration <= 100),
+  aes(iteration, pmax(gap, 1e-12), color = components)
+) +
+  geom_line() +
+  scale_y_log10() +
+  scale_color_manual(
+    name = NULL,
+    values = c(
+      `Strong overlap` = "darkorange",
+      `Well separated` = "royalblue"
+    )
+  ) +
+  labs(x = "EM iteration", y = "Distance to fitted means")
+```
+:::::
+:::
+
 ## Label Switching
 
 If we set $\sigma_1 = \sigma_2$, then the likelihood is invariant under
@@ -1781,7 +1869,9 @@ We are not showing `gate_responsibility()` and `gate_q()` here.
 
 gate_loglik <- function(coef) {
   p <- plogis(coef[1] + coef[2] * w_gem)
-  sum(log(p * dnorm(x_gem, -0.5, 1) + (1 - p) * dnorm(x_gem, 4, 1)))
+  sum(log(
+    p * dnorm(x_gem, -0.5, 1) + (1 - p) * dnorm(x_gem, 4, 1)
+  ))
 }
 
 fit_gate <- function(
@@ -1801,7 +1891,11 @@ fit_gate <- function(
     path <- c(path, next_loglik)
     elapsed_ms <- c(
       elapsed_ms,
-      as.numeric(difftime(Sys.time(), start_time, units = "secs")) *
+      as.numeric(difftime(
+        Sys.time(),
+        start_time,
+        units = "secs"
+      )) *
         1000
     )
     if (next_loglik < loglik - 1e-8) {
@@ -1893,7 +1987,11 @@ for (i in seq_len(4)) {
   p <- ggplot(gem_curve, aes(x = theta)) +
     geom_line(aes(y = loglik, color = "likelihood")) +
     geom_line(aes(y = bound, color = "bound")) +
-    geom_point(data = history, aes(y = value), color = "grey60") +
+    geom_point(
+      data = history,
+      aes(y = value),
+      color = "grey60"
+    ) +
     geom_vline(
       xintercept = current,
       color = "grey60",
@@ -1985,11 +2083,15 @@ change at the next E-step.
 ```{r}
 #| label: varying-mixture-gem-step
 
-loose_gate_step <- function(coef) gate_m_step(coef, reltol = 1e-2)
+loose_gate_step <- function(coef) {
+  gate_m_step(coef, reltol = 1e-2)
+}
 moderate_gate_step <- function(coef) {
   gate_m_step(coef, reltol = 1e-9)
 }
-tight_gate_step <- function(coef) gate_m_step(coef, reltol = 1e-14)
+tight_gate_step <- function(coef) {
+  gate_m_step(coef, reltol = 1e-14)
+}
 ```
 
 Each outer iteration still recomputes the responsibilities before calling
