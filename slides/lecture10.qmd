@@ -104,7 +104,7 @@ $$
 with
 $$
   Q(\theta \mid \theta_n)
-  = \E_{\theta_n}\big(\log p(X, Z \mid \theta) \mid X\big).
+  = \E_{Z \mid X, \theta_n}\big(\log p(X, Z \mid \theta)\big).
 $$
 
 \medskip\pause
