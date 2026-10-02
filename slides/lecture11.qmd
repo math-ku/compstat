@@ -184,11 +184,6 @@ $$
   \nabla_\beta L(y_i,x_i,\beta)
   = x_i \left( \frac{e^{\beta^T x_i}}{1 + e^{\beta^T x_i}} - y_i \right).
 $$
-
-. . .
-
-The next figure shows GD first, then reveals one SGD run on the same loss
-surface.
 :::::
 
 ::::: {.column width="47%"}
@@ -324,16 +319,16 @@ for (show_sgd in c(FALSE, TRUE)) {
 :::::
 :::
 
-## The Same Runs, Counted by Updates
+## The Same Runs, Counted by Iterations and Epochs
 
+::: {.columns}
+::::: {.column width="47%"}
 Over the first 100 updates, GD reduces the loss much faster. But each GD update
 processes all $N$ observations.
 
 ```{r}
 #| label: convergence-by-updates
 #| echo: false
-#| fig-width: 5
-#| fig-height: 2.8
 #| fig-cap: "The first 100 updates of the same GD and SGD runs."
 
 conv_data <- tibble(
@@ -351,17 +346,15 @@ ggplot(
   scale_y_log10() +
   labs(x = "Updates", y = "Suboptimality", color = NULL)
 ```
+:::::
 
-## The Same Runs, Counted by Data Processed
-
+::::: {.column width="47%"}
 One GD update and $N$ single-observation SGD updates each process $N$
 observations. This is one **epoch of work** for either method.
 
 ```{r}
 #| label: convergence-by-epochs
 #| echo: false
-#| fig-width: 5
-#| fig-height: 2.8
 #| fig-cap: "The same GD and SGD runs, measured in epochs of work."
 
 ggplot(
@@ -375,6 +368,8 @@ ggplot(
 
 SGD can reach a useful loss sooner when we compare equal amounts of data
 processed. The result depends on the problem and learning rates.
+:::::
+:::
 
 ## If SGD Reaches the Minimizer
 
@@ -469,7 +464,8 @@ ggplot(fixed_data, aes(epoch, loss, color = method)) +
   geom_line() +
   scale_y_log10() +
   coord_cartesian(xlim = c(0, 30)) +
-  labs(x = "Epochs of work", y = "Suboptimality", color = NULL)
+  labs(x = "Epochs", y = "Suboptimality", color = NULL) +
+  theme(legend.position.inside = c(0.8, 0.8))
 ```
 :::::
 :::
@@ -752,7 +748,6 @@ decay_scheduler <- function(
   t0 = gamma0
 ) {
   force(a)
-  # Keep the existing logreg_sgd() interface while using gamma in the slides.
   gamma0 <- t0
 
   if (!is.null(gamma1) && !is.null(n1)) {
@@ -1267,35 +1262,64 @@ SGD algorithms typically subset rows, or blocks of rows.
 In a column-major order matrix, this is not optimal. Transposing the matrix
 first can help.
 
-## Warm-Up: Estimate a Mean with SGD
+## Exercise: Estimate a Mean with SGD
 
-For observations $y_1,\ldots,y_N$, minimize
+::: {.columns align="top"}
+::::: {.column width="47%"}
+**15 minutes.** For observations $y_1,\ldots,y_N$, minimize
 $$
   H_N(\theta) = \frac{1}{N}\sum_{i=1}^N \frac{1}{2}(\theta - y_i)^2.
 $$
 
 \medskip\pause
 
-Find the minimizer $\theta^*$ and the sampled gradient. Then complete the update
-$\theta_{n+1} = \theta_n - \gamma_n\rho_n$.
+1. Find the minimizer $\theta^*$ and the sampled gradient. \pause
+2. Complete the SGD update and plot its path. \pause
+3. Compare $\gamma_k = 0.1$ with $\gamma_k = 1/k$. What changes?
+:::::
 
-\medskip\pause
+::::: {.column width="50%"}
+\footnotesize
 
-How would the path change if $\gamma_n = 0.1$ were replaced by $\gamma_n = 1/n$?
+```{r}
+#| label: sgd-mean-exercise
+#| eval: false
+
+set.seed(1)
+
+N <- 100
+y <- rnorm(N, mean = 2)
+steps <- 200
+theta <- numeric(steps + 1)
+theta[1] <- 0
+
+for (k in seq_len(steps)) {
+  i <- sample.int(N, 1)
+  gamma <- 0.1
+  # Complete the update.
+  theta[k + 1] <- NA
+}
+
+plot(0:steps, theta, type = "l")
+abline(h = mean(y), lty = 2)
+```
+:::::
+:::
 
 ## Mean Estimation: One Possible Run
 
-Here $\theta^* = \bar y$ and $\rho_n = \theta_n - y_{J_n}$.
+Here $\theta^* = \bar y$ and $\rho_k = \theta_k - y_{J_k}$.
 
 ```{r}
 #| label: sgd-mean-example
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2.8
+#| fig-cap: "SGD for estimating a mean, with fixed and diminishing learning rates."
 
 set.seed(1)
 y_mean <- rnorm(100, mean = 2)
-mean_steps <- 500L
+mean_steps <- 200L
 sampled_indices <- sample.int(
   length(y_mean),
   mean_steps,
@@ -1317,14 +1341,14 @@ matplot(
   lty = 1,
   col = c("darkorange", "royalblue"),
   xlab = "Updates",
-  ylab = expression(theta[n])
+  ylab = expression(theta[k])
 )
 abline(h = mean(y_mean), lty = 2)
 legend(
   "bottomright",
   legend = c(
     "Fixed rate",
-    expression(gamma[n] == 1 / n),
+    expression(gamma[k] == 1 / k),
     "Sample mean"
   ),
   col = c("darkorange", "royalblue", "black"),
@@ -1333,7 +1357,7 @@ legend(
 )
 ```
 
-## Exercise: Single-Variable Ridge Regression
+## Optional Extension: Single-Variable Ridge Regression
 
 Minimize
 $$
@@ -1381,12 +1405,6 @@ Generate some data, for instance $x$ from `rnorm` and
 Solve this problem using stochastic gradient descent. Plot loss in terms of
 epochs and time. Test your method against `optimize()` or an analytical
 solution.
-
-. . .
-
-### Step 3
-
-Profile your algorithm.
 
 ## Summary
 
