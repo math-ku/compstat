@@ -470,11 +470,6 @@ ggplot(fixed_data, aes(epoch, loss, color = method)) +
 :::::
 :::
 
-\medskip\pause
-
-Can we find conditions on the learning rates $\gamma_n$ that ensure convergence
-of SGD? **Yes, under suitable assumptions.**
-
 \medskip
 
 But first, we need to introduce the concept of **strong convexity**.
@@ -833,6 +828,9 @@ loss_2d_vectorized <- Vectorize(function(b1, b2) {
 z <- outer(beta1, beta2, loss_2d_vectorized)
 
 step_size_illustration <- function(a) {
+  old_par <- par(mar = c(2.5, 2.5, 0.5, 0.5))
+  on.exit(par(old_par))
+
   res_sgd <- logreg_sgd(
     X,
     y,
@@ -881,7 +879,11 @@ step_size_illustration <- function(a) {
 ```{r}
 #| label: step-size-illustration-06
 #| echo: false
-#| fig-height: 3
+#| dev: png
+#| dev.args: { pointsize: 9 }
+#| dpi: 300
+#| crop: false
+#| fig-height: 2.4
 #| fig-cap: SGD on the logistic regression example with $a = 0.6$ (slow decay).
 
 step_size_illustration(0.6)
@@ -894,7 +896,11 @@ step_size_illustration(0.6)
 ```{r}
 #| label: step-size-illustration-09
 #| echo: false
-#| fig-height: 3
+#| dev: png
+#| dev.args: { pointsize: 9 }
+#| dpi: 300
+#| crop: false
+#| fig-height: 2.4
 #| fig-cap: SGD on the logistic regression example with $a = 0.9$ (fast decay).
 
 step_size_illustration(0.9)
@@ -965,7 +971,7 @@ $$
 $$
 and $\delta = 1 - l/L$.
 
-. . .
+\medskip\pause
 
 Under same conditions, SGD gives us
 $$
@@ -1022,7 +1028,7 @@ $$
 $$
 then update $\theta_{n+1} = \theta_n - \gamma_n\rho_n$.
 
-. . .
+\medskip\pause
 
 Estimates are still unbiased,
 $$
@@ -1264,9 +1270,9 @@ first can help.
 
 ## Exercise: Estimate a Mean with SGD
 
-::: {.columns align="top"}
+::: {.columns}
 ::::: {.column width="47%"}
-**15 minutes.** For observations $y_1,\ldots,y_N$, minimize
+For observations $y_1,\ldots,y_N$, minimize
 $$
   H_N(\theta) = \frac{1}{N}\sum_{i=1}^N \frac{1}{2}(\theta - y_i)^2.
 $$
@@ -1278,7 +1284,7 @@ $$
 3. Compare $\gamma_k = 0.1$ with $\gamma_k = 1/k$. What changes?
 :::::
 
-::::: {.column width="50%"}
+::::: {.column width="47%"}
 \footnotesize
 
 ```{r}
@@ -1296,115 +1302,17 @@ theta[1] <- 0
 for (k in seq_len(steps)) {
   i <- sample.int(N, 1)
   gamma <- 0.1
-  # Complete the update.
-  theta[k + 1] <- NA
+
+  theta[k + 1] <- NA # <1>
 }
 
 plot(0:steps, theta, type = "l")
 abline(h = mean(y), lty = 2)
 ```
+
+1. Complete the update.
 :::::
 :::
-
-## Mean Estimation: One Possible Run
-
-Here $\theta^* = \bar y$ and $\rho_k = \theta_k - y_{J_k}$.
-
-```{r}
-#| label: sgd-mean-example
-#| echo: false
-#| fig-width: 5
-#| fig-height: 2.8
-#| fig-cap: "SGD for estimating a mean, with fixed and diminishing learning rates."
-
-set.seed(1)
-y_mean <- rnorm(100, mean = 2)
-mean_steps <- 200L
-sampled_indices <- sample.int(
-  length(y_mean),
-  mean_steps,
-  replace = TRUE
-)
-mean_paths <- matrix(0, nrow = mean_steps + 1L, ncol = 2L)
-
-for (k in seq_len(mean_steps)) {
-  grad_fixed <- mean_paths[k, 1] - y_mean[sampled_indices[k]]
-  grad_decay <- mean_paths[k, 2] - y_mean[sampled_indices[k]]
-  mean_paths[k + 1L, 1] <- mean_paths[k, 1] - 0.1 * grad_fixed
-  mean_paths[k + 1L, 2] <- mean_paths[k, 2] - grad_decay / k
-}
-
-matplot(
-  0:mean_steps,
-  mean_paths,
-  type = "l",
-  lty = 1,
-  col = c("darkorange", "royalblue"),
-  xlab = "Updates",
-  ylab = expression(theta[k])
-)
-abline(h = mean(y_mean), lty = 2)
-legend(
-  "bottomright",
-  legend = c(
-    "Fixed rate",
-    expression(gamma[k] == 1 / k),
-    "Sample mean"
-  ),
-  col = c("darkorange", "royalblue", "black"),
-  lty = c(1, 1, 2),
-  bty = "n"
-)
-```
-
-## Optional Extension: Single-Variable Ridge Regression
-
-Minimize
-$$
-  H_N(\beta) = \frac{1}{N} \sum_{i=1}^N L(y_i,x_i,\beta),
-  \quad\text{with}\quad L(y_i,x_i,\beta) = \frac{1}{2} (y_i - x_i \beta)^2
-                                           + \frac{\lambda}{2} \beta^2.
-$$
-
-. . .
-
-```{r}
-#| label: ridge-regression
-#| echo: false
-#| include: false
-
-f <- function(beta, xx, yy, lambda) {
-  mean(0.5 * (xx * beta - yy)^2 + 0.5 * lambda * beta^2)
-}
-
-f_grad <- function(beta, i, xx, yy, lambda) {
-  (xx[i] * beta - yy[i]) * xx[i] + lambda * beta
-}
-
-beta <- 3
-
-x <- rnorm(100)
-y <- x * beta + rnorm(100)
-
-beta_grid <- seq(-2, 5, length.out = 200)
-
-f_vec <- Vectorize(f, vectorize.args = "beta")
-
-plot(beta_grid, f_vec(beta_grid, x, y, 0.6), type = "l")
-```
-
-### Step 1
-
-Generate some data, for instance $x$ from `rnorm` and
-`y <- x * beta + rnorm(N)`. You can pick $\beta$ and $N$ however you want.
-
-. . .
-
-### Step 2
-
-Solve this problem using stochastic gradient descent. Plot loss in terms of
-epochs and time. Test your method against `optimize()` or an analytical
-solution.
 
 ## Summary
 
