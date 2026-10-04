@@ -50,14 +50,18 @@ jobs:
 
       - run: devenv shell -- quarto render --profile publish
 
+      - name: Check repository source links
+        run: devenv shell -- python3 scripts/check-repository-links.py _site .
+
       - name: Check links
         uses: lycheeverse/lychee-action@v2
         with:
-          # Stack Overflow blocks automated clients even when a page exists.
+          # These sites can reject automated checks even when their pages exist.
           args: >-
             --root-dir "${{ github.workspace }}/_site"
             --max-retries 3
             --no-progress
+            --exclude '^https://github[.]com/math-ku/compstat/blob/main/'
             --exclude '^https://stackoverflow\.com/'
             '_site/**/*.html'
 
