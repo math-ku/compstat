@@ -156,7 +156,7 @@ $$
 Thus each stochastic gradient is **unbiased**, even though a single one can
 point far from the full gradient.
 
-. . .
+\medskip\pause
 
 An **epoch** measures $N$ observations processed. With independent sampling,
 some observations can appear more than once during an epoch.
@@ -946,13 +946,13 @@ gradient.
 ::::: {.column width="47%"}
 When $H_N$ is strongly convex and has Lipschitz gradient, GD satisfies
 $$
-  H_N(\theta_n) - H_N^* = O(\delta^n), \qquad \delta \in (0, 1)
+  H_N(\theta_n) - H_N^* = O(\delta^n)
 $$
-and $\delta = 1 - l/L$.
+with $\delta \in (0, 1)$ and $\delta = 1 - l/L$.
 
 \medskip\pause
 
-Under same conditions, SGD gives us
+Under the **same conditions**, SGD gives us
 $$
   \E\big(H_N(\theta_n) - H_N^*\big) = O\left( \frac{1}{n} \right).
 $$
@@ -966,7 +966,7 @@ So SGD does **not** enjoy linear convergence rates under strong convexity.
 \begin{figure}
 \begin{tikzpicture}
   \begin{axis}[
-      width=6cm, height=5cm,
+      width=6.5cm, height=6cm,
       xlabel={$n$},
       ylabel={Suboptimality},
       legend pos=north east,
@@ -1106,7 +1106,7 @@ tune_rate <- function(b) {
           result <- logreg_sgd(
             X,
             y,
-            max_epochs = 100,
+            max_epochs = 25,
             batch_size = b,
             a = 1,
             t0 = rate
@@ -1181,8 +1181,8 @@ ggplot(
   geom_line() +
   scale_y_log10() +
   labs(
-    color = expression("Batch size (" * t[0] * ")"),
-    fill = expression("Batch size (" * t[0] * ")"),
+    color = expression("Batch size (" * gamma[0] * ")"),
+    fill = expression("Batch size (" * gamma[0] * ")"),
     y = "Suboptimality"
   )
 ```
@@ -1208,12 +1208,11 @@ ggplot(
     color = NA
   ) +
   geom_line() +
-  scale_x_log10() +
   scale_y_log10() +
   labs(
-    x = "Elapsed time (s, log scale)",
-    color = expression("Batch size (" * t[0] * ")"),
-    fill = expression("Batch size (" * t[0] * ")"),
+    x = "Elapsed time (s)",
+    color = expression("Batch size (" * gamma[0] * ")"),
+    fill = expression("Batch size (" * gamma[0] * ")"),
     y = "Suboptimality"
   )
 ```
@@ -1230,12 +1229,142 @@ So why even care about SGD?
 
 ### Reasons to Use SGD
 
-- If $N \gg p$, then we can pick a batch size that is reasonably accurate but
-  still much smaller than $N$. \pause
+- On large data, mini-batches can reach a useful loss before GD completes many
+  full-gradient steps. \pause
 - In many applications (e.g. deep learning), we don't *care* about optimizing to
   high accuracy. \pause
 - Sometimes, the stochasticity in SGD helps it escape saddle points and local
   minima.
+
+## When SGD Wins: A Moderate Accuracy Target
+
+```{r}
+#| label: large-data-sgd-vs-gd
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2.8
+#| fig-cap: "Logistic regression with $N = 10^5$ and $p = 20$; both methods use
+#|   step length $1/L$. The dashed line marks a 0.01 loss gap. Curves show
+#|   medians of five runs. Timing excludes full-loss checks and reference fitting."
+
+set.seed(1729)
+
+N_large <- 100000L
+p_large <- 20L
+X_large <- matrix(rnorm(N_large * p_large), nrow = N_large)
+beta_true_large <- seq(0.8, 0.1, length.out = p_large)
+y_large <- rbinom(
+  N_large,
+  1,
+  plogis(drop(X_large %*% beta_true_large))
+)
+
+full_loss_large <- function(theta) {
+  z <- drop(X_large %*% theta)
+  mean(log1p(exp(z)) - y_large * z)
+}
+
+beta_opt_large <- glm.fit(
+  X_large,
+  y_large,
+  family = binomial()
+)$coefficients
+loss_opt_large <- full_loss_large(beta_opt_large)
+L_large <- 0.25 * norm(crossprod(X_large), "2") / N_large
+target_gap <- 0.01
+
+run_large_logreg <- function(batch_size, seed) {
+  set.seed(seed)
+  theta <- numeric(p_large)
+  elapsed <- 0
+  max_updates <- if (batch_size == N_large) 15L else 150L
+  history <- vector("list", max_updates)
+
+  for (k in seq_len(max_updates)) {
+    start <- as.numeric(Sys.time())
+
+    if (batch_size == N_large) {
+      X_batch <- X_large
+      y_batch <- y_large
+    } else {
+      ind <- sample.int(N_large, batch_size, replace = TRUE)
+      X_batch <- X_large[ind, , drop = FALSE]
+      y_batch <- y_large[ind]
+    }
+
+    gradient <- drop(crossprod(
+      X_batch,
+      plogis(drop(X_batch %*% theta)) - y_batch
+    )) /
+      batch_size
+    theta <- theta - gradient / L_large
+    elapsed <- elapsed + as.numeric(Sys.time()) - start
+
+    if (batch_size == N_large || k <= 20L || k %% 5L == 0L) {
+      history[[k]] <- tibble(
+        update = k,
+        milliseconds = 1000 * elapsed,
+        gap = pmax(
+          full_loss_large(theta) - loss_opt_large,
+          1e-10
+        )
+      )
+    }
+  }
+
+  dplyr::bind_rows(history)
+}
+
+comparison_large <- purrr::map_dfr(
+  c(N_large, 1000L),
+  function(batch_size) {
+    purrr::map_dfr(201:205, function(seed) {
+      run_large_logreg(batch_size, seed) |>
+        mutate(
+          method = if (batch_size == N_large) {
+            "GD"
+          } else {
+            "SGD (m = 1000)"
+          }
+        )
+    })
+  }
+)
+
+comparison_large <- comparison_large |>
+  group_by(method, update) |>
+  summarize(
+    milliseconds = median(milliseconds),
+    gap = median(gap),
+    lower = quantile(gap, 0.25),
+    upper = quantile(gap, 0.75),
+    .groups = "drop"
+  )
+
+ggplot(
+  comparison_large,
+  aes(milliseconds, gap, color = method, fill = method)
+) +
+  geom_hline(
+    yintercept = target_gap,
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper),
+    alpha = 0.15,
+    color = NA
+  ) +
+  geom_line() +
+  scale_y_log10() +
+  coord_cartesian(xlim = c(0.1, 20), ylim = c(1e-3, 0.3)) +
+  labs(
+    x = "Optimizer time (ms)",
+    y = "Suboptimality",
+    color = NULL,
+    fill = NULL
+  )
+```
 
 ##
 
@@ -1325,7 +1454,9 @@ plot_iteration <- function(i, x_gd, x_sgd) {
 #| fig-show: animate
 #| fig-width: 5.2
 #| fig-height: 3.2
-#| fig-cap: "The stochasticity in SGD sometimes helps it escape local minima."
+#| fig-cap: >-
+#|   The stochasticity in SGD sometimes helps it escape local minima and saddle
+#|   points.
 
 for (i in c(1, 2, 3, 5, 10, 15, 20, steps)) {
   plot_iteration(i, x_gd, x_sgd)
