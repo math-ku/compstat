@@ -43,79 +43,115 @@ the learning rate controls it.
 
 # Stochastic Gradient Descent
 
-## Empirical Risk Minimization
+## Minimizing Average Loss
 
-For data $(y_i,x_i)$, $i = 1,\ldots,N$, the empirical risk is
+Many problems in statistics and machine learning have an objective that is an
+average of observation-level losses:
 $$
-  H_N(\theta) = \frac{1}{N} \sum_{i=1}^N L(y_i,x_i,\theta).
+  H_n(\theta) = \frac{1}{n} \sum_{i=1}^n L(y_i, x_i, \theta),
 $$
+where $(y_i, x_i)$, $i = 1,\ldots,n$, are the observed data.
+
+\pause
+
+### Examples
+
+- Least squares:
+  $L(y_i, x_i, \beta) = \frac{1}{2} (y_i - \beta^\intercal x_i)^2$
+- Logistic regression:
+  $L(y_i, x_i, \beta) = -y_i \beta^\intercal x_i + \log\left( 1 + e^{\beta^\intercal x_i} \right)$
+- Neural networks: $L$ is the loss of the network on observation $i$
+
+## Gradient Descent, and Its Price
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+Because $H_n$ is an average of observation-level losses, its gradient is also an
+average:
+$$
+  \nabla H_n(\theta_k)
+  = \frac{1}{n}\sum_{i=1}^n \nabla_\theta L(y_i,x_i,\theta_k).
+$$
+
+\medskip\pause
+
+Gradient descent updates
+$$
+  \theta_{k+1} = \theta_k - \gamma_k \nabla H_n(\theta_k).
+$$
+:::::
 
 . . .
 
-Gradient descent uses the mean of all $N$ observation-level gradients:
-$$
-  \nabla H_N(\theta) = \frac{1}{N}\sum_{i=1}^N \nabla_\theta L(y_i,x_i,\theta),
-  \qquad
-  \theta_{n+1} = \theta_n - \gamma_n\nabla H_N(\theta_n).
-$$
-
-## The Cost of a Full Gradient
-
-For least squares with $p$ predictors, one observation contributes a gradient in
-$O(p)$ operations.
+::::: {.column width="47%"}
+\begin{algorithm}[H]
+  \caption{Gradient descent}
+  \KwData{$\theta_0$, learning rates $\{\gamma_k\}$}
+  \For{$k = 0,1,\ldots$}{
+    \colorbox{mLightBrown!20}{%
+      $\displaystyle \rho_k \gets \frac{1}{n}\sum_{i=1}^n \nabla_\theta L(y_i,x_i,\theta_k)$%
+    }\;
+    $\theta_{k+1} \gets \theta_k - \gamma_k\rho_k$\;
+  }
+\end{algorithm}
 
 \medskip\pause
 
-A full gradient therefore costs $O(Np)$ operations. Gradient descent pays that
-cost at **every** update.
+### The Problem {.alert}
+
+Computing $\nabla H_n$ means touching **every** observation.
+Each contribution costs $O(p)$, so one iteration costs $O(np)$.
+
+\medskip\pause
+
+*Can we estimate this gradient without computing every term?*
+:::::
+:::
+
+## Stochastic Gradient Descent
+
+::: {.columns}
+::::: {.column width="47%"}
+Sample $J_k$ uniformly from $\{1,\ldots,n\}$, compute
+$$
+  \rho_k = \nabla_\theta L(y_{J_k},x_{J_k},\theta_k),
+$$
+and update $\theta_{k+1} = \theta_k - \gamma_k\rho_k$.
 
 \bigskip\pause
 
-If $N$ is large, can we estimate this mean without computing every term?
+\begin{algorithm}[H]
+  \caption{SGD}
+  \KwData{$\theta_0$, learning rates $\{\gamma_k\}$}
+  \For{$k = 0,1,\ldots$}{
+    \colorbox{mLightGreen!20}{%
+      $\displaystyle J_k \sim \operatorname{Uniform}\{1,\ldots,n\}$%
+    }\;
+    \colorbox{mLightGreen!20}{%
+      $\displaystyle \rho_k \gets \nabla_\theta L(y_{J_k},x_{J_k},\theta_k)$%
+    }\;
+    $\theta_{k+1} \gets \theta_k - \gamma_k\rho_k$\;
+  }
+\end{algorithm}
+:::::
 
-## Estimate a Mean by Sampling
+::::: {.column width="47%"}
+\pause
 
-Write $g_i(\theta) = \nabla_\theta L(y_i,x_i,\theta)$. The full gradient is
+### Unbiasedness
+
+Each step follows the true gradient *on average*:
 $$
-  \nabla H_N(\theta) = \frac{1}{N}\sum_{i=1}^N g_i(\theta).
+  \E(\rho_k \mid \theta_k) = \nabla H_n(\theta_k).
 $$
 
 \medskip\pause
 
-Draw one index $J_n$ uniformly from $\{1,\ldots,N\}$ and use $g_{J_n}(\theta_n)$
-as the estimate.
+### Iteration cost
 
-\medskip\pause
-
-What does this save, and what do we lose?
-
-## The Stochastic Gradient Descent Update
-
-Set $\rho_n = \nabla_\theta L(y_{J_n},x_{J_n},\theta_n)$, then update
-$$
-  \theta_{n+1} = \theta_n - \gamma_n\rho_n.
-$$
-
-\medskip\pause
-
-One update costs $O(p)$ rather than $O(Np)$, but its direction depends on the
-sampled observation.
-
-## Example: Ordinary Least Squares
-
-The empirical risk is
-$$
-  H_N(\beta) = \frac{1}{N} \sum_{i=1}^N L(y_i,x_i,\beta),
-$$
-where
-$$
-  L(y_i,x_i,\beta) = \frac{1}{2} (y_i - \beta^T x_i)^2.
-$$
-
-And the gradient is
-$$
-  \nabla_\beta L(y_i,x_i,\beta) = -x_i(y_i - \beta^T x_i).
-$$
+The cost falls from $O(np)$ to $O(p)$.
+:::::
+:::
 
 ## Basic Implementation of SGD
 
@@ -141,49 +177,41 @@ sgd_basic <- function(
 }
 ```
 
-## Unbiasedness
 
-Conditioning on the current iterate $\theta_n$ gives
+## Example: Ordinary Least Squares
+
+The empirical risk is
 $$
-  \begin{aligned}
-    \E(\rho_n \mid \theta_n)
-     & = \sum_{i=1}^N \Pr(J_n = i)\,g_i(\theta_n) \\
-     & = \frac{1}{N}\sum_{i=1}^N g_i(\theta_n)    \\
-     & = \nabla H_N(\theta_n).
-  \end{aligned}
+  H_N(\beta) = \frac{1}{N} \sum_{i=1}^N L(y_i,x_i,\beta),
+$$
+where
+$$
+  L(y_i,x_i,\beta) = \frac{1}{2} (y_i - \beta^T x_i)^2.
 $$
 
-Thus each stochastic gradient is **unbiased**, even though a single one can
-point far from the full gradient.
-
-\medskip\pause
-
-An **epoch** measures $N$ observations processed. With independent sampling,
-some observations can appear more than once during an epoch.
-
-## Before We Look at the Path
-
-Suppose GD and SGD both start at the same point on a logistic-regression loss
-surface.
-
-\medskip\pause
-
-Which path will be smoother? Which method will reach a useful loss first if we
-count observations processed rather than updates?
+And the gradient is
+$$
+  \nabla_\beta L(y_i,x_i,\beta) = -x_i(y_i - \beta^T x_i).
+$$
 
 ## Example: Logistic Regression
 
-::: {.columns}
+::: {.columns align="center"}
 ::::: {.column width="47%"}
 With $y_i \in \{0, 1\}$, the logistic regression loss is
 $$
-  L(y_i,x_i,\beta) = -y_i \beta^T x_i + \log\left( 1 + e^{\beta^T x_i} \right).
+  L(y_i,x_i,\beta) = -y_i \beta^T x_i + \log\left( 1 + e^{\beta^T x_i} \right)
 $$
-and
+and the gradient is
 $$
   \nabla_\beta L(y_i,x_i,\beta)
   = x_i \left( \frac{e^{\beta^T x_i}}{1 + e^{\beta^T x_i}} - y_i \right).
 $$
+
+\medskip\pause
+
+Gradient descent (GD) follows a smooth path to the minimizer. How do
+you think SGD will behave?
 :::::
 
 ::::: {.column width="47%"}
@@ -191,8 +219,8 @@ $$
 #| label: logistic-regression-paths
 #| echo: false
 #| fig-show: animate
-#| fig-height: 3.6
-#| fig-width: 3.2
+#| fig-height: 3.4
+#| fig-width: 3.0
 
 set.seed(123)
 
@@ -261,14 +289,17 @@ n3 <- length(loss3)
 
 pal <- palette.colors(palette = "Okabe-Ito")
 
-for (show_sgd in c(FALSE, TRUE)) {
+sgd_reveals <- c(0L, 1L, 5L, 20L, 100L, 1000, 10000)
+
+for (steps in sgd_reveals) {
   contour(
     beta1,
     beta2,
     z,
     col = "dark grey",
     drawlabels = FALSE,
-    asp = 1
+    asp = 1,
+    main = sprintf("SGD updates: %d", steps)
   )
 
   lines(
@@ -284,18 +315,19 @@ for (show_sgd in c(FALSE, TRUE)) {
     cex = 0.5
   )
 
-  if (show_sgd) {
+  if (steps > 0L) {
+    path <- seq_len(steps + 1L)
     lines(
-      res_sgd$beta_history[1, ],
-      res_sgd$beta_history[2, ],
+      res_sgd$beta_history[1, path],
+      res_sgd$beta_history[2, path],
       col = pal[3]
     )
     points(
-      res_sgd$beta_history[1, ],
-      res_sgd$beta_history[2, ],
+      res_sgd$beta_history[1, steps + 1L],
+      res_sgd$beta_history[2, steps + 1L],
       col = pal[3],
       pch = 19,
-      cex = 0.5
+      cex = 0.9
     )
   }
 
@@ -309,8 +341,8 @@ for (show_sgd in c(FALSE, TRUE)) {
 
   legend(
     "bottomright",
-    legend = if (show_sgd) c("SGD", "GD") else "GD",
-    col = if (show_sgd) pal[c(3, 1)] else pal[1],
+    legend = if (steps > 0L) c("SGD", "GD") else "GD",
+    col = if (steps > 0L) pal[c(3, 1)] else pal[1],
     pch = 19,
     cex = 0.8
   )
@@ -323,8 +355,7 @@ for (show_sgd in c(FALSE, TRUE)) {
 
 ::: {.columns}
 ::::: {.column width="47%"}
-Over the first 100 updates, GD reduces the loss much faster. But each GD update
-processes all $N$ observations.
+Over the first 100 iterations, GD reduces the loss much faster.
 
 ```{r}
 #| label: convergence-by-updates
@@ -344,18 +375,19 @@ ggplot(
 ) +
   geom_line() +
   scale_y_log10() +
-  labs(x = "Updates", y = "Suboptimality", color = NULL)
+  labs(x = "Iterations", y = "Suboptimality", color = NULL)
 ```
 :::::
 
+. . .
+
 ::::: {.column width="47%"}
-One GD update and $N$ single-observation SGD updates each process $N$
-observations. This is one **epoch of work** for either method.
+One GD iteration or $N$ single-observation SGD iterations: one **epoch** for either method.
 
 ```{r}
 #| label: convergence-by-epochs
 #| echo: false
-#| fig-cap: "The same GD and SGD runs, measured in epochs of work."
+#| fig-cap: "The same GD and SGD runs, measured in epochs."
 
 ggplot(
   dplyr::mutate(conv_data, epoch = observations / N),
@@ -363,46 +395,44 @@ ggplot(
 ) +
   geom_line() +
   scale_y_log10() +
-  labs(x = "Epochs of work", y = "Suboptimality", color = NULL)
+  labs(x = "Epochs", y = "Suboptimality", color = NULL)
 ```
-
-SGD can reach a useful loss sooner when we compare equal amounts of data
-processed. The result depends on the problem and learning rates.
 :::::
 :::
 
-## If SGD Reaches the Minimizer
+## Unbiased Does Not Mean Noiseless
 
-Suppose $\theta_n = \theta^*$, so the **full** gradient is zero.
+Suppose $\theta_k = \theta^*$, so the **full** gradient is zero. Gradient descent would stop there.
 
 \bigskip\pause
 
-Will the next SGD update stay at $\theta^*$?
+What about SGD?
+
+\bigskip\pause
+
+No, because although the stochastic gradient is unbiased, it is still noisy:
+$$
+  \E(\rho_k) = 0, \qquad \E\bigl(\lVert\rho_k\rVert^2\bigr)
+                  = \sigma_\star^2
+                  > 0.
+$$
+
+. . .
+
+With a fixed learning rate $\gamma > 0$,
+$$
+  \theta_{k+1} - \theta^\star = -\gamma\rho_k,
+$$
+so
+$$
+  \E\bigl(\lVert\theta_{k+1} - \theta^*\rVert^2 \mid \theta_k = \theta^*\bigr)
+  = \gamma^2\sigma_\star^2 > 0.
+$$
 
 \medskip\pause
 
-Individual observation gradients usually do not vanish there. Their mean is
-zero, but the sampled gradient can still move the iterate.
-
-## Unbiased Does Not Mean Noiseless
-
-At $\theta^*$, let
-$\sigma_*^2 = \E(\|\rho_n\|_2^2 \mid \theta_n = \theta^*) > 0$. For a fixed
-learning rate $\gamma > 0$,
-$$
-  \theta_{n+1} - \theta^* = -\gamma\rho_n.
-$$
-
-\medskip\pause
-
-Consequently,
-$$
-  \E(\|\theta_{n+1} - \theta^*\|_2^2 \mid \theta_n = \theta^*)
-  = \gamma^2\sigma_*^2 > 0.
-$$
-
-Even a step taken **from** the minimizer moves away from it on average in
-squared distance.
+The next iterate is correct on average, but it still moves away from the
+minimizer.
 
 ## Learning Rate
 
@@ -414,12 +444,18 @@ With a suitable fixed step length, GD can converge to the minimizer.
 
 When observation gradients remain noisy at the minimizer, fixed-rate SGD keeps
 fluctuating around it.
+
+\medskip
+
+We **can** improve this, but first we need to introduce the concept of **strong
+convexity**.
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
 #| label: fixed-learning-rate
 #| fig-cap: "Convergence of SGD for logistic regression with a fixed learning rate."
+#| fig-height: 2.6
 #| echo: false
 
 L <- 0.25 * norm(crossprod(X), "2") / N
@@ -465,14 +501,10 @@ ggplot(fixed_data, aes(epoch, loss, color = method)) +
   scale_y_log10() +
   coord_cartesian(xlim = c(0, 30)) +
   labs(x = "Epochs", y = "Suboptimality", color = NULL) +
-  theme(legend.position = c(0.8, 0.8))
+  theme(legend.position = c(0.6, 0.9))
 ```
 :::::
 :::
-
-\medskip
-
-But first, we need to introduce the concept of **strong convexity**.
 
 ## Strong Convexity
 
@@ -910,6 +942,67 @@ step_size_illustration(0.9)
 :::::
 :::
 
+## Learning Rates in Practice
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+The inverse-power schedule is useful for the Robbins--Monro theorem. A finite
+training run need not use it.
+
+\medskip\pause
+
+In practice, with a fixed training budget, common choices include:
+
+- A constant rate for a moderate accuracy target.\pause
+- Warmup, then linear or cosine decay over a planned run.\pause
+- Reduce the rate when validation performance stalls.
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: practical-learning-rate-schedules
+#| echo: false
+#| fig-height: 2.7
+#| fig-cap: "Illustrative planned schedules."
+
+progress <- seq(0, 1, length.out = 201)
+warmup <- 0.1
+after_warmup <- pmax(0, (progress - warmup) / (1 - warmup))
+
+schedule_data <- tibble(
+  progress,
+  Constant = 1,
+  `Warmup + linear` = pmin(progress / warmup, 1 - after_warmup),
+  `Warmup + cosine` = pmin(
+    progress / warmup,
+    (1 + cos(pi * after_warmup)) / 2
+  )
+) |>
+  pivot_longer(
+    -progress,
+    names_to = "schedule",
+    values_to = "rate"
+  )
+
+ggplot(schedule_data, aes(progress, rate, color = schedule)) +
+  geom_line() +
+  scale_color_manual(
+    values = c(
+      Constant = "darkorange",
+      `Warmup + linear` = "royalblue",
+      `Warmup + cosine` = "forestgreen"
+    )
+  ) +
+  theme(legend.position = c(0.6, 0.8)) +
+  labs(
+    x = "Fraction of training run",
+    y = expression(gamma / gamma[max]),
+    color = NULL
+  )
+```
+:::::
+:::
+
 ## Convergence Rates
 
 ### Gradient Descent
@@ -966,7 +1059,7 @@ So SGD does **not** enjoy linear convergence rates under strong convexity.
 \begin{figure}
 \begin{tikzpicture}
   \begin{axis}[
-      width=6.5cm, height=6cm,
+      width=6.5cm, height=6.7cm,
       xlabel={$n$},
       ylabel={Suboptimality},
       legend pos=north east,
@@ -1001,8 +1094,74 @@ So SGD does **not** enjoy linear convergence rates under strong convexity.
 :::::
 :::
 
+## Another Way to Control Noise
+
+::: {.columns}
+::::: {.column width="47%"}
+Decay controls SGD's noise, but choosing the learning-rate schedule is
+difficult.
+
+\medskip\pause
+
+Could averaging several observation gradients make this choice less delicate?
+
+\medskip\pause
+
+Larger batches lower the noise floor, but process more observations per update.
+:::::
+
+::::: {.column width="47%"}
+```{r}
+#| label: fixed-rate-batch-noise
+#| echo: false
+#| fig-cap: "Mean excess loss (100 runs, $N = 1000$, fixed $\\gamma = 0.2$)."
+#| fig-height: 2.7
+
+set.seed(820)
+
+batch_demo_y <- rnorm(1000)
+batch_demo_target <- mean(batch_demo_y)
+batch_demo_sizes <- c(1L, 10L, 100L)
+batch_demo_updates <- 120L
+batch_demo_runs <- 100L
+batch_demo_rate <- 0.2
+
+batch_demo_data <- purrr::map_dfr(batch_demo_sizes, function(m) {
+  mean_gap <- numeric(batch_demo_updates + 1L)
+
+  for (run in seq_len(batch_demo_runs)) {
+    theta <- batch_demo_target + 3
+    mean_gap[1] <- mean_gap[1] +
+      (theta - batch_demo_target)^2 / 2
+
+    for (k in seq_len(batch_demo_updates)) {
+      gradient <- theta - mean(sample(batch_demo_y, size = m))
+      theta <- theta - batch_demo_rate * gradient
+      mean_gap[k + 1L] <- mean_gap[k + 1L] +
+        (theta - batch_demo_target)^2 / 2
+    }
+  }
+
+  tibble(
+    batch = factor(m, levels = batch_demo_sizes),
+    update = 0:batch_demo_updates,
+    gap = mean_gap / batch_demo_runs
+  )
+})
+
+ggplot(batch_demo_data, aes(update, gap, color = batch)) +
+  geom_line() +
+  scale_y_log10() +
+  theme(legend.position = c(0.5, 0.8)) +
+  labs(x = "Updates", y = "Mean loss gap", color = "Batch size")
+```
+:::::
+:::
+
 ## Mini-Batch Gradient Descent
 
+::: {.columns}
+::::: {.column width="47%"}
 Take a mini-batch $I_n$ of size $m$ and compute
 $$
   \rho_n = \frac{1}{m}\sum_{i \in I_n} \nabla_\theta L(y_i,x_i,\theta_n),
@@ -1015,42 +1174,69 @@ Estimates are still unbiased,
 $$
   \E(\rho_n \mid \theta_n) = \nabla H_N(\theta_n),
 $$
-but variance is reduced by a factor of $1/m$.
+but variance falls roughly as $1/m$ when $m$ is small relative to $N$.
+:::::
 
-\medskip\pause
+::::: {.column width="47%"}
+\begin{algorithm}[H]
+  \caption{Stochastic gradient descent (with mini-batches)}
+  \KwData{Initial parameter $\theta_0$ and learning-rate schedule $(\gamma_n)$}
+  \For{$n = 0,1,\dots$}{
+    $I_n \gets$ mini-batch of $m$ indices\;
+
+    $\rho_n \gets \frac{1}{m}\sum_{i\in I_n}\nabla_\theta L(y_i,x_i,\theta_n)$\;
+
+    $\theta_{n+1} \gets \theta_n - \gamma_n\rho_n$\;
+    \If{converged}{
+      \Return{$\theta_{n+1}$}
+    }
+  }
+\end{algorithm}
+:::::
+:::
+
+--------------------------------------------------------------------------------
+
+## Mini-Batch Convergence Rates and Sizes
+
+::: {.columns}
+::::: {.column width="47%"}
+### Rates
 
 Under Lipschitz gradient, the rate goes from $O(1/\sqrt{n})$ to
 $O(1/\sqrt{mn}+1/n)$.
 
 \medskip\pause
 
-After $E$ epochs, $n = EN/m$, so the bound becomes $O(1/\sqrt{EN}+m/(EN))$. Its
-leading term does not improve with batch size.
+After $E$ epochs, $n = EN/m$, so the bound becomes
+$$
+  O\big(1/\sqrt{EN}+m/(EN)\big).
+$$
+Its leading term does not improve with batch size.
+:::::
 
-\medskip\pause
+. . .
 
-Mini-batches can still reduce runtime through vectorized and parallel
-computation.
-
-\pdfpcnote{
-Connect to law of large numbers: averaging reduces variance.
-}
-
-## How Large Should a Mini-Batch Be?
+::::: {.column width="47%"}
+### How Large Should a Mini-Batch Be?
 
 There is no universal best $m$: useful sizes depend on gradient noise, the
 learning-rate schedule, and the hardware.
 
 \medskip\pause
 
-Try a few feasible sizes across orders of magnitude---for example,
-$m \in \{1,10,100,N\}$ here---and tune the learning rate for each.
+Try different sizes and tune the learning rate for each.
 
 \medskip\pause
 
 Choose the size that reaches a useful loss (or validation error) fastest in
-**wall-clock time**. Stop increasing $m$ once larger batches no longer shorten
-that time.
+**wall-clock time**.
+:::::
+:::
+
+\pdfpcnote{
+Connect to law of large numbers: averaging reduces variance.
+}
 
 --------------------------------------------------------------------------------
 
@@ -1060,9 +1246,8 @@ that time.
 #| fig-width: 5
 #| fig-height: 2.8
 #| fig-cap: "The best tested rate for each batch size minimizes mean loss at
-#|   epoch 100 over three pilot runs. Curves show medians of five new runs;
-#|   ribbons show interquartile ranges. Mini-batch rates decay per update, while
-#|   the full-batch rate stays fixed. Gaps below $10^{-10}$ are clipped."
+#|   epoch 100 over three pilot runs. Mini-batch rates decay per update, while
+#|   the full-batch rate stays fixed."
 
 set.seed(123)
 
@@ -1134,7 +1319,7 @@ conv_data <- purrr::map2_dfr(
       result <- logreg_sgd(
         X,
         y,
-        max_epochs = 100,
+        max_epochs = 25,
         batch_size = b,
         a = 1,
         t0 = rate,
@@ -1144,7 +1329,7 @@ conv_data <- purrr::map2_dfr(
       tibble(
         b = b,
         seed = seed,
-        epoch = seq_len(100),
+        epoch = seq_len(25),
         seconds = result$elapsed,
         loss = pmax(result$loss - loss_optim, 1e-10)
       )
@@ -1243,9 +1428,7 @@ So why even care about SGD?
 #| echo: false
 #| fig-width: 5
 #| fig-height: 2.8
-#| fig-cap: "Logistic regression with $N = 10^5$ and $p = 20$; both methods use
-#|   step length $1/L$. The dashed line marks a 0.01 loss gap. Curves show
-#|   medians of five runs. Timing excludes full-loss checks and reference fitting."
+#| fig-cap: "Logistic regression with $N = 10^5$ and $p = 20$."
 
 set.seed(1729)
 
@@ -1464,21 +1647,6 @@ for (i in c(1, 2, 3, 5, 10, 15, 20, steps)) {
 ```
 
 ##
-
-\begin{algorithm}[H]
-  \caption{Stochastic gradient descent (with mini-batches)}
-  \KwData{Initial parameter $\theta_0$ and learning-rate schedule $(\gamma_n)$}
-  \For{$n = 0,1,\dots$}{
-    $I_n \gets$ mini-batch of $m$ indices\;
-
-    $\rho_n \gets \frac{1}{m}\sum_{i\in I_n}\nabla_\theta L(y_i,x_i,\theta_n)$\;
-
-    $\theta_{n+1} \gets \theta_n - \gamma_n\rho_n$\;
-    \If{converged}{
-      \Return{$\theta_{n+1}$}
-    }
-  }
-\end{algorithm}
 
 ## Implementation Details
 
