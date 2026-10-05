@@ -1,4 +1,10 @@
-decay_scheduler <- function(t0 = 1, a = 1, K = 1, t1 = NULL, k1 = NULL) {
+decay_scheduler <- function(
+  t0 = 1,
+  a = 1,
+  K = 1,
+  t1 = NULL,
+  k1 = NULL
+) {
   force(a)
 
   if (!is.null(t1) && !is.null(k1)) {
@@ -21,9 +27,12 @@ logreg_sgd <- function(
   a = 1,
   beta_mom = 0,
   # Momentum memory (0 = no momentum).
-  momentum_type = "polyak" # "polyak" or "nesterov"
+  momentum_type = "polyak", # "polyak" or "nesterov"
+  record_time = FALSE
 ) {
+  start_time <- if (record_time) as.numeric(Sys.time()) else NULL
   loss <- double(max_epochs)
+  elapsed <- if (record_time) rep(NA_real_, max_epochs) else NULL
 
   n <- nrow(X)
   p <- ncol(X)
@@ -78,7 +87,8 @@ logreg_sgd <- function(
 
       p_hat <- 1 / (1 + exp(-z))
 
-      gradient <- drop(crossprod(X_batch, p_hat - y_batch)) / batch_size
+      gradient <- drop(crossprod(X_batch, p_hat - y_batch)) /
+        batch_size
 
       if (momentum_type == "polyak") {
         rho <- beta_mom * rho + (1 - beta_mom) * gradient
@@ -96,12 +106,26 @@ logreg_sgd <- function(
     # Compute the loss for the current iteration
     z <- X %*% beta
     p_hat <- 1 / (1 + exp(-z))
-    loss[epoch] <- -mean(y * log(p_hat) + (1 - y) * log(1 - p_hat))
+    loss[epoch] <- -mean(
+      y * log(p_hat) + (1 - y) * log(1 - p_hat)
+    )
+
+    if (record_time) {
+      elapsed[epoch] <- as.numeric(Sys.time()) - start_time
+    }
 
     if (loss[epoch] - loss_optim < 1e-6 * loss_optim) {
       break
     }
   }
 
-  list(coefficients = beta, loss = loss, beta_history = beta_history)
+  result <- list(
+    coefficients = beta,
+    loss = loss,
+    beta_history = beta_history
+  )
+  if (record_time) {
+    result$elapsed <- elapsed
+  }
+  result
 }
