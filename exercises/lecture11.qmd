@@ -1,0 +1,79 @@
+---
+title: "Estimate a Mean with SGD: Exercise Solution"
+format: html
+execute:
+  cache: false
+---
+
+Solution to the exercise in [Lecture 11](../slides/lecture11.pdf).
+
+## Minimizer and sampled gradient
+
+Differentiating the average loss gives
+$$
+  H_N'(\theta) = \frac{1}{N}\sum_{i=1}^N (\theta - y_i) = \theta - \bar{y}.
+$$
+Thus the minimizer is $\theta^* = \bar{y}$. If we sample observation $i$, its
+gradient is $\theta - y_i$, and the SGD update is
+$$
+  \theta_{k+1} = \theta_k - \gamma_k(\theta_k - y_{I_k}).
+$$
+
+## Implementation
+
+We use the same sampled indices for both learning rates so that the comparison
+depends only on the rates.
+
+```{r}
+#| label: sgd-mean-solution
+
+set.seed(1)
+
+N <- 100
+y <- rnorm(N, mean = 2)
+steps <- 200
+indices <- sample.int(N, steps, replace = TRUE)
+
+run_sgd <- function(learning_rate) {
+  theta <- numeric(steps + 1)
+
+  for (k in seq_len(steps)) {
+    i <- indices[k]
+    gamma <- learning_rate(k)
+    theta[k + 1] <- theta[k] - gamma * (theta[k] - y[i])
+  }
+
+  theta
+}
+
+constant <- run_sgd(function(k) 0.1)
+decaying <- run_sgd(function(k) 1 / k)
+
+plot(
+  0:steps,
+  constant,
+  type = "l",
+  col = "darkorange",
+  ylim = range(constant, decaying, mean(y)),
+  xlab = "Update",
+  ylab = expression(theta[k])
+)
+lines(0:steps, decaying, col = "royalblue")
+abline(h = mean(y), lty = 2)
+legend(
+  "bottomright",
+  legend = c(
+    "Fixed rate: 0.1",
+    "Decaying rate: 1/k",
+    "Sample mean"
+  ),
+  col = c("darkorange", "royalblue", "black"),
+  lty = c(1, 1, 2),
+  bty = "n"
+)
+```
+
+The fixed rate keeps responding to each new observation, so its path continues
+to fluctuate around $\bar{y}$. With $\gamma_k = 1/k$, the update produces the
+running mean of the sampled observations. Its fluctuations shrink as more
+observations are drawn, and it converges to $\bar{y}$.
