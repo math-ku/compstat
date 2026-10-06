@@ -427,22 +427,22 @@ plot.new()
 plot.window(xlim = c(-2.3, 8.5), ylim = c(0.4, 2.6))
 
 for (row in seq_along(draws)) {
-  y <- 3 - row
-  text(-2.2, y, names(draws)[row], adj = 0, cex = 0.8)
+  row_y <- 3 - row
+  text(-2.2, row_y, names(draws)[row], adj = 0, cex = 0.8)
 
   for (i in seq_along(draws[[row]])) {
     observation <- draws[[row]][i]
     rect(
       i - 0.45,
-      y - 0.4,
+      row_y - 0.4,
       i + 0.35,
-      y + 0.4,
+      row_y + 0.4,
       col = colors[observation],
       border = NA
     )
     text(
       i - 0.05,
-      y,
+      row_y,
       observation,
       col = ifelse(
         observation %in% c("A", "F"),
