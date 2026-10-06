@@ -664,7 +664,7 @@ $$
 
 This is twice differentiable with
 $$
-  D^2H(\theta) = 2 - \sin(\theta).
+  H''(\theta) = 2 - \sin(\theta).
 $$
 
 \medskip\pause
