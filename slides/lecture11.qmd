@@ -99,8 +99,8 @@ $$
 
 ### The Problem {.alert}
 
-Computing $\nabla H_n$ means touching **every** observation.
-Each contribution costs $O(p)$, so one iteration costs $O(np)$.
+Computing $\nabla H_n$ means touching **every** observation. Each contribution
+costs $O(p)$, so one iteration costs $O(np)$.
 
 \medskip\pause
 
@@ -177,7 +177,6 @@ sgd_basic <- function(
 }
 ```
 
-
 ## Example: Ordinary Least Squares
 
 The empirical risk is
@@ -210,8 +209,8 @@ $$
 
 \medskip\pause
 
-Gradient descent (GD) follows a smooth path to the minimizer. How do
-you think SGD will behave?
+Gradient descent (GD) follows a smooth path to the minimizer. How do you think
+SGD will behave?
 :::::
 
 ::::: {.column width="47%"}
@@ -382,7 +381,8 @@ ggplot(
 . . .
 
 ::::: {.column width="47%"}
-One GD iteration or $N$ single-observation SGD iterations: one **epoch** for either method.
+One GD iteration or $N$ single-observation SGD iterations: one **epoch** for
+either method.
 
 ```{r}
 #| label: convergence-by-epochs
@@ -400,9 +400,70 @@ ggplot(
 :::::
 :::
 
+## What Does an Epoch See?
+
+For single-observation SGD, one epoch means $N$ updates. It does not necessarily
+mean that every observation was used once.
+
+\medskip\pause
+
+```{r}
+#| label: sgd-epoch-sampling
+#| echo: false
+#| fig-width: 5
+#| fig-height: 1.6
+#| fig-cap: "Two ways to select eight observations over one epoch."
+
+draws <- strsplit(c("ACCHDAFB", "DAGBHECF"), "")
+names(draws) <- c("Independent draws", "Shuffle once")
+colors <- setNames(
+  palette.colors(8, palette = "Okabe-Ito"),
+  LETTERS[1:8]
+)
+
+old_par <- par(mar = c(0, 0, 0, 0))
+plot.new()
+plot.window(xlim = c(-2.3, 8.5), ylim = c(0.4, 2.6))
+
+for (row in seq_along(draws)) {
+  y <- 3 - row
+  text(-2.2, y, names(draws)[row], adj = 0, cex = 0.8)
+
+  for (i in seq_along(draws[[row]])) {
+    observation <- draws[[row]][i]
+    rect(
+      i - 0.45,
+      y - 0.4,
+      i + 0.35,
+      y + 0.4,
+      col = colors[observation],
+      border = NA
+    )
+    text(
+      i - 0.05,
+      y,
+      observation,
+      col = ifelse(
+        observation %in% c("A", "F"),
+        "white",
+        "black"
+      )
+    )
+  }
+}
+
+par(old_par)
+```
+
+\medskip\pause
+
+Independent draws may revisit some observations and miss others. Shuffling the
+data once per epoch uses each observation exactly once.
+
 ## Unbiased Does Not Mean Noiseless
 
-Suppose $\theta_k = \theta^*$, so the **full** gradient is zero. Gradient descent would stop there.
+Suppose $\theta_k = \theta^*$, so the **full** gradient is zero. Gradient
+descent would stop there.
 
 \bigskip\pause
 
@@ -412,9 +473,8 @@ What about SGD?
 
 No, because although the stochastic gradient is unbiased, it is still noisy:
 $$
-  \E(\rho_k) = 0, \qquad \E\bigl(\lVert\rho_k\rVert^2\bigr)
-                  = \sigma_\star^2
-                  > 0.
+  \E(\rho_k) = 0, \qquad \E\bigl(\lVert\rho_k\rVert^2\bigr) = \sigma_\star^2
+                                                            > 0.
 $$
 
 . . .
@@ -690,6 +750,56 @@ perfectly conditioned.
 
 We reach the minimum in one step with gradient descent and step length
 $t = 1/L = 1/2$.
+
+## Why Scale Predictors Before SGD?
+
+When predictors have very different scales, the loss can be steep in one
+direction and flat in another. One learning rate must work for both directions.
+
+\medskip\pause
+
+```{r}
+#| label: sgd-predictor-scaling
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+
+grid <- seq(-2, 2, length.out = 101)
+contour_levels <- c(0.25, 0.5, 1, 2, 3)
+old_par <- par(mfrow = c(1, 2), mar = c(2.2, 2.2, 1.5, 0.5))
+
+contour(
+  grid,
+  grid,
+  outer(grid, grid, function(x, y) ((3 * x)^2 + y^2) / 2),
+  levels = contour_levels,
+  drawlabels = FALSE,
+  col = "royalblue",
+  asp = 1,
+  xlab = "",
+  ylab = "",
+  main = "Original predictors"
+)
+contour(
+  grid,
+  grid,
+  outer(grid, grid, function(x, y) (x^2 + y^2) / 2),
+  levels = contour_levels,
+  drawlabels = FALSE,
+  col = "royalblue",
+  asp = 1,
+  xlab = "",
+  ylab = "",
+  main = "Scaled predictors"
+)
+
+par(old_par)
+```
+
+\medskip\pause
+
+Scaling can make the contours more nearly round and the learning rate easier to
+choose. Use training-data scales for new observations too.
 
 ## The Robbins--Monro Convergence Theorem
 
