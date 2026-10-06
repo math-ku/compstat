@@ -220,6 +220,7 @@ SGD will behave?
 #| fig-show: animate
 #| fig-height: 3.4
 #| fig-width: 3.0
+#| dev.args: { bg: white, pointsize: 9 }
 
 set.seed(123)
 
