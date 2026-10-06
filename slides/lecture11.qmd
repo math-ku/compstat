@@ -1707,55 +1707,70 @@ for (i in c(1, 2, 3, 5, 10, 15, 20, steps)) {
 }
 ```
 
-## Why Scale Predictors Before SGD?
+## Why Scale Predictors for GD and SGD?
 
-When predictors have very different scales, the loss can be steep in one
-direction and flat in another. One learning rate must work for both directions.
+Unequal predictor scales stretch the loss. A learning rate stable in the steep
+direction can make progress slow in the flat direction.
 
-\medskip\pause
+. . .
 
 ```{r}
 #| label: sgd-predictor-scaling
 #| echo: false
-#| fig-width: 5
-#| fig-height: 2
+#| fig-width: 5.2
+#| fig-height: 1.9
+#| fig-cap: >-
+#|   After eight GD steps, scaling permits a larger stable learning rate. SGD
+#|   faces the same constraint, with additional noise from sampled gradients.
 
 grid <- seq(-2, 2, length.out = 101)
-contour_levels <- c(0.25, 0.5, 1, 2, 3)
 old_par <- par(mfrow = c(1, 2), mar = c(2.2, 2.2, 1.5, 0.5))
 
-contour(
-  grid,
-  grid,
-  outer(grid, grid, function(x, y) ((3 * x)^2 + y^2) / 2),
-  levels = contour_levels,
-  drawlabels = FALSE,
-  col = "royalblue",
-  asp = 1,
-  xlab = "",
-  ylab = "",
-  main = "Original predictors"
-)
-contour(
-  grid,
-  grid,
-  outer(grid, grid, function(x, y) (x^2 + y^2) / 2),
-  levels = contour_levels,
-  drawlabels = FALSE,
-  col = "royalblue",
-  asp = 1,
-  xlab = "",
-  ylab = "",
-  main = "Scaled predictors"
-)
+for (curvature in list(c(9, 1), c(1, 1))) {
+  scaled <- all(curvature == 1)
+  gamma <- if (scaled) 0.8 else 0.2
+  path <- matrix(NA_real_, nrow = 9, ncol = 2)
+  path[1, ] <- c(1.5, 1.5)
+
+  for (k in seq_len(8)) {
+    path[k + 1, ] <- path[k, ] - gamma * curvature * path[k, ]
+  }
+
+  contour(
+    grid,
+    grid,
+    outer(
+      grid,
+      grid,
+      function(x, y) {
+        (curvature[1] * x^2 + curvature[2] * y^2) / 2
+      }
+    ),
+    levels = c(0.25, 0.5, 1, 2, 3),
+    drawlabels = FALSE,
+    col = "royalblue",
+    asp = 1,
+    xlab = "",
+    ylab = "",
+    main = if (scaled) {
+      "Scaled: rate 0.8"
+    } else {
+      "Original: rate 0.2"
+    }
+  )
+  lines(path[, 1], path[, 2], col = "darkorange")
+  points(
+    path[-1, 1],
+    path[-1, 2],
+    col = "darkorange",
+    pch = 19,
+    cex = 0.5
+  )
+  points(path[1, 1], path[1, 2], pch = 1, cex = 1.2)
+}
 
 par(old_par)
 ```
-
-\medskip\pause
-
-Scaling can make the contours more nearly round and the learning rate easier to
-choose. Use training-data scales for new observations too.
 
 ## Implementation Details
 
