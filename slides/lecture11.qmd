@@ -752,56 +752,6 @@ perfectly conditioned.
 We reach the minimum in one step with gradient descent and step length
 $t = 1/L = 1/2$.
 
-## Why Scale Predictors Before SGD?
-
-When predictors have very different scales, the loss can be steep in one
-direction and flat in another. One learning rate must work for both directions.
-
-\medskip\pause
-
-```{r}
-#| label: sgd-predictor-scaling
-#| echo: false
-#| fig-width: 5
-#| fig-height: 2
-
-grid <- seq(-2, 2, length.out = 101)
-contour_levels <- c(0.25, 0.5, 1, 2, 3)
-old_par <- par(mfrow = c(1, 2), mar = c(2.2, 2.2, 1.5, 0.5))
-
-contour(
-  grid,
-  grid,
-  outer(grid, grid, function(x, y) ((3 * x)^2 + y^2) / 2),
-  levels = contour_levels,
-  drawlabels = FALSE,
-  col = "royalblue",
-  asp = 1,
-  xlab = "",
-  ylab = "",
-  main = "Original predictors"
-)
-contour(
-  grid,
-  grid,
-  outer(grid, grid, function(x, y) (x^2 + y^2) / 2),
-  levels = contour_levels,
-  drawlabels = FALSE,
-  col = "royalblue",
-  asp = 1,
-  xlab = "",
-  ylab = "",
-  main = "Scaled predictors"
-)
-
-par(old_par)
-```
-
-\medskip\pause
-
-Scaling can make the contours more nearly round and the learning rate easier to
-choose. Use training-data scales for new observations too.
-
 ## The Robbins--Monro Convergence Theorem
 
 Let $H(\theta) = \E L(Y,\theta)$ be the population risk. Suppose $H$ is strongly
@@ -1757,7 +1707,55 @@ for (i in c(1, 2, 3, 5, 10, 15, 20, steps)) {
 }
 ```
 
-##
+## Why Scale Predictors Before SGD?
+
+When predictors have very different scales, the loss can be steep in one
+direction and flat in another. One learning rate must work for both directions.
+
+\medskip\pause
+
+```{r}
+#| label: sgd-predictor-scaling
+#| echo: false
+#| fig-width: 5
+#| fig-height: 2
+
+grid <- seq(-2, 2, length.out = 101)
+contour_levels <- c(0.25, 0.5, 1, 2, 3)
+old_par <- par(mfrow = c(1, 2), mar = c(2.2, 2.2, 1.5, 0.5))
+
+contour(
+  grid,
+  grid,
+  outer(grid, grid, function(x, y) ((3 * x)^2 + y^2) / 2),
+  levels = contour_levels,
+  drawlabels = FALSE,
+  col = "royalblue",
+  asp = 1,
+  xlab = "",
+  ylab = "",
+  main = "Original predictors"
+)
+contour(
+  grid,
+  grid,
+  outer(grid, grid, function(x, y) (x^2 + y^2) / 2),
+  levels = contour_levels,
+  drawlabels = FALSE,
+  col = "royalblue",
+  asp = 1,
+  xlab = "",
+  ylab = "",
+  main = "Scaled predictors"
+)
+
+par(old_par)
+```
+
+\medskip\pause
+
+Scaling can make the contours more nearly round and the learning rate easier to
+choose. Use training-data scales for new observations too.
 
 ## Implementation Details
 
