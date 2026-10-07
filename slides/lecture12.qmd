@@ -28,20 +28,21 @@ using namespace Rcpp;
 
 ## Last Time: Stochastic Gradient Descent
 
-A version of gradient descent that samples observations (functions) and
-converges in expectation.
+A version of gradient descent that samples observations (functions) to estimate
+the gradient. It can converge under suitable assumptions on the objective,
+gradient estimates, and step sizes.
 
 \medskip\pause
 
 \begin{algorithm}[H]
   \caption{Stochastic gradient descent (with mini-batches)}
-  \KwData{Initial step size $t_0 > 0$}
+  \KwData{Initial parameter $x$ and step size $t_0 > 0$}
   \For{$k = 1,2,\dots$}{
     $A_k \gets$ batch of data\;
 
-    $t_k \gets$ new, smaller, step size\;
+    $t_k \gets$ step size from a suitable diminishing schedule\;
 
-    $x \gets x - t_k \sum_{i \in A_k} \nabla f(x_i)$\;
+    $x \gets x - t_k \frac{1}{|A_k|} \sum_{i \in A_k} \nabla f_i(x)$\;
     \If{converged}{
       \Return{$x$}
     }
@@ -92,14 +93,14 @@ Because R lets us
 - work interactively,\pause
 - explore and visualize data via a rich toolset,\pause
 - easily retrieve or generate data,\pause
-- summarize and report (via RMarkdown/Quarto), and\pause
+- summarize and report (via R Markdown or Quarto), and\pause
 - make use of a comprehensive ecosystem of packages.
 :::::
 :::
 
 ## Why *Not* R?
 
-R is often slow because it is an **interpreted** language.
+R loops often incur overhead from interpreting code and handling dynamic types.
 
 . . .
 
@@ -107,29 +108,28 @@ R is often slow because it is an **interpreted** language.
 ::::: {.column width="47%"}
 ### Interpreted Languages
 
-<!-- TODO: Add flow chart to describe interpreted languages -->
-
-Execution of code happens line by line.
+An interpreter executes expressions or bytecode at runtime.
 
 \medskip\pause
 
-Many functions are written in C, but you still have to call them from R.
+R can compile code to bytecode. Many R functions also call compiled C or Fortran
+code.
 
 \medskip\pause
 
-**Examples:** R, Python, Matlab, Javascript.
+**Examples:** R and Python commonly execute bytecode in an interpreter.
 :::::
 
 . . .
 
 ::::: {.column width="47%"}
-### Compiled Languages
+### Ahead-of-Time Compilation
 
 Code is translated into machine code before execution.
 
 \medskip\pause
 
-**Examples:** C, C++, Fortran, Java
+**Examples:** C, C++, Fortran, and Rust.
 :::::
 :::
 
@@ -155,15 +155,13 @@ Code is translated into machine code before execution.
     \node[process, fill=yellow!10] (src) {Source code};
     \node[diamond, draw, fill=green!15, above=of src] (user) {User};
     \node[process, fill=blue!10, right=of src] (interp) {Interpreter};
-    \node[process, fill=red!15, right=of interp] (bin) {Machine code};
-    \node[circle, draw, fill=gray!15, right=of bin] (cpu) {CPU};
+    \node[circle, draw, fill=gray!15, right=of interp] (cpu) {CPU};
 
     \draw[arrow] (src) -- (interp);
     \draw[arrow] (user) -- (src);
-    \draw[arrow] (interp) -- (bin);
-    \draw[arrow] (bin) -- (cpu);
+    \draw[arrow] (interp) -- (cpu);
   \end{tikzpicture}
-  \caption{Interpreted languages (R, Python)}
+  \caption{An interpreter executes source code or bytecode (R, Python).}
 \end{figure}
 
 \pause
@@ -187,7 +185,7 @@ Code is translated into machine code before execution.
     \draw[arrow] (user) -- (bin);
     \draw[arrow] (bin) -- (cpu);
   \end{tikzpicture}
-  \caption{Compiled Languages (C++, Fortran, Rust)}
+  \caption{Ahead-of-time compilation (C++, Fortran, Rust)}
 \end{figure}
 
 ## C++ Code
@@ -195,6 +193,8 @@ Code is translated into machine code before execution.
 Here's a small program in C++.
 
 ```cpp
+#include <iostream>
+
 int
 add(int a, int b)
 {
@@ -211,8 +211,8 @@ main()
 
 ## Assembly Representation
 
-In assembly (human-readable machine) code, the code on the previous slide might
-look like this:
+A disassembly of the program on the previous slide might look like this. The
+hexadecimal bytes encode machine instructions; the mnemonics describe them.
 
 ```assembly
 0000000000401130 <main>:
@@ -229,16 +229,17 @@ look like this:
 
 ### Binary Representation
 
-In the end, this will be converted in binary (0s and 1s).
+Machine code is stored as binary (0s and 1s). The bytes above are displayed in
+hexadecimal.
 
 ## Why C++?
 
-C++ generates performant machine code: you no longer have to be scared of for
-loops.
+C++ compilers generate efficient machine code: you no longer have to be scared
+of `for` loops.
 
 \medskip\pause
 
-Compilation catches bugs early.
+Compilation catches type errors and some other bugs early.
 
 \medskip
 
@@ -312,7 +313,7 @@ No need to manually compile and link code. Rcpp takes care of this for you!
 
 ### Classes
 
-Rcpp defines a number of classes that wraps R objects, including
+Rcpp defines a number of classes that wrap R objects, including
 
 - `Rcpp::NumericVector`
 - `Rcpp::DataFrame`
@@ -322,7 +323,7 @@ Rcpp defines a number of classes that wraps R objects, including
 
 ### Functions
 
-Rcpp offers many functions (sugar) that offer counterparts to R functions,
+Rcpp offers counterparts to many R functions through its sugar interface,
 including
 
 - `Rcpp::sum()`
@@ -332,7 +333,7 @@ including
 
 ### Linux
 
-Depends on distro, but on Ubuntu call this:
+The required tools depend on your distribution. On Ubuntu, run:
 
 ```bash
 sudo apt install r-base-dev
@@ -340,9 +341,9 @@ sudo apt install r-base-dev
 
 . . .
 
-### OSX
+### macOS
 
-You need Xcode. Open up a terminal and call this:
+You need the Xcode Command Line Tools. Open a terminal and run:
 
 ```sh
 xcode-select --install
@@ -352,7 +353,16 @@ xcode-select --install
 
 ### Windows
 
-Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
+Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for your
+version of R.
+
+\medskip
+
+On each platform, also install the Rcpp package in R:
+
+```r
+install.packages("Rcpp")
+```
 
 ## Side-By-Side Comparison
 
@@ -405,8 +415,8 @@ sum_cpp(NumericVector x)
 
 ## Return and Argument Types
 
-C++ is **strongly typed**: you need to specify types for return values and
-arguments.
+C++ is **statically typed**: types are checked at compile time. In these
+examples, you specify types for return values and arguments.
 
 . . .
 
@@ -414,7 +424,7 @@ arguments.
 double   // Return type: double
 f(int x) // Argument type: int
 {
-  return x / 3;
+  return x / 3.0;
 }
 ```
 
@@ -426,7 +436,7 @@ If your function returns nothing, use `void`:
 void
 f()
 {
-  Rcpp::cout << "Hello world" << std::endl;
+  Rcpp::Rcout << "Hello world" << std::endl;
 }
 ```
 
@@ -563,7 +573,8 @@ But you don't need them with Rcpp and they are often a source of bugs.
 
 ## In-Place Modification
 
-Unlike R, C++ functions can modify their arguments in place.
+Unlike ordinary R vector arguments, C++ arguments passed by reference can be
+modified in place.
 
 . . .
 
@@ -612,7 +623,7 @@ class Point
 public: // can also use private
   double x;
   double y;
-}
+};
 ```
 
 . . .
@@ -647,7 +658,7 @@ public:
 
 . . .
 
-You call methods using the `.` operator (or `->` for references).
+You call methods using `.` for objects and references, or `->` for pointers.
 
 . . .
 
@@ -659,9 +670,9 @@ distance(Point p)
 }
 ```
 
-## C++ is Not a Functional Programming Language
+## Functional Programming Features in C++
 
-But it has elements of it.
+C++ supports several programming styles, including functional programming.
 
 \medskip\pause
 
@@ -696,7 +707,7 @@ f(int x)
   return x + 1;
 }
 
-void
+int
 main()
 {
   f(3);   // OK (an integer, result is 4)
@@ -739,7 +750,8 @@ After declaration, the variable cannot be modified.
 
 \medskip\pause
 
-Marginal performance improvements, but signals intent and can prevent bugs.
+`const` signals intent and helps prevent accidental modification. It does not
+guarantee faster code.
 
 ## Including C++ Code in R
 
@@ -751,8 +763,8 @@ library(Rcpp)
 
 . . .
 
-The C++ code can be passed directly to the `cppFunction()` as a text string for
-compilation and setting up an R interface.
+Pass C++ code to `cppFunction()` as a text string. It compiles the code and
+creates an R interface.
 
 ```{r}
 #| label: rcpp-one
@@ -777,7 +789,7 @@ But it's better to use `.cpp` files (for instance in the `src/` folder) and call
 
 \medskip\pause
 
-In `R/my_r_experiment.R` (or similar), call
+In `scripts/my_r_experiment.R` (or similar), call
 
 ```r
 sourceCpp(here::here("src", "my_cpp_functions.cpp"))
@@ -810,9 +822,9 @@ Before each function you want to export to R, add the comment
 
 ## Sum Functions
 
-Let's see if we can beat R's own `sum()` (See
+Let's see if we can beat R's own `sum()` (see
 [here](https://github.com/wch/r-source/blob/3b69aff4083ee81d6c4fe7177eb2b2a2ca41a240/src/main/summary.c#L152)
-for the implementation.)
+for the implementation).
 
 ```{r}
 #| label: bench-sum
@@ -840,7 +852,8 @@ sum_cpp_ref(Rcpp::NumericVector x)
 
 . . .
 
-But no, `Rcpp::NumericVector` is a reference to the R object.
+But no, copying the `Rcpp::NumericVector` wrapper does not copy the underlying R
+vector. Both wrappers refer to the same R object.
 
 ## Pitfall: Modifying R Objects
 
@@ -871,9 +884,9 @@ x
 The input vector `x` has been modified in place! You can use `Rcpp::clone()` to
 avoid this.
 
-## `Const` References
+## `const` References
 
-If you don't want to modify the input, you can pass by const reference.
+A `const` reference restricts modification through the parameter.
 
 . . .
 
@@ -895,7 +908,10 @@ sum_cpp_const_ref(const Rcpp::NumericVector& x) {
 }
 ```
 
-In C++, this can make a big difference, but with Rcpp, it makes no difference.
+For ordinary C++ containers, passing by reference avoids copying their data.
+`NumericVector` already shares the underlying R vector when passed by value, so
+a reference usually provides little performance benefit. `const` still helps
+prevent accidental modification.
 
 ## Printing
 
@@ -941,8 +957,8 @@ safe_log(double x) {
 
 ## Premature Optimization
 
-Premature optimization is especially useless with C++ since the compiler will
-often optimize the code for you anyway.
+Measure performance before optimizing. C++ compilers remove some overhead, but
+algorithm choice, memory access, and allocation still matter.
 
 \medskip\pause
 
@@ -961,8 +977,11 @@ Copies and temporaries are often optimized away.
 #| cache: true
 
 rvonmises <- function(N, kappa) {
+  if (!is.finite(kappa) || kappa < 0) {
+    stop("kappa must be finite and nonnegative")
+  }
   y <- numeric(N)
-  for (i in 1:N) {
+  for (i in seq_len(N)) {
     reject <- TRUE
     while (reject) {
       y0 <- runif(1, -pi, pi)
@@ -987,12 +1006,15 @@ rvonmises <- function(N, kappa) {
 Rcpp::NumericVector
 rvonmises_cpp(const int N, const double kappa)
 {
+  if (!std::isfinite(kappa) || kappa < 0) {
+    Rcpp::stop("kappa must be finite and nonnegative");
+  }
   Rcpp::NumericVector y(N);
   int i = 0;
 
   while (i < N) {
     double y0 = R::runif(-M_PI, M_PI);
-    bool accept = R::runif(0, 1) <= exp(kappa * (cos(y0) - 1));
+    bool accept = R::runif(0, 1) <= std::exp(kappa * (std::cos(y0) - 1));
     if (accept) {
       y[i] = y0;
       i++;
@@ -1039,7 +1061,8 @@ containers.
 
 ### Efficiently Growing Vectors
 
-Unlike R and Rcpp vector, `std::vector()` grows efficiently.
+Unlike R and Rcpp vectors, `std::vector` supports efficient growth through
+amortized constant-time insertion at the end.
 
 ```cpp
 std::vector<int> x;
@@ -1091,7 +1114,8 @@ More low-level than Armadillo, but does not depend on BLAS/LAPACK.
 
 ## Parallelization
 
-Parallelization in R comes with overhead. The situation in C++ is better.
+Parallelization has overhead in both R and C++. C++ threads can reduce the
+communication and serialization overhead of separate R processes.
 
 \medskip\pause
 
@@ -1107,14 +1131,15 @@ using namespace Rcpp;
 double
 parallel_function(const Rcpp::NumericVector& x)
 {
-  // Your parallel code here
+  // Implement a parallel reduction and return its result here.
+  return 0.0; // Placeholder result.
 }
 ```
 
 . . .
 
-We won't cover the details here, but expect much better leverage than using R's
-parallelization tools.
+We won't cover the details here. Speedups depend on the workload and how work is
+divided. Parallel workers generally must avoid calling the R or Rcpp APIs.
 
 ## Packages
 
@@ -1169,7 +1194,9 @@ Won't cover it here, but has some advantages and disadvantages compared to Rcpp.
 
 - Smaller ecosystem
 - Fewer built-in functions (sugar)
-- No (stable) Armadillo or Eigen bindings
+- Less established Armadillo and Eigen bindings:
+  [cpp11armadillo](https://cran.r-project.org/package=cpp11armadillo) and
+  [cpp11eigen](https://cran.r-project.org/package=cpp11eigen)
 :::::
 :::
 
@@ -1204,6 +1231,7 @@ cpp_sd(NumericVector x) {
   double x_mean = 0.0;
 
   int n = x.size();
+  if (n < 2) return NA_REAL;
 
   for (int i = 0; i < n; ++i) {
     x_mean += x[i] / n;
@@ -1219,7 +1247,8 @@ cpp_sd(NumericVector x) {
 
 ## Summary
 
-R is an interpreted language, which makes it easy to use but often slow.
+R supports interactive work, but interpreted loops and dynamic typing can add
+overhead.
 
 \medskip\pause
 
