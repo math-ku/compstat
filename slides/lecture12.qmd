@@ -36,15 +36,15 @@ gradient estimates, and step sizes.
 
 \begin{algorithm}[H]
   \caption{Stochastic gradient descent (with mini-batches)}
-  \KwData{Initial parameter $x$ and step size $t_0 > 0$}
-  \For{$k = 1,2,\dots$}{
-    $A_k \gets$ batch of data\;
+  \KwData{Initial parameter $\theta_0$ and learning-rate schedule $(\gamma_n)$}
+  \For{$n = 0,1,\dots$}{
+    $I_n \gets$ mini-batch of $m$ indices\;
 
-    $t_k \gets$ step size from a suitable diminishing schedule\;
+    $\rho_n \gets \frac{1}{m}\sum_{i\in I_n}\nabla_\theta L(y_i,x_i,\theta_n)$\;
 
-    $x \gets x - t_k \frac{1}{|A_k|} \sum_{i \in A_k} \nabla f_i(x)$\;
+    $\theta_{n+1} \gets \theta_n - \gamma_n\rho_n$\;
     \If{converged}{
-      \Return{$x$}
+      \Return{$\theta_{n+1}$}
     }
   }
 \end{algorithm}
@@ -76,12 +76,8 @@ We learn how to connect R and C++ using the Rcpp package.
 
 ## Why R?
 
-::: {.columns}
+::: {.columns align="center"}
 ::::: {.column width="30%"}
-Why are we even using R?
-
-\bigskip
-
 ![](../images/r-logo.svg)
 :::::
 
@@ -293,7 +289,8 @@ painful.
 This has changed with the Rcpp package.
 
 ## The Sum Function in C++
-
+::: {.columns align="center"}
+::::: {.column width="47%"}
 ```{Rcpp}
 //| label: rcpp-sum
 //| eval: false
@@ -311,11 +308,15 @@ sum_cpp(Rcpp::NumericVector x) {
   return total;
 }
 ```
+:::::
 
 . . .
 
+::::: {.column width="47%"}
 As you can see, it looks quite similar to R code. We will explore the
 similarities and differences in the rest of this lecture.
+:::::
+:::
 
 ## What Rcpp Brings
 
@@ -374,7 +375,7 @@ xcode-select --install
 Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for your
 version of R.
 
-\medskip
+\medskip\pause
 
 On each platform, also install the Rcpp package in R:
 
@@ -458,6 +459,52 @@ f()
 }
 ```
 
+## R and C++ Types
+
+Rcpp converts R arguments to the types in the C++ function signature and
+converts the return value back to an R object.
+
+\medskip
+
+  | R input           | C++ type              |
+  | ----------------- | --------------------- |
+  | One numeric value | `double`              |
+  | One integer value | `int`                 |
+  | One logical value | `bool`                |
+  | Numeric vector    | `Rcpp::NumericVector` |
+  | Integer vector    | `Rcpp::IntegerVector` |
+  | Numeric matrix    | `Rcpp::NumericMatrix` |
+
+\medskip\pause
+
+Choose types to match the computation, e.g. `int` for counts and `double` for
+continuous values.
+
+## Integer Division
+
+In R, `5 / 2` gives `2.5`. In C++, dividing two integers discards the fractional
+part.
+
+```cpp
+double a = 5 / 2;   // a is 2.0.
+double b = 5 / 2.0; // b is 2.5.
+```
+
+. . .
+
+The division happens before assignment. Storing the result in a `double` does
+not recover the lost fraction!
+
+\medskip\pause
+
+If both operands are integer variables, convert one before dividing:
+
+```cpp
+int successes = 5;
+int trials = 2;
+double ratio = static_cast<double>(successes) / trials;
+```
+
 ## Syntax
 
 ### Assignment
@@ -519,6 +566,50 @@ ooops(Rcpp::NumericVector x)
 . . .
 
 Will look at one element past the end of the vector!
+
+## Working with Matrices
+
+Use `X(i, j)` to access row `i`, column `j`. Both indices start at zero.
+
+\small
+
+```{Rcpp}
+//| label: rcpp-column-sums
+//| eval: false
+
+// [[Rcpp::export]]
+Rcpp::NumericVector
+column_sums_cpp(const Rcpp::NumericMatrix& X)
+{
+  Rcpp::NumericVector out(X.ncol());
+  for (int j = 0; j < X.ncol(); ++j) {
+    for (int i = 0; i < X.nrow(); ++i) {
+      out[j] += X(i, j);
+    }
+  }
+  return out;
+}
+```
+
+\normalsize
+
+. . .
+
+R stores matrices by column. Visiting consecutive rows within each column
+follows their order in memory.
+
+```{r}
+#| label: rcpp-column-sums-check
+#| include: false
+#| cache: false
+
+X <- matrix(seq_len(12), nrow = 3)
+stopifnot(isTRUE(all.equal(column_sums_cpp(X), colSums(X))))
+stopifnot(identical(
+  column_sums_cpp(matrix(numeric(), 0, 2)),
+  c(0, 0)
+))
+```
 
 ## Declaration Order Matters
 
@@ -917,19 +1008,23 @@ double
 sum_cpp_const_ref(const Rcpp::NumericVector& x) {
   double total = 0.0;
   const int n = x.size();
-
   for (int i = 0; i < n; ++i) {
     total += x[i];
   }
-
   return total;
 }
 ```
 
 For ordinary C++ containers, passing by reference avoids copying their data.
+
+\medskip\pause
+
 `NumericVector` already shares the underlying R vector when passed by value, so
-a reference usually provides little performance benefit. `const` still helps
-prevent accidental modification.
+a reference usually provides little performance benefit.
+
+\medskip\pause
+
+But `const` still helps prevent accidental modification.
 
 ## Printing
 
@@ -973,26 +1068,80 @@ safe_log(double x) {
 }
 ```
 
-## Premature Optimization
+## Missing Values
 
-Measure performance before optimizing. C++ compilers remove some overhead, but
-algorithm choice, memory access, and allocation still matter.
-
-\medskip\pause
-
-What you see in the source code is **not** what you get.
+Use `NA_REAL` for a missing numeric result. Detect missing values with
+`Rcpp::NumericVector::is_na()`, which recognizes both `NA` and `NaN`.
 
 \medskip\pause
 
-Copies and temporaries are often optimized away.
+```{Rcpp}
+//| label: rcpp-sum-missing
+//| eval: false
+
+// [[Rcpp::export]]
+double
+sum_checked_cpp(const Rcpp::NumericVector& x)
+{
+  double total = 0.0;
+  for (int i = 0; i < x.size(); ++i) {
+    if (Rcpp::NumericVector::is_na(x[i])) {
+      return NA_REAL;
+    }
+    total += x[i];
+  }
+  return total;
+}
+```
+
+```{r}
+#| label: rcpp-sum-missing-check
+#| include: false
+#| cache: false
+
+stopifnot(
+  identical(sum_checked_cpp(c(1, 2, 3)), 6),
+  identical(sum_checked_cpp(c(1, NA_real_)), NA_real_),
+  identical(sum_checked_cpp(c(1, NaN)), NA_real_),
+  identical(sum_checked_cpp(numeric()), 0)
+)
+```
+
+## Random Numbers from R
+
+Rcpp provides access to R's random-number generator.
+
+```cpp
+double u = R::runif(0.0, 1.0);
+Rcpp::NumericVector draws = Rcpp::runif(10, 0.0, 1.0);
+```
+
+. . .
+
+`R::runif()` returns one draw; `Rcpp::runif()` returns a vector of draws.
+
+\medskip\pause
+
+Call `set.seed()` in R to make results reproducible. Functions exported with
+`[[Rcpp::export]]` automatically manage R's RNG state.
+
+\medskip\pause
+
+Use these functions for simulation in a single thread. R's RNG cannot safely be
+called from parallel worker threads.
 
 ## Example: Von Mises Rejection Sampling
 
-### R Version
+Rejection sampling is a great example for when C++ can help speed up R code
+because it involves a natural loop with many iterations and a simple computation
+inside the loop.
+
+\pause
 
 ```{r}
 #| label: vM-rejection
 #| cache: true
+#| echo: false
 
 rvonmises <- function(N, kappa) {
   if (!is.finite(kappa) || kappa < 0) {
@@ -1012,13 +1161,10 @@ rvonmises <- function(N, kappa) {
 }
 ```
 
-##
-
-### Rcpp Version
-
 ```{Rcpp}
 //| label: vMsim-cpp
 //| eval: false
+//| echo: false
 
 // [[Rcpp::export]]
 Rcpp::NumericVector
@@ -1032,7 +1178,8 @@ rvonmises_cpp(const int N, const double kappa)
 
   while (i < N) {
     double y0 = R::runif(-M_PI, M_PI);
-    bool accept = R::runif(0, 1) <= std::exp(kappa * (std::cos(y0) - 1));
+    double probability = std::exp(kappa * (std::cos(y0) - 1));
+    bool accept = R::runif(0, 1) <= probability;
     if (accept) {
       y[i] = y0;
       i++;
@@ -1041,8 +1188,6 @@ rvonmises_cpp(const int N, const double kappa)
   return y;
 }
 ```
-
-##
 
 ```{r, dependson=c("vMsim-cpp", "vM-rejection")}
 #| label: vMsim-cpp-runtime
@@ -1060,17 +1205,28 @@ bench::mark(
 
 ## Batch Sizes Revisited: R versus C++
 
+::: {.columns align="center"}
+::::: {.column width="47%"}
 The same logistic regression as last time: $N = 1000$, $p = 2$, and 25 epochs.
-Both implementations use the same batches and learning rates.
 
+\pause\medskip
+
+Small batches pay for many R calls and temporary objects. The C++ loop avoids
+this R overhead.
+
+\medskip
+
+But note that the small batches are still slower than the large batches. Larger
+batches use the hardware more efficiently.
+:::::
+
+::::: {.column width="47%"}
 ```{r}
 #| label: batch-size-rcpp-runtime
 #| echo: false
 #| cache: false
-#| fig-width: 5
 #| fig-height: 2.4
-#| fig-cap: "Median of 10 runs. Times include gradient updates, but exclude
-#|   compilation, batch sampling, rate tuning, and loss evaluation."
+#| fig-cap: "C++ reduces the performance penalty of small batches."
 
 source(here::here("R", "lecture12-batch-sizes.R"))
 Rcpp::sourceCpp(here::here("R", "lecture12-batch-sizes.cpp"))
@@ -1091,18 +1247,87 @@ ggplot(
     x = "Batch size",
     y = "Time for 25 epochs (ms)",
     color = NULL
-  )
+  ) +
+  theme(legend.position = c(0.8, 0.8))
 ```
-
-\pause
-
-Small batches pay for many R calls and temporary objects. The C++ loop avoids
-this R overhead; arithmetic and the single call from R still have a cost.
+:::::
+:::
 
 \pdfpcnote{
 - Compare implementation costs for fixed work, not time to a target loss.\\
 - Use the same gradients as lecture 11, without loss evaluation or coefficient history.\\
 }
+
+## Convergence by Epoch
+
+Mini-batch rates decay per update. Regular GD uses all $N = 1000$ observations
+and a fixed rate.
+
+```{r}
+#| label: batch-size-rcpp-convergence
+#| echo: false
+#| cache: false
+#| fig-width: 5
+#| fig-height: 2.5
+#| fig-cap: "Identical batches and tuned rates in R and C++. Lines show medians
+#|   over five runs; bands show quartiles. The convergence paths agree."
+
+batch_convergence <- logreg_batch_convergence()
+
+ggplot(
+  subset(batch_convergence, language == "C++"),
+  aes(epoch, gap, color = batch, fill = batch)
+) +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper),
+    alpha = 0.15,
+    color = NA
+  ) +
+  geom_line() +
+  scale_y_log10() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(
+    x = "Epoch",
+    y = "Suboptimality",
+    color = expression("Batch size [" * gamma[0] * "]"),
+    fill = expression("Batch size [" * gamma[0] * "]")
+  )
+```
+
+## R versus C++: Convergence in Wall-Clock Time
+
+```{r}
+#| label: batch-size-rcpp-wall-time
+#| echo: false
+#| cache: false
+#| fig-width: 5.3
+#| fig-height: 2.5
+#| fig-cap: "Panels use different time ranges and the same loss scale. Times
+#|   include updates and full-loss evaluation each epoch, but exclude compilation,
+#|   precomputed batch sampling, and rate tuning."
+
+ggplot(
+  batch_convergence,
+  aes(milliseconds, gap, color = batch, fill = batch)
+) +
+  facet_wrap(~language, nrow = 1, scales = "free_x") +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper),
+    alpha = 0.15,
+    color = NA
+  ) +
+  geom_line() +
+  scale_y_log10() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(
+    x = "Elapsed time (ms)",
+    y = "Suboptimality",
+    color = expression("Batch size [" * gamma[0] * "]"),
+    fill = expression("Batch size [" * gamma[0] * "]")
+  )
+```
 
 ## The Standard Template Library (STL)
 
@@ -1111,10 +1336,6 @@ A library of generic algorithms, data structures, and iterators for C++.
 \medskip\pause
 
 It's like R's base package, but for C++.
-
-\medskip\pause
-
-Accessed via the `std` namespace.
 
 \medskip\pause
 
@@ -1136,9 +1357,12 @@ for (int i = 0; i < 10; ++i) {
 }
 ```
 
-## Linear Algebra with RcppArmadillo
+## Linear Algebra in C++
 
-Armadillo is a user-friendly C++ library for linear algebra.
+### Armadillo
+
+A user-friendly C++ library for linear algebra, with intuitive MATLAB-like
+syntax, but depends on BLAS and LAPACK.
 
 ```cpp
 #include <RcppArmadillo.h>
@@ -1154,27 +1378,10 @@ armaMatMul(const arma::mat& A, const arma::mat& B)
 
 . . .
 
-Intuitive syntax, depends on BLAS and LAPACK.
+### Eigen
 
-## Linear Algebra with RcppEigen
-
-Eigen is another popular C++ library for linear algebra.
-
-```cpp
-#include <RcppEigen.h>
-
-// [[Rcpp::depends(RcppEigen)]]
-// [[Rcpp::export]]
-Eigen::MatrixXd
-eigenMatMul(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B)
-{
-  return A * B;
-}
-```
-
-. . .
-
-More low-level than Armadillo, but does not depend on BLAS/LAPACK.
+Another popular C++ library for linear algebra. More low-level than Armadillo,
+but does not depend on BLAS/LAPACK.
 
 ## Parallelization
 
@@ -1186,39 +1393,29 @@ communication and serialization overhead of separate R processes.
 Two main ways to parallelize C++ code in R are OpenMP and the
 [RcppParallel](https://rcppcore.github.io/RcppParallel/) package.
 
-```cpp
-#include <RcppParallel.h>
-using namespace Rcpp;
-
-// [[Rcpp::depends(RcppParallel)]]
-// [[Rcpp::export]]
-double
-parallel_function(const Rcpp::NumericVector& x)
-{
-  // Implement a parallel reduction and return its result here.
-  return 0.0; // Placeholder result.
-}
-```
-
 . . .
 
-We won't cover the details here. Speedups depend on the workload and how work is
-divided. Parallel workers generally must avoid calling the R or Rcpp APIs.
+For independent iterations, divide the work among threads. For a sum, each
+thread computes a partial sum, and the partial sums are combined.
+
+\medskip\pause
+
+Speedups depend on the workload, the number of threads, and how work is divided.
 
 ## Packages
 
+::: {.columns align="center"}
+::::: {.column width="60%"}
 Like tests, Rcpp code works best in packages.
 
 \medskip\pause
 
-We will cover this in our final lecture.
+We will cover this later in the course!
 
 \medskip\pause
 
 Not as complicated as you might think!
 
-::: {.columns align="center"}
-::::: {.column width="62%"}
 . . .
 
 ### R Packages
@@ -1226,41 +1423,8 @@ Not as complicated as you might think!
 Great book to get started; free and available online at <https://r-pkgs.org>.
 :::::
 
-::::: {.column width="25%"}
+::::: {.column width="27%"}
 ![](../images/r-pkgs.png){width=100%}
-:::::
-:::
-
-## The cpp11 Package
-
-Nowadays, you can also use the [cpp11](https://cpp11.r-lib.org/) package, which
-works similarly to Rcpp but is more lightweight.
-
-\medskip\pause
-
-Won't cover it here, but has some advantages and disadvantages compared to Rcpp.
-
-. . .
-
-::: {.columns}
-::::: {.column width="47%"}
-### Advantages
-
-- Compiles faster
-- Grows vectors efficiently
-- Enforces copy-on-write semantics (like R)
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-### Disadvantages
-
-- Smaller ecosystem
-- Fewer built-in functions (sugar)
-- Less established Armadillo and Eigen bindings:
-  [cpp11armadillo](https://cran.r-project.org/package=cpp11armadillo) and
-  [cpp11eigen](https://cran.r-project.org/package=cpp11eigen)
 :::::
 :::
 
@@ -1277,10 +1441,11 @@ Won't cover it here, but has some advantages and disadvantages compared to Rcpp.
 ## Exercise
 
 1. Implement a function using Rcpp that computes the sample standard deviation
-   of a (numeric) vector.\footnote{Don't use `Rcpp::sd()`, please!}\pause
+   of a (numeric) vector.^[Don't use `Rcpp::sd()`, please!]\pause
 2. Test your function against R's `sd()` function to make sure it works
    correctly.\pause
-3. Benchmark your function against R's `sd()` function to see if it is faster.
+3. Benchmark your function against R's `sd()` function to see if it is
+   faster.\pause
 4. Return `NA` when the input vector has length 0 or 1, as R's `sd()` does.
 
 ```{Rcpp}
@@ -1326,14 +1491,6 @@ But there are pitfalls, so be careful!
 \medskip\pause
 
 Debugging C++ code is tricky and failures can crash R.
-
-## Course Evaluations
-
-The course evaluations are open!
-
-\medskip
-
-Please take a few minutes to fill them out. Your feedback is valuable!
 
 ## Next Time
 
