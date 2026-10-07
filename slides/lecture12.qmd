@@ -133,13 +133,31 @@ Code is translated into machine code before execution.
 :::::
 :::
 
+## Difference Between Compiled and Interpreted Languages
+
+I have asked various version of OpenAI's image generation models to illustrate
+the difference between compiled and interpreted languages, using this
+prompt:\bigskip
+
+> Give me an image that illustrates the difference between a compiled computer
+> language and an interpreted computer language.
+
+\bigskip\pause
+
+I started doing this the first time the course was taught in 2024 and did it
+again 2025 and now in 2026.
+
 ##
 
-![Compiled vs interpreted languages according to DALL-E 2 in 2024.](../images/chatgpt-compiled-interpreted.png){width=55%}
+![Compiled vs interpreted languages according to ChatGPT (DALL-E 2) in 2024.](../images/chatgpt-compiled-interpreted.png){width=55%}
 
 ##
 
 ![Compiled vs interpreted languages according to ChatGPT in 2025.](../images/chatgpt-compiled-interpreted-2025.png){width=75%}
+
+##
+
+![Compiled vs interpreted languages according to ChatGPT in 2026.](../images/chatgpt-compiled-interpreted-2026.png){width=85%}
 
 ##
 
@@ -1039,6 +1057,52 @@ bench::mark(
 ) |>
   plot()
 ```
+
+## Batch Sizes Revisited: R versus C++
+
+The same logistic regression as last time: $N = 1000$, $p = 2$, and 25 epochs.
+Both implementations use the same batches and learning rates.
+
+```{r}
+#| label: batch-size-rcpp-runtime
+#| echo: false
+#| cache: false
+#| fig-width: 5
+#| fig-height: 2.4
+#| fig-cap: "Median of 10 runs. Times include gradient updates, but exclude
+#|   compilation, batch sampling, rate tuning, and loss evaluation."
+
+source(here::here("R", "lecture12-batch-sizes.R"))
+Rcpp::sourceCpp(here::here("R", "lecture12-batch-sizes.cpp"))
+batch_timings <- benchmark_logreg_batches()
+
+ggplot(
+  batch_timings,
+  aes(batch_size, milliseconds, color = language)
+) +
+  geom_line() +
+  geom_point() +
+  scale_x_log10(breaks = c(1, 10, 100, 1000)) +
+  scale_y_log10() +
+  scale_color_manual(
+    values = c("C++" = "royalblue", "R" = "darkorange")
+  ) +
+  labs(
+    x = "Batch size",
+    y = "Time for 25 epochs (ms)",
+    color = NULL
+  )
+```
+
+\pause
+
+Small batches pay for many R calls and temporary objects. The C++ loop avoids
+this R overhead; arithmetic and the single call from R still have a cost.
+
+\pdfpcnote{
+- Compare implementation costs for fixed work, not time to a target loss.\\
+- Use the same gradients as lecture 11, without loss evaluation or coefficient history.\\
+}
 
 ## The Standard Template Library (STL)
 
