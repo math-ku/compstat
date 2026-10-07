@@ -323,4 +323,5 @@ session will not be held.
 
 #### Examinations
 
-See the schedule on Absalon.
+See the schedule on Absalon. All examinations will take place sometime between
+09:00 and 18:00 in NBB 2.3.I.164, Jagtvej 155.
