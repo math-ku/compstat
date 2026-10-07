@@ -1,0 +1,150 @@
+---
+title: "Standard Deviation with Rcpp: Exercise Solution"
+format: html
+execute:
+  cache: false
+---
+
+Solution to the exercise in [Lecture 12](../slides/lecture12.pdf).
+
+```{r}
+#| label: rcpp-sd-setup
+#| include: false
+
+library(Rcpp)
+```
+
+## Implementation
+
+R's `sd()` computes the sample standard deviation,
+$$
+  s = \sqrt{\frac{1}{n - 1}\sum_{i=1}^n (x_i - \bar{x})^2},
+  \qquad
+  \bar{x} = \frac{1}{n}\sum_{i=1}^n x_i.
+$$
+The denominator is $n - 1$, rather than $n$. When $n < 2$, the sample standard
+deviation is undefined, and `sd()` returns `NA`.
+
+We use two loops: the first computes the mean, and the second sums the squared
+deviations. Computing deviations from the mean avoids subtracting two large,
+nearly equal sums, as in $\sum_i x_i^2 - n\bar{x}^2$. This matters when the
+observations have a large mean but little variation.
+
+```{Rcpp}
+//| label: rcpp-sd-solution
+
+#include <Rcpp.h>
+#include <cmath>
+
+// [[Rcpp::export]]
+double
+cpp_sd(const Rcpp::NumericVector& x)
+{
+  const R_xlen_t n = x.size();
+  if (n < 2) {
+    return NA_REAL;
+  }
+
+  double mean = 0.0;
+  for (R_xlen_t i = 0; i < n; ++i) {
+    if (Rcpp::NumericVector::is_na(x[i])) {
+      return NA_REAL;
+    }
+    mean += x[i] / n;
+  }
+
+  double sum_squared = 0.0;
+  for (R_xlen_t i = 0; i < n; ++i) {
+    const double deviation = x[i] - mean;
+    sum_squared += deviation * deviation;
+  }
+
+  return std::sqrt(sum_squared / (n - 1));
+}
+```
+
+The Rcpp chunk compiles the function and makes `cpp_sd()` available in R.
+Alternatively, save the code in a `.cpp` file and load it with
+`Rcpp::sourceCpp()`. The `const` reference helps prevent accidental modification
+of the input. We return `NA_REAL` for short vectors and missing values, matching
+the default behavior of `sd()`. This function does not implement `na.rm = TRUE`.
+
+## Check against R
+
+We check ordinary data, constant data, large values with small differences,
+missing values, and the two short-vector cases. Floating-point results can
+differ slightly, so we use `all.equal()` rather than requiring exact equality.
+
+```{r}
+#| label: rcpp-sd-checks
+
+set.seed(1)
+inputs <- list(
+  ordinary = c(-3, 0, 2, 8),
+  random = rnorm(1000),
+  constant = rep(2, 10),
+  large_mean = 1e10 + c(-2, -1, 0, 1, 2),
+  missing = c(1, NA_real_, 3),
+  nan = c(1, NaN, 3),
+  empty = numeric(),
+  singleton = 1
+)
+
+for (x in inputs) {
+  stopifnot(isTRUE(all.equal(cpp_sd(x), sd(x))))
+}
+
+data.frame(
+  input = names(inputs),
+  R = vapply(inputs, sd, numeric(1)),
+  Rcpp = vapply(inputs, cpp_sd, numeric(1)),
+  row.names = NULL
+)
+```
+
+The empty vector and singleton both return `NA`, and constant data return zero.
+All comparisons above must pass for the document to render successfully.
+
+## Benchmark
+
+We compile the function and generate the input before benchmarking, so the
+timings measure calls to the functions. `bench::mark()` also checks that their
+results agree.
+
+```{r}
+#| label: rcpp-sd-benchmark
+
+set.seed(2)
+x <- rnorm(1e5)
+
+timings <- bench::mark(
+  R = sd(x),
+  Rcpp = cpp_sd(x),
+  min_iterations = 20
+)
+timings[, c("expression", "median", "itr/sec", "mem_alloc")]
+```
+
+```{r}
+#| label: rcpp-sd-speedup
+#| include: false
+
+speedup <- as.numeric(timings$median[1] / timings$median[2])
+comparison <- if (speedup >= 1) {
+  sprintf("runs %.2f times as fast as", speedup)
+} else {
+  sprintf("takes %.2f times as long per call as", 1 / speedup)
+}
+```
+
+The median reports the typical time per call; `itr/sec` reports calls per
+second. A smaller median indicates a faster implementation. The memory column
+measures allocations tracked by R, so it does not include every C++ allocation.
+
+In this run, the Rcpp implementation `r comparison` R's `sd()`, based on the
+median times.
+
+The Rcpp version is not guaranteed to win: R's `sd()` already uses compiled code
+to compute the variance. Results depend on the input size, compiler, and
+machine. Try changing the vector length to see when the cost of calling C++
+matters relative to the work inside the function.

@@ -230,15 +230,18 @@ code here: [debugging.R](R/debugging.R).
 
 `r session_info("2026-10-08")`
 
-Prior to this lecture, you should have Rcpp installed. You can follow the
-instructions in [Rcpp for
+Prior to this lecture, install Rcpp and the build tools needed to compile C++
+code. You can follow the instructions in [Rcpp for
 Everyone](https://teuder.github.io/rcpp4everyone_en/020_install.html) to get
 started.
 
 - **Slides:** [Rcpp](slides/lecture12.pdf)
-  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture12.qmd))
+  ([source](https://github.com/math-ku/compstat/blob/main/slides/lecture12.qmd),
+  [exercise solution](exercises/lecture12.qmd))
 - **Reading:** [Chapter 25 (AdvR)](https://adv-r.hadley.nz/rcpp.html#rcpp)
 - **Exercises:**
+  - Implement, test, and benchmark a sample standard deviation function using
+    Rcpp (see the exercise in the slides).
   - [1 and 2 from 25.2.6
     (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercise-started)
   - [1 and 2 from 25.4.5 (AdvR)](https://adv-r.hadley.nz/rcpp.html#exercises-73)

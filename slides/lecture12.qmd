@@ -1212,12 +1212,12 @@ Won't cover it here, but has some advantages and disadvantages compared to Rcpp.
 
 ## Exercise
 
-1. Implement a function using Rcpp that computes the standard deviation of a
-   (numeric) vector.\footnote{Don't use `Rcpp::sd()`, please!}\pause
+1. Implement a function using Rcpp that computes the sample standard deviation
+   of a (numeric) vector.\footnote{Don't use `Rcpp::sd()`, please!}\pause
 2. Test your function against R's `sd()` function to make sure it works
    correctly.\pause
 3. Benchmark your function against R's `sd()` function to see if it is faster.
-4. Handle cases when the input vector is of length 0 or 1.
+4. Return `NA` when the input vector has length 0 or 1, as R's `sd()` does.
 
 ```{Rcpp}
 //| label: rcpp-sd
