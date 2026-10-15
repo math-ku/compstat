@@ -37,7 +37,9 @@ plot_trajectory <- function(betas) {
 
 b1 <- seq(-0.3, 1.4, length.out = 100)
 b2 <- seq(0, 1.6, length.out = 100)
-f_vec <- Vectorize(function(b1, b2) 0.5 * norm(X %*% c(b1, b2) - y, "2")^2)
+f_vec <- Vectorize(function(b1, b2) {
+  0.5 * norm(X %*% c(b1, b2) - y, "2")^2
+})
 z <- outer(b1, b2, f_vec)
 
 beta_mom_values <- c(0, 0.3, 0.9)
@@ -141,8 +143,7 @@ influential; $\beta = 0$ gives gradient descent.
 
 For a fixed learning rate $\gamma$, the previous update implies
 $$
-  \theta_n = \theta_{n-1}
-             - \gamma(1 - \beta)\nabla H(\theta_{n-1})
+  \theta_n = \theta_{n-1} - \gamma(1 - \beta)\nabla H(\theta_{n-1})
              + \beta(\theta_{n-1} - \theta_{n-2}).
 $$
 
@@ -151,8 +152,7 @@ $$
 As introduced by @polyakMethodsSpeedingConvergence1964, the classical heavy-ball
 form
 $$
-  \theta_n = \theta_{n-1}
-             - \alpha \nabla H(\theta_{n-1})
+  \theta_n = \theta_{n-1} - \alpha \nabla H(\theta_{n-1})
              + \beta(\theta_{n-1} - \theta_{n-2}),
 $$
 uses $\alpha = \gamma(1 - \beta)$.
@@ -324,7 +324,12 @@ Convergence improves further for quadratic and strongly convex!
 #| echo: false
 
 opar <- par(no.readonly = TRUE)
-par(mfrow = c(1, 2), mai = c(1, 0, 1, 0.0), oma = c(0, 4, 0.1, 0.1), cex = 1)
+par(
+  mfrow = c(1, 2),
+  mai = c(1, 0, 1, 0.0),
+  oma = c(0, 4, 0.1, 0.1),
+  cex = 1
+)
 
 maxit <- 30
 beta_mom <- 0.8
@@ -332,7 +337,13 @@ beta_mom <- 0.8
 source(here::here("R", "gd.R"))
 
 for (method in c("polyak", "nesterov")) {
-  res <- gd(X, y, beta_mom = beta_mom, type = method, maxit = maxit)
+  res <- gd(
+    X,
+    y,
+    beta_mom = beta_mom,
+    type = method,
+    maxit = maxit
+  )
   first_plot <- method == "polyak"
   contour(
     b1,
@@ -432,7 +443,9 @@ loss_2d <- function(beta1, beta2, X, y) {
 beta1 <- seq(-1, 3, length = 51)
 beta2 <- seq(-0.5, 5, length = 51)
 
-loss_2d_vectorized <- Vectorize(function(b1, b2) loss_2d(b1, b2, X, y))
+loss_2d_vectorized <- Vectorize(function(b1, b2) {
+  loss_2d(b1, b2, X, y)
+})
 
 z <- outer(beta1, beta2, loss_2d_vectorized)
 
@@ -460,7 +473,12 @@ res_sgd_mom <- logreg_sgd(
   K = K,
   beta_mom = beta_mom
 )
-loss_optim <- loss_2d(res_glm$coefficients[1], res_glm$coefficients[2], X, y)
+loss_optim <- loss_2d(
+  res_glm$coefficients[1],
+  res_glm$coefficients[2],
+  X,
+  y
+)
 
 loss1 <- loss_2d_vectorized(
   res_sgd_mom$beta_history[1, ],
@@ -473,9 +491,20 @@ loss2 <- loss_2d_vectorized(
 
 pal <- palette.colors(palette = "Okabe-Ito")
 
-contour(beta1, beta2, z, col = "dark grey", drawlabels = FALSE, asp = 1)
+contour(
+  beta1,
+  beta2,
+  z,
+  col = "dark grey",
+  drawlabels = FALSE,
+  asp = 1
+)
 
-lines(res_sgd$beta_history[1, ], res_sgd$beta_history[2, ], col = pal[3])
+lines(
+  res_sgd$beta_history[1, ],
+  res_sgd$beta_history[2, ],
+  col = pal[3]
+)
 points(
   res_sgd$beta_history[1, ],
   res_sgd$beta_history[2, ],
@@ -591,7 +620,13 @@ logistic_grad <- function(beta, X, y) {
 }
 
 # SGD with Polyak-Ruppert averaging for logistic regression
-sgd_polyak_ruppert <- function(X, y, batch_size = 10, maxit = 500, lr = 0.19) {
+sgd_polyak_ruppert <- function(
+  X,
+  y,
+  batch_size = 10,
+  maxit = 500,
+  lr = 0.19
+) {
   N <- nrow(X)
   p <- ncol(X)
 
@@ -626,7 +661,11 @@ sgd_polyak_ruppert <- function(X, y, batch_size = 10, maxit = 500, lr = 0.19) {
     betas_avg[, k] <- beta_avg
   }
 
-  list(betas = betas, betas_avg = betas_avg, beta_true = beta_true)
+  list(
+    betas = betas,
+    betas_avg = betas_avg,
+    beta_true = beta_true
+  )
 }
 
 # Run SGD with and without averaging
@@ -881,7 +920,9 @@ train_loss <- 2 * exp(-epochs / 25) + 0.1 + rnorm(100, 0, 0.05)
 train_loss <- pmax(train_loss, 0.05) # Ensure positive
 
 # Validation loss: decreases initially, then increases (overfitting)
-val_loss_base <- 2.2 * exp(-epochs / 20) + 0.15 + (epochs / 100)^2 * 0.8
+val_loss_base <- 2.2 * exp(-epochs / 20) +
+  0.15 +
+  (epochs / 100)^2 * 0.8
 val_loss <- val_loss_base + rnorm(100, 0, 0.08)
 val_loss <- pmax(val_loss, 0.1) # Ensure positive
 
@@ -925,7 +966,13 @@ plot(
 lines(epochs, val_loss, col = "darkorange")
 
 # Mark the best validation loss point
-points(best_epoch, best_val_loss, col = "black", pch = 19, cex = 1.5)
+points(
+  best_epoch,
+  best_val_loss,
+  col = "black",
+  pch = 19,
+  cex = 1.5
+)
 
 # Mark the early stopping point
 if (!is.null(early_stop_epoch)) {
@@ -933,7 +980,10 @@ if (!is.null(early_stop_epoch)) {
 }
 
 # Add annotations for the patience period
-if (!is.null(early_stop_epoch) && early_stop_epoch >= best_epoch + patience) {
+if (
+  !is.null(early_stop_epoch) &&
+    early_stop_epoch >= best_epoch + patience
+) {
   # Highlight the patience period with a more visible window
   patience_start <- best_epoch
   patience_end <- early_stop_epoch
@@ -963,7 +1013,12 @@ if (!is.null(early_stop_epoch) && early_stop_epoch >= best_epoch + patience) {
 # Add legend
 legend(
   "bottomleft",
-  legend = c("Training Loss", "Validation Loss", "Best Model", "Early Stop"),
+  legend = c(
+    "Training Loss",
+    "Validation Loss",
+    "Best Model",
+    "Early Stop"
+  ),
   col = c("steelblue", "darkorange", "black", "black"),
   lty = c(1, 1, NA, 2),
   pch = c(NA, NA, 19, NA),
