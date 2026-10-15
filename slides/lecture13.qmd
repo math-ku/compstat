@@ -357,14 +357,15 @@ $$
 . . .
 
 With heavy-ball coefficients $\alpha = 1/9$ and $\beta = 4/9$, the method
-converges to three limit points. In the book convention, the equivalent learning
-rate is $\gamma = \alpha / (1 - \beta) = 1/5$.
+converges to three limit points. The learning rate is
+$\gamma = \alpha / (1 - \beta) = 1/5$.
 :::::
 
 ::::: {.column width="47%"}
 ```{r}
 #| label: momentum-failure
 #| echo: false
+#| fig-show: animate
 #| fig-width: 2.8
 #| fig-height: 2.9
 #| fig-cap: "Initialized at $\\theta_0 = 3.2$, the algorithm fails to converge."
@@ -402,37 +403,35 @@ local({
   maxit <- 100
 
   x0 <- 3.2
-  x_hist <- double(maxit)
+  x_hist <- double(maxit + 1)
   x_hist[1] <- x0
   rho <- 0
 
-  for (k in 2:maxit) {
-    gradient <- g(x_hist[k - 1])
+  for (k in seq_len(maxit)) {
+    gradient <- g(x_hist[k])
     rho <- beta_mom * rho + (1 - beta_mom) * gradient
-    x_hist[k] <- x_hist[k - 1] - gamma * rho
+    x_hist[k + 1] <- x_hist[k] - gamma * rho
   }
 
-  curve(
-    f(x),
-    -3,
-    4,
-    xlab = expression(theta),
-    ylab = expression(H(theta))
-  )
-  lines(
-    x_hist[seq_len(maxit)],
-    f(x_hist[seq_len(maxit)]),
-    pch = pch,
-    cex = cex,
-    col = col
-  )
-  points(
-    x_hist[seq_len(maxit)],
-    f(x_hist[seq_len(maxit)]),
-    pch = pch,
-    cex = cex,
-    col = col
-  )
+  for (step in c(1:4, seq(14, maxit, by = 10), maxit)) {
+    indices <- seq_len(step + 1)
+    curve(
+      f(x),
+      -3,
+      4,
+      xlab = expression(theta),
+      ylab = expression(H(theta)),
+      main = bquote(n == .(step))
+    )
+    lines(x_hist[indices], f(x_hist[indices]), col = col)
+    points(
+      x_hist[indices],
+      f(x_hist[indices]),
+      pch = pch,
+      cex = cex,
+      col = col
+    )
+  }
 })
 ```
 :::::
@@ -471,22 +470,13 @@ First appeared in @nesterovMethodSolvingConvex1983.
 ```{r}
 #| label: momentum-illustration
 #| echo: false
+#| fig-show: animate
 #| fig-width: 5.4
 #| fig-height: 3.1
 #| fig-cap: "Illustration of Nesterov and Polyak momentum."
 
 local({
   library(mvtnorm)
-
-  draw_canvas_bg <- function(col = "white") {
-    rect(
-      par("usr")[1],
-      par("usr")[3],
-      par("usr")[2],
-      par("usr")[4],
-      col = col
-    )
-  }
 
   set.seed(622)
 
@@ -497,13 +487,6 @@ local({
   X <- rmvnorm(n, mu, Sigma)
   beta <- c(0.5, 1)
   y <- X %*% beta + rnorm(n)
-
-  plot_trajectory <- function(betas) {
-    b1 <- betas[1, ]
-    b2 <- betas[2, ]
-    lines(b1, b2)
-    points(b1, b2, cex = 0.5, pch = 19)
-  }
 
   b1 <- seq(0.1, 0.6, length.out = 100)
   b2 <- seq(1.05, 1.25, length.out = 100)
@@ -559,77 +542,74 @@ local({
   rm <- twostep_gd(beta_mom)
   rn <- twostep_gd(beta_mom, method = "nesterov")
 
-  contour(
-    b1,
-    b2,
-    f2,
-    asp = 1,
-    col = "dark grey",
-    levels = c(480, 487.6, 495, 512.2, 526),
-    drawlabels = FALSE,
-    xlab = expression(theta[1]),
-    ylab = expression(theta[2]),
-    panel.first = expression(draw_canvas_bg())
-  )
-  draw_canvas_bg()
-  contour(
-    b1,
-    b2,
-    f2,
-    asp = 1,
-    col = "dark grey",
-    levels = c(480, 487.6, 495, 512.2, 526),
-    drawlabels = FALSE,
-    add = TRUE
-  )
-
   b <- res$beta
 
-  text(b[1, 1], b[2, 1], expression(theta[n - 1]), pos = 2)
-  text(b[1, 3], b[2, 3], expression(theta[n]), pos = 3)
+  for (stage in seq_len(5)) {
+    contour(
+      b1,
+      b2,
+      f2,
+      asp = 1,
+      col = "dark grey",
+      levels = c(480, 487.6, 495, 512.2, 526),
+      drawlabels = FALSE,
+      xlab = expression(theta[1]),
+      ylab = expression(theta[2])
+    )
+    points(b[1, 2:3], b[2, 2:3], pch = 19)
+    lines(b[1, 2:3], b[2, 2:3])
+    text(b[1, 2], b[2, 2], expression(theta[n - 1]), pos = 2)
+    text(b[1, 3], b[2, 3], expression(theta[n]), pos = 3)
 
-  arrows(
-    rm$beta[1, 3],
-    rm$beta[2, 3],
-    rm$r[1, 3],
-    rm$r[2, 3],
-    lty = 2,
-    length = 0.15
-  )
-
-  points(b[1, ], b[2, ], pch = 19)
-  lines(b[1, ], b[2, ], pch = 19)
-
-  lines(
-    c(rm$r[1, 3], rm$beta[1, 4]),
-    c(rm$r[2, 3], rm$beta[2, 4]),
-    col = "dark orange"
-  )
-  points(
-    rm$beta[1, 4],
-    rm$beta[2, 4],
-    pch = 19,
-    col = "dark orange"
-  )
-
-  lines(
-    c(rn$r[1, 3], rn$beta[1, 4]),
-    c(rn$r[2, 3], rn$beta[2, 4]),
-    col = "steelblue4"
-  )
-  points(
-    rn$beta[1, 4],
-    rn$beta[2, 4],
-    col = "steelblue4",
-    pch = 19
-  )
-  legend(
-    "topright",
-    c("GD", "Polyak", "Nesterov"),
-    col = c("black", "dark orange", "steelblue4"),
-    pch = 19,
-    bg = "white"
-  )
+    if (stage >= 2) {
+      arrows(
+        rm$beta[1, 3],
+        rm$beta[2, 3],
+        rm$r[1, 3],
+        rm$r[2, 3],
+        lty = 2,
+        length = 0.15
+      )
+      text(rm$r[1, 3], rm$r[2, 3], expression(y[n + 1]), pos = 1)
+    }
+    if (stage >= 3) {
+      lines(b[1, 3:4], b[2, 3:4])
+      points(b[1, 4], b[2, 4], pch = 19)
+    }
+    if (stage >= 4) {
+      lines(
+        c(rm$r[1, 3], rm$beta[1, 4]),
+        c(rm$r[2, 3], rm$beta[2, 4]),
+        col = "darkorange"
+      )
+      points(
+        rm$beta[1, 4],
+        rm$beta[2, 4],
+        pch = 19,
+        col = "darkorange"
+      )
+    }
+    if (stage >= 5) {
+      lines(
+        c(rn$r[1, 3], rn$beta[1, 4]),
+        c(rn$r[2, 3], rn$beta[2, 4]),
+        col = "royalblue"
+      )
+      points(
+        rn$beta[1, 4],
+        rn$beta[2, 4],
+        pch = 19,
+        col = "royalblue"
+      )
+    }
+    legend(
+      "topright",
+      c("GD", "Polyak", "Nesterov"),
+      col = c("black", "darkorange", "royalblue"),
+      pch = 19,
+      bg = "white"
+    )
+  }
 })
 ```
 
@@ -1329,7 +1309,7 @@ Not covered here, but see the course literature\ [@hansen2024] for details.
 ## Gradient Clipping
 
 ::: {.columns}
-::::: {.column width="47%"}
+::::: {.column width="55%"}
 ### Idea
 
 If gradient is too large, scale it down to avoid too large steps.
@@ -1345,8 +1325,7 @@ $$
 $$
 
 . . .
-:::::
-::::: {.column width="47%"}
+
 ### How do you Pick $c$?
 
 Some strategies:
@@ -1356,7 +1335,8 @@ Some strategies:
    training and set $c$ based on observed distribution\pause
 3. **Percentile-based**: Set $c$ to be the 95th or 99th percentile of observed
    gradient norms\pause
-
+:::::
+::::: {.column width="40%"}
 ### Practical considerations:**
 
 - Start conservative (smaller $c$) and increase if training is too slow
