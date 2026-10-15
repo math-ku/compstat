@@ -8,7 +8,7 @@ execute:
 {{< include _common.qmd >}}
 
 ```{r}
-#| label: momentum-surface
+#| label: setup-momentum-surface
 #| echo: false
 
 source(here::here("R", "gd.R"))
@@ -116,8 +116,6 @@ first.
 
 . . .
 
-### Book Convention
-
 The direction $\rho_n$ is an exponentially weighted average of gradients.
 
 \medskip\pause
@@ -165,7 +163,58 @@ rescaling.
 
 ## Polyak Momentum in Practice
 
-![Trajectories of GD for different momentum values for a least-squares problem](../images/momentum-surface.pdf)
+```{r}
+#| label: momentum-surface
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 3.6
+#| fig-cap: >-
+#|   Trajectories of GD for different momentum values for a least-squares
+#|   problem.
+
+local({
+  opar <- par(no.readonly = TRUE)
+  par(
+    mfrow = c(1, length(beta_mom_values)),
+    mai = c(1, 0, 1, 0.0),
+    oma = c(0, 4, 0.1, 0.1),
+    cex = 1
+  )
+  for (beta_mom in beta_mom_values) {
+    res <- gd(X, y, beta_mom = beta_mom)
+    first_plot <- beta_mom == beta_mom_values[1]
+    contour(
+      b1,
+      b2,
+      z,
+      asp = 1,
+      col = "dark grey",
+      drawlabels = FALSE,
+      axes = FALSE,
+      frame.plot = TRUE,
+      xlab = expression(beta[1])
+    )
+    axis(1)
+    if (first_plot) {
+      axis(2)
+      mtext(
+        expression(beta[2]),
+        side = 2,
+        line = 3,
+        outer = TRUE
+      )
+    }
+    plot_trajectory(res$betas)
+    text(
+      x = par("usr")[1] + 0.05 * diff(par("usr")[1:2]),
+      y = par("usr")[4] - 0.07 * diff(par("usr")[3:4]),
+      labels = bquote(beta == .(beta_mom)),
+      adj = 0
+    )
+  }
+  par(opar)
+})
+```
 
 ## Local Minima
 
@@ -175,13 +224,54 @@ For nonconvex $H$, gradient descent may get stuck at a local minimum.
 :::::
 
 ::::: {.column width="47%"}
-\begin{figure}[htpb]
-  \centering
-  \multiinclude[<+>][format=pdf]{lecture13/images/escape-minima-gd}
-  \caption{%
-    No momentum ($\beta = 0$).
+```{r}
+#| label: escape-minima-gd
+#| echo: false
+#| fig-width: 2.7
+#| fig-height: 2.9
+#| fig-cap: "No momentum ($\\beta = 0$)."
+#| fig-show: animate
+
+local({
+  beta_mom <- 0
+  pch <- 19
+  cex <- 1
+
+  f <- function(x) 0.1 * x^4 - 0.25 * x^3 - 0.7 * x^2
+
+  g <- function(x) 0.4 * x^3 - 0.75 * x^2 - 1.4 * x
+
+  alpha <- 0.05
+
+  # Use the book convention while preserving the heavy-ball trajectories.
+
+  x <- x0 <- -3
+  rho <- 0
+  gamma <- alpha / (1 - beta_mom)
+  maxit <- 10
+  x_hist <- double(maxit)
+  for (k in seq_len(maxit)) {
+    x_hist[k] <- x
+    rho <- beta_mom * rho + (1 - beta_mom) * g(x)
+    x <- x - gamma * rho
+
+    curve(
+      f(x),
+      -3.2,
+      4.3,
+      xlab = expression(theta),
+      ylab = expression(H(theta))
+    )
+    points(
+      x_hist[seq_len(k)],
+      f(x_hist[seq_len(k)]),
+      pch = pch,
+      cex = cex,
+      col = "steelblue4"
+    )
   }
-\end{figure}
+})
+```
 :::::
 :::
 
@@ -193,13 +283,54 @@ With momentum, we can (sometimes) remedy this problem.
 :::::
 
 ::::: {.column width="47%"}
-\begin{figure}[htpb]
-  \centering
-  \multiinclude[<+>][format=pdf]{lecture13/images/escape-minima-mom}
-  \caption{%
-    With momentum ($\beta = 0.8$).
+```{r}
+#| label: escape-minima-mom
+#| echo: false
+#| fig-width: 2.7
+#| fig-height: 2.9
+#| fig-cap: "With momentum ($\\beta = 0.8$)."
+#| fig-show: animate
+
+local({
+  beta_mom <- 0.8
+  pch <- 19
+  cex <- 1
+
+  f <- function(x) 0.1 * x^4 - 0.25 * x^3 - 0.7 * x^2
+
+  g <- function(x) 0.4 * x^3 - 0.75 * x^2 - 1.4 * x
+
+  alpha <- 0.05
+
+  # Use the book convention while preserving the heavy-ball trajectories.
+
+  x <- x0 <- -3
+  rho <- 0
+  gamma <- alpha / (1 - beta_mom)
+  maxit <- 10
+  x_hist <- double(maxit)
+  for (k in seq_len(maxit)) {
+    x_hist[k] <- x
+    rho <- beta_mom * rho + (1 - beta_mom) * g(x)
+    x <- x - gamma * rho
+
+    curve(
+      f(x),
+      -3.2,
+      4.3,
+      xlab = expression(theta),
+      ylab = expression(H(theta))
+    )
+    points(
+      x_hist[seq_len(k)],
+      f(x_hist[seq_len(k)]),
+      pch = pch,
+      cex = cex,
+      col = "steelblue4"
+    )
   }
-\end{figure}
+})
+```
 :::::
 :::
 
@@ -231,7 +362,79 @@ rate is $\gamma = \alpha / (1 - \beta) = 1/5$.
 :::::
 
 ::::: {.column width="47%"}
-![Initialized at $\theta_0 = 3.2$, the algorithm fails to converge.](../images/momentum-failure.pdf)
+```{r}
+#| label: momentum-failure
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.9
+#| fig-cap: "Initialized at $\\theta_0 = 3.2$, the algorithm fails to converge."
+
+local({
+  pch <- 19
+  cex <- 1
+
+  f <- function(x) {
+    ifelse(
+      x < 1,
+      12.5 * x^2,
+      ifelse(
+        1 <= x & x < 2,
+        0.5 * x^2 + 24 * x - 12,
+        12.5 * x^2 - 24 * x + 36
+      )
+    )
+  }
+
+  g <- function(x) {
+    ifelse(
+      x < 1,
+      25 * x,
+      ifelse(1 <= x & x < 2, x + 24, 25 * x - 24)
+    )
+  }
+
+  alpha <- 1 / 9
+  beta_mom <- 4 / 9
+  gamma <- alpha / (1 - beta_mom)
+
+  col <- rgb(0, 0, 0, alpha = 0.2)
+
+  maxit <- 100
+
+  x0 <- 3.2
+  x_hist <- double(maxit)
+  x_hist[1] <- x0
+  rho <- 0
+
+  for (k in 2:maxit) {
+    gradient <- g(x_hist[k - 1])
+    rho <- beta_mom * rho + (1 - beta_mom) * gradient
+    x_hist[k] <- x_hist[k - 1] - gamma * rho
+  }
+
+  curve(
+    f(x),
+    -3,
+    4,
+    xlab = expression(theta),
+    ylab = expression(H(theta))
+  )
+  lines(
+    x_hist[seq_len(maxit)],
+    f(x_hist[seq_len(maxit)]),
+    pch = pch,
+    cex = cex,
+    col = col
+  )
+  points(
+    x_hist[seq_len(maxit)],
+    f(x_hist[seq_len(maxit)]),
+    pch = pch,
+    cex = cex,
+    col = col
+  )
+})
+```
 :::::
 :::
 
@@ -265,7 +468,170 @@ First appeared in @nesterovMethodSolvingConvex1983.
 
 ##
 
-![Illustration of Nesterov and Polyak momentum](../images/momentum-illustration.pdf)
+```{r}
+#| label: momentum-illustration
+#| echo: false
+#| fig-width: 5.4
+#| fig-height: 3.1
+#| fig-cap: "Illustration of Nesterov and Polyak momentum."
+
+local({
+  library(mvtnorm)
+
+  draw_canvas_bg <- function(col = "white") {
+    rect(
+      par("usr")[1],
+      par("usr")[3],
+      par("usr")[2],
+      par("usr")[4],
+      col = col
+    )
+  }
+
+  set.seed(622)
+
+  p <- 2
+  n <- 1000
+  Sigma <- matrix(c(1, 0.7, 0.7, 1), 2, 2)
+  mu <- c(0, 0)
+  X <- rmvnorm(n, mu, Sigma)
+  beta <- c(0.5, 1)
+  y <- X %*% beta + rnorm(n)
+
+  plot_trajectory <- function(betas) {
+    b1 <- betas[1, ]
+    b2 <- betas[2, ]
+    lines(b1, b2)
+    points(b1, b2, cex = 0.5, pch = 19)
+  }
+
+  b1 <- seq(0.1, 0.6, length.out = 100)
+  b2 <- seq(1.05, 1.25, length.out = 100)
+  f_vec <- Vectorize(function(b1, b2) {
+    0.5 * norm(X %*% c(b1, b2) - y, "2")^2
+  })
+  f2 <- outer(b1, b2, f_vec)
+
+  L <- norm(crossprod(X), "2")
+
+  beta <- c(.2, 1.1)
+  n_it <- 4
+  alpha <- 1 / L
+
+  twostep_gd <- function(
+    beta_mom = 0,
+    method = c("polyak", "nesterov")
+  ) {
+    betas <- matrix(0, nrow = p, ncol = n_it)
+    betas[, 1] <- beta
+    betas[, 2] <- beta
+    rs <- matrix(0, nrow = p, ncol = n_it)
+    rho <- double(p)
+
+    method <- match.arg(method)
+
+    for (k in 2:(n_it - 1)) {
+      rs[, k] <- betas[, k] +
+        beta_mom * (betas[, k] - betas[, k - 1])
+
+      if (method == "polyak") {
+        gradient <- crossprod(X, X %*% betas[, k] - y)
+        rho <- beta_mom * rho + (1 - beta_mom) * gradient
+        gamma <- alpha / (1 - beta_mom)
+        betas[, k + 1] <- betas[, k] - gamma * rho
+      } else {
+        gradient <- crossprod(X, X %*% rs[, k] - y)
+        if (k < 3) {
+          step <- alpha
+        } else {
+          step <- alpha * 0.8
+        }
+        betas[, k + 1] <- rs[, k] - step * gradient
+      }
+    }
+
+    list(beta = betas, r = rs)
+  }
+
+  beta_mom <- 0.6
+
+  res <- twostep_gd()
+  rm <- twostep_gd(beta_mom)
+  rn <- twostep_gd(beta_mom, method = "nesterov")
+
+  contour(
+    b1,
+    b2,
+    f2,
+    asp = 1,
+    col = "dark grey",
+    levels = c(480, 487.6, 495, 512.2, 526),
+    drawlabels = FALSE,
+    xlab = expression(theta[1]),
+    ylab = expression(theta[2]),
+    panel.first = expression(draw_canvas_bg())
+  )
+  draw_canvas_bg()
+  contour(
+    b1,
+    b2,
+    f2,
+    asp = 1,
+    col = "dark grey",
+    levels = c(480, 487.6, 495, 512.2, 526),
+    drawlabels = FALSE,
+    add = TRUE
+  )
+
+  b <- res$beta
+
+  text(b[1, 1], b[2, 1], expression(theta[n - 1]), pos = 2)
+  text(b[1, 3], b[2, 3], expression(theta[n]), pos = 3)
+
+  arrows(
+    rm$beta[1, 3],
+    rm$beta[2, 3],
+    rm$r[1, 3],
+    rm$r[2, 3],
+    lty = 2,
+    length = 0.15
+  )
+
+  points(b[1, ], b[2, ], pch = 19)
+  lines(b[1, ], b[2, ], pch = 19)
+
+  lines(
+    c(rm$r[1, 3], rm$beta[1, 4]),
+    c(rm$r[2, 3], rm$beta[2, 4]),
+    col = "dark orange"
+  )
+  points(
+    rm$beta[1, 4],
+    rm$beta[2, 4],
+    pch = 19,
+    col = "dark orange"
+  )
+
+  lines(
+    c(rn$r[1, 3], rn$beta[1, 4]),
+    c(rn$r[2, 3], rn$beta[2, 4]),
+    col = "steelblue4"
+  )
+  points(
+    rn$beta[1, 4],
+    rn$beta[2, 4],
+    col = "steelblue4",
+    pch = 19
+  )
+  legend(
+    "topright",
+    c("GD", "Polyak", "Nesterov"),
+    col = c("black", "dark orange", "steelblue4"),
+    pch = 19,
+    bg = "white"
+  )
+})
+```
 
 ## Optimal Nesterov Weights
 
@@ -288,7 +654,57 @@ First step ($n = 1$) is just standard gradient descent.
 :::::
 
 ::::: {.column width="47%"}
-![Optimal momentum for Nesterov acceleration (for GD).](../images/nesterov-weights.pdf)
+```{r}
+#| label: nesterov-weights
+#| echo: false
+#| fig-width: 2.4
+#| fig-height: 2.9
+#| fig-cap: "Optimal momentum for Nesterov acceleration (for GD)."
+
+local({
+  library(here)
+
+  draw_canvas_bg <- function(col = "white") {
+    rect(
+      par("usr")[1],
+      par("usr")[3],
+      par("usr")[2],
+      par("usr")[4],
+      col = col
+    )
+  }
+
+  n <- 50
+  beta_mom <- a <- double(n)
+  a[1] <- 1
+
+  for (k in seq_len(n - 1)) {
+    a[k + 1] <- (1 + sqrt(1 + 4 * a[k]^2)) / 2
+    beta_mom[k] <- (a[k] - 1) / a[k + 1]
+  }
+
+  plot(
+    1:(n - 1),
+    beta_mom[-n],
+    type = "b",
+    pch = 19,
+    cex = 0.7,
+    ylab = expression(beta[n]),
+    xlab = expression(n),
+    col = "steelblue4"
+  )
+  draw_canvas_bg()
+  points(
+    1:(n - 1),
+    beta_mom[-n],
+    type = "b",
+    pch = 19,
+    cex = 0.7,
+    ylab = expression(beta[n]),
+    xlab = expression(n)
+  )
+})
+```
 :::::
 :::
 
@@ -309,7 +725,93 @@ Convergence improves further for quadratic and strongly convex!
 :::::
 
 ::::: {.column width="47%"}
-![Suboptimality plot for a logistic regression problem with $N = 1000$, $p = 100$.](../images/momentum-convergence.pdf)
+```{r}
+#| label: momentum-convergence
+#| echo: false
+#| fig-width: 2.7
+#| fig-height: 3.2
+#| fig-cap: >-
+#|   Suboptimality plot for a logistic regression problem with $N = 1000$, $p =
+#|   100$.
+
+local({
+  library(mvtnorm)
+
+  set.seed(622)
+
+  n <- 1000
+  p <- 100
+
+  X <- matrix(rnorm(n * p), n, p)
+  beta <- runif(p)
+  y <- rbinom(n, 1, plogis(X %*% beta))
+
+  res_glm <- glm.fit(X, y, family = binomial())
+
+  f <- function(beta, X, y) {
+    z <- X %*% beta
+    p_hat <- 1 / (1 + exp(-z))
+    p_hat[p_hat < 1e-6] <- 1e-6
+    p_hat[p_hat > 1 - 1e-6] <- 1 - 1e-6
+    -mean(y * log(p_hat) + (1 - y) * log(1 - p_hat))
+  }
+
+  grad_f <- function(beta, X, y) {
+    z <- X %*% beta
+    p_hat <- 1 / (1 + exp(-z))
+    crossprod(X, p_hat - y) / length(y)
+  }
+
+  beta0 <- double(p)
+  L <- 0.25 * norm(crossprod(X), "2") / n
+
+  maxit <- 100
+  res <- gd_general(
+    beta0,
+    f,
+    grad_f,
+    X = X,
+    y = y,
+    L = L,
+    maxit = maxit
+  )
+  res_nesterov <- gd_general(
+    beta0,
+    f,
+    grad_f,
+    X = X,
+    y = y,
+    L = L,
+    type = "nesterov",
+    maxit = maxit
+  )
+
+  optim <- f(coef(res_glm), X, y)
+  suboptimality_gd <- pmax(res$loss - optim, .Machine$double.eps)
+  suboptimality_nesterov <- pmax(
+    res_nesterov$loss - optim,
+    .Machine$double.eps
+  )
+
+  plot(
+    seq_along(res_nesterov$loss),
+    suboptimality_nesterov,
+    type = "l",
+    log = "y",
+    ylab = expression(H(theta[n]) - H * "*"),
+    xlab = expression(n),
+    col = "steelblue4"
+  )
+  lines(seq_along(res$loss), suboptimality_gd, type = "l")
+  legend(
+    "topright",
+    c("GD", "Nesterov"),
+    lty = 1,
+    col = c(1, "steelblue4"),
+    bg = "white"
+  )
+})
+```
 :::::
 :::
 
@@ -826,6 +1328,8 @@ Not covered here, but see the course literature\ [@hansen2024] for details.
 
 ## Gradient Clipping
 
+::: {.columns}
+::::: {.column width="47%"}
 ### Idea
 
 If gradient is too large, scale it down to avoid too large steps.
@@ -841,7 +1345,8 @@ $$
 $$
 
 . . .
-
+:::::
+::::: {.column width="47%"}
 ### How do you Pick $c$?
 
 Some strategies:
@@ -851,14 +1356,13 @@ Some strategies:
    training and set $c$ based on observed distribution\pause
 3. **Percentile-based**: Set $c$ to be the 95th or 99th percentile of observed
    gradient norms\pause
-4. **Problem-specific**: Use domain knowledge about expected gradient magnitudes
 
-. . .
-
-**Practical considerations:**
+### Practical considerations:**
 
 - Start conservative (smaller $c$) and increase if training is too slow
 - Monitor loss curves: clipping should stabilize, not hurt convergence
+:::::
+:::
 
 ## Early Stopping
 
@@ -1026,6 +1530,44 @@ legend(
 )
 ```
 
+```{r}
+#| label: setup-nonlinear
+#| include: false
+#| fig-width: 2.8
+#| fig-height: 2.9
+
+nonlinear <- new.env()
+local(
+  {
+    set.seed(123)
+    N <- 1000
+    osc <- data.frame(x = seq(0, 5, length.out = N))
+    osc$f <- cos(10 * osc$x)
+    osc$y <- osc$f + rnorm(N, sd = 0.1)
+    H <- function(par) {
+      mean((osc$y - par[1] * cos(par[2] * osc$x))^2) / 2
+    }
+    grad_batch <- function(par, i) {
+      residual <- par[1] * cos(par[2] * osc$x[i]) - osc$y[i]
+      c(
+        mean(residual * cos(par[2] * osc$x[i])),
+        mean(
+          -residual * par[1] * osc$x[i] * sin(par[2] * osc$x[i])
+        )
+      )
+    }
+    alpha_seq <- seq(-2, 2, length.out = 101)
+    beta_seq <- seq(8, 12, length.out = 101)
+    z <- outer(
+      alpha_seq,
+      beta_seq,
+      Vectorize(function(a, b) H(c(a, b)))
+    )
+  },
+  envir = nonlinear
+)
+```
+
 ## Example: Nonlinear Least Squares
 
 ::: {.columns align="center"}
@@ -1051,7 +1593,29 @@ $$
 :::::
 
 ::::: {.column width="50%"}
-![Simulation from problem](../images/nonlinear-data.pdf)
+```{r}
+#| label: nonlinear-data
+#| echo: false
+#| fig-width: 2.9
+#| fig-height: 2.6
+#| fig-cap: "Simulation from problem."
+
+local(
+  {
+    plot(
+      osc$x,
+      osc$y,
+      pch = 19,
+      col = "dark grey",
+      xlab = "x",
+      ylab = "y",
+      cex = 0.7
+    )
+    lines(osc$x, osc$f)
+  },
+  envir = nonlinear
+)
+```
 :::::
 :::
 
@@ -1059,13 +1623,119 @@ $$
 
 ::: {.columns}
 ::::: {.column width="40%"}
-![Perspective plot of function](../images/nonlinear-persp.pdf)
+```{r}
+#| label: nonlinear-persp
+#| echo: false
+#| fig-width: 3.3
+#| fig-height: 4
+#| fig-cap: "Perspective plot of function."
+
+local(
+  {
+    persp(
+      alpha_seq,
+      beta_seq,
+      z,
+      theta = 20,
+      phi = 50,
+      col = "royalblue",
+      xlab = "alpha",
+      ylab = "beta",
+      zlab = "H"
+    )
+  },
+  envir = nonlinear
+)
+```
 :::::
 
 ::::: {.column width="50%"}
-![Contour plot of $H_N$](../images/nonlinear-contour.png)
+```{r}
+#| label: nonlinear-contour
+#| echo: false
+#| fig-width: 3.2
+#| fig-height: 2.8
+#| fig-cap: "Contour plot of $H_N$."
+
+local(
+  {
+    filled.contour(
+      alpha_seq,
+      beta_seq,
+      z,
+      color.palette = function(n) {
+        hcl.colors(n, "viridis", rev = TRUE)
+      },
+      xlab = expression(alpha),
+      ylab = expression(beta),
+      key.border = NA
+    )
+  },
+  envir = nonlinear
+)
+```
 :::::
 :::
+
+```{r}
+#| label: setup-nonlinear-paths
+#| include: false
+#| fig-width: 2.8
+#| fig-height: 2.9
+
+local(
+  {
+    par_init <- as.matrix(expand.grid(
+      alpha = c(-1, -0.5, 0, 1.5),
+      beta = c(8.4, 9.3, 10.7, 11.2, 11.6)
+    ))
+    paths <- list()
+    for (init in seq_len(nrow(par_init))) {
+      for (method in c("batch", "momentum", "adam")) {
+        set.seed(123 + init)
+        theta <- par_init[init, ]
+        rho <- v <- c(0, 0)
+        trajectory <- matrix(NA_real_, 101, 2)
+        trajectory[1, ] <- theta
+        step <- 0
+        for (epoch in seq_len(100)) {
+          indices <- sample(N)
+          for (j in seq_len(N / 50)) {
+            i <- indices[((j - 1) * 50 + 1):(j * 50)]
+            gradient <- grad_batch(theta, i)
+            step <- step + 1
+            if (method == "batch") {
+              theta <- theta - 0.01 * gradient
+            } else if (method == "momentum") {
+              rho <- 0.95 * rho + 0.05 * gradient
+              theta <- theta - 0.01 * rho
+            } else {
+              rho <- 0.9 * rho + 0.1 * gradient
+              v <- 0.9 * v + 0.1 * gradient^2
+              theta <- theta -
+                0.001 *
+                  (rho / (1 - 0.9^step)) /
+                  (sqrt(v / (1 - 0.9^step)) + 1e-8)
+            }
+          }
+          trajectory[epoch + 1, ] <- theta
+        }
+        paths[[length(paths) + 1]] <- data.frame(
+          init = init,
+          method = method,
+          epoch = 0:100,
+          alpha = trajectory[, 1],
+          beta = trajectory[, 2],
+          alpha0 = par_init[init, 1],
+          beta0 = par_init[init, 2]
+        )
+      }
+    }
+    paths <- dplyr::bind_rows(paths)
+  },
+  envir = nonlinear
+)
+```
 
 ## Variants
 
@@ -1086,24 +1756,113 @@ converges.
 
 ##
 
-\begin{figure}[htpb]
-  \centering
-  \multiinclude[<+>][
-    format=pdf,
-    graphics={width=\textwidth}
-  ]{lecture13/images/nonlinear-convergence}
-  \caption{%
-    Convergence of different algorithms for different starting values.  
-  }
-\end{figure}
+```{r}
+#| label: nonlinear-convergence
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 3.3
+#| fig-cap: "Convergence of different algorithms for different starting values."
+#| fig-show: animate
+
+local(
+  {
+    opar <- par(no.readonly = TRUE)
+    par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+    for (start in c(1, 3, 7, 8, 16, 17, 19)) {
+      for (algorithm in c("adam", "momentum", "batch")) {
+        contour(
+          alpha_seq,
+          beta_seq,
+          z,
+          drawlabels = FALSE,
+          col = "dark grey",
+          xlab = expression(alpha),
+          ylab = expression(beta),
+          main = algorithm
+        )
+        path <- subset(
+          paths,
+          init == start & method == algorithm
+        )
+        lines(path$alpha, path$beta, col = "royalblue")
+        points(path$alpha[1], path$beta[1], col = "royalblue")
+        points(
+          tail(path$alpha, 1),
+          tail(path$beta, 1),
+          col = "royalblue",
+          pch = 19
+        )
+      }
+    }
+    par(opar)
+  },
+  envir = nonlinear
+)
+```
 
 ##
 
-![Updates of $\alpha$ parameter over time for the different algorithms over different starting values.](../images/nonlinear-alpha.pdf)
+```{r}
+#| label: nonlinear-alpha
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 3.3
+#| fig-cap: "Updates of $\\alpha$ for different algorithms and starting values."
+
+local(
+  {
+    ggplot(paths, aes(epoch, alpha, color = method)) +
+      geom_line() +
+      facet_grid(
+        vars(alpha0),
+        vars(beta0),
+        scales = "free_y",
+        labeller = label_bquote(
+          rows = alpha == .(alpha0),
+          cols = beta == .(beta0)
+        )
+      ) +
+      labs(
+        x = "Epoch",
+        y = expression(alpha),
+        color = "Algorithm"
+      )
+  },
+  envir = nonlinear
+)
+```
 
 ##
 
-![Updates of $\beta$ parameter over time for the different algorithms over different starting values.](../images/nonlinear-beta.pdf)
+```{r}
+#| label: nonlinear-beta
+#| echo: false
+#| fig-width: 5.5
+#| fig-height: 3.3
+#| fig-cap: "Updates of $\\beta$ for different algorithms and starting values."
+
+local(
+  {
+    ggplot(paths, aes(epoch, beta, color = method)) +
+      geom_line() +
+      facet_grid(
+        vars(alpha0),
+        vars(beta0),
+        scales = "free_y",
+        labeller = label_bquote(
+          rows = alpha == .(alpha0),
+          cols = beta == .(beta0)
+        )
+      ) +
+      labs(
+        x = "Epoch",
+        y = expression(beta),
+        color = "Algorithm"
+      )
+  },
+  envir = nonlinear
+)
+```
 
 ## Rcpp
 
