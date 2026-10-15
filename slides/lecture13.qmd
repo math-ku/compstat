@@ -413,7 +413,7 @@ local({
     x_hist[k + 1] <- x_hist[k] - gamma * rho
   }
 
-  for (step in c(1:4, seq(14, maxit, by = 10), maxit)) {
+  for (step in c(1:6, seq(14, maxit, by = 10), maxit)) {
     indices <- seq_len(step + 1)
     curve(
       f(x),
@@ -745,7 +745,7 @@ local({
   beta0 <- double(p)
   L <- 0.25 * norm(crossprod(X), "2") / n
 
-  maxit <- 100
+  maxit <- 200
   res <- gd_general(
     beta0,
     f,
@@ -1312,11 +1312,8 @@ Not covered here, but see the course literature\ [@hansen2024] for details.
 ::::: {.column width="55%"}
 ### Idea
 
-If gradient is too large, scale it down to avoid too large steps.
-
-\medskip\pause
-
-Replace gradient $\nabla H(\theta_n)$ by
+If gradient is too large, scale it down to avoid too large steps. Replace
+gradient $\nabla H(\theta_n)$ by
 $$
   \tilde{\nabla} H(\theta_n) = \begin{cases}
                                  \nabla H(\theta_n)                                    & \text{if } \|\nabla H(\theta_n)\|_2 \leq c, \\
@@ -1326,9 +1323,7 @@ $$
 
 . . .
 
-### How do you Pick $c$?
-
-Some strategies:
+### How Do You Pick $c$?
 
 1. **Rule of thumb**: $c \in [1, 10]$ often works well in practice\pause
 2. **Gradient norm monitoring**: Track $\|\nabla H(\theta_n)\|_2$ during
@@ -1337,7 +1332,7 @@ Some strategies:
    gradient norms\pause
 :::::
 ::::: {.column width="40%"}
-### Practical considerations:**
+### Practical Considerations
 
 - Start conservative (smaller $c$) and increase if training is too slow
 - Monitor loss curves: clipping should stabilize, not hurt convergence
