@@ -1606,7 +1606,9 @@ local(
       z,
       theta = 20,
       phi = 50,
-      col = "royalblue",
+      shade = 0.3,
+      col = "steelblue1",
+      border = NA,
       xlab = "alpha",
       ylab = "beta",
       zlab = "H"
@@ -1621,6 +1623,10 @@ local(
 ```{r}
 #| label: nonlinear-contour
 #| echo: false
+#| dev: png
+#| dev.args: { pointsize: 9 }
+#| dpi: 300
+#| crop: false
 #| fig-width: 3.2
 #| fig-height: 2.8
 #| fig-cap: "Contour plot of $H_N$."
