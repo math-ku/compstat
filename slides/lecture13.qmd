@@ -1343,68 +1343,212 @@ par(mfrow = c(1, 1))
 
 ## Adaptive Gradients
 
-### General Idea
+With a decreasing global learning rate, a feature that first appears late gets a
+small update, even if we have barely seen it.
 
-Some directions may be important, but feature information is **sparse**.
-
-. . .
+\pause
 
 ### AdaGrad
 
-::: {.columns}
-::::: {.column width="47%"}
-Store matrix of gradient history,
+Let each coordinate keep its own
+history\ [@duchiAdaptiveSubgradientMethods2011].
+
+\medskip
+
+Write $g_n = \nabla H(\theta_{n-1})$, and take a small $\epsilon > 0$ to avoid
+division by zero. For coordinate $j$,
 $$
-  G_n = \sum_{i=1}^n \nabla H(\theta_i) \nabla H(\theta_i)^\intercal,
+  s_{n,j} = \sum_{i=1}^n g_{i,j}^2, \qquad \theta_{n,j}
+  = \theta_{n-1,j}
+    - \underbrace{\frac{\gamma}{\sqrt{\epsilon + s_{n,j}}}}_{\text{coordinate's learning rate}} g_{n,j}.
 $$
-and update by multiplying gradient with $G_n^{-1/2}$.
-:::::
 
-. . .
+\pause
 
-::::: {.column width="47%"}
-\begin{algorithm}[H]
-  \KwData{$\gamma >0$, $G = 0$} \For{$n \gets 1, 2, \dots$}{
-    $G_n \gets G_{n-1} + \nabla H(\theta_{n-1}) \nabla H(\theta_{n-1})^\intercal$\;
-    $\theta_n \gets \theta_{n-1} - \gamma G_n^{-1/2} \nabla H(\theta_{n-1})$\; }
-\caption{AdaGrad}
-\end{algorithm}
-:::::
-:::
+For comparable gradient magnitudes, rarely active coordinates retain larger
+learning rates.
 
-. . .
+\pdfpcnote{
+- Squaring gradients prevents positive and negative contributions from canceling.\\
+- The history measures accumulated squared gradients, not curvature directly.\\
+- We use diagonal AdaGrad; the full-matrix version also tracks interactions between coordinates.\\
+}
 
-### Effects
+## Example: One Rare Feature
 
-- Larger learning rates for sparse features\pause
-- Step-sizes adapt to curvature.
-
-## AdaGrad In Practice
-
-### Simplified Version
-
-Computing $\nabla H \nabla H^\intercal$ is $O(p^2)$: expensive!
+Take $x_n = (1,z_n)^\intercal$ and $y_n = 1 + z_n$, where
+$$
+  z_n = \begin{cases}
+          1 & n = 100,200,\dots, \\
+          0 & \text{otherwise},
+        \end{cases}
+  \qquad L_n(\theta) = \frac{1}{2}(y_n - x_n^\intercal\theta)^2.
+$$
 
 \medskip\pause
 
-Replace $G^{-1/2}_n$ with $\operatorname{diag}(G_n)^{-1/2}$
+The first feature is always present. **Feature 2 appears only 1% of the time.**
 
-. . .
+\medskip\pause
 
-### Avoid Singularities
+Start both methods at $\theta_0 = (0,0)^\intercal$. The optimum is
+$\theta^* = (1,1)^\intercal$.
 
-Add a small $\epsilon$ to diagonal.
+\medskip
 
-\bigskip
+SGD
+:   $\gamma_n = 0.3/\sqrt{n}$
+
+AdaGrad
+:   $\gamma = 0.3$, $\epsilon = 10^{-8}$.
+
+## AdaGrad: Learning a Rare Coefficient
+
+```{r}
+#| label: adagrad-sparse-trajectory
+#| echo: false
+#| fig-show: animate
+#| fig-width: 4.2
+#| fig-height: 3.1
+#| fig-cap: >-
+#|   Contours show the average loss; small circles mark rare-feature
+#|   observations.
+
+local({
+  maxit <- 1000
+  iterations <- seq_len(maxit)
+  rare <- iterations %% 100 == 0
+  gamma <- 0.3
+  epsilon <- 1e-8
+  colors <- c(SGD = "royalblue", AdaGrad = "darkorange")
+  paths <- lapply(
+    colors,
+    function(color) matrix(0, 2, maxit + 1)
+  )
+  history <- c(0, 0)
+
+  for (n in iterations) {
+    x <- c(1, as.integer(rare[n]))
+    y <- 1 + as.integer(rare[n])
+    for (method in names(colors)) {
+      theta <- paths[[method]][, n]
+      gradient <- (sum(x * theta) - y) * x
+      if (method == "AdaGrad") {
+        history <- history + gradient^2
+        rate <- gamma / sqrt(epsilon + history)
+      } else {
+        rate <- gamma / sqrt(n)
+      }
+      paths[[method]][, n + 1] <- theta - rate * gradient
+    }
+  }
+
+  coordinates <- seq(-0.1, 1.15, length.out = 201)
+  loss <- outer(
+    coordinates,
+    coordinates,
+    function(x, y) (0.99 * (x - 1)^2 + 0.01 * (x + y - 2)^2) / 2
+  )
+
+  opar <- par(no.readonly = TRUE)
+  par(mar = c(3.8, 4.1, 2.2, 0.8), mgp = c(2.5, 0.7, 0))
+  for (step in c(0, 99, 100, 200, 500, maxit)) {
+    indices <- seq_len(step + 1)
+    rare_indices <- which(rare & iterations <= step) + 1
+    contour(
+      coordinates,
+      coordinates,
+      loss,
+      levels = c(
+        0.0005,
+        0.001,
+        0.002,
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.2,
+        0.5
+      ),
+      drawlabels = FALSE,
+      col = "grey75",
+      asp = 1,
+      xlab = expression(theta[1] ~ "(common)"),
+      ylab = expression(theta[2] ~ "(rare)"),
+      main = sprintf(
+        "Observation %d (rare: %d)",
+        step,
+        length(rare_indices)
+      )
+    )
+    for (method in names(colors)) {
+      path <- paths[[method]]
+      lines(
+        path[1, indices],
+        path[2, indices],
+        col = colors[method]
+      )
+      points(
+        path[1, rare_indices],
+        path[2, rare_indices],
+        col = colors[method],
+        pch = 19,
+        cex = 0.5
+      )
+      points(
+        path[1, step + 1],
+        path[2, step + 1],
+        col = colors[method],
+        pch = 19
+      )
+    }
+    points(0, 0, pch = 1)
+    points(1, 1, pch = 4)
+    legend(
+      "topleft",
+      c("SGD", "AdaGrad", "Minimum"),
+      col = c(colors, "black"),
+      lty = c(1, 1, NA),
+      pch = c(19, 19, 4),
+      cex = 0.8,
+      bg = "white"
+    )
+  }
+  par(opar)
+})
+```
+
+\pdfpcnote{
+- Both methods see the same sequence: 99 common observations followed by one rare observation, repeated.\\
+- At its first appearance, the rare coefficient moves about 0.03 with SGD and 0.30 with AdaGrad.\\
+- After 1000 observations, the rare coefficient is about 0.14 with SGD and 0.92 with AdaGrad.\\
+}
+
+## AdaGrad in Practice
+
+Keep one accumulator per coordinate: $O(p)$ storage and work per update, apart
+from computing the gradient.
+
+\medskip
 
 \begin{algorithm}[H]
-  \KwData{$\gamma >0$, $\epsilon > 0$}
-    \For{$n \gets 1, 2, \dots$}{
-      $G_n \gets G_{n-1} + \operatorname{diag}\big(\nabla H(\theta_{n-1})^2\big)$\;
-      $\theta_n \gets \theta_{n-1} - \gamma \operatorname{diag}\big(\epsilon I_p + G_n\big)^{-1/2} \nabla H(\theta_{n-1})$\;
-    }
-  \caption{Simplified AdaGrad}
+  \KwData{$\theta_0$, $\gamma > 0$, $\epsilon > 0$, $s_0 = 0$}
+  \For{$n \gets 1, 2, \dots$}{
+    $g_n \gets \nabla H(\theta_{n-1})$\;
+    $s_n \gets s_{n-1} + g_n \odot g_n$\;
+    $\theta_n \gets \theta_{n-1} - \frac{\gamma}{\sqrt{\epsilon + s_n}} \odot g_n$\;
+  }
+  \caption{Diagonal AdaGrad. All operations are coordinatewise.}
 \end{algorithm}
+
+\medskip\pause
+
+Each accumulator can only grow, so its learning rate can only shrink.
+
+\medskip\pause
+
+**What if we remember only recent gradients?**
 
 ## RMSProp
 
@@ -1414,26 +1558,29 @@ Acronym for **R**oot **M**ean **S**quare **Prop**agation\ [@hintonLecture62018].
 
 ### Idea
 
-Divide learning rate by running average of magnitude of recent gradients:
+Replace AdaGrad's sum by an exponentially weighted average of squared gradients:
 $$
-  v(\theta, n) = \xi v(\theta, n - 1) + (1 - \xi)\nabla H(\theta_n)^2
+  v_n = \xi v_{n-1} + (1 - \xi)g_n \odot g_n,
+  \qquad
+  g_n = \nabla H(\theta_{n-1}),
 $$
-where $\xi$ is the **forgetting factor**.
+where $\xi \in [0,1)$ is the **forgetting factor**.
 
 \medskip\pause
 
-Similar to AdaGrad, but uses **forgetting** to gradually decrease influence of
-old data.
+Old gradients gradually lose influence. Unlike AdaGrad's accumulators, $v_n$ can
+decrease, allowing the learning rates to increase again.
 
 \medskip\pause
 
 \begin{algorithm}[H]
-  \KwData{$\gamma >0$, $\xi > 0$}
-  \For{$n \gets 1, 2, \dots$,
-    $\xi \in [0, 1)$}{ $v_n = \xi v_{n-1} + (1 - \xi) \nabla H(\theta_{n-1})$\;
-    $\theta_n \gets \theta_{n-1} - \frac{\gamma}{\sqrt{v_n}} \odot \nabla H(\theta_{n-1})$\; 
+  \KwData{$\theta_0$, $\gamma > 0$, $\epsilon > 0$, $\xi \in [0,1)$, $v_0 = 0$}
+  \For{$n \gets 1, 2, \dots$}{
+    $g_n \gets \nabla H(\theta_{n-1})$\;
+    $v_n \gets \xi v_{n-1} + (1 - \xi)g_n \odot g_n$\;
+    $\theta_n \gets \theta_{n-1} - \frac{\gamma}{\sqrt{\epsilon + v_n}} \odot g_n$\;
   }
-  \caption{RMSProp. (Note that $\odot$ is element-wise product.)}
+  \caption{RMSProp. All operations are coordinatewise.}
 \end{algorithm}
 
 ## Adam
