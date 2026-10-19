@@ -116,7 +116,7 @@ first.
 
 The direction $\rho_n$ is an exponentially weighted average of gradients.
 
-\medskip\pause
+\medskip
 
 $\beta \in [0,1)$ determines how long past gradients remain influential.
 :::::
@@ -147,6 +147,303 @@ $$
 
 Momentum carries a fraction $\beta$ of the previous movement into the next step,
 like the inertia of a heavy ball\ [@polyakMethodsSpeedingConvergence1964].
+
+```{r}
+#| label: setup-momentum-illustration
+#| include: false
+
+momentum_illustration <- local({
+  library(mvtnorm)
+
+  set.seed(622)
+
+  p <- 2
+  n <- 1000
+  Sigma <- matrix(c(1, 0.7, 0.7, 1), 2, 2)
+  mu <- c(0, 0)
+  X <- rmvnorm(n, mu, Sigma)
+  beta <- c(0.5, 1)
+  y <- X %*% beta + rnorm(n)
+
+  b1 <- seq(0.1, 0.6, length.out = 100)
+  b2 <- seq(1.05, 1.25, length.out = 100)
+  f_vec <- Vectorize(function(b1, b2) {
+    0.5 * norm(X %*% c(b1, b2) - y, "2")^2
+  })
+  f2 <- outer(b1, b2, f_vec)
+
+  L <- norm(crossprod(X), "2")
+
+  beta <- c(.2, 1.1)
+  n_it <- 4
+  alpha <- 1 / L
+
+  twostep_gd <- function(
+    beta_mom = 0,
+    method = c("polyak", "nesterov")
+  ) {
+    betas <- matrix(0, nrow = p, ncol = n_it)
+    betas[, 1] <- beta
+    betas[, 2] <- beta
+    rs <- matrix(0, nrow = p, ncol = n_it)
+    rho <- double(p)
+
+    method <- match.arg(method)
+
+    for (k in 2:(n_it - 1)) {
+      rs[, k] <- betas[, k] +
+        beta_mom * (betas[, k] - betas[, k - 1])
+
+      if (method == "polyak") {
+        gradient <- crossprod(X, X %*% betas[, k] - y)
+        rho <- beta_mom * rho + (1 - beta_mom) * gradient
+        gamma <- alpha / (1 - beta_mom)
+        betas[, k + 1] <- betas[, k] - gamma * rho
+      } else {
+        gradient <- crossprod(X, X %*% rs[, k] - y)
+        betas[, k + 1] <- rs[, k] - alpha * gradient
+      }
+    }
+
+    list(beta = betas, r = rs)
+  }
+
+  beta_mom <- 0.6
+
+  res <- twostep_gd()
+  rm <- twostep_gd(beta_mom)
+  rn <- twostep_gd(beta_mom, method = "nesterov")
+
+  b <- res$beta
+
+  function(stage, show_nesterov = FALSE) {
+    contour(
+      b1,
+      b2,
+      f2,
+      asp = 1,
+      col = "dark grey",
+      levels = c(480, 487.6, 495, 512.2, 526),
+      drawlabels = FALSE,
+      xlab = expression(theta[1]),
+      ylab = expression(theta[2])
+    )
+    points(b[1, 2:3], b[2, 2:3], pch = 19)
+    lines(b[1, 2:3], b[2, 2:3])
+    text(b[1, 2], b[2, 2], expression(theta[n - 1]), pos = 2)
+    text(b[1, 3], b[2, 3], expression(theta[n]), pos = 3)
+
+    if (stage >= 2) {
+      arrows(
+        rm$beta[1, 3],
+        rm$beta[2, 3],
+        rm$r[1, 3],
+        rm$r[2, 3],
+        lty = 2,
+        length = 0.15
+      )
+      if (show_nesterov) {
+        text(
+          rm$r[1, 3],
+          rm$r[2, 3],
+          expression(y[n + 1]),
+          pos = 3
+        )
+      } else {
+        text(
+          mean(c(rm$beta[1, 3], rm$r[1, 3])),
+          mean(c(rm$beta[2, 3], rm$r[2, 3])),
+          expression(beta * (theta[n] - theta[n - 1])),
+          pos = 3,
+          offset = 1.2,
+          cex = 0.8
+        )
+      }
+    }
+    if (stage >= 3) {
+      lines(b[1, 3:4], b[2, 3:4])
+      points(b[1, 4], b[2, 4], pch = 19)
+    }
+    if (stage >= 4) {
+      lines(
+        c(rm$r[1, 3], rm$beta[1, 4]),
+        c(rm$r[2, 3], rm$beta[2, 4]),
+        col = "darkorange"
+      )
+      points(
+        rm$beta[1, 4],
+        rm$beta[2, 4],
+        pch = 19,
+        col = "darkorange"
+      )
+    }
+    if (show_nesterov && stage >= 5) {
+      lines(
+        c(rn$r[1, 3], rn$beta[1, 4]),
+        c(rn$r[2, 3], rn$beta[2, 4]),
+        col = "royalblue"
+      )
+      points(
+        rn$beta[1, 4],
+        rn$beta[2, 4],
+        pch = 19,
+        col = "royalblue"
+      )
+    }
+    legend(
+      "topright",
+      if (show_nesterov) {
+        c("GD", "Polyak", "Nesterov")
+      } else {
+        c("GD", "Polyak")
+      },
+      col = if (show_nesterov) {
+        c("black", "darkorange", "royalblue")
+      } else {
+        c("black", "darkorange")
+      },
+      pch = 19,
+      bg = "white"
+    )
+  }
+})
+```
+
+## Polyak Momentum: One Update
+
+```{r}
+#| label: momentum-illustration
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5.4
+#| fig-height: 3.1
+#| fig-cap: "Building a Polyak momentum update."
+
+for (stage in seq_len(4)) {
+  momentum_illustration(stage)
+}
+```
+
+## Momentum in a Narrow Valley
+
+```{r}
+#| label: momentum-valley
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5.5
+#| fig-height: 2.9
+#| fig-cap: >-
+#|   A quadratic valley with curvature ratio 100. GD ($\gamma = 0.018$) and
+#|   Polyak ($\gamma = 0.045$, $\beta = 0.6$) start at the same point.
+
+local({
+  rotation <- matrix(c(1, 1, -1, 1), 2) / sqrt(2)
+  Q <- tcrossprod(rotation %*% diag(c(1, 100)), rotation)
+  initial <- drop(rotation %*% c(-3, 0.6))
+  maxit <- 80
+  colors <- c(GD = "royalblue", Polyak = "darkorange")
+  beta_values <- c(GD = 0, Polyak = 0.6)
+  paths <- losses <- list()
+
+  for (method in names(colors)) {
+    beta <- beta_values[method]
+    # Match the coefficient of the current gradient in the heavy-ball form.
+    gamma <- 0.018 / (1 - beta)
+    theta <- matrix(0, 2, maxit + 1)
+    theta[, 1] <- initial
+    rho <- c(0, 0)
+    for (k in seq_len(maxit)) {
+      gradient <- drop(Q %*% theta[, k])
+      rho <- beta * rho + (1 - beta) * gradient
+      theta[, k + 1] <- theta[, k] - gamma * rho
+    }
+    paths[[method]] <- theta
+    losses[[method]] <- colSums(theta * (Q %*% theta)) / 2
+  }
+
+  coordinates <- seq(-2.8, 0.6, length.out = 201)
+  surface <- outer(
+    coordinates,
+    coordinates,
+    function(x, y) ((x + y)^2 + 100 * (y - x)^2) / 4
+  )
+  opar <- par(no.readonly = TRUE)
+  par(
+    mfrow = c(1, 2),
+    mar = c(3.5, 3.7, 2, 0.8),
+    mgp = c(2.3, 0.7, 0)
+  )
+  for (step in c(0:2, 4, 8, 16, 32, 64, maxit)) {
+    iterations <- 0:step
+    indices <- iterations + 1
+    contour(
+      coordinates,
+      coordinates,
+      surface,
+      levels = c(0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32),
+      drawlabels = FALSE,
+      col = "dark grey",
+      asp = 1,
+      xlab = expression(theta[1]),
+      ylab = expression(theta[2]),
+      main = bquote(k == .(step))
+    )
+    abline(a = 0, b = 1, col = "dark grey", lty = 3)
+    for (method in names(colors)) {
+      path <- paths[[method]][, indices, drop = FALSE]
+      lines(path[1, ], path[2, ], col = colors[method])
+      points(
+        path[1, ],
+        path[2, ],
+        col = colors[method],
+        pch = 19,
+        cex = 0.4
+      )
+    }
+    points(0, 0, pch = 4)
+    points(initial[1], initial[2], pch = 1)
+    legend(
+      "topleft",
+      c("GD", "Polyak", "Minimum"),
+      col = c(colors, "black"),
+      lty = c(1, 1, NA),
+      pch = c(19, 19, 4),
+      cex = 0.8,
+      bg = "white"
+    )
+
+    plot(
+      NA,
+      xlim = c(0, maxit),
+      ylim = range(unlist(losses)),
+      log = "y",
+      xlab = "Iteration",
+      ylab = expression(H(theta[k]) - H(theta^"*")),
+      main = "Suboptimality"
+    )
+    for (method in names(colors)) {
+      lines(
+        iterations,
+        losses[[method]][indices],
+        col = colors[method]
+      )
+      points(
+        step,
+        losses[[method]][step + 1],
+        col = colors[method],
+        pch = 19
+      )
+    }
+  }
+  par(opar)
+})
+```
+
+\pdfpcnote{
+- Convex quadratic with curvature ratio 100 and a unique minimum at the origin.\\
+- Alternating gradient components partly cancel; consistent components reinforce each other.\\
+- Both methods use the same current-gradient coefficient and the same number of gradient evaluations.\\
+}
 
 ## Polyak Momentum in Practice
 
@@ -450,152 +747,19 @@ First appeared in @nesterovMethodSolvingConvex1983.
 :::::
 :::
 
-##
+## Nesterov and Polyak: One Update
 
 ```{r}
-#| label: momentum-illustration
+#| label: nesterov-illustration
 #| echo: false
 #| fig-show: animate
 #| fig-width: 5.4
 #| fig-height: 3.1
-#| fig-cap: "Illustration of Nesterov and Polyak momentum."
+#| fig-cap: "Nesterov evaluates the gradient at the look-ahead point."
 
-local({
-  library(mvtnorm)
-
-  set.seed(622)
-
-  p <- 2
-  n <- 1000
-  Sigma <- matrix(c(1, 0.7, 0.7, 1), 2, 2)
-  mu <- c(0, 0)
-  X <- rmvnorm(n, mu, Sigma)
-  beta <- c(0.5, 1)
-  y <- X %*% beta + rnorm(n)
-
-  b1 <- seq(0.1, 0.6, length.out = 100)
-  b2 <- seq(1.05, 1.25, length.out = 100)
-  f_vec <- Vectorize(function(b1, b2) {
-    0.5 * norm(X %*% c(b1, b2) - y, "2")^2
-  })
-  f2 <- outer(b1, b2, f_vec)
-
-  L <- norm(crossprod(X), "2")
-
-  beta <- c(.2, 1.1)
-  n_it <- 4
-  alpha <- 1 / L
-
-  twostep_gd <- function(
-    beta_mom = 0,
-    method = c("polyak", "nesterov")
-  ) {
-    betas <- matrix(0, nrow = p, ncol = n_it)
-    betas[, 1] <- beta
-    betas[, 2] <- beta
-    rs <- matrix(0, nrow = p, ncol = n_it)
-    rho <- double(p)
-
-    method <- match.arg(method)
-
-    for (k in 2:(n_it - 1)) {
-      rs[, k] <- betas[, k] +
-        beta_mom * (betas[, k] - betas[, k - 1])
-
-      if (method == "polyak") {
-        gradient <- crossprod(X, X %*% betas[, k] - y)
-        rho <- beta_mom * rho + (1 - beta_mom) * gradient
-        gamma <- alpha / (1 - beta_mom)
-        betas[, k + 1] <- betas[, k] - gamma * rho
-      } else {
-        gradient <- crossprod(X, X %*% rs[, k] - y)
-        if (k < 3) {
-          step <- alpha
-        } else {
-          step <- alpha * 0.8
-        }
-        betas[, k + 1] <- rs[, k] - step * gradient
-      }
-    }
-
-    list(beta = betas, r = rs)
-  }
-
-  beta_mom <- 0.6
-
-  res <- twostep_gd()
-  rm <- twostep_gd(beta_mom)
-  rn <- twostep_gd(beta_mom, method = "nesterov")
-
-  b <- res$beta
-
-  for (stage in seq_len(5)) {
-    contour(
-      b1,
-      b2,
-      f2,
-      asp = 1,
-      col = "dark grey",
-      levels = c(480, 487.6, 495, 512.2, 526),
-      drawlabels = FALSE,
-      xlab = expression(theta[1]),
-      ylab = expression(theta[2])
-    )
-    points(b[1, 2:3], b[2, 2:3], pch = 19)
-    lines(b[1, 2:3], b[2, 2:3])
-    text(b[1, 2], b[2, 2], expression(theta[n - 1]), pos = 2)
-    text(b[1, 3], b[2, 3], expression(theta[n]), pos = 3)
-
-    if (stage >= 2) {
-      arrows(
-        rm$beta[1, 3],
-        rm$beta[2, 3],
-        rm$r[1, 3],
-        rm$r[2, 3],
-        lty = 2,
-        length = 0.15
-      )
-      text(rm$r[1, 3], rm$r[2, 3], expression(y[n + 1]), pos = 1)
-    }
-    if (stage >= 3) {
-      lines(b[1, 3:4], b[2, 3:4])
-      points(b[1, 4], b[2, 4], pch = 19)
-    }
-    if (stage >= 4) {
-      lines(
-        c(rm$r[1, 3], rm$beta[1, 4]),
-        c(rm$r[2, 3], rm$beta[2, 4]),
-        col = "darkorange"
-      )
-      points(
-        rm$beta[1, 4],
-        rm$beta[2, 4],
-        pch = 19,
-        col = "darkorange"
-      )
-    }
-    if (stage >= 5) {
-      lines(
-        c(rn$r[1, 3], rn$beta[1, 4]),
-        c(rn$r[2, 3], rn$beta[2, 4]),
-        col = "royalblue"
-      )
-      points(
-        rn$beta[1, 4],
-        rn$beta[2, 4],
-        pch = 19,
-        col = "royalblue"
-      )
-    }
-    legend(
-      "topright",
-      c("GD", "Polyak", "Nesterov"),
-      col = c("black", "darkorange", "royalblue"),
-      pch = 19,
-      bg = "white"
-    )
-  }
-})
+for (stage in 4:5) {
+  momentum_illustration(stage, show_nesterov = TRUE)
+}
 ```
 
 ## Optimal Nesterov Weights
@@ -863,12 +1027,10 @@ No optimal rates anymore, just heuristics.
 
 But momentum helps in another way: it **reduces variance** of the iterates.
 
-##
+## Variance Reduction
 
 ::: {.columns align="center"}
 ::::: {.column width="47%"}
-### Variance Reduction
-
 Momentum smooths out the updates, reducing variance of the iterates.
 
 \medskip\pause
@@ -1539,7 +1701,7 @@ local(
 ## Example: Nonlinear Least Squares
 
 ::: {.columns align="center"}
-::::: {.column width="42%"}
+::::: {.column width="55%"}
 Let's assume we're trying to solve a least-squares type of problem:
 $$
   H_N(\theta) = \frac{1}{2N} \sum_{i=1}^N \left( y_i - g(\theta; x_i) \right)^2
@@ -1560,11 +1722,11 @@ $$
 $$
 :::::
 
-::::: {.column width="50%"}
+::::: {.column width="40%"}
 ```{r}
 #| label: nonlinear-data
 #| echo: false
-#| fig-width: 2.9
+#| fig-width: 2.3
 #| fig-height: 2.6
 #| fig-cap: "Simulation from problem."
 
@@ -1735,8 +1897,8 @@ converges.
 ```{r}
 #| label: nonlinear-convergence
 #| echo: false
-#| fig-width: 5.5
-#| fig-height: 3.3
+#| fig-width: 5.2
+#| fig-height: 3.0
 #| fig-cap: "Optimization paths and suboptimality for different starting values."
 #| fig-show: animate
 
@@ -1845,6 +2007,8 @@ Use RcppEigen or RcppArmadillo.
 
 ## Exercise: Rosenbrock's Banana
 
+::: {.columns}
+::::: {.column width="47%"}
 ### Steps
 
 1. Minimize $H(\theta) = (a - \theta_1)^2 + b(\theta_2 - \theta_1^2)^2$ with
@@ -1852,8 +2016,6 @@ Use RcppEigen or RcppArmadillo.
 2. Add Polyak momentum.\pause
 3. Experiment with different step sizes and momentum parameters.
 
-::: {.columns}
-::::: {.column width="47%"}
 \begin{algorithm}[H]
   \KwData{$\gamma >0$, $\beta \in [0,1)$, $\rho_0 = 0$}
   \For{$n \gets 1, 2, \dots$}{
