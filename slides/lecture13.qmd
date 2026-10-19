@@ -1523,6 +1523,14 @@ local(
       beta_seq,
       Vectorize(function(a, b) H(c(a, b)))
     )
+    # Refine the best grid point to estimate the global minimum.
+    minimum <- arrayInd(which.min(z), dim(z))
+    H_min <- optim(
+      c(alpha_seq[minimum[1]], beta_seq[minimum[2]]),
+      H,
+      method = "BFGS",
+      control = list(reltol = 1e-12)
+    )$value
   },
   envir = nonlinear
 )
@@ -1686,8 +1694,10 @@ local(
           epoch = 0:100,
           alpha = trajectory[, 1],
           beta = trajectory[, 2],
-          alpha0 = par_init[init, 1],
-          beta0 = par_init[init, 2]
+          suboptimality = pmax(
+            apply(trajectory, 1, H) - H_min,
+            .Machine$double.eps
+          )
         )
       }
     }
@@ -1721,104 +1731,85 @@ converges.
 #| echo: false
 #| fig-width: 5.5
 #| fig-height: 3.3
-#| fig-cap: "Convergence of different algorithms for different starting values."
+#| fig-cap: "Optimization paths and suboptimality for different starting values."
 #| fig-show: animate
 
 local(
   {
     opar <- par(no.readonly = TRUE)
-    par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+    par(
+      mfrow = c(1, 2),
+      mar = c(4, 4, 2, 1),
+      mgp = c(2.5, 0.75, 0)
+    )
+    colors <- c(
+      adam = "royalblue",
+      momentum = "darkorange",
+      batch = "darkgreen"
+    )
     for (start in c(1, 3, 7, 8, 16, 17, 19)) {
-      for (algorithm in c("adam", "momentum", "batch")) {
-        contour(
-          alpha_seq,
-          beta_seq,
-          z,
-          drawlabels = FALSE,
-          col = "dark grey",
-          xlab = expression(alpha),
-          ylab = expression(beta),
-          main = algorithm
+      contour(
+        alpha_seq,
+        beta_seq,
+        z,
+        drawlabels = FALSE,
+        col = "dark grey",
+        xlab = expression(alpha),
+        ylab = expression(beta),
+        main = bquote(
+          alpha[0] == .(par_init[start, 1]) ~
+            "," ~
+            beta[0] == .(par_init[start, 2])
         )
+      )
+      for (algorithm in names(colors)) {
         path <- subset(
           paths,
           init == start & method == algorithm
         )
-        lines(path$alpha, path$beta, col = "royalblue")
-        points(path$alpha[1], path$beta[1], col = "royalblue")
+        lines(path$alpha, path$beta, col = colors[algorithm])
+        points(
+          path$alpha[1],
+          path$beta[1],
+          col = colors[algorithm]
+        )
         points(
           tail(path$alpha, 1),
           tail(path$beta, 1),
-          col = "royalblue",
+          col = colors[algorithm],
           pch = 19
+        )
+      }
+      legend(
+        "left",
+        legend = c("Adam", "Momentum", "Batch"),
+        col = colors,
+        lty = 1,
+        bg = "white",
+        cex = 0.8
+      )
+      plot(
+        NA,
+        xlim = range(paths$epoch),
+        ylim = range(paths$suboptimality),
+        log = "y",
+        xlab = "Epoch",
+        ylab = expression(H[N](theta[k]) - H[N]^"*"),
+        main = "Suboptimality"
+      )
+      for (algorithm in names(colors)) {
+        path <- subset(
+          paths,
+          init == start & method == algorithm
+        )
+        lines(
+          path$epoch,
+          path$suboptimality,
+          col = colors[algorithm]
         )
       }
     }
     par(opar)
-  },
-  envir = nonlinear
-)
-```
-
-##
-
-```{r}
-#| label: nonlinear-alpha
-#| echo: false
-#| fig-width: 5.5
-#| fig-height: 3.3
-#| fig-cap: "Updates of $\\alpha$ for different algorithms and starting values."
-
-local(
-  {
-    ggplot(paths, aes(epoch, alpha, color = method)) +
-      geom_line() +
-      facet_grid(
-        vars(alpha0),
-        vars(beta0),
-        scales = "free_y",
-        labeller = label_bquote(
-          rows = alpha == .(alpha0),
-          cols = beta == .(beta0)
-        )
-      ) +
-      labs(
-        x = "Epoch",
-        y = expression(alpha),
-        color = "Algorithm"
-      )
-  },
-  envir = nonlinear
-)
-```
-
-##
-
-```{r}
-#| label: nonlinear-beta
-#| echo: false
-#| fig-width: 5.5
-#| fig-height: 3.3
-#| fig-cap: "Updates of $\\beta$ for different algorithms and starting values."
-
-local(
-  {
-    ggplot(paths, aes(epoch, beta, color = method)) +
-      geom_line() +
-      facet_grid(
-        vars(alpha0),
-        vars(beta0),
-        scales = "free_y",
-        labeller = label_bquote(
-          rows = alpha == .(alpha0),
-          cols = beta == .(beta0)
-        )
-      ) +
-      labs(
-        x = "Epoch",
-        y = expression(beta),
-        color = "Algorithm"
-      )
   },
   envir = nonlinear
 )
