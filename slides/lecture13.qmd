@@ -47,16 +47,14 @@ beta_mom_values <- c(0, 0.3, 0.9)
 
 ## Last Times: Rcpp and SGD
 
+::: {.columns align="center"}
+::::: {.column width="39%"}
 ### Rcpp
 
 We introduced Rcpp and how to use it to speed up R code.
 
 . . .
 
-## Stochastic Gradient Descent
-
-::: {.columns align="center"}
-::::: {.column width="39%"}
 ### SGD
 
 Introduced stochastic gradient descent (SGD) and mini-batch version thereof.
@@ -114,14 +112,13 @@ Average recent gradients so that the update has **memory**.
 Not specific to SGD! To simplify, we will discuss standard gradient descent
 first.
 
-. . .
+\medskip
 
 The direction $\rho_n$ is an exponentially weighted average of gradients.
 
 \medskip\pause
 
-The memory parameter $\beta \in [0,1)$ determines how long past gradients remain
-influential; $\beta = 0$ gives gradient descent.
+$\beta \in [0,1)$ determines how long past gradients remain influential.
 :::::
 
 ::::: {.column width="47%"}
@@ -137,29 +134,19 @@ influential; $\beta = 0$ gives gradient descent.
 :::::
 :::
 
-## Relation to the Heavy-Ball Form
+## The Heavy-Ball Interpretation
 
 For a fixed learning rate $\gamma$, the previous update implies
 $$
-  \theta_n = \theta_{n-1} - \gamma(1 - \beta)\nabla H(\theta_{n-1})
-             + \beta(\theta_{n-1} - \theta_{n-2}).
+  \theta_n
+  = \theta_{n-1} - \gamma(1 - \beta)\nabla H(\theta_{n-1})
+    + \underbrace{\beta(\theta_{n-1} - \theta_{n-2})}_{\text{previous movement}}.
 $$
 
 . . .
 
-As introduced by @polyakMethodsSpeedingConvergence1964, the classical heavy-ball
-form
-$$
-  \theta_n = \theta_{n-1} - \alpha \nabla H(\theta_{n-1})
-             + \beta(\theta_{n-1} - \theta_{n-2}),
-$$
-uses $\alpha = \gamma(1 - \beta)$.
-
-\medskip\pause
-
-With a learning-rate schedule, the displacement coefficient also contains
-$\gamma_n / \gamma_{n-1}$, so the two forms are not related by a single
-rescaling.
+Momentum carries a fraction $\beta$ of the previous movement into the next step,
+like the inertia of a heavy ball\ [@polyakMethodsSpeedingConvergence1964].
 
 ## Polyak Momentum in Practice
 
@@ -356,9 +343,8 @@ $$
 
 . . .
 
-With heavy-ball coefficients $\alpha = 1/9$ and $\beta = 4/9$, the method
-converges to three limit points. The learning rate is
-$\gamma = \alpha / (1 - \beta) = 1/5$.
+With $\gamma = 1/5$ and $\beta = 4/9$, the method converges to three limit
+points.
 :::::
 
 ::::: {.column width="47%"}
@@ -394,9 +380,8 @@ local({
     )
   }
 
-  alpha <- 1 / 9
+  gamma <- 1 / 5
   beta_mom <- 4 / 9
-  gamma <- alpha / (1 - beta_mom)
 
   col <- rgb(0, 0, 0, alpha = 0.2)
 
@@ -694,7 +679,7 @@ local({
 ::::: {.column width="47%"}
 Convergence rate with Nesterov acceleration goes from $O(1/n)$ to $O(1/n^2)$
 
-\medskip\pause
+\medskip
 
 This is **optimal** for a first-order method. But it is no longer a *descent*
 method!
@@ -1888,14 +1873,23 @@ Use RcppEigen or RcppArmadillo.
 ::::: {.column width="47%"}
 ### Plot Contours
 
-You can use the following code to plot the contours of the function (after
-defining `H`):
+Use the following code to plot the contours of the function:
 
-```r
+```{r}
+#| label: rosenbrock-contour
+#| eval: false
+#| code-style:
+#|   line-width: 31
+
 theta1 <- seq(-2, 2, by = 0.05)
 theta2 <- seq(-1, 3, by = 0.05)
 z <- outer(theta1, theta2, H)
-contour(theta1, theta2, z, nlevels = 20)
+contour(
+  theta1,
+  theta2,
+  z,
+  nlevels = 20
+)
 ```
 :::::
 :::
