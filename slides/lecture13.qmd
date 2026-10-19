@@ -1583,6 +1583,162 @@ decrease, allowing the learning rates to increase again.
   \caption{RMSProp. All operations are coordinatewise.}
 \end{algorithm}
 
+## Example: A Nonconvex Shoulder
+
+Consider the smooth nonconvex function
+$$
+  H(\theta) = \frac{\theta^4}{4} - \frac{2\theta^3}{3} + \frac{1.01\theta^2}{2}.
+$$
+
+\medskip\pause
+
+Its gradient $H'(\theta) = \theta\big[(\theta - 1)^2 + 0.01\big]$ becomes small
+near $\theta = 1$. A steeper descent follows, leading to the minimum at zero.
+
+\medskip\pause
+
+Old large gradients keep AdaGrad's steps small on the shoulder. RMSProp reduces
+their weight and crosses the shoulder more quickly.
+
+\medskip
+
+Start both at $\theta_0 = 1.8$ with zero history. Use $\xi = 0.9$,
+$\gamma_{\mathrm{A}} = 0.1$, and $\gamma_{\mathrm{R}} = 0.1\sqrt{1 - \xi}$ to
+match the first step.
+
+\pdfpcnote{
+- The second derivative is negative on part of the shoulder, so the function is nonconvex.\\
+- Matching the first step removes the fixed scaling difference between a sum and an exponential average.\\
+- The gradient near the shoulder is small but nonzero; the unique stationary point is the minimum at zero.\\
+}
+
+## RMSProp: Crossing the Shoulder
+
+```{r}
+#| label: rmsprop-forgetting
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5.5
+#| fig-height: 2.9
+#| fig-cap: >-
+#|   RMSProp crosses the shallow shoulder as the earlier large gradients lose
+#|   weight. Both methods take the same first step.
+
+local({
+  objective <- function(theta) {
+    theta^4 / 4 - 2 * theta^3 / 3 + 1.01 * theta^2 / 2
+  }
+  gradient <- function(theta) theta * ((theta - 1)^2 + 0.01)
+  initial <- 1.8
+  maxit <- 100
+  xi <- 0.9
+  epsilon <- 1e-8
+  colors <- c(AdaGrad = "darkorange", RMSProp = "royalblue")
+  gamma <- c(AdaGrad = 0.1, RMSProp = 0.1 * sqrt(1 - xi))
+  paths <- rates <- list()
+
+  for (method in names(colors)) {
+    theta <- numeric(maxit + 1)
+    theta[1] <- initial
+    eta <- numeric(maxit)
+    history <- 0
+    for (n in seq_len(maxit)) {
+      g <- gradient(theta[n])
+      if (method == "AdaGrad") {
+        history <- history + g^2
+      } else {
+        history <- xi * history + (1 - xi) * g^2
+      }
+      eta[n] <- gamma[method] / sqrt(epsilon + history)
+      theta[n + 1] <- theta[n] - eta[n] * g
+    }
+    paths[[method]] <- theta
+    rates[[method]] <- eta
+  }
+
+  coordinates <- seq(-0.1, 1.85, length.out = 401)
+  opar <- par(no.readonly = TRUE)
+  par(
+    mfrow = c(1, 2),
+    mar = c(3.8, 3.9, 2, 0.8),
+    mgp = c(2.5, 0.7, 0)
+  )
+  for (step in c(0, 1, 20, 40, 60, 70, 80, maxit)) {
+    indices <- seq_len(step + 1)
+    plot(
+      coordinates,
+      objective(coordinates),
+      type = "l",
+      col = "grey50",
+      xlab = expression(theta),
+      ylab = expression(H(theta)),
+      main = bquote(n == .(step))
+    )
+    text(1, objective(1) + 0.06, "Shallow\nshoulder", cex = 0.75)
+    for (method in names(colors)) {
+      path <- paths[[method]]
+      points(
+        path[indices],
+        objective(path[indices]),
+        col = adjustcolor(colors[method], alpha.f = 0.4),
+        pch = 19,
+        cex = 0.3
+      )
+    }
+    for (method in names(colors)) {
+      theta <- paths[[method]][step + 1]
+      points(
+        theta,
+        objective(theta),
+        col = colors[method],
+        pch = 19
+      )
+    }
+    points(0, 0, pch = 4)
+    legend(
+      "topleft",
+      c("AdaGrad", "RMSProp", "Minimum"),
+      col = c(colors, "black"),
+      pch = c(19, 19, 4),
+      cex = 0.8,
+      bg = "white"
+    )
+
+    plot(
+      NA,
+      xlim = c(0, maxit),
+      ylim = range(unlist(rates)),
+      log = "y",
+      xlab = "Iteration",
+      ylab = "Effective learning rate",
+      main = "Gradient scaling"
+    )
+    if (step > 0) {
+      for (method in names(colors)) {
+        lines(
+          seq_len(step),
+          rates[[method]][seq_len(step)],
+          col = colors[method]
+        )
+        points(
+          step,
+          rates[[method]][step],
+          col = colors[method],
+          pch = 19
+        )
+      }
+    }
+  }
+  par(opar)
+})
+```
+
+\pdfpcnote{
+- The entire function stays visible on fixed axes throughout the animation.\\
+- RMSProp's learning rate rises on the shoulder, then falls as it reaches the steeper descent beyond it.\\
+- After 100 updates, AdaGrad is near 1.11 on the shoulder, while RMSProp is near zero.\\
+}
+
 ## Adam
 
 Acronym for **Ada**ptive **m**oment
