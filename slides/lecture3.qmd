@@ -278,6 +278,11 @@ for (step in seq_along(profiler_samples)) {
 
 cat(
   "\\begin{center}\n",
+  "\\alt<handout>{\\includegraphics[width=0.96\\linewidth]{",
+  profiler_figure_base,
+  "-",
+  length(profiler_samples),
+  ".pdf}}{",
   sprintf(
     paste0(
       "\\multiinclude[<+>][format=pdf,start=1,end=%d,",
@@ -286,7 +291,7 @@ cat(
     length(profiler_samples),
     profiler_figure_base
   ),
-  "\n\\end{center}\n",
+  "}\n\\end{center}\n",
   sep = ""
 )
 ```

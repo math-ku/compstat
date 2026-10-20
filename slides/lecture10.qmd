@@ -601,7 +601,11 @@ for (i in seq_len(4)) {
 ```{=latex}
 \begin{figure}
 \centering
-\multiinclude[<+>][format=pdf,start=1,end=8]{lecture10_files/figure-beamer/plot-curves}
+\alt<handout>{%
+  \includegraphics{lecture10_files/figure-beamer/plot-curves-8.pdf}%
+}{%
+  \multiinclude[<+>][format=pdf,start=1,end=8]{lecture10_files/figure-beamer/plot-curves}%
+}
 \caption{Gray contours show $-Q$; dashed orange contours show $-\ell$. The cross marks the MLE.}
 \end{figure}
 ```
