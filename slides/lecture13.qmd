@@ -1381,8 +1381,8 @@ $$
   z_n = \begin{cases}
           1 & n = 100,200,\dots, \\
           0 & \text{otherwise},
-        \end{cases}
-  \qquad L_n(\theta) = \frac{1}{2}(y_n - x_n^\intercal\theta)^2.
+        \end{cases} \qquad L_n(\theta)
+      = \frac{1}{2}(y_n - x_n^\intercal\theta)^2.
 $$
 
 \medskip\pause
@@ -1788,6 +1788,138 @@ $$
 - Monitor loss curves: clipping should stabilize, not hurt convergence
 :::::
 :::
+
+## Gradient Clipping: A Steep Region
+
+$$
+  H(\theta) = \frac{\theta_1^4 + \theta_2^4}{4} + \frac{\|\theta\|_2^2}{2},
+  \qquad
+  \gamma = \frac{1}{2}, \quad c = 2.
+$$
+
+```{r}
+#| label: gradient-clipping
+#| echo: false
+#| fig-show: animate
+#| fig-width: 5.4
+#| fig-height: 2.1
+#| fig-cap: >-
+#|   First step: $H = 24.75$ (unclipped), $H = 1.22$ (clipped).
+
+local({
+  objective <- function(x, y) (x^4 + y^4) / 4 + (x^2 + y^2) / 2
+  gradient <- function(theta) theta^3 + theta
+  initial <- c(2, 1)
+  gamma <- 0.5
+  threshold <- 2
+  maxit <- 8
+  raw <- initial - gamma * gradient(initial)
+  path <- matrix(0, 2, maxit + 1)
+  path[, 1] <- initial
+
+  for (n in seq_len(maxit)) {
+    g <- gradient(path[, n])
+    g <- g * min(1, threshold / sqrt(sum(g^2)))
+    path[, n + 1] <- path[, n] - gamma * g
+  }
+
+  x <- seq(-3.6, 2.7, length.out = 201)
+  y <- seq(-0.7, 1.8, length.out = 151)
+  z <- outer(x, y, objective)
+  colors <- c(Unclipped = "darkorange", Clipped = "royalblue")
+  opar <- par(no.readonly = TRUE)
+  par(mar = c(3.5, 3.5, 0.5, 0.5), mgp = c(2.3, 0.7, 0))
+
+  for (stage in seq_len(4)) {
+    contour(
+      x,
+      y,
+      z,
+      levels = c(0.1, 0.5, 1, 2, 4, 6.75, 12, 24.75, 40),
+      drawlabels = FALSE,
+      col = "grey75",
+      asp = 1,
+      xlab = expression(theta[1]),
+      ylab = expression(theta[2])
+    )
+    points(0, 0, pch = 4)
+    text(0, 0, "Minimum", pos = 1, cex = 0.8)
+    points(initial[1], initial[2], pch = 19)
+    text(
+      initial[1],
+      initial[2],
+      "Start: H = 6.75",
+      pos = 3,
+      cex = 0.8
+    )
+
+    if (stage >= 2) {
+      arrows(
+        initial[1],
+        initial[2],
+        raw[1],
+        raw[2],
+        col = colors["Unclipped"],
+        lty = 2,
+        length = 0.1
+      )
+      points(raw[1], raw[2], pch = 19, col = colors["Unclipped"])
+      text(raw[1], raw[2], "H = 24.75", pos = 1, cex = 0.8)
+    }
+
+    if (stage >= 3) {
+      arrows(
+        initial[1],
+        initial[2],
+        path[1, 2],
+        path[2, 2],
+        col = colors["Clipped"],
+        length = 0.1
+      )
+      points(
+        path[1, 2],
+        path[2, 2],
+        pch = 19,
+        col = colors["Clipped"]
+      )
+      text(
+        path[1, 2],
+        path[2, 2],
+        "H = 1.22",
+        pos = 3,
+        cex = 0.8
+      )
+    }
+
+    if (stage >= 4) {
+      lines(path[1, -1], path[2, -1], col = colors["Clipped"])
+      points(
+        path[1, -1],
+        path[2, -1],
+        pch = 19,
+        cex = 0.5,
+        col = colors["Clipped"]
+      )
+    }
+
+    legend(
+      "topleft",
+      names(colors),
+      col = colors,
+      lty = c(2, 1),
+      bg = "white",
+      cex = 0.8
+    )
+  }
+  par(opar)
+})
+```
+
+\pdfpcnote{
+- Clipping preserves the gradient direction and caps the step length at $\gamma c$.\\
+- The same learning rate works near the minimum, where gradients are smaller.\\
+- A smaller learning rate would also prevent this overshoot; clipping limits steps in steep regions.\\
+}
 
 ## Early Stopping
 
@@ -2367,11 +2499,6 @@ We introduced several new concepts:
 - gradient clipping, and\pause
 - early stopping.\pause
 
-\medskip\pause
-
-We practically implemented versions of gradient descent and stochastic gradient
-descent with momentum.
-
 . . .
 
 ### Additional Resources
@@ -2384,17 +2511,5 @@ descent with lots of pedagogical illustrations.
 ### R Packages
 
 We build an R package.
-
-. . .
-
-### Summary
-
-We summarize the course.
-
-. . .
-
-### Exam Advice
-
-We talk about the upcoming oral examinations.
 
 ## References {.allowframebreaks}
