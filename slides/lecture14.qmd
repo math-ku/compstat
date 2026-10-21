@@ -72,6 +72,7 @@ Need to keep track of where your functions are defined or source manually.
 
 ```{r}
 #| eval: false
+#| label: including-functions
 
 source("path/to/some/file1.R")
 source("path/to/some/file2.R")
@@ -90,6 +91,7 @@ You can just do:
 
 ```{r}
 #| eval: false
+#| label: including-functions-package
 
 library(mypkg)
 
@@ -99,7 +101,8 @@ my_second_function()
 
 . . .
 
-or `mypkg::my_first_function()`{.r} if you don't want to load the whole package.
+or `mypkg::my_first_function()`{.r} if you don't want to attach the whole
+package.
 :::::
 :::
 
@@ -110,7 +113,11 @@ or `mypkg::my_first_function()`{.r} if you don't want to load the whole package.
 ### Without a Package
 
 Previously, we needed to manually run scripts to test our code: store them in
-some folder and call `testthat::test_dir()`{.r}
+some folder and call
+
+```r
+testthat::test_dir("<folder>")
+```
 :::::
 
 . . .
@@ -118,8 +125,13 @@ some folder and call `testthat::test_dir()`{.r}
 ::::: {.column width="47%"}
 ### With a Package
 
-With a package, we can use `devtools::test()`{.r} to run all tests in the
-package.
+With a package, we can use
+
+```r
+devtools::test()
+```
+
+to run all tests in the package.
 
 \medskip\pause
 
@@ -195,8 +207,13 @@ You need to keep track of where data files are located and load them manually.
 
 ```{r}
 #| eval: false
+#| code-style:
+#|   line-width: 32
+#| label: r
 
-mydata <- read.csv("path/to/mydata.csv")
+mydata <- read.csv(
+  "path/to/mydata.csv"
+)
 ```
 :::::
 
@@ -225,9 +242,9 @@ And if you've already made a package, this is straightforward!
 
 ::: {.columns align="center"}
 ::::: {.column width="50%"}
-Different approaches, but we will follow **R Packages**
-[@wickhamPackagesOrganizeTest2023], which is based around the **devtools**
-package.
+Different approaches, but we will follow **R
+Packages**\ [@wickhamPackagesOrganizeTest2023], which is based around the
+**devtools** package.
 :::::
 
 ::::: {.column width="35%"}
@@ -318,7 +335,7 @@ Gives you a **minimal** package:
 . . .
 
 ::::: {.column width="47%"}
-You may also have `.Rbuildignore` and `.rosenbrock.Rproj` depending on how you
+You may also have `.Rbuildignore` and `rosenbrock.Rproj` depending on how you
 created the package.
 :::::
 :::
@@ -377,8 +394,7 @@ Installs the package, like calling `install.packages()`{.r}.
 
 \medskip\pause
 
-Robust but slow. Need to call `library(rosenbrock)`{.r} to load
-package\footnote[frame]{Done automatically in R Studio}.
+Robust but slow. Need to call `library(rosenbrock)`{.r} to load package.
 :::::
 
 . . .
@@ -386,7 +402,8 @@ package\footnote[frame]{Done automatically in R Studio}.
 ::::: {.column width="47%"}
 ### `devtools::load_all()`{.r}\footnote[frame]{\texttt{Ctrl/Cmd+Shift+L}}
 
-Sources all of your code.
+Simulates loading the package without installing it, for instance sources all R
+files in `R/`.
 
 \medskip\pause
 
@@ -489,8 +506,9 @@ This creates some new files and directories:
 
 ## A First Simple Test
 
-For the Rosenbrock function, $f^* = f(a,a^2) = f(1,1) = 0$. Let's make sure this
-is the case for us too!
+For $b > 0$, the Rosenbrock function has its unique minimum at $(a, a^2)$, where
+$f(a, a^2) = 0$. With the defaults $a = 1$ and $b = 100$, this gives
+$f(1, 1) = 0$. Let's make sure this is the case for us too!
 
 \medskip\pause
 
@@ -546,14 +564,15 @@ Now run `devtools::check()`{.r}. Is there a problem?
 
 \medskip\pause
 
-Yes, we're missing a license!
+Yes, the license placeholder needs replacing, and `objective()`{.r} is missing
+documentation. We will fix both.
 
 ## Metadata
 
 The metadata for your package lives in `DESCRIPTION`. Right now it looks like
 this:
 
-```
+```dcf
 Package: rosenbrock
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
@@ -564,7 +583,7 @@ License: `use_mit_license()`, `use_gpl3_license()` or friends
     to pick a license
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 8.0.0
 ```
 
 For now we'll leave most of these files alone, but let's fix one thing: the
@@ -669,37 +688,41 @@ to set up a package doc file in `R/rosenbrock-package.R`.
 . . .
 
 ::::: {.column width="42%"}
-Then use `usethis::use_rcpp()`{.r}, which sets up Rcpp by modifying
+Then use `usethis::use_rcpp("objective")`{.r}, which sets up Rcpp by modifying
 `DESCRIPTION` and setting up the namespace via roxygen2.
 
 \medskip\pause
 
-It will also create a `src/` folder with a empty C++ file:
+It also creates a `src/` folder with a C++ file containing the Rcpp include and
+namespace declaration:
 
 \medskip
 
 \dirtree{%
   .1 rosenbrock/.
   .2 src/.
-  .3 rosenbrock-package.cpp.
+  .3 objective.cpp.
 }
 
 \bigskip\pause
 
-Install or load your package and your code is available (but not exported).
+Run `devtools::document()`{.r} to update `NAMESPACE`, then install or load your
+package.
 :::::
 :::
 
 ## Exporting Rcpp Code
 
 ::: {.columns}
-::::: {.column width="47%"}
+::::: {.column width="52%"}
 ### Wrapping
 
-Call your Rcpp function through an R wrapper:
+Mark the C++ function with `// [[Rcpp::export]]`, then call it through an R
+wrapper:
 
 ```r
-my_fun <- function(x) my_fun_cpp(x)
+#' @export
+my_fun <- function() my_fun_cpp()
 ```
 
 . . .
@@ -710,13 +733,14 @@ side.
 
 . . .
 
-::::: {.column width="47%"}
+::::: {.column width="42%"}
 ### Direct Export
 
 You can add roxygen2 comments in Rcpp code too:
 
 ```cpp
 //' @export
+// [[Rcpp::export]]
 double
 my_fun_cpp()
 {
@@ -729,6 +753,11 @@ my_fun_cpp()
 Saves you having to write and maintain an R function.
 :::::
 :::
+
+\medskip\pause
+
+Run `devtools::document()`{.r} after adding export tags, then reinstall the
+package to make the exported functions available to users.
 
 ## Documentation
 
@@ -784,6 +813,11 @@ my_fun <- function(x) ...
 Document `objective()`{.r} with roxygen2 syntax. No need for sensible
 documentation. Just make sure you have the bare minimum.
 
+\medskip\pause
+
+Document any other exported functions too, then run `devtools::document()`{.r}
+to generate the help files.
+
 ## Documentation in This Course
 
 - Not making a package for CRAN, so lower standards.
@@ -809,7 +843,7 @@ Use the shortcuts (and save yourself some typing/clicking):^[Replace `Ctrl` with
 
 ## Projects
 
-::: {.columns}
+::: {.columns align="center"}
 ::::: {.column width="47%"}
 When you have a project, you typically need more things:
 
@@ -851,6 +885,12 @@ and return the optimal point and function value.
 Write an implementation of the gradient using Rcpp. Let the user choose whether
 to use the gradient or not in `optimize_banana()`{.r}.
 
+\medskip
+
+Use `method = "BFGS"` in `optim()`{.r}, and pass the gradient as `gr`, or
+`gr = NULL` to use finite differences. The default Nelder--Mead method ignores
+`gr`.
+
 . . .
 
 ### Step 3
@@ -872,6 +912,6 @@ document it, and manage dependencies and licensing.
 - How to properly format metadata (`DESCRIPTION`)\pause
 - Integrating data into our package\pause
 - Publishing to CRAN\pause
-- Enhanced reproducibility (renv)
+- Reproducibility (renv)
 
 ## References
