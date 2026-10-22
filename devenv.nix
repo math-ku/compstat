@@ -13,6 +13,9 @@ let
   });
 in
 {
+  # Quarto honors inherited QUARTO_PANDOC ahead of its packaged default.
+  env.QUARTO_PANDOC = "${pandoc}/bin/pandoc";
+
   packages = [
     pkgs.git
     pkgs.bashInteractive
