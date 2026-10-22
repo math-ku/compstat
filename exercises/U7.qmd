@@ -17,65 +17,41 @@ Take a look at the following Rcpp code:
 ```cpp
 #include <Rcpp.h>
 
-// Count > threshold with a hard branch
+// Copy the elements > threshold into out (branchy)
 int
-count_branchy(Rcpp::NumericVector x, double t)
+filter_branchy(Rcpp::NumericVector x, Rcpp::NumericVector out, double t)
 {
   int n = x.size(), cnt = 0;
   for (int i = 0; i < n; ++i) {
-    if (x[i] > t)
+    if (x[i] > t) {
+      out[cnt] = x[i];
       ++cnt;
+    }
   }
   return cnt;
 }
 
-// Count > threshold without a hard branch
+// Copy the elements > threshold into out (branchless)
 int
-count_branchless(Rcpp::NumericVector x, double t)
+filter_branchless(Rcpp::NumericVector x, Rcpp::NumericVector out, double t)
 {
   int n = x.size(), cnt = 0;
   for (int i = 0; i < n; ++i) {
+    out[cnt] = x[i];
     cnt += (x[i] > t);
   }
   return cnt;
 }
-
-// Two-path summation (branchy)
-double
-sum_branchy(Rcpp::NumericVector x, double thr)
-{
-  double s = 0.0;
-  for (int i = 0; i < x.size(); ++i) {
-    double xi = x[i];
-    if (xi >= thr)
-      s += xi;
-    else
-      s += 2.0 * xi;
-  }
-  return s;
-}
-
-// Two-path summation (branchless)
-double
-sum_branchless(Rcpp::NumericVector x, double thr)
-{
-  double s = 0.0;
-  for (int i = 0; i < x.size(); ++i) {
-    double xi = x[i];
-    double mask = (xi >= thr);
-    s += mask * xi + (1.0 - mask) * (2.0 * xi);
-  }
-  return s;
-}
 ```
-In the code above, we have two functions that count the number of elements in a
-vector that are greater than a threshold, and two functions that sum the
-elements in a vector that are greater than a threshold. The functions come in
-two flavors: one that uses an if statement, and another that uses a mask.
 
-In the if statement version, code is executed conditionally based on the result
-of a comparison. In the mask version, one applies a mask to the elements of the
-vector, and then adds the mask to the sum.
+Both functions copy the elements of `x` that are greater than a threshold `t`
+into the vector `out`, and return how many there are. The functions come in two
+flavors: one that uses an `if` statement, and another that avoids it.
+
+In the `if` statement version, the copy is only executed when the comparison is
+true. In the branchless version, we *always* write `x[i]` to the next free slot
+in `out`, but only move the counter forward when the comparison is true. If the
+element should not be kept, it is simply overwritten in the next iteration.
 
 ## What exactly is *branch prediction*?
 
@@ -97,14 +73,24 @@ prediction helps us write code that the computer can run faster---especially for
 large datasets or simulations.
 
 The code above illustrates two styles: one that uses explicit branches (`if`
-statements), and another that uses arithmetic "masks" to avoid branches. The
-version without branches can run faster on modern CPUs, especially when the
-branch direction is hard to predict.
+statements), and another that uses arithmetic on the result of the comparison
+to avoid branches. The version without branches can run faster on modern CPUs,
+especially when the branch direction is hard to predict.
+
+::: {.callout-note}
+## Why not just count or sum?
+
+A simpler example would be to count the elements above the threshold, with
+`if (x[i] > t) ++cnt;` versus `cnt += (x[i] > t);`. However, optimizing
+compilers are smart enough to rewrite the `if` version into branchless code
+themselves, so the two versions end up identical and run equally fast. The
+compiler cannot do this for `filter_branchy()`, since it is not allowed to
+introduce a write to `out` that the original code would not have made.
+:::
 
 ```{r}
 #| echo: false
 
-# install.packages(c("Rcpp","bench"))
 library(Rcpp)
 library(bench)
 
@@ -114,122 +100,79 @@ Rcpp::sourceCpp(
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-int count_branchy(NumericVector x, double t) {
+int filter_branchy(NumericVector x, NumericVector out, double t) {
   int n = x.size(), cnt = 0;
   for (int i = 0; i < n; ++i) {
-    if (x[i] > t) ++cnt;
+    if (x[i] > t) {
+      out[cnt] = x[i];
+      ++cnt;
+    }
   }
   return cnt;
 }
 
 // [[Rcpp::export]]
-int count_branchless(NumericVector x, double t) {
+int filter_branchless(NumericVector x, NumericVector out, double t) {
   int n = x.size(), cnt = 0;
   for (int i = 0; i < n; ++i) {
+    out[cnt] = x[i];
     cnt += (x[i] > t);
   }
   return cnt;
-}
-
-// [[Rcpp::export]]
-double sum_branchy(NumericVector x, double thr) {
-  double s = 0.0;
-  for (int i = 0; i < x.size(); ++i) {
-    double xi = x[i];
-    if (xi >= thr) s += xi; else s += 2.0 * xi;
-  }
-  return s;
-}
-
-// [[Rcpp::export]]
-double sum_branchless(NumericVector x, double thr) {
-  double s = 0.0;
-  for (int i = 0; i < x.size(); ++i) {
-    double xi = x[i];
-    double mask = (xi >= thr);
-    s += mask * xi + (1.0 - mask) * (2.0 * xi);
-  }
-  return s;
 }
 "
 )
 ```
 
+We test the functions on two data sets with the same values. In the first, the
+values are in random order, so whether `x[i] > 0` is a coin flip and the CPU
+cannot predict the branch. In the second, the values are sorted, so the branch
+goes the same way for the first half of the vector and the other way for the
+second half, which is trivial to predict.
+
 ```{r}
 set.seed(1)
 n <- 5e6
+thr <- 0
 
-# Case A: "Always true" branch (maximally predictable)
-# Pick a very low threshold so every comparison is true
-x_any <- rnorm(n)
-thr_all_true <- -1e9
+x_rand <- rnorm(n) # random order: unpredictable branch
+x_sorted <- sort(x_rand) # sorted: predictable branch
+out <- numeric(n) # preallocated output buffer
 
-# Case B: Single flip (long runs -> easy prediction)
-# First 99.9% below thr, last 0.1% above thr
-thr_split <- 0.0
-x_easy <- c(rep(-1.0, n - 5000L), rep(1.0, 5000L))
+# Sanity check: both versions keep the same number of elements
+c(filter_branchy(x_rand, out, thr), filter_branchless(x_rand, out, thr))
 
-# Case C: Hard 50/50 random (for contrast)
-x_rand <- rnorm(n)
-thr_med <- 0.0
-
-# Warm-up
-invisible(count_branchy(x_any, thr_all_true))
-invisible(count_branchless(x_any, thr_all_true))
-invisible(sum_branchy(x_any, thr_all_true))
-invisible(sum_branchless(x_any, thr_all_true))
-
-# Benchmarks where BRANCHY SHOULD WIN or TIE
-bench_easy_counts <- bench::mark(
-  branchy_all_true = count_branchy(x_any, thr_all_true),
-  branchless_all_true = count_branchless(x_any, thr_all_true),
-  branchy_singleflip = count_branchy(x_easy, thr_split),
-  branchless_singleflip = count_branchless(x_easy, thr_split),
+bench_filter <- bench::mark(
+  branchy_random = filter_branchy(x_rand, out, thr),
+  branchless_random = filter_branchless(x_rand, out, thr),
+  branchy_sorted = filter_branchy(x_sorted, out, thr),
+  branchless_sorted = filter_branchless(x_sorted, out, thr),
   iterations = 30,
-  check = FALSE,
-  min_time = 0.5
+  check = FALSE
 )
 
-bench_easy_sums <- bench::mark(
-  sum_branchy_all_true = sum_branchy(x_any, thr_all_true),
-  sum_branchless_all_true = sum_branchless(x_any, thr_all_true),
-  sum_branchy_singleflip = sum_branchy(x_easy, thr_split),
-  sum_branchless_singleflip = sum_branchless(x_easy, thr_split),
-  iterations = 30,
-  check = FALSE,
-  min_time = 0.5
-)
-
-# Contrast: hard 50/50 case where BRANCHLESS SHOULD WIN
-bench_hard_counts <- bench::mark(
-  branchy_random = count_branchy(x_rand, thr_med),
-  branchless_random = count_branchless(x_rand, thr_med),
-  iterations = 30,
-  check = FALSE,
-  min_time = 0.5
-)
-
-bench_hard_sums <- bench::mark(
-  sum_branchy_random = sum_branchy(x_rand, thr_med),
-  sum_branchless_random = sum_branchless(x_rand, thr_med),
-  iterations = 30,
-  check = FALSE,
-  min_time = 0.5
-)
-
-bench_easy_counts
-bench_easy_sums
-bench_hard_counts
-bench_hard_sums
+bench_filter
 ```
-From the results, we see that the branchless version is faster than the branchy
-version in all cases. The prformance difference is double in the random cases,
-since the branch direction is completely unpredictable. Whereas in the easy
-cases, where one branch is taken >99% of the time, we see that the difference is
-quite small.
 
-It is important to keep in mind that this is a very simple example, and in
-certain real world cases, **the branchy version may be faster!**
+```{r}
+#| echo: false
+
+med <- as.numeric(bench_filter$median)
+ratio_random <- med[1] / med[2]
+```
+
+On randomly ordered data, the branchy version is about
+`r round(ratio_random, 1)` times slower than the branchless version. Half of the
+time the CPU guesses wrong, and each wrong guess costs a pipeline flush. The
+branchless version does slightly more work in each iteration (it always writes
+to `out`), but it never has to guess, so its run time does not depend on the
+order of the data.
+
+On sorted data, the branch is almost perfectly predictable, and the branchy
+version becomes as fast as or even faster than the branchless one: it now only
+pays for the writes it actually needs. So keep in mind that branchless code is
+not automatically better---in certain real world cases, **the branchy version
+may be faster!**
 
 ## Rejection sampling and branch prediction
 
