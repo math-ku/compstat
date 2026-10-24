@@ -6,13 +6,15 @@ title: "R Packages"
 
 ## Today
 
+### Course Summary
+
+What did we actually do?
+
+. . .
+
 ### Oral Examination
 
-What to think of during examination
-
-\medskip\pause
-
-Oral presentation tips
+What to think of during examination and general tips for oral presentations.
 
 . . .
 
@@ -22,9 +24,72 @@ Tell me what you want to know more about, and I will try to answer.
 
 . . .
 
-### Course Summary
+# Course Summary
 
-What did we actually do?
+## Statistical Topics
+
+::: {.columns}
+::::: {.column width="47%"}
+### Smoothing
+
+- Kernel density estimation\pause
+- Smoothing splines
+
+. . .
+
+### Monte Carlo Methods
+
+- Inverse transform sampling\pause
+- Rejection sampling\pause
+- Importance sampling
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+### Optimization
+
+- Unconstrained optimization (gradient descent, Newton's method)\pause
+- Constrained optimization (interior point method)\pause
+- The EM algorithm\pause
+- Stochastic gradient descent (mini-batching, acceleration)
+:::::
+:::
+
+## Computational Topics
+
+::: {.columns}
+::::: {.column width="47%"}
+### Accuracy
+
+- Testing your code (ad-hoc, testthat)\pause
+- Debugging techniques (interactive debugging)
+
+. . .
+
+### Measuring Performance
+
+- Profiling (profvis)\pause
+- Benchmarking (bench)
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+### Improving Performance
+
+- Using R (vectorization, avoiding copies)\pause
+- Using Rcpp (C++)\pause
+- Parallelization (foreach)
+
+. . .
+
+### Organizing Code
+
+- Object-oriented programming (S3)\pause
+- R Packages
+:::::
+:::
 
 # Oral Examination
 
@@ -97,73 +162,6 @@ Then very likely you have **too much text** on your slides.
 Read aloud any text on your slides.
 
 ## The Presentation Speed Run
-
-# Course Summary
-
-## Statistical Topics
-
-::: {.columns}
-::::: {.column width="47%"}
-### Smoothing
-
-- Kernel density estimation\pause
-- Smoothing splines
-
-. . .
-
-### Monte Carlo Methods
-
-- Inverse transform sampling\pause
-- Rejection sampling\pause
-- Importance sampling
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-### Optimization
-
-- Unconstrained optimization (gradient descent, Newton's method)\pause
-- Constrained optimization (interior point method)\pause
-- The EM algorithm\pause
-- Stochastic gradient descent (mini-batching, acceleration)
-:::::
-:::
-
-## Computational Topics
-
-::: {.columns}
-::::: {.column width="47%"}
-### Accuracy
-
-- Testing your code (ad-hoc, testthat)\pause
-- Debugging techniques (interactive debugging)
-
-. . .
-
-### Measuring Performance
-
-- Profiling (profvis)\pause
-- Benchmarking (bench)
-:::::
-
-. . .
-
-::::: {.column width="47%"}
-### Improving Performance
-
-- Using R (vectorization, avoiding copies)\pause
-- Using Rcpp (C++)\pause
-- Parallelization (foreach)
-
-. . .
-
-### Organizing Code
-
-- Object-oriented programming (S3)\pause
-- R Packages
-:::::
-:::
 
 ::: {.standout}
 ##
