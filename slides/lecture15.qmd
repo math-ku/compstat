@@ -26,68 +26,769 @@ Tell me what you want to know more about, and I will try to answer.
 
 # Course Summary
 
-## Statistical Topics
+## Kernel Density Estimation
 
-::: {.columns}
+::: {.columns align="center"}
 ::::: {.column width="47%"}
-### Smoothing
+Average kernels centered at the observations.
 
-- Kernel density estimation\pause
-- Smoothing splines
+\medskip\pause
 
-. . .
-
-### Monte Carlo Methods
-
-- Inverse transform sampling\pause
-- Rejection sampling\pause
-- Importance sampling
+The bandwidth controls the **bias--variance trade-off**.
 :::::
 
-. . .
-
 ::::: {.column width="47%"}
-### Optimization
+<!-- Figure from lecture 2: gaussian-kernel-illustration-plot3. -->
 
-- Unconstrained optimization (gradient descent, Newton's method)\pause
-- Constrained optimization (interior point method)\pause
-- The EM algorithm\pause
-- Stochastic gradient descent (mini-batching, acceleration)
+```{r}
+#| label: recap-kde
+#| echo: false
+#| fig-width: 3
+#| fig-height: 2.5
+#| out-width: 100%
+
+x <- c(-1, 3, 5, 6, 9)
+N <- length(x)
+
+l <- lapply(x, function(xi) {
+  a <- seq(-4, 4, length.out = 100)
+  d <- dnorm(a) / N
+  data.frame(x = xi, a = a + xi, d = d)
+})
+
+res <- do.call(rbind, l)
+
+p1 <- ggplot() +
+  xlim(c(-5, 15)) +
+  ylim(c(0, 0.15)) +
+  labs(x = "x", y = "Density")
+
+p2 <- p1 +
+  geom_rug(
+    aes(x),
+    data = tibble(x = x),
+    linewidth = 1,
+    col = "navy"
+  )
+
+p3 <- p2 +
+  geom_line(aes(a, d, group = x), col = "darkorange", data = res)
+
+p4 <- p3 + geom_density(aes(x), bw = 1, data = tibble(x = x))
+
+p4
+```
 :::::
 :::
 
-## Computational Topics
+## Scatterplot Smoothing
 
-::: {.columns}
+::: {.columns align="center"}
 ::::: {.column width="47%"}
-### Accuracy
+Estimate a smooth relationship from noisy observations.
 
-- Testing your code (ad-hoc, testthat)\pause
-- Debugging techniques (interactive debugging)
+\medskip\pause
 
-. . .
-
-### Measuring Performance
-
-- Profiling (profvis)\pause
-- Benchmarking (bench)
+Nearest neighbors or smoothing splines: choose the smoothing level by
+**cross-validation**.
 :::::
 
-. . .
+::::: {.column width="47%"}
+<!-- Figure from lecture 4: nuuk-spline-opt2. -->
+
+```{r}
+#| label: recap-smoothing-data
+#| include: false
+#| message: false
+
+nuuk <- read_table(
+  here::here("data", "nuuk.txt"),
+  col_names = c("Year", 1:12),
+  na = "-999",
+  skip = 1
+) |>
+  gather(
+    key = "Month",
+    value = "Temperature",
+    -Year,
+    convert = TRUE
+  ) |>
+  mutate(Temperature = Temperature / 10) |>
+  filter(Year > 1866)
+
+nuuk_year <- group_by(nuuk, Year) |>
+  summarise(
+    Temperature = mean(Temperature),
+    Median = median(Temperature),
+    High = max(Temperature),
+    Low = min(Temperature)
+  )
+N <- nrow(nuuk_year)
+
+nuuk_plot <- ggplot(nuuk_year, aes(Year, Temperature)) +
+  geom_point()
+```
+
+```{r}
+#| label: recap-smoothing
+#| echo: false
+#| fig-width: 3
+#| fig-height: 2.5
+#| out-width: 100%
+
+smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature)
+nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
+```
+:::::
+:::
+
+## Rejection Sampling
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+Propose from an easy distribution, then accept or reject.
+
+\medskip\pause
+
+The envelope must **dominate the target**. A tighter envelope wastes fewer
+proposals.
+:::::
 
 ::::: {.column width="47%"}
-### Improving Performance
+<!-- Figure from lecture 5: rejection-sampling-ggplot. -->
 
-- Using R (vectorization, avoiding copies)\pause
-- Using Rcpp (C++)\pause
-- Parallelization (foreach)
+```{r}
+#| label: recap-rejection
+#| echo: false
+#| fig-width: 3.2
+#| fig-height: 2.6
+#| out-width: 100%
 
-. . .
+set.seed(1)
+N <- 1000
+y <- runif(N, 0, 9)
+u <- runif(N, 0, 0.43)
+target <- function(x) {
+  ifelse(
+    x > 0 & x < 9,
+    dnorm(x, 5, 1) / (pnorm(9, 5, 1) - pnorm(0, 5, 1)),
+    0
+  )
+}
+envelope <- function(x) rep(0.43, length(x))
 
-### Organizing Code
+accepted <- u <= target(y)
+df <- data.frame(y = y, u = u, accepted = accepted)
 
-- Object-oriented programming (S3)\pause
-- R Packages
+curve_df <- data.frame(
+  x = seq(0, 9, length.out = 200),
+  target = target(seq(0, 9, length.out = 200)),
+  envelope = envelope(seq(0, 9, length.out = 200))
+)
+
+ggplot() +
+  geom_line(data = curve_df, aes(x = x, y = envelope)) +
+  geom_area(
+    data = curve_df,
+    aes(x = x, y = target),
+    col = "black",
+    fill = "grey90"
+  ) +
+  geom_point(
+    data = df,
+    aes(x = y, y = u, color = accepted),
+    size = 0.5
+  ) +
+  scale_color_manual(
+    values = c("red", "steelblue2"),
+    labels = c("Rejected", "Accepted")
+  ) +
+  labs(x = "y", y = "Density", color = NULL) +
+  guides(color = guide_legend(position = "inside")) +
+  theme(
+    legend.position.inside = c(0.98, 0.98),
+    legend.justification.inside = c(1, 1),
+    legend.background = element_rect(fill = "white", color = NA)
+  )
+```
+:::::
+:::
+
+## Monte Carlo and Importance Sampling
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+Estimate expectations by averaging random draws.
+
+\medskip\pause
+
+### Importance Sampling
+
+Change the sampling distribution and reweight. Support and tails matter.
+:::::
+
+::::: {.column width="47%"}
+<!-- Figure from lecture 6: rare-event-comparison. -->
+
+```{r}
+#| label: recap-mc-data
+#| include: false
+
+n_rare <- 10000
+
+set.seed(2026)
+p_rare <- pnorm(4, lower.tail = FALSE)
+rare_estimates <- replicate(500, {
+  z <- rnorm(n_rare)
+  x <- rnorm(n_rare, mean = 4)
+  c(MC = mean(z > 4), IS = mean((x > 4) * exp(8 - 4 * x)))
+})
+
+rare_runs <- tibble(
+  run = seq_len(ncol(rare_estimates)),
+  MC = rare_estimates["MC", ],
+  IS = rare_estimates["IS", ]
+) |>
+  pivot_longer(
+    c(MC, IS),
+    names_to = "method",
+    values_to = "estimate"
+  ) |>
+  mutate(
+    method = factor(
+      method,
+      levels = c("MC", "IS"),
+      labels = c("Ordinary MC", "Importance sampling")
+    )
+  )
+```
+
+```{r}
+#| label: recap-mc
+#| echo: false
+#| fig-width: 3
+#| fig-height: 3.1
+#| out-width: 100%
+
+ggplot(rare_runs, aes(run, estimate / p_rare, color = method)) +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  geom_point(size = 0.6, alpha = 0.6) +
+  facet_wrap(vars(method), ncol = 1) +
+  scale_color_manual(
+    values = c(
+      "Ordinary MC" = "royalblue",
+      "Importance sampling" = "darkorange"
+    )
+  ) +
+  guides(color = "none") +
+  labs(x = "Run", y = expression(hat(p) / p))
+```
+:::::
+:::
+
+## Optimization
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+Gradient descent uses gradients. Newton also uses curvature.
+
+\medskip\pause
+
+### Cheap Steps or Fewer Steps?
+
+Conditioning and problem size matter.
+:::::
+
+::::: {.column width="47%"}
+<!-- Figure from lecture 7: gd-newton-basic-iterations. -->
+
+```{r}
+#| label: recap-optimization-data
+#| include: false
+
+source(here::here("R", "lecture7-comparison.R"))
+
+comparison_basic <- compare_logistic_methods(logistic_comparison_problem(
+  1500,
+  300,
+  design_condition = 5,
+  seed = 71
+))
+comparison_plots <- function(comparison) {
+  curves <- comparison$history |>
+    mutate(
+      relative_gap = pmax(relative_gap, comparison$tolerance)
+    )
+
+  endpoints <- curves |>
+    group_by(method) |>
+    slice_tail(n = 1) |>
+    ungroup()
+  points <- bind_rows(
+    filter(curves, method == "Newton"),
+    filter(endpoints, method == "Gradient descent")
+  )
+
+  base_plot <- ggplot(
+    curves,
+    aes(y = relative_gap, color = method, linetype = method)
+  ) +
+    geom_hline(
+      yintercept = comparison$tolerance,
+      color = "grey60",
+      linetype = "dotted"
+    ) +
+    geom_line() +
+    geom_point(data = points, size = 1.5) +
+    scale_x_continuous(
+      transform = "log1p",
+      breaks = c(0, 1, 10, 100, 1000),
+      expand = expansion(mult = 0.03)
+    ) +
+    scale_y_log10(
+      breaks = 10^seq(-8, 0, by = 2),
+      labels = function(z) parse(text = paste0("10^", log10(z)))
+    ) +
+    scale_color_manual(
+      values = c(
+        "Gradient descent" = "royalblue",
+        Newton = "darkorange"
+      )
+    ) +
+    scale_linetype_manual(
+      values = c(
+        "Gradient descent" = "solid",
+        Newton = "longdash"
+      )
+    ) +
+    labs(
+      y = "Relative objective gap",
+      color = NULL,
+      linetype = NULL
+    ) +
+    guides(
+      color = guide_legend(position = "inside"),
+      linetype = guide_legend(position = "inside")
+    ) +
+    theme(
+      legend.position.inside = c(0.60, 0.04),
+      legend.justification.inside = c(0.5, 0),
+      legend.background = element_rect(
+        fill = "white",
+        color = NA
+      )
+    )
+
+  iteration_plot <- base_plot +
+    aes(x = iteration) +
+    labs(x = "Iterations, log(1 + x)")
+  work_plot <- base_plot +
+    aes(x = work) +
+    labs(x = "Work (GD steps), log(1 + x)")
+
+  list(iterations = iteration_plot, work = work_plot)
+}
+```
+
+```{r}
+#| label: recap-optimization
+#| echo: false
+#| fig-width: 3.2
+#| fig-height: 2.6
+#| out-width: 100%
+
+comparison_plots(comparison_basic)$iterations
+```
+:::::
+:::
+
+## Stochastic Gradient Descent
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+Use a random observation or mini-batch to estimate the gradient.
+
+\medskip\pause
+
+**Learning rates, batch sizes, and momentum** control progress and noise.
+:::::
+
+::::: {.column width="47%"}
+<!-- Figure from lecture 11: logistic-regression-paths. -->
+
+```{r}
+#| label: recap-sgd
+#| echo: false
+#| fig-width: 3
+#| fig-height: 3.1
+#| out-width: 100%
+#| fig-keep: last
+#| dev.args: { bg: white, pointsize: 9 }
+
+library(mvtnorm)
+source(here::here("R", "sgd.R"))
+
+set.seed(123)
+
+N <- 1000
+p <- 2
+Sigma <- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
+mu <- c(0, 0)
+
+X <- rmvnorm(N, mean = mu, sigma = Sigma)
+beta <- c(1, 2)
+y <- rbinom(N, 1, plogis(X %*% beta))
+
+res_glm <- glm.fit(X, y, family = binomial())
+
+loss_2d <- function(beta1, beta2, X, y) {
+  beta <- c(beta1, beta2)
+  z <- X %*% beta
+  p_hat <- 1 / (1 + exp(-z))
+  -mean(y * log(p_hat) + (1 - y) * log(1 - p_hat))
+}
+
+beta1 <- seq(-1, 3, length = 100)
+beta2 <- seq(-1, 3, length = 100)
+
+loss_2d_vectorized <- Vectorize(function(b1, b2) {
+  loss_2d(b1, b2, X, y)
+})
+
+z <- outer(beta1, beta2, loss_2d_vectorized)
+
+res_sgd <- logreg_sgd(X, y, max_epochs = 100, batch_size = 1)
+res_gd <- logreg_sgd(X, y, max_epochs = 100, batch_size = N)
+
+pal <- palette.colors(palette = "Okabe-Ito")
+
+sgd_reveals <- c(0L, 1L, 5L, 20L, 100L, 1000, 10000)
+
+for (steps in sgd_reveals) {
+  contour(
+    beta1,
+    beta2,
+    z,
+    col = "dark grey",
+    drawlabels = FALSE,
+    asp = 1,
+    main = sprintf("SGD updates: %d", steps)
+  )
+
+  lines(
+    res_gd$beta_history[1, ],
+    res_gd$beta_history[2, ],
+    col = pal[1]
+  )
+  points(
+    res_gd$beta_history[1, ],
+    res_gd$beta_history[2, ],
+    col = pal[1],
+    pch = 19,
+    cex = 0.5
+  )
+
+  if (steps > 0L) {
+    path <- seq_len(steps + 1L)
+    lines(
+      res_sgd$beta_history[1, path],
+      res_sgd$beta_history[2, path],
+      col = pal[3]
+    )
+    points(
+      res_sgd$beta_history[1, steps + 1L],
+      res_sgd$beta_history[2, steps + 1L],
+      col = pal[3],
+      pch = 19,
+      cex = 0.9
+    )
+  }
+
+  points(
+    res_glm$coefficients[1],
+    res_glm$coefficients[2],
+    col = pal[2],
+    pch = 19,
+    cex = 1
+  )
+
+  legend(
+    "bottomright",
+    legend = if (steps > 0L) c("SGD", "GD") else "GD",
+    col = if (steps > 0L) pal[c(3, 1)] else pal[1],
+    pch = 19,
+    cex = 0.8
+  )
+}
+```
+:::::
+:::
+
+## The EM Algorithm
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+### E-Step
+
+Take conditional expectations.
+
+### M-Step
+
+Maximize the resulting $Q$-function.
+
+\medskip\pause
+
+The likelihood does not decrease, but EM can be slow and **initialization
+matters**.
+:::::
+
+::::: {.column width="47%"}
+<!-- Figure from lecture 9: em-lower-bound. -->
+
+```{r}
+#| label: recap-em
+#| echo: false
+#| fig-width: 3.4
+#| fig-height: 2.8
+#| out-width: 100%
+#| fig-keep: 2
+
+library(ggplot2)
+
+# A Gaussian latent-variable model gives exact bounds for this illustration:
+# Z ~ N(theta, 1), X | Z ~ N(Z, 1), and the observed value is X = 2.
+# All curves omit the same additive constant.
+em_loglik <- function(theta) -(theta - 2)^2 / 4
+em_bound <- function(theta, current) {
+  em_loglik(theta) - (theta - current)^2 / 4
+}
+
+em_theta <- numeric(5)
+em_theta[1] <- -1
+for (i in seq_len(4)) {
+  em_theta[i + 1] <- (em_theta[i] + 2) / 2
+}
+
+em_curve <- data.frame(theta = seq(-1.4, 4.5, length.out = 401))
+em_curve$loglik <- em_loglik(em_curve$theta)
+
+for (i in seq_len(4)) {
+  current <- em_theta[i]
+  next_theta <- em_theta[i + 1]
+  em_curve$bound <- em_bound(em_curve$theta, current)
+  history <- data.frame(
+    theta = em_theta[seq_len(i)],
+    value = em_loglik(em_theta[seq_len(i)])
+  )
+
+  p <- ggplot(em_curve, aes(x = theta)) +
+    geom_line(aes(y = loglik, color = "likelihood")) +
+    geom_line(aes(y = bound, color = "bound")) +
+    geom_point(
+      data = history,
+      aes(y = value),
+      color = "grey60"
+    ) +
+    geom_vline(
+      xintercept = current,
+      color = "grey60",
+      linetype = "dashed"
+    ) +
+    scale_color_manual(
+      name = NULL,
+      values = c(likelihood = "royalblue", bound = "darkorange"),
+      breaks = c("likelihood", "bound"),
+      labels = expression(
+        italic(l) * (theta),
+        italic("F") * (q[n] * "," ~ theta)
+      )
+    ) +
+    guides(color = guide_legend(position = "inside")) +
+    theme(
+      legend.position.inside = c(0.98, 0.02),
+      legend.justification.inside = c(1, 0),
+      legend.background = element_rect(
+        fill = "white",
+        color = NA
+      )
+    ) +
+    coord_cartesian(xlim = c(-1.4, 4.5), ylim = c(-3, 0.25)) +
+    labs(x = expression(theta), y = "Value")
+
+  print(
+    p +
+      annotate(
+        "point",
+        x = current,
+        y = em_loglik(current),
+        color = "royalblue",
+        size = 2.5
+      ) +
+      labs(
+        title = sprintf("Iteration %d: E-step", i),
+        subtitle = "Make the bound tight at the current parameter"
+      )
+  )
+
+  print(
+    p +
+      geom_vline(
+        xintercept = next_theta,
+        color = "grey60",
+        linetype = "dashed"
+      ) +
+      annotate(
+        "segment",
+        x = next_theta,
+        xend = next_theta,
+        y = em_bound(next_theta, current),
+        yend = em_loglik(next_theta),
+        color = "royalblue"
+      ) +
+      annotate(
+        "point",
+        x = next_theta,
+        y = em_bound(next_theta, current),
+        color = "darkorange",
+        fill = "white",
+        shape = 21,
+        size = 2.5
+      ) +
+      annotate(
+        "point",
+        x = next_theta,
+        y = em_loglik(next_theta),
+        color = "royalblue",
+        size = 2.5
+      ) +
+      labs(
+        title = sprintf("Iteration %d: M-step", i),
+        subtitle = "Move to the maximum of the bound"
+      )
+  )
+}
+```
+:::::
+:::
+
+## Accuracy
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+### Testing
+
+Check known answers, edge cases, and numerical tolerances.
+
+\medskip\pause
+
+### Debugging
+
+Isolate the problem and inspect intermediate values.
+:::::
+
+::::: {.column width="47%"}
+<!-- Figure from lecture 8: Test Coverage. -->
+
+![](../images/code-coverage.png){width=100%}
+:::::
+:::
+
+## Measuring Performance
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+### Profiling
+
+Where does the time go?
+
+\medskip\pause
+
+### Benchmarking
+
+Compare implementations on the same task and check their results.
+:::::
+
+::::: {.column width="47%"}
+<!-- Figure from lecture 3: Profiling Density Estimation. -->
+
+![](../images/profvis-kern.png){width=100%}
+:::::
+:::
+
+## Improving Performance
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+**Vectorize** work, avoid copies, and **parallelize** independent tasks.
+
+\medskip\pause
+
+Use **C++** through Rcpp for bottlenecks that remain.
+:::::
+
+::::: {.column width="47%"}
+<!-- Figure from lecture 3: custom-bench-plot-code. -->
+
+```{r}
+#| label: recap-performance-data
+#| include: false
+#| message: false
+#| warning: false
+
+source(here::here("R", "kernel.R"))
+
+dens_bench <- bench::press(N = 2^(6:9), {
+  x <- rnorm(N)
+  bench::mark(
+    base = density(x, 0.2),
+    loop = kern_dens(x, 0.2),
+    vectorized = kern_dens_vec(x, 0.2),
+    check = FALSE # density() uses a different approximation.
+  )
+})
+```
+
+```{r}
+#| label: recap-performance
+#| echo: false
+#| fig-width: 3
+#| fig-height: 2.5
+#| out-width: 100%
+
+mutate(dens_bench, method = as.character(expression)) |>
+  ggplot(aes(N, median, color = method)) +
+  geom_point() +
+  geom_line() +
+  labs(y = "time (s)", color = NULL) +
+  guides(color = guide_legend(position = "inside")) +
+  theme(
+    legend.position.inside = c(0.02, 0.98),
+    legend.justification.inside = c(0, 1),
+    legend.background = element_rect(fill = "white", color = NA)
+  )
+```
+:::::
+:::
+
+## Organizing Code
+
+::: {.columns align="center"}
+::::: {.column width="47%"}
+### OOP
+
+Classes describe results; methods define behavior.
+
+\medskip\pause
+
+### R Packages
+
+Keep code, tests, documentation, and dependencies together.
+:::::
+
+::::: {.column width="47%"}
+<!-- Figure from lecture 14: Documentation in This Course. -->
+
+![](../images/pkgs-workflow.png){width=100%}
 :::::
 :::
 
