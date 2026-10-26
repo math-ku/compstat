@@ -673,45 +673,68 @@ for (i in seq_len(4)) {
 
 ## Accuracy
 
-::: {.columns align="center"}
+::: {.columns}
 ::::: {.column width="47%"}
 ### Testing
 
 Check known answers, edge cases, and numerical tolerances.
 
-\medskip\pause
+\bigskip
 
+\centering
+
+![](../images/testthat.png){width=60%}
+:::::
+
+. . .
+
+::::: {.column width="47%"}
 ### Debugging
 
 Isolate the problem and inspect intermediate values.
-:::::
 
-::::: {.column width="47%"}
-<!-- Figure from lecture 8: Test Coverage. -->
+\bigskip
 
-![](../images/code-coverage.png){width=100%}
+\begin{figure}
+  \begin{tikzpicture}
+    \duck[stethoscope=gray!80!black]
+  \end{tikzpicture}
+\end{figure}
 :::::
 :::
 
 ## Measuring Performance
 
-::: {.columns align="center"}
+::: {.columns}
 ::::: {.column width="47%"}
 ### Profiling
 
 Where does the time go?
 
+\bigskip
+
+![](../images/profvis-kern.png){width=100%}
+
 \medskip\pause
-
-### Benchmarking
-
-Compare implementations on the same task and check their results.
 :::::
 
 ::::: {.column width="47%"}
-<!-- Figure from lecture 3: Profiling Density Estimation. -->
+### Benchmarking
 
-![](../images/profvis-kern.png){width=100%}
+Compare implementations on the same task and check their results.
+
+```{r}
+#| label: recap-benchmark-data
+#| echo: false
+#| fig-height: 1.7
+#| fig-cap: "Benchmarking the square root function."
+
+library(bench)
+
+x <- runif(100)
+sqrt_bench <- bench::mark(sqrt(x), x^0.5)
+plot(sqrt_bench)
+```
 :::::
 :::
 
@@ -734,6 +757,7 @@ Use **C++** through Rcpp for bottlenecks that remain.
 #| include: false
 #| message: false
 #| warning: false
+#| fig-cap: Vectorization improves performance of kernel density estimation.
 
 source(here::here("R", "kernel.R"))
 
@@ -801,8 +825,8 @@ Keep code, tests, documentation, and dependencies together.
    with the projector.
 2. When all technical issues are settled, you will draw the assignment and find
    the presentation on the computer.
-3. Time starts and you have 15 min for the presentation. The examiners may ask
-   questions if something needs to be clarified.
+3. Time starts and you have 15 min for the presentation. We may ask questions if
+   something needs to be clarified.
 4. After 15 min your presentation will be stopped, and the examiners will ask
    questions related to the assignment as well as to the general content of the
    course.
@@ -818,7 +842,7 @@ Keep code, tests, documentation, and dependencies together.
   that you understand the main concepts.
 - For a good grade, you need to have studied at least part of the assignment in
   detail.
-- We expect you to use slides. Aim for around 15-20 slides.
+- We expect you to use slides. Aim for around 15 slides.
 - Use plenty of plots. Pick out important code snippets.
 - Practice your presentation.
 - Keep your code available in case we want to see something.
@@ -829,6 +853,23 @@ Keep code, tests, documentation, and dependencies together.
 The following advice are heavily inspired by blog posts by Claus Wilke.
 
 ## Tell a Story
+
+To show us you've understood the material, it helps to tell a story.
+
+\medskip\pause
+
+Show us how you arrived at your results---not just the results themselves.
+
+. . .
+
+### Example
+
+1. First, I tried method A.\pause
+2. But I realized I had to wait for a long time for my implementation to
+   finish.\pause
+3. Then I profiled my code and found a bottleneck.\pause
+4. I fixed the bottleneck using method B.\pause
+5. Here's a comparison of the results from method A and method B.\pause
 
 ## Read Out All of the Text on Your Slides
 
@@ -860,9 +901,36 @@ Then very likely you have **too much text** on your slides.
 
 ## Practice Your Presentation
 
-Read aloud any text on your slides.
+### Run It Through
 
-## The Presentation Speed Run
+Run through the presentation
+
+. . .
+
+### The Speed-Run
+
+If you are short on time:
+
+- Go through your slides one-by-one\medskip
+- Try to guess what the next slide is!
+
+# Questions and Answers
+
+## Number of Optimization Methods
+
+### Question
+
+> How many optimization methods would you recommend comparing with the EM
+> algorithm in Assignment 3A? Are there any particular methods you would suggest
+> including?
+
+\medskip\pause
+
+### Answer
+
+- Not too many, not too few! One or two is enough.\pause
+- Pick one or two methods that are **different** from EM, e.g., gradient descent
+  and Newton's method. Let your interest in the methods guide your choice.\pause
 
 ::: {.standout}
 ##
