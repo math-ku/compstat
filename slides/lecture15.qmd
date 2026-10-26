@@ -797,7 +797,7 @@ mutate(dens_bench, method = as.character(expression)) |>
 ## Organizing Code
 
 ::: {.columns align="center"}
-::::: {.column width="47%"}
+::::: {.column width="40%"}
 ### OOP
 
 Classes describe results; methods define behavior.
@@ -809,7 +809,7 @@ Classes describe results; methods define behavior.
 Keep code, tests, documentation, and dependencies together.
 :::::
 
-::::: {.column width="47%"}
+::::: {.column width="55%"}
 <!-- Figure from lecture 14: Documentation in This Course. -->
 
 ![](../images/pkgs-workflow.png){width=100%}
@@ -897,13 +897,12 @@ Then very likely you have **too much text** on your slides.
 :::::
 :::
 
-## Figures Also Contain Text
-
 ## Practice Your Presentation
 
 ### Run It Through
 
-Run through the presentation
+Run through the entire presentation. Even just reading the slides aloud is
+helpful.
 
 . . .
 
@@ -911,7 +910,7 @@ Run through the presentation
 
 If you are short on time:
 
-- Go through your slides one-by-one\medskip
+- Go through your slides one-by-one\pause
 - Try to guess what the next slide is!
 
 # Questions and Answers
@@ -928,7 +927,7 @@ If you are short on time:
 
 ### Answer
 
-- Not too many, not too few! One or two is enough.\pause
+- One or two is enough.\pause
 - Pick one or two methods that are **different** from EM, e.g., gradient descent
   and Newton's method. Let your interest in the methods guide your choice.\pause
 
