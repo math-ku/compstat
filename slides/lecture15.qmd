@@ -30,22 +30,21 @@ Tell me what you want to know more about, and I will try to answer.
 
 ::: {.columns align="center"}
 ::::: {.column width="47%"}
-Average kernels centered at the observations.
+Average kernels centered at the observations:
+$$
+  \hat{f}_h(x) = \frac{1}{hN} \sum_{j=1}^N K\left( \frac{x - x_j}{h} \right).
+$$
 
 \medskip\pause
 
-The bandwidth controls the **bias--variance trade-off**.
+The bandwidth, $h$, controls the **bias--variance trade-off**.
 :::::
 
 ::::: {.column width="47%"}
-<!-- Figure from lecture 2: gaussian-kernel-illustration-plot3. -->
-
 ```{r}
 #| label: recap-kde
 #| echo: false
-#| fig-width: 3
-#| fig-height: 2.5
-#| out-width: 100%
+#| fig-cap: Illustration of kernel density estimation with a Gaussian kernel.
 
 x <- c(-1, 3, 5, 6, 9)
 N <- length(x)
@@ -91,6 +90,14 @@ Estimate a smooth relationship from noisy observations.
 
 Nearest neighbors or smoothing splines: choose the smoothing level by
 **cross-validation**.
+
+\medskip\pause
+
+Smoothing splines use a penalized least-squares criterion:
+$$
+  \sum_{i=1}^N (y_i - f(x_i))^2
+  + \lambda \underbrace{\int f''(z)^2 \ \mathrm{d}z}_{\|f''\|_2^2}
+$$
 :::::
 
 ::::: {.column width="47%"}
@@ -132,9 +139,8 @@ nuuk_plot <- ggplot(nuuk_year, aes(Year, Temperature)) +
 ```{r}
 #| label: recap-smoothing
 #| echo: false
-#| fig-width: 3
-#| fig-height: 2.5
-#| out-width: 100%
+#| fig-cap: Scatterplot of annual mean temperatures in Nuuk, Greenland, with a
+#|   smoothing spline.
 
 smooth <- smooth.spline(nuuk_year$Year, nuuk_year$Temperature)
 nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
@@ -160,9 +166,6 @@ proposals.
 ```{r}
 #| label: recap-rejection
 #| echo: false
-#| fig-width: 3.2
-#| fig-height: 2.6
-#| out-width: 100%
 
 set.seed(1)
 N <- 1000
@@ -266,9 +269,6 @@ rare_runs <- tibble(
 ```{r}
 #| label: recap-mc
 #| echo: false
-#| fig-width: 3
-#| fig-height: 3.1
-#| out-width: 100%
 
 ggplot(rare_runs, aes(run, estimate / p_rare, color = method)) +
   geom_hline(yintercept = 1, linetype = "dashed") +
@@ -288,19 +288,9 @@ ggplot(rare_runs, aes(run, estimate / p_rare, color = method)) +
 
 ## Optimization
 
-::: {.columns align="center"}
-::::: {.column width="47%"}
 Gradient descent uses gradients. Newton also uses curvature.
 
-\medskip\pause
-
-### Cheap Steps or Fewer Steps?
-
-Conditioning and problem size matter.
-:::::
-
-::::: {.column width="47%"}
-<!-- Figure from lecture 7: gd-newton-basic-iterations. -->
+\bigskip
 
 ```{r}
 #| label: recap-optimization-data
@@ -308,99 +298,152 @@ Conditioning and problem size matter.
 
 source(here::here("R", "lecture7-comparison.R"))
 
-comparison_basic <- compare_logistic_methods(logistic_comparison_problem(
-  1500,
-  300,
-  design_condition = 5,
+optimization_problem <- logistic_comparison_problem(
+  1000,
+  2,
+  design_condition = 8,
   seed = 71
-))
-comparison_plots <- function(comparison) {
-  curves <- comparison$history |>
-    mutate(
-      relative_gap = pmax(relative_gap, comparison$tolerance)
-    )
+)
+optimization_start <- c(0, 0)
+optimization_value <- logistic_evaluate(
+  optimization_start,
+  optimization_problem
+)$loss
+optimization_gradient <- logistic_gradient(
+  optimization_start,
+  optimization_problem
+)
+optimization_hessian <- logistic_hessian(
+  optimization_start,
+  optimization_problem
+)
+optimization_minimum <- fit_logistic_comparison(
+  optimization_problem,
+  "Newton"
+)$beta
 
-  endpoints <- curves |>
-    group_by(method) |>
-    slice_tail(n = 1) |>
-    ungroup()
-  points <- bind_rows(
-    filter(curves, method == "Newton"),
-    filter(endpoints, method == "Gradient descent")
+gd_step <- optimization_start -
+  optimization_gradient / optimization_problem$L
+newton_step <- optimization_start -
+  solve(optimization_hessian, optimization_gradient)
+optimization_steps <- tibble(
+  method = c("Gradient descent", "Newton"),
+  beta1 = c(gd_step[1], newton_step[1]),
+  beta2 = c(gd_step[2], newton_step[2])
+)
+
+optimization_grid <- expand_grid(
+  beta1 = seq(-4, 1, length.out = 121),
+  beta2 = seq(-4, 1, length.out = 121)
+)
+optimization_offsets <- sweep(
+  as.matrix(optimization_grid),
+  2,
+  optimization_start
+)
+optimization_linear <- optimization_value +
+  drop(optimization_offsets %*% optimization_gradient)
+optimization_levels <- optimization_value +
+  c(-0.2, -0.1, 0, 0.2, 0.4)
+
+optimization_grid <- optimization_grid |>
+  mutate(
+    objective = apply(
+      as.matrix(optimization_grid),
+      1,
+      function(beta) {
+        logistic_evaluate(beta, optimization_problem)$loss
+      }
+    ),
+    `Gradient descent` = optimization_linear +
+      optimization_problem$L *
+        rowSums(optimization_offsets^2) /
+        2,
+    Newton = optimization_linear +
+      rowSums(
+        (optimization_offsets %*% optimization_hessian) *
+          optimization_offsets
+      ) /
+        2
+  ) |>
+  pivot_longer(
+    c("Gradient descent", "Newton"),
+    names_to = "method",
+    values_to = "model"
   )
-
-  base_plot <- ggplot(
-    curves,
-    aes(y = relative_gap, color = method, linetype = method)
-  ) +
-    geom_hline(
-      yintercept = comparison$tolerance,
-      color = "grey60",
-      linetype = "dotted"
-    ) +
-    geom_line() +
-    geom_point(data = points, size = 1.5) +
-    scale_x_continuous(
-      transform = "log1p",
-      breaks = c(0, 1, 10, 100, 1000),
-      expand = expansion(mult = 0.03)
-    ) +
-    scale_y_log10(
-      breaks = 10^seq(-8, 0, by = 2),
-      labels = function(z) parse(text = paste0("10^", log10(z)))
-    ) +
-    scale_color_manual(
-      values = c(
-        "Gradient descent" = "royalblue",
-        Newton = "darkorange"
-      )
-    ) +
-    scale_linetype_manual(
-      values = c(
-        "Gradient descent" = "solid",
-        Newton = "longdash"
-      )
-    ) +
-    labs(
-      y = "Relative objective gap",
-      color = NULL,
-      linetype = NULL
-    ) +
-    guides(
-      color = guide_legend(position = "inside"),
-      linetype = guide_legend(position = "inside")
-    ) +
-    theme(
-      legend.position.inside = c(0.60, 0.04),
-      legend.justification.inside = c(0.5, 0),
-      legend.background = element_rect(
-        fill = "white",
-        color = NA
-      )
-    )
-
-  iteration_plot <- base_plot +
-    aes(x = iteration) +
-    labs(x = "Iterations, log(1 + x)")
-  work_plot <- base_plot +
-    aes(x = work) +
-    labs(x = "Work (GD steps), log(1 + x)")
-
-  list(iterations = iteration_plot, work = work_plot)
-}
 ```
 
 ```{r}
 #| label: recap-optimization
 #| echo: false
-#| fig-width: 3.2
-#| fig-height: 2.6
-#| out-width: 100%
+#| fig-width: 5.0
+#| fig-height: 2.3
+#| fig-cap: "Gray: logistic objective. Dashed: quadratic models. Arrows minimize each
+#|   model."
 
-comparison_plots(comparison_basic)$iterations
+ggplot(optimization_grid, aes(beta1, beta2)) +
+  geom_contour(
+    aes(z = objective),
+    breaks = optimization_levels,
+    color = "grey65"
+  ) +
+  geom_contour(
+    aes(z = model, color = method),
+    breaks = optimization_levels,
+    linetype = "dashed"
+  ) +
+  geom_segment(
+    data = optimization_steps,
+    aes(
+      x = optimization_start[1],
+      y = optimization_start[2],
+      xend = beta1,
+      yend = beta2,
+      color = method
+    ),
+    arrow = grid::arrow(length = grid::unit(0.08, "inches"))
+  ) +
+  geom_point(
+    data = optimization_steps,
+    aes(color = method),
+    size = 2
+  ) +
+  annotate(
+    "point",
+    x = optimization_start[1],
+    y = optimization_start[2],
+    size = 2
+  ) +
+  annotate(
+    "point",
+    x = optimization_minimum[1],
+    y = optimization_minimum[2],
+    shape = 4,
+    size = 2
+  ) +
+  facet_wrap(vars(method)) +
+  scale_color_manual(
+    values = c(
+      "Gradient descent" = "royalblue",
+      Newton = "darkorange"
+    ),
+    guide = "none"
+  ) +
+  scale_x_continuous(breaks = c(-4, -2, 0)) +
+  scale_y_continuous(breaks = c(-4, -2, 0)) +
+  coord_fixed(expand = FALSE) +
+  labs(x = expression(beta[1]), y = expression(beta[2]))
 ```
-:::::
-:::
+
+\pause
+
+**Cheap steps or fewer steps?** Conditioning and problem size matter.
+
+\pdfpcnote{
+  - Both models match the objective and gradient at the same starting point.\\
+  - Gradient descent uses $LI$; Newton uses the Hessian of the objective.\\
+  - A full Newton step minimizes the local model, so it need not reach the optimum.\\
+}
 
 ## Stochastic Gradient Descent
 
@@ -419,10 +462,8 @@ Use a random observation or mini-batch to estimate the gradient.
 ```{r}
 #| label: recap-sgd
 #| echo: false
-#| fig-width: 3
-#| fig-height: 3.1
-#| out-width: 100%
 #| fig-keep: last
+#| fig-height: 3.2
 #| dev.args: { bg: white, pointsize: 9 }
 
 library(mvtnorm)
@@ -548,9 +589,6 @@ matters**.
 ```{r}
 #| label: recap-em
 #| echo: false
-#| fig-width: 3.4
-#| fig-height: 2.8
-#| out-width: 100%
 #| fig-keep: 2
 
 library(ggplot2)
@@ -775,9 +813,6 @@ dens_bench <- bench::press(N = 2^(6:9), {
 ```{r}
 #| label: recap-performance
 #| echo: false
-#| fig-width: 3
-#| fig-height: 2.5
-#| out-width: 100%
 
 mutate(dens_bench, method = as.character(expression)) |>
   ggplot(aes(N, median, color = method)) +
