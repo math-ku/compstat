@@ -94,6 +94,37 @@ test_that("only timetable changes replace the saved data", {
   expect_equal(read_timetable(path)$room[1], "New room")
 })
 
+test_that("temporary fetch failures are retried before parsing the timetable", {
+  attempts <- 0L
+  body <- readBin(
+    here::here("tests", "fixtures", "ku-timetable.html"),
+    "raw",
+    n = file.info(here::here(
+      "tests",
+      "fixtures",
+      "ku-timetable.html"
+    ))$size
+  )
+  mock <- function(...) {
+    attempts <<- attempts + 1L
+    if (attempts == 1L) {
+      return(rlang::error_cnd("httr2_failure", message = "Connection timed out"))
+    }
+    if (attempts == 2L) {
+      return(httr2::response(status_code = 503))
+    }
+    httr2::response(body = body)
+  }
+
+  testthat::local_mocked_bindings(req_perform1 = mock, .package = "httr2")
+  document <- fetch_timetable(timetable_url)
+  expect_equal(attempts, 3L)
+  expect_equal(
+    parse_timetable(document),
+    parse_timetable(saved_timetable())
+  )
+})
+
 test_that("fetch and parse failures leave the saved data intact", {
   path <- tempfile(fileext = ".csv")
   on.exit(unlink(path))

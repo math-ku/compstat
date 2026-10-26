@@ -145,6 +145,7 @@ parse_timetable <- function(document) {
 fetch_timetable <- function(url) {
   response <- httr2::request(url) |>
     httr2::req_timeout(30) |>
+    httr2::req_retry(max_tries = 3, retry_on_failure = TRUE) |>
     httr2::req_perform()
   # KU serves Latin-1; xml2's UTF-8 default garbles Danish room names.
   xml2::read_html(httr2::resp_body_raw(response), encoding = "ISO-8859-1")
