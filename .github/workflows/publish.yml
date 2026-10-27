@@ -56,13 +56,15 @@ jobs:
       - name: Check links
         uses: lycheeverse/lychee-action@v2
         with:
-          # These sites can reject automated checks even when their pages exist.
+          # These sites can reject or time out automated checks.
+          # The timetable update workflow fetches KU's timetable with retries.
           args: >-
             --root-dir "${{ github.workspace }}/_site"
             --max-retries 3
             --no-progress
             --exclude '^https://github[.]com/math-ku/compstat/blob/main/'
             --exclude '^https://stackoverflow\.com/'
+            --exclude '^https://skema[.]ku[.]dk/tt/tt[.]asp[?]'
             '_site/**/*.html'
 
       - name: Upload artifact
