@@ -154,6 +154,19 @@ nuuk_plot + geom_line(aes(y = smooth$y), color = "blue")
 ::::: {.column width="47%"}
 Propose from an easy distribution, then accept or reject.
 
+\bigskip
+
+\begin{algorithm}[H]
+  \caption{Rejection sampling}
+  \Repeat{sample is accepted}{
+    Generate $Y \sim g$\;
+    Generate $U \sim \mathcal{U}(0, 1)$\;
+    \If{$U \leq \frac{\alpha f(y)}{g(y)}$}{
+      Accept $Y$\;
+    }
+  }
+\end{algorithm}
+
 \medskip\pause
 
 The envelope must **dominate the target**. A tighter envelope wastes fewer
@@ -166,6 +179,8 @@ proposals.
 ```{r}
 #| label: recap-rejection
 #| echo: false
+#| fig-cap: Illustration of rejection sampling with a Gaussian target and a
+#|   uniform
 
 set.seed(1)
 N <- 1000
@@ -223,11 +238,22 @@ ggplot() +
 ::::: {.column width="47%"}
 Estimate expectations by averaging random draws.
 
-\medskip\pause
+\pause
 
 ### Importance Sampling
 
-Change the sampling distribution and reweight. Support and tails matter.
+Use the "trick" that
+$$
+  \begin{aligned}
+    \mu & = \int h(x) f(x) \mathrm{d}x                     \\
+        & = \int h(x) \frac{f(x)}{g(x)} g(x) \ \mathrm{d}x \\
+        & = \int h(x) w^*(x) g(x) \ \mathrm{d}x
+  \end{aligned}
+$$
+and estimate
+$$
+  \hat{\mu}^*_{\mathrm{IS}} = \frac{1}{N} \sum_{i=1}^N h(X_i) w^*(X_i).
+$$
 :::::
 
 ::::: {.column width="47%"}
@@ -236,6 +262,8 @@ Change the sampling distribution and reweight. Support and tails matter.
 ```{r}
 #| label: recap-mc-data
 #| include: false
+#| fig-cap: Comparison of ordinary Monte Carlo and importance sampling for
+#|   estimating a rare-event probability.
 
 n_rare <- 10000
 
@@ -451,6 +479,23 @@ ggplot(optimization_grid, aes(beta1, beta2)) +
 ::::: {.column width="47%"}
 Use a random observation or mini-batch to estimate the gradient.
 
+\medskip
+
+\begin{algorithm}[H]
+  \caption{Mini-batch SGD}
+  \KwData{Initial parameter $\theta_0$ and learning-rate schedule $(\gamma_n)$}
+  \For{$n = 0,1,\dots$}{
+    $I_n \gets$ mini-batch of $m$ indices\;
+
+    $\rho_n \gets \frac{1}{m}\sum_{i\in I_n}\nabla_\theta L(y_i,x_i,\theta_n)$\;
+
+    $\theta_{n+1} \gets \theta_n - \gamma_n\rho_n$\;
+    \If{converged}{
+      \Return{$\theta_{n+1}$}
+    }
+  }
+\end{algorithm}
+
 \medskip\pause
 
 **Learning rates, batch sizes, and momentum** control progress and noise.
@@ -465,6 +510,7 @@ Use a random observation or mini-batch to estimate the gradient.
 #| fig-keep: last
 #| fig-height: 3.2
 #| dev.args: { bg: white, pointsize: 9 }
+#| fig-cap: SGD follows a noisy path, but makes quick progress in the start.
 
 library(mvtnorm)
 source(here::here("R", "sgd.R"))
@@ -569,6 +615,10 @@ for (steps in sgd_reveals) {
 
 ::: {.columns align="center"}
 ::::: {.column width="47%"}
+Useful algorithm for latent variables or missing data.
+
+. . .
+
 ### E-Step
 
 Take conditional expectations.
@@ -881,6 +931,53 @@ Keep code, tests, documentation, and dependencies together.
 - Use plenty of plots. Pick out important code snippets.
 - Practice your presentation.
 - Keep your code available in case we want to see something.
+- Skip roadmaps and overviews: just get started.
+:::
+
+## You Need To Understand your AI-Generated Content
+
+It is still your work.
+
+\medskip\pause
+
+You have to be able to **explain** it, and for that you need to be able to
+**understand** it.
+
+\medskip\pause
+
+Extravagant work that you don't understand is worse than good work that you do
+understand.
+
+## What We Will Ask About
+
+::: {.columns}
+::::: {.column width="47%"}
+We may ask you about anything in the course, but do not expect you to know the
+details of the alternative assignment.
+
+. . .
+
+### Example
+
+If you have done assignment 2B, we will details about rejection sampling---but
+you still have to know what it is on at least a rough level.
+:::::
+
+. . .
+
+::::: {.column width="47%"}
+### Computational Aspects
+
+But irrespective of what you have done, we expect that you know about all the
+computational aspects we have covered.
+
+. . .
+
+### Example
+
+You may not have parallelized your algorithm for assignment X, but you still
+have to be able to explain why you didn't think that was necessary.
+:::::
 :::
 
 ## Giving Effective Presentations
@@ -904,7 +1001,7 @@ Show us how you arrived at your results---not just the results themselves.
    finish.\pause
 3. Then I profiled my code and found a bottleneck.\pause
 4. I fixed the bottleneck using method B.\pause
-5. Here's a comparison of the results from method A and method B.\pause
+5. Here's a comparison of the results from method A and method B.
 
 ## Read Out All of the Text on Your Slides
 
@@ -919,6 +1016,14 @@ talking about something else than what is on the slide.
 
 They will either read the slide or listen to you, but not both.
 
+\medskip\pause
+
+Resist the temptation to paraphrase!
+:::::
+
+. . .
+
+::::: {.column width="47%"}
 ### Too Much Text?
 
 If this makes you think
@@ -927,10 +1032,19 @@ If this makes you think
 
 Then very likely you have **too much text** on your slides.
 :::::
-
-::::: {.column width="47%"}
-:::::
 :::
+
+## Use Animations
+
+Your audience will not resist the temptation to read ahead.
+
+\medskip\pause
+
+And when they do, the will no longer be listening to you.
+
+\medskip\pause
+
+Feed users your content incrementally---especially figures!
 
 ## Practice Your Presentation
 
